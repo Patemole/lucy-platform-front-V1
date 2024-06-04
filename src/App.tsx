@@ -16,6 +16,7 @@ import ChooseRole from './routes/chooseRole';
 import LearningStyleSurvey from './routes/learningStyleSurvey';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthContext } from './auth/context/AuthContext';
+import config from './config';
 
 
 
@@ -24,8 +25,12 @@ const App: React.FC = () => {
 
     console.log("App: isAuth:", isAuth, "user:", user);
 
+    /*
     const hostname = window.location.hostname;
     const subdomain = hostname.split('.')[0]; // Supposons que le format est subdomain.localhost
+    */
+    const subdomain = config.subdomain;
+
 
     const theme = useMemo(() => getTheme(subdomain), [subdomain]);
 
