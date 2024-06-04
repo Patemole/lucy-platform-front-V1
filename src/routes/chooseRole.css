@@ -1,0 +1,9 @@
+.rolebox {
+    cursor: pointer;
+    transition: outline 0.2s; /* Add transition effect for smoother outline change */
+  }
+  
+  .rolebox:hover,
+  .rolebox:active {
+    outline: 2px solid #7C3BEC; /* Purple outline on hover and click */
+  }

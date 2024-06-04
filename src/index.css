@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+/* Ajoutez cette règle à votre fichier CSS */
+.bg-custom {
+  background-color: #F6F8FA;
+}
+
+/* index.css */
+.mx-16 {
+  margin-left: 4rem; /* ou une autre valeur plus grande que mx-12 */
+  margin-right: 4rem;
+}
+
+.mx-20 {
+  margin-left: 5rem;
+  margin-right: 5rem;
+}
+
+.mx-24 {
+  margin-left: 6rem;
+  margin-right: 6rem;
+}
+
+.custom-placeholder .MuiInputBase-input::placeholder {
+  color: #100F32 !important; /* Placeholder color */
+}
+
+.custom-placeholder .MuiInputBase-input:focus::placeholder {
+  color: #100F32 !important; /* Placeholder color when focused */
+}
+
+.custom-placeholder .MuiInputBase-input {
+  color: #100F32 !important; /* Input text color */
+}
+
