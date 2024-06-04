@@ -1,0 +1,17 @@
+{
+    "rewrites": [
+      {
+        "source": "/upenn/(.*)",
+        "destination": "/$1"
+      },
+      {
+        "source": "/harvard/(.*)",
+        "destination": "/$1"
+      },
+      {
+        "source": "/usyd/(.*)",
+        "destination": "/$1"
+      }
+    ]
+  }
+  
