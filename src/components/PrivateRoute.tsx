@@ -22,8 +22,8 @@ const PrivateRoute = () => {
 
   
   if (!isAuth || !user) {
-    console.log("PrivateRoute: Not authenticated, redirecting to /sign-in/student");
-    return <Navigate to="/sign-in/student" />;
+    console.log("PrivateRoute: Not authenticated, redirecting to /auth/sign-in");
+    return <Navigate to="/auth/sign-in" />;
   }
 
   console.log("PrivateRoute: Authenticated, rendering Outlet");
