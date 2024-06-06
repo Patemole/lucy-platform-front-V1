@@ -29,7 +29,7 @@ const getSubdomain = () => {
 // Détermine l'URL du serveur en fonction de l'environnement
 const getServerUrl = () => {
     if (process.env.REACT_APP_NODE_ENV !== 'production') {
-        return 'http://localhost:5000'; // URL pour le développement
+        return 'http://localhost:5001'; // URL pour le développement
     } else {
         return 'https://lucy-platform-back-ed6ea84d8a6a.herokuapp.com'; // URL pour la production
     }

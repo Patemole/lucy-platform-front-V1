@@ -431,6 +431,48 @@ const processSingleChunk = <T extends NonEmptyObject>(
     }
 };
 
+/*
+// TESTER AVEC UN NOUVEAU TRAITEMENT PAR CHUNKS
+export async function* handleStream<T extends NonEmptyObject>(
+    streamingResponse: Response
+): AsyncGenerator<T[], void, unknown> {
+    const reader = streamingResponse.body?.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    let previousPartialChunk: string | null = null;
+    console.log("Starting to handle stream");
+
+    while (true) {
+        const rawChunk = await reader?.read();
+        if (!rawChunk) {
+            throw new Error("Unable to process chunk");
+        }
+        const { done, value } = rawChunk;
+        if (done) {
+            console.log("Stream reading completed");
+            break;
+        }
+
+        const decodedValue = decoder.decode(value, { stream: true });
+        console.log("Raw chunk received:", decodedValue);
+
+        const [completedChunk, newPartialChunk]: [T | null, string | null] = processSingleChunk<T>(
+            decodedValue,
+            previousPartialChunk
+        );
+        console.log("Completed chunk:", completedChunk);
+        console.log("Partial chunk:", newPartialChunk);
+
+        if (completedChunk) {
+            yield [completedChunk];  // Retourner sous forme de tableau
+        }
+        previousPartialChunk = newPartialChunk;
+    }
+}
+*/
+
+
+
 // TESTER AVEC UN NOUVEAU TRAITEMENT PAR CHUNKS
 export async function* handleStream<T extends NonEmptyObject>(
     streamingResponse: Response
