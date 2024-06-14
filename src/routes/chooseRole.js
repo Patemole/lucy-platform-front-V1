@@ -1,5 +1,3 @@
-//Amélioration avec ajouts sur le hoover des containers : 
-
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -51,25 +49,36 @@ export default function ChooseRole() {
     setTeacherClicked(false);
   };
 
-  const handleSubmit = async () => {
-    if (teacherClicked) {
-      const docRef = doc(db, "users", location.state.uid);
-      await updateDoc(docRef, {
-        role: "teacher"
-      });
-      const docSnap = await getDoc(docRef);
-      login({
-        id: location.state.uid,
-        name: docSnap.data().name,
-        email: docSnap.data().email,
-        role: docSnap.data().role
-      });
+  const handleRoleSubmit = async (role) => {
+    const docRef = doc(db, "users", location.state.uid);
+    await updateDoc(docRef, {
+      role: role
+    });
+    const docSnap = await getDoc(docRef);
+    login({
+      id: location.state.uid,
+      name: docSnap.data().name,
+      email: docSnap.data().email,
+      role: docSnap.data().role
+    });
+    if (role === 'teacher') {
       navigate('/onboarding/course-creation', {
-        state: { userName: docSnap.data().name, uid: location.state.uid}
-
+        state: { userName: docSnap.data().name, uid: location.state.uid }
+      });
+    } else if (role === 'academic_advisor') {
+      navigate('/dashboard/academic-advisor', {
+        state: { userName: docSnap.data().name, uid: location.state.uid }
       });
     } else {
       navigate('/onboarding/learningStyleSurvey', { state: { uid: location.state.uid } });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (teacherClicked) {
+      await handleRoleSubmit('teacher');
+    } else if (studentClicked) {
+      await handleRoleSubmit('student');
     }
   };
 
@@ -105,9 +114,12 @@ export default function ChooseRole() {
           >
             <Grid container justifyContent="right" sx={{ p: 10 }}>
               <Grid item>
-                <span style={{ color: '#8692A6' }}>Already have an account? </span>
-                <Link href="/sign-in/student" style={{ color: theme.palette.primary.main, textDecoration: 'none' }}>
-                  Sign in
+                <span style={{ color: '#8692A6' }}>I'm an Academic Advisor </span>
+                <Link
+                  onClick={() => handleRoleSubmit('academic_advisor')}
+                  style={{ color: theme.palette.primary.main, textDecoration: 'none', cursor: 'pointer' }}
+                >
+                  Go
                 </Link>
               </Grid>
             </Grid>
@@ -136,7 +148,6 @@ export default function ChooseRole() {
                     marginTop: 3,
                     '&:hover': {
                       outline: `2px solid ${theme.palette.primary.main}`
-                      //backgroundColor: 'rgba(0, 0, 0, 0.05)',
                     }
                   }}
                   className="rolebox"
@@ -161,7 +172,6 @@ export default function ChooseRole() {
                     marginTop: 3,
                     '&:hover': {
                       outline: `2px solid ${theme.palette.primary.main}`
-                      //backgroundColor: 'rgba(0, 0, 0, 0.05)',
                     }
                   }}
                   className="rolebox"
@@ -181,7 +191,6 @@ export default function ChooseRole() {
             </Grid>
           </Box>
 
-         
           <Box
             sx={{
               width: '100%',
@@ -208,6 +217,3 @@ export default function ChooseRole() {
     </ThemeProvider>
   );
 }
-
-
-

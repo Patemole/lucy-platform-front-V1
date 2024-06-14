@@ -1,3 +1,4 @@
+//Nouvelle version avec ajout d'une nouvelle collection "chatsessions" pour enregistrer le chat_id qui vient d'être crée 
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -8,7 +9,7 @@ import { db } from '../auth/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
 import { useState } from 'react';
-import { doc, updateDoc, getDoc, arrayUnion } from "firebase/firestore";
+import { doc, updateDoc, getDoc, arrayUnion, setDoc, serverTimestamp } from "firebase/firestore";
 import Typography from '@mui/material/Typography';
 import { useLocation, useParams } from 'react-router-dom';
 import InputLabel from '@mui/material/InputLabel';
@@ -19,6 +20,7 @@ import Button from '@mui/material/Button';
 import FormHelperText from '@mui/material/FormHelperText';
 import Link from '@mui/material/Link';
 import logo from '../logo_lucy.png';
+import { v4 as uuidv4 } from 'uuid'; // Import for generating unique IDs
 
 export default function LearningStyleSurvey() {
   const { login } = useAuth();
@@ -73,7 +75,14 @@ export default function LearningStyleSurvey() {
         const userSnap = await getDoc(userRef);
         const userData = userSnap.data();
 
-        if (course_id) {
+        // Always add "academic_advisor_upenn_course_id" to the user's courses
+        const academicAdvisorCourseId = "6f9b98d4-7f92-4f7b-abe5-71c2c634edb2";
+        let chatId = uuidv4(); // Generate a unique chat ID
+
+        // Initialize an array to hold the courses to be added
+        let coursesToAdd = [academicAdvisorCourseId];
+
+        if (course_id) {  // If course_id is present
           console.log(`Fetching course with course_id: ${course_id}`);
           const courseRef = doc(db, 'courses', course_id);
           const courseSnap = await getDoc(courseRef);
@@ -82,8 +91,19 @@ export default function LearningStyleSurvey() {
             const courseData = courseSnap.data();
             console.log('Course data:', courseData);
 
+            coursesToAdd.push(course_id); // Add the current course_id to the list
+
             await updateDoc(userRef, {
-              courses: arrayUnion(course_id)
+              courses: arrayUnion(...coursesToAdd),
+              chatsessions: arrayUnion(chatId) // Add the chat ID to the chatsessions array
+            });
+
+            // Add the chat session document to the chatsessions collection
+            await setDoc(doc(db, "chatsessions", chatId), {
+              chat_id: chatId,
+              name: "New chat",
+              created_at: serverTimestamp(),
+              modified_at: serverTimestamp()
             });
 
             login({
@@ -98,7 +118,20 @@ export default function LearningStyleSurvey() {
           } else {
             console.log('No such course document!');
           }
-        } else {
+        } else {  // If course_id is not present
+          await updateDoc(userRef, {
+            courses: arrayUnion(...coursesToAdd),
+            chatsessions: arrayUnion(chatId) // Add the chat ID to the chatsessions array
+          });
+
+          // Add the chat session document to the chatsessions collection
+          await setDoc(doc(db, "chatsessions", chatId), {
+            chat_id: chatId,
+            name: "New chat",
+            created_at: serverTimestamp(),
+            modified_at: serverTimestamp()
+          });
+
           login({
             id: location.state.uid,
             name: userData.name,
@@ -107,6 +140,11 @@ export default function LearningStyleSurvey() {
           });
         }
 
+        // Store course_id and chat_id in LocalStorage
+        localStorage.setItem('course_id', academicAdvisorCourseId);
+        localStorage.setItem('chat_id', chatId);
+
+        // Navigate to the student dashboard
         navigate(`/dashboard/student/${location.state.uid}`);
       } catch (error) {
         console.error("Error:", error);
@@ -299,3 +337,5 @@ export default function LearningStyleSurvey() {
     </ThemeProvider>
   );
 }
+
+

@@ -19,6 +19,9 @@ const defaultTheme = createTheme({
       },
     },
   },
+  logo: '/logos/harvard_logo.png', // Chemin vers le logo de Harvard
+  university: 'harvard', // Champ supplémentaire pour l'université
 });
+
 
 export default defaultTheme;

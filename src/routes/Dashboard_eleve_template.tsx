@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, KeyboardEvent, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ThemeProvider, TextField, IconButton, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Menu, MenuItem, Avatar, Divider } from '@mui/material';
@@ -19,22 +18,14 @@ import '../index.css';
 import { AIMessage } from '../components/Messages';
 import { FeedbackType } from '../components/types';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
-import { sendMessageSocraticLangGraph } from '../api/chat';
+import { Message, Course } from '../interfaces/interfaces_eleve';
+import { sendMessageSocraticLangGraph, saveMessageAIToBackend, getChatHistory } from '../api/chat';
 import { handleAutoScroll } from '../components/utils';
 import { usePopup } from '../components/popup';
 import { useAuth } from '../auth/hooks/useAuth';
 import { db } from '../auth/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import config from '../config';
-
-type Message = {
-  id: number;
-  type: 'human' | 'ai' | 'error';
-  content: string;
-  personaName?: string;
-  citedDocuments?: AnswerDocument[];
-  fileType?: 'pdf' | 'mp4';
-};
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { v4 as uuidv4 } from 'uuid';
 
 const drawerWidth = 240;
 
@@ -42,32 +33,107 @@ const Dashboard_eleve_template: React.FC = () => {
   const theme = useTheme();
   const { uid } = useParams<{ uid: string }>();
   const [showChat, setShowChat] = useState(false);
-
-  //Initialisation de l'état messages comme un tableau vide
   const [messages, setMessages] = useState<Message[]>([]);
-
   const [isComplete, setIsComplete] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isCancelled, setIsCancelled] = useState(false);
   const [currentFeedback, setCurrentFeedback] = useState<[FeedbackType, number] | null>(null);
   const [selectedMessageForDocDisplay, setSelectedMessageForDocDisplay] = useState<number | null>(null);
-
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [conversations, setConversations] = useState<{ chat_id: string, name: string }[]>([]);
   const navigate = useNavigate();
   const { popup, setPopup } = usePopup();
-
   const { logout } = useAuth();
-
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollableDivRef = useRef<HTMLDivElement>(null);
   const endDivRef = useRef<HTMLDivElement>(null);
-
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedFilter, setSelectedFilter] = useState<string>('Academic Advisor');
-
+  const [selectedFilter, setSelectedFilter] = useState<string>('');
   const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [courseOptions, setCourseOptions] = useState<string[]>(['Academic Advisor']);
+  const [courseOptions, setCourseOptions] = useState<Course[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string | null>(localStorage.getItem('chat_id'));
+
+  useEffect(() => {
+    const fetchCourseOptionsAndChatSessions = async () => {
+      console.log("Fetching course options and chat sessions for user with UID:", uid);
+      if (uid) {
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          console.log("User data:", userData);
+          const courseIds = userData.courses || [];
+          const chatSessionIds = userData.chatsessions || [];
+
+          console.log("Course IDs:", courseIds);
+          console.log("Chat Session IDs:", chatSessionIds);
+
+          const coursePromises = courseIds.map(async (courseId: string) => {
+            if (typeof courseId === 'string') {
+              const courseRef = doc(db, 'courses', courseId);
+              const courseSnap = await getDoc(courseRef);
+              if (courseSnap.exists()) {
+                console.log("Course data found for ID:", courseId);
+                return { id: courseId, name: courseSnap.data().name };
+              } else {
+                console.log(`Course not found for ID: ${courseId}`);
+              }
+            }
+            return null;
+          });
+
+          const courses = await Promise.all(coursePromises);
+          const validCourses = courses.filter((course): course is Course => course !== null);
+          console.log("Valid courses fetched:", validCourses);
+
+          setCourseOptions(validCourses);
+          if (validCourses.length > 0) {
+            const initialCourseId = localStorage.getItem('course_id') || validCourses[0].id;
+            const initialCourse = validCourses.find(course => course.id === initialCourseId);
+            console.log("Initial course ID from localStorage:", initialCourseId);
+            console.log("Initial course found:", initialCourse);
+            setSelectedFilter(initialCourse ? initialCourse.name : validCourses[0].name);
+            localStorage.setItem('course_id', initialCourseId);
+          }
+
+          const chatPromises = chatSessionIds.map(async (chatId: string) => {
+            if (typeof chatId === 'string') {
+              const chatRef = doc(db, 'chatsessions', chatId);
+              const chatSnap = await getDoc(chatRef);
+              if (chatSnap.exists() && chatSnap.data().name) {
+                console.log("Chat session data found for ID:", chatId);
+                return { chat_id: chatId, name: chatSnap.data().name };
+              } else {
+                console.log(`Chat session not found or name is empty for ID: ${chatId}`);
+              }
+            }
+            return null;
+          });
+
+          const fetchedConversations = await Promise.all(chatPromises);
+          const validConversations = fetchedConversations.filter((conversation): conversation is { chat_id: string, name: string } => conversation !== null);
+          console.log("Valid conversations fetched:", validConversations);
+          setConversations(validConversations.reverse());
+        } else {
+          console.log("No user data found for UID:", uid);
+        }
+      }
+    };
+
+    fetchCourseOptionsAndChatSessions();
+  }, [uid]);
+
+  useEffect(() => {
+    const loadMessagesFromLocalStorageChatId = async () => {
+      const storedChatId = localStorage.getItem('chat_id');
+      if (storedChatId) {
+        await handleConversationClick(storedChatId);
+      }
+    };
+    loadMessagesFromLocalStorageChatId();
+  }, []);
 
   const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setProfileMenuAnchorEl(event.currentTarget);
@@ -87,33 +153,51 @@ const Dashboard_eleve_template: React.FC = () => {
   };
 
   const handleMenuClose = (option: string) => {
+    console.log("Selected option from menu:", option);
+    const selectedCourse = courseOptions.find(course => course.name === option);
+    if (selectedCourse) {
+      setSelectedFilter(selectedCourse.name);
+      localStorage.setItem('course_id', selectedCourse.id);
+      console.log("Updated course ID in localStorage:", selectedCourse.id);
+    }
     setAnchorEl(null);
-    setSelectedFilter(option);
   };
 
   const handleMenuCloseWithoutSelection = () => {
     setAnchorEl(null);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessageSocraticLangGraph = () => {
+    if (inputValue.trim() === '') return;
 
-    if (inputValue.trim() === '') return; 
-
-    setShowChat(true); //Affiche la fenêtre de chat 
-    setIsComplete(false); 
+    setShowChat(true);
+    setIsComplete(false);
     setIsStreaming(true);
 
-    //Ajoute le nouveau message humain à la liste des messages
     const newMessage: Message = { id: Date.now(), type: 'human', content: inputValue };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    console.log("User sending a message:", newMessage);
 
-    //ajoute le message de réponse de Lucy de chargement en attendant un message
+    setMessages((prevMessages) => {
+      console.log("Messages state before adding new human message:", prevMessages);
+      const updatedMessages = [...prevMessages, newMessage];
+      console.log("Messages state after adding new human message:", updatedMessages);
+      return updatedMessages;
+    });
+
     const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
+    console.log("Adding Lucy's loading message:", loadingMessage);
+
+    setMessages((prevMessages) => {
+      console.log("Messages state before adding loading message:", prevMessages);
+      const updatedMessages = [...prevMessages, loadingMessage];
+      console.log("Messages state after adding loading message:", updatedMessages);
+      return updatedMessages;
+    });
 
     setInputValue('');
 
     const messageHistory = [...messages, newMessage, loadingMessage];
+    console.log("Message history before submission:", messageHistory);
 
     onSubmit(messageHistory, inputValue);
   };
@@ -125,11 +209,19 @@ const Dashboard_eleve_template: React.FC = () => {
     let error: string | null = null;
 
     try {
-      const chatSessionId = 'chat_id_business';
-      const courseId = 'business';
-      const username = 'greg_test';
+      const chatSessionId = localStorage.getItem('chat_id') || 'default_chat_id';
+      const courseId = localStorage.getItem('course_id') || 'default_course_id';
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const username = user.name || 'default_user';
+
+      console.log("Retrieved from localStorage:", {
+        chatSessionId,
+        courseId,
+        username,
+      });
 
       const lastMessageIndex = messageHistory.length - 1;
+      console.log("Last message index before streaming:", lastMessageIndex);
 
       for await (const packetBunch of sendMessageSocraticLangGraph({
         message: inputValue,
@@ -137,26 +229,37 @@ const Dashboard_eleve_template: React.FC = () => {
         courseId: courseId,
         username: username,
       })) {
-        console.log("Packet bunch:", packetBunch);
+        console.log("Received a bunch of response packets:", packetBunch);
+
         for (const packet of packetBunch) {
-          if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
-            answer += (packet as AnswerPiecePacket).answer_piece;
-          } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_document')) {
-            answerDocuments.push((packet as AnswerDocumentPacket).answer_document);
-          } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
-            error = (packet as StreamingError).error;
+          console.log("Packet:", packet);
+          if (typeof packet === 'string') {
+            answer = packet.replace(/\|/g, "");
+            console.log("Accumulated partial answer so far: (for string)", answer);
+          } else {
+            if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
+              answer = (packet as AnswerPiecePacket).answer_piece;
+              console.log("Accumulated answer so far:", answer);
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_document')) {
+              answerDocuments.push((packet as AnswerDocumentPacket).answer_document);
+              console.log("Accumulated cited documents so far:", answerDocuments);
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
+              error = (packet as StreamingError).error;
+              console.log("Error encountered during streaming:", error);
+            }
           }
         }
 
         setMessages((prevMessages) => {
           const updatedMessages = [...prevMessages];
           updatedMessages[lastMessageIndex] = {
-            id: Date.now(),
+            id: prevMessages[lastMessageIndex].id,
             type: 'ai',
             content: answer,
             personaName: 'Lucy',
             citedDocuments: answerDocuments,
           };
+          console.log("Messages state after processing a packet:", updatedMessages);
           return updatedMessages;
         });
 
@@ -167,99 +270,22 @@ const Dashboard_eleve_template: React.FC = () => {
       }
 
       setIsStreaming(false);
-    } catch (e: any) {
-      const errorMsg = e.message;
-      console.log("Error message:", errorMsg);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: Date.now(),
-          type: 'error',
-          content: "An error occurred. The API endpoint might be down.",
-        },
-      ]);
-      setIsStreaming(false);
-    }
-  };
 
-  const handleInputKeyPress = (event: KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      handleSendMessage();
-    }
-  };
-
-  const handleSendMessageSocraticLangGraph = () => {
-    if (inputValue.trim() === '') return;
-
-    setShowChat(true);
-    setIsComplete(false);
-    setIsStreaming(true);
-
-    const newMessage: Message = { id: Date.now(), type: 'human', content: inputValue };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-    setMessages((prevMessages) => [...prevMessages, newMessage, loadingMessage]);
-
-    setInputValue('');
-
-    const messageHistory = [...messages, newMessage, loadingMessage];
-
-    onSubmitSocraticLangGraph(messageHistory, inputValue);
-  };
-
-  const onSubmitSocraticLangGraph = async (messageHistory: Message[], inputValue: string) => {
-    setIsStreaming(true);
-    let answer = '';
-    let answerDocuments: AnswerDocument[] = [];
-    let error: string | null = null;
-
-    try {
-      const chatSessionId = 'chat_id_healthcare';
-      const courseId = 'healthcare';
-      const username = 'greg_test';
-
-      const lastMessageIndex = messageHistory.length - 1;
-
-      for await (const packetBunch of sendMessageSocraticLangGraph({
-        message: inputValue,
+      const Message_AI_to_save = {
+        message: answer,
         chatSessionId: chatSessionId,
         courseId: courseId,
-        username: username,
-      })) {
-        console.log("Packet bunch:", packetBunch);
-        for (const packet of packetBunch) {
-          if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
-            answer += (packet as AnswerPiecePacket).answer_piece;
-          } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_document')) {
-            answerDocuments.push((packet as AnswerDocumentPacket).answer_document);
-          } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
-            error = (packet as StreamingError).error;
-          }
-        }
+        username: "Lucy",
+        type: 'ai'
+      };
 
-        setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages];
-          updatedMessages[lastMessageIndex] = {
-            id: Date.now(),
-            type: 'ai',
-            content: answer,
-            personaName: 'Lucy',
-            citedDocuments: answerDocuments,
-          };
-          return updatedMessages;
-        });
+      console.log("Message AI to be saved:", Message_AI_to_save);
 
-        if (isCancelled) {
-          setIsCancelled(false);
-          break;
-        }
-      }
+      await saveMessageAIToBackend(Message_AI_to_save);
 
-      setIsStreaming(false);
     } catch (e: any) {
       const errorMsg = e.message;
-      console.log("Error message:", errorMsg);
+      console.log("Error during submission:", errorMsg);
       setMessages((prevMessages) => [
         ...prevMessages,
         {
@@ -278,6 +304,94 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
 
+  // POUR CRÉER UNE NOUVELLE CONVERSATION
+  const handleNewConversation = async () => {
+    const newChatId = uuidv4();
+    const oldChatId = localStorage.getItem('chat_id');
+  
+    // Clear messages
+    setMessages([]);
+  
+    // Save new chat ID to localStorage
+    localStorage.setItem('chat_id', newChatId);
+    setActiveChatId(newChatId);
+  
+    if (uid) {
+      const userRef = doc(db, 'users', uid); // Define userRef here
+      const userSnap = await getDoc(userRef);
+  
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const chatsessions = userData.chatsessions || [];
+  
+        // Update the old chat session name
+        if (oldChatId) {
+          await updateDoc(doc(db, "chatsessions", oldChatId), { name: "Conversation history" });
+        }
+  
+        // Add new chat session
+        chatsessions.push(newChatId);
+        await updateDoc(userRef, { chatsessions });
+  
+        // Add new chat session document
+        await setDoc(doc(db, "chatsessions", newChatId), {
+          chat_id: newChatId,
+          name: "New chat",
+          created_at: serverTimestamp(),
+          modified_at: serverTimestamp()
+        });
+  
+        console.log("New conversation created with chat_id:", newChatId);
+  
+        // Refresh chat sessions
+        const refreshedUserSnap = await getDoc(userRef);
+  
+        if (refreshedUserSnap.exists()) {
+          const refreshedUserData = refreshedUserSnap.data();
+          const chatSessionIds = refreshedUserData.chatsessions || [];
+  
+          const chatPromises = chatSessionIds.map(async (chatId: string) => {
+            if (typeof chatId === 'string') {
+              const chatRef = doc(db, 'chatsessions', chatId);
+              const chatSnap = await getDoc(chatRef);
+              if (chatSnap.exists() && chatSnap.data().name) {
+                return { chat_id: chatId, name: chatSnap.data().name };
+              }
+            }
+            return null;
+          });
+  
+          const fetchedConversations = await Promise.all(chatPromises);
+          const validConversations = fetchedConversations.filter((conversation): conversation is { chat_id: string, name: string } => conversation !== null);
+          setConversations(validConversations.reverse());
+        }
+      }
+    } else {
+      console.error("UID is undefined. Cannot create new conversation.");
+    }
+  };
+
+  // POUR RÉCUPÉRER LES MESSAGES D'UNE CONVERSATION ET L'AFFICHER
+  const handleConversationClick = async (chat_id: string) => {
+    // On met le chat_id de la conversation dans le localStorage
+    localStorage.setItem('chat_id', chat_id);
+    setActiveChatId(chat_id);
+
+    // Fetch chat history for the selected chat_id
+    try {
+      const chatHistory = await getChatHistory(chat_id);
+      setMessages(chatHistory);
+      setShowChat(true);
+    } catch (error) {
+      console.error("Failed to fetch chat history:", error);
+      setPopup({
+        type: 'error',
+        message: "Failed to fetch chat history. Please try again later.",
+      });
+    }
+  };
+
+  // POUR CHANGER DE PAGE QUAND ON CLIQUE SUR TA'S HELP
   const handleMeetingClick = () => {
     navigate('/schedule-meeting');
   };
@@ -296,36 +410,6 @@ const Dashboard_eleve_template: React.FC = () => {
     handleAutoScroll(endDivRef, scrollableDivRef);
   }, [messages]);
 
-  useEffect(() => {
-    const fetchCourseOptions = async () => {
-      if (uid) {
-        const userRef = doc(db, 'users', uid);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          const courseIds = userData.courses || [];
-
-          const coursePromises = courseIds.map(async (courseId: string) => {
-            const courseRef = doc(db, 'courses', courseId);
-            const courseSnap = await getDoc(courseRef);
-            if (courseSnap.exists()) {
-              return courseSnap.data().name;
-            }
-            return null;
-          });
-
-          const courseNames = await Promise.all(coursePromises);
-          const validCourseNames = courseNames.filter((name): name is string => name !== null);
-
-          setCourseOptions(['Academic Advisor', ...validCourseNames]);
-        }
-      }
-    };
-
-    fetchCourseOptions();
-  }, [uid]);
-
   return (
     <ThemeProvider theme={theme}>
       <div className="flex h-screen bg-gray-100">
@@ -339,33 +423,53 @@ const Dashboard_eleve_template: React.FC = () => {
             <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
               <MenuIcon />
             </IconButton>
-            <IconButton sx={{ color: theme.palette.primary.main }}>
+            <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.primary.main }}>
               <MapsUgcRoundedIcon />
             </IconButton>
           </Box>
-          <List>
-            <ListItem button onClick={() => navigate(`/dashboard/student/${uid}`)}>
+          <List style={{ padding: '0 15px' }}>
+            <ListItem button onClick={() => navigate(`/dashboard/student/${uid}`)} style={{ borderRadius: '8px' }}>
               <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
                 <HomeIcon />
               </ListItemIcon>
               <ListItemText primary="Home" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
             </ListItem>
-            <ListItem button onClick={() => navigate('/dashboard/analytics')}>
+            <ListItem button onClick={() => navigate('/dashboard/analytics')} style={{ borderRadius: '8px' }}>
               <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
                 <InsightsIcon />
               </ListItemIcon>
               <ListItemText primary="Analytics" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
             </ListItem>
-            <ListItem button onClick={() => navigate('/about')}>
+            <ListItem button onClick={() => navigate('/about')} style={{ borderRadius: '8px' }}>
               <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
                 <InfoIcon />
               </ListItemIcon>
               <ListItemText primary="About" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
             </ListItem>
-            <Divider style={{ backgroundColor: 'lightgray', margin: '30px 15px' }} />
-            <Typography align="center" style={{ fontWeight: '500', fontSize: '0.875rem', color: 'gray', marginTop: '30px' }}>
-              You have no conversations yet
-            </Typography>
+            <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
+            {conversations.length > 0 ? (
+              conversations.map((conversation) => (
+                <ListItem
+                  button
+                  key={conversation.chat_id}
+                  onClick={() => handleConversationClick(conversation.chat_id)}
+                  sx={{
+                    borderRadius: '8px',
+                    margin: '5px 0',
+                    backgroundColor: activeChatId === conversation.chat_id ? '#EBE2FC' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: '#F5F5F5',
+                    },
+                  }}
+                >
+                  <ListItemText primary={conversation.name} primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+                </ListItem>
+              ))
+            ) : (
+              <Typography align="center" style={{ fontWeight: '500', fontSize: '0.875rem', color: 'gray', marginTop: '30px' }}>
+                You have no conversations yet
+              </Typography>
+            )}
           </List>
         </Drawer>
 
@@ -376,15 +480,16 @@ const Dashboard_eleve_template: React.FC = () => {
                 <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
                   <MenuIcon />
                 </IconButton>
-                <IconButton sx={{ color: theme.palette.primary.main }}>
+
+                <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.primary.main }}>
                   <MapsUgcRoundedIcon />
                 </IconButton>
               </>
             )}
             <div style={{ width: '16px' }} />
-            <div onClick={handleDropDownClick} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', backgroundColor: selectedFilter === 'Academic Advisor' ? '#EBE2FC' : '#DDFCE5', padding: '4px 8px', borderRadius: '8px' }}>
-              <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: selectedFilter === 'Academic Advisor' ? '#7C3BEC' : '#43AE58', marginRight: '8px' }}>{selectedFilter}</Typography>
-              <ArrowDropDownIcon sx={{ fontSize: '1rem', color: selectedFilter === 'Academic Advisor' ? '#7C3BEC' : '#43AE58' }} />
+            <div onClick={handleDropDownClick} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', backgroundColor: '#EBE2FC' }}>
+              <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#7C3BEC', marginRight: '8px' }}>{selectedFilter}</Typography>
+              <ArrowDropDownIcon sx={{ fontSize: '1rem', color: '#7C3BEC' }} />
             </div>
             <Menu
               anchorEl={anchorEl}
@@ -393,9 +498,9 @@ const Dashboard_eleve_template: React.FC = () => {
               PaperProps={{ style: { borderRadius: '12px' } }}
             >
               {courseOptions.map((option) => (
-                <MenuItem key={option} onClick={() => handleMenuClose(option)}>
+                <MenuItem key={option.id} onClick={() => handleMenuClose(option.name)}>
                   <Typography style={{ fontWeight: '500', fontSize: '0.875rem', padding: '4px 8px', borderRadius: '8px' }}>
-                    {option}
+                    {option.name}
                   </Typography>
                 </MenuItem>
               ))}
@@ -420,13 +525,13 @@ const Dashboard_eleve_template: React.FC = () => {
             <Button variant="outlined" color="primary" onClick={handleMeetingClick}>TA's help</Button>
           </div>
 
-          {!showChat ? (
+          {messages.length === 0 ? (
             <div className="flex-grow flex items-center justify-center w-full">
               <div className="w-full h-full p-8 bg-white flex flex-col items-center justify-center">
                 <h1 className="text-4xl font-bold text-center mb-6 text-custom-blue">Your Assistant Lucy</h1>
                 <p className="text-center mb-5">Try a sample thread</p>
                 <div className="flex flex-col items-center space-y-4">
-                  <Button variant="contained" style={{ borderRadius: '5px' }} color="primary">How can AI improve medical diagnosis? </Button>
+                  <Button variant="contained" style={{ borderRadius: '5px' }} color="primary">How can AI improve medical diagnosis?</Button>
                   <Button variant="contained" style={{ borderRadius: '5px' }} color="primary">Which class can I take for next semester?</Button>
                   <Button variant="contained" style={{ borderRadius: '5px' }} color="primary">How many business models do you know?</Button>
                 </div>
@@ -540,3 +645,4 @@ const Dashboard_eleve_template: React.FC = () => {
 };
 
 export default Dashboard_eleve_template;
+

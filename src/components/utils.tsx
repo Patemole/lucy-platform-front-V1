@@ -1,3 +1,4 @@
+//To be depreciated
 import { RefObject } from "react";
 import { ChatSession, Message } from "../interfaces/interfaces";
 export function groupSessionsByDateRange(chatSessions: ChatSession[]) {

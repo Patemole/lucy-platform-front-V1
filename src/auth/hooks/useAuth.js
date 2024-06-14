@@ -30,6 +30,8 @@ export const useAuth = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('isAuth');
     localStorage.removeItem('pinecone_index_name');
+    localStorage.removeItem('course_id');
+    localStorage.removeItem('chat_id');
   };
 
   return { user, login, logout, setUser, isAuth, setIsAuth };

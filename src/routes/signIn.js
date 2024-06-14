@@ -13,9 +13,10 @@ import { auth, db } from '../auth/firebase';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { doc, getDoc, updateDoc, arrayUnion, setDoc, serverTimestamp } from "firebase/firestore";
 import './signUp.css';
 import lucyLogo from '../logo_lucy.png';
+import { v4 as uuidv4 } from 'uuid';
 
 const provider = new GoogleAuthProvider();
 
@@ -33,55 +34,79 @@ export default function SignIn() {
     return subdomain;
   };
 
-  const checkLocalStorage = (user, role, name, university) => {
-    if (localStorage.getItem('isAuth') && localStorage.getItem('user')) {
-      redirectBasedOnRole(role, name, user.uid, university);
-    } else {
-      console.warn("User not authenticated in localStorage");
-    }
+  const generateChatId = () => {
+    let chatId = uuidv4(); // Generate a unique chat ID
+    return chatId;
+  };
+
+  const checkLocalStorage = (user, role, name, university, lastCourseId, lastChatId) => {
+    localStorage.setItem('isAuth', 'true');
+    localStorage.setItem('user', JSON.stringify({ id: user.uid, name, email: user.email, role }));
+    localStorage.setItem('course_id', lastCourseId);
+    localStorage.setItem('chat_id', lastChatId);
+
+    console.log('Stored in localStorage:', {
+      isAuth: localStorage.getItem('isAuth'),
+      user: localStorage.getItem('user'),
+      course_id: localStorage.getItem('course_id'),
+      chat_id: localStorage.getItem('chat_id')
+    });
   };
 
   const redirectBasedOnRole = async (role, userName, uid, university) => {
     const subdomain = getSubdomain();
+    console.log('Redirect based on role:', { role, userName, uid, university, subdomain });
     if (subdomain !== university) {
       setErrors({ university: `You need to log in to the ${university} portal` });
       return;
     }
 
-    if (!course_id && role === 'teacher') {
-      const docRef = doc(db, "users", uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const courses = docSnap.data().courses;
-        if (courses && courses.length > 0) {
-          const firstCourseId = courses[0];
+    if (!course_id) {
+      if (role === 'teacher') {
+        const docRef = doc(db, "users", uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const courses = docSnap.data().courses;
+          if (courses && courses.length > 0) {
+            const firstCourseId = courses[0];
 
-          // Fetch pinecone_index_name from the courses collection
-          const courseDocRef = doc(db, "courses", firstCourseId);
-          const courseDocSnap = await getDoc(courseDocRef);
-          if (courseDocSnap.exists()) {
-            const pineconeIndexName = courseDocSnap.data()['pinecone-index'];
-            localStorage.setItem('pinecone_index_name', pineconeIndexName);
+            // Fetch pinecone_index_name from the courses collection
+            const courseDocRef = doc(db, "courses", firstCourseId);
+            const courseDocSnap = await getDoc(courseDocRef);
+            if (courseDocSnap.exists()) {
+              const pineconeIndexName = courseDocSnap.data()['pinecone-index'];
+              localStorage.setItem('pinecone_index_name', pineconeIndexName);
+            }
+
+            console.log('Navigating to teacher dashboard with firstCourseId:', firstCourseId);
+            navigate(`/dashboard/teacher/${uid}/${firstCourseId}`, {
+              state: { userName }
+            });
+            return;
           }
-
-          navigate(`/dashboard/teacher/${uid}/${firstCourseId}`, {
-            state: { userName }
-          });
-          return;
         }
+      } else if (role === 'academic_advisor') {
+        console.log('Navigating to academic advisor dashboard');
+        navigate(`/dashboard/academic-advisor`, {
+          state: { userName }
+        });
+        return;
       }
     }
 
     if (role === 'teacher') {
+      console.log('Navigating to teacher dashboard with course_id:', course_id);
       navigate(`/dashboard/teacher/${uid}/${course_id}`, {
         state: { userName }
       });
     } else if (role === 'student') {
+      console.log('Navigating to student dashboard');
       navigate(`/dashboard/student/${uid}`, {
         state: { userName }
       });
-    } else {
-      navigate(`/dashboard/teacher/${uid}/${course_id}`, {
+    } else if (role === 'academic_advisor') {
+      console.log('Navigating to academic advisor dashboard');
+      navigate(`/dashboard/academic-advisor`, {
         state: { userName }
       });
     }
@@ -117,11 +142,36 @@ export default function SignIn() {
             const userRole = docSnap.data().role;
             const userName = docSnap.data().name;
             const university = docSnap.data().university;
+            const lastCourseId = docSnap.data().courses ? docSnap.data().courses.slice(-1)[0] : null;
+            const lastChatId = docSnap.data().chatsessions ? docSnap.data().chatsessions.slice(-1)[0] : null;
 
             if (course_id && userRole === 'student') {
+              const newChatId = generateChatId();
               await updateDoc(docRef, {
-                courses: arrayUnion(course_id)
+                courses: arrayUnion(course_id),
+                chatsessions: arrayUnion(newChatId)
               });
+
+              // Add the chat session document to the chatsessions collection
+              await setDoc(doc(db, "chatsessions", newChatId), {
+                chat_id: newChatId,
+                name: "New chat",
+                created_at: serverTimestamp(),
+                modified_at: serverTimestamp()
+              });
+
+              localStorage.setItem('course_id', course_id);
+              localStorage.setItem('chat_id', newChatId);
+              console.log('Stored in localStorage:', {
+                isAuth: localStorage.getItem('isAuth'),
+                user: localStorage.getItem('user'),
+                course_id: localStorage.getItem('course_id'),
+                chat_id: localStorage.getItem('chat_id')
+              });
+              redirectBasedOnRole(userRole, userName, user.uid, university);
+            } else {
+              checkLocalStorage(user, userRole, userName, university, lastCourseId, lastChatId);
+              redirectBasedOnRole(userRole, userName, user.uid, university);
             }
 
             login({
@@ -130,8 +180,6 @@ export default function SignIn() {
               email: email,
               role: userRole
             });
-
-            checkLocalStorage(user, userRole, userName, university);
           } else {
             console.log("No such document!");
           }
@@ -156,24 +204,51 @@ export default function SignIn() {
         const user = result.user;
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
-        const userRole = docSnap.data().role;
-        const userName = user.displayName;
-        const university = docSnap.data().university;
+        if (docSnap.exists()) {
+          const userRole = docSnap.data().role;
+          const userName = user.displayName;
+          const university = docSnap.data().university;
+          const lastCourseId = docSnap.data().courses ? docSnap.data().courses.slice(-1)[0] : null;
+          const lastChatId = docSnap.data().chatsessions ? docSnap.data().chatsessions.slice(-1)[0] : null;
 
-        if (course_id && userRole === 'student') {
-          await updateDoc(docRef, {
-            courses: arrayUnion(course_id)
+          if (course_id && userRole === 'student') {
+            const newChatId = generateChatId();
+            await updateDoc(docRef, {
+              courses: arrayUnion(course_id),
+              chatsessions: arrayUnion(newChatId)
+            });
+
+            // Add the chat session document to the chatsessions collection
+            await setDoc(doc(db, "chatsessions", newChatId), {
+              chat_id: newChatId,
+              name: "New chat",
+              created_at: serverTimestamp(),
+              modified_at: serverTimestamp()
+            });
+
+            localStorage.setItem('course_id', course_id);
+            localStorage.setItem('chat_id', newChatId);
+            console.log('Stored in localStorage:', {
+              isAuth: localStorage.getItem('isAuth'),
+              user: localStorage.getItem('user'),
+              course_id: localStorage.getItem('course_id'),
+              chat_id: localStorage.getItem('chat_id')
+            });
+            redirectBasedOnRole(userRole, userName, user.uid, university);
+          } else {
+            checkLocalStorage(user, userRole, userName, university, lastCourseId, lastChatId);
+            redirectBasedOnRole(userRole, userName, user.uid, university);
+          }
+
+          login({
+            id: user.uid,
+            name: userName,
+            email: user.email,
+            role: userRole
           });
+        } else {
+          console.log("No such document!");
         }
-
-        login({
-          id: user.uid,
-          name: userName,
-          email: user.email,
-          role: userRole
-        });
-
-        checkLocalStorage(user, userRole, userName, university);
       }).catch((error) => {
         console.log(error.code, error.message);
       });
@@ -308,7 +383,6 @@ export default function SignIn() {
         </Box>
       </Box>
 
-     
       <Box
         sx={{
           width: '100%',
@@ -334,3 +408,5 @@ export default function SignIn() {
     </Container>
   );
 }
+
+

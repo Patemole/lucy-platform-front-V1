@@ -8,6 +8,7 @@ import ScheduleMeeting from './routes/Schedule_meeting';
 
 import Dashboard_teacher_template from './routes/Dashboard_teacher_template';
 import Dashboard_eleve_template from './routes/Dashboard_eleve_template';
+import Dashboard_academic_advisor_template from './routes/Dashboard_academic_advisor_template';
 import Analytics_eleve_template from './routes/analytics_eleve_template';
 import LearningStyleSurveyTeacher from './routes/learningStyleSurvey_teacher';
 import SignIn from './routes/signIn';
@@ -70,6 +71,8 @@ const App: React.FC = () => {
 
                         <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
                         <Route path="/dashboard/analytics" element={<Analytics_eleve_template />} />
+
+                        <Route path="/dashboard/academic-advisor" element={<Dashboard_academic_advisor_template />} />
                         
                         <Route path="/schedule-meeting" element={<ScheduleMeeting />} />
                         <Route path="/" element={<Chat_eleve />} />
