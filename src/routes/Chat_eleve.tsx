@@ -129,6 +129,7 @@ const Chat_eleve: React.FC = () => {
         chatSessionId: chatSessionId,
         courseId: courseId,
         username: username,
+        university: "3"
       })) {
         console.log("Packet bunch:", packetBunch);
         for (const packet of packetBunch) {

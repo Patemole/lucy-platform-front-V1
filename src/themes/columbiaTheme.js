@@ -12,8 +12,6 @@ const customTheme = createTheme({
       primary: '#100F32', // Couleur du texte par défaut
     },
   },
-
-
   components: {
     MuiTypography: {
       styleOverrides: {
@@ -43,8 +41,6 @@ const customTheme = createTheme({
       },
     },
   },
-
-  
   logo: '/logos/upenn_logo.png', // Chemin vers le logo de UPenn
   university: 'upenn', // Champ supplémentaire pour l'université
 });
