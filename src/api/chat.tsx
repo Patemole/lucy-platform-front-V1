@@ -45,6 +45,7 @@ export interface SendMessageRequest {
     chatSessionId: string;
     courseId: string;
     username: string;
+    university: string
 }
 
 // fonction dépréciée à enlever
@@ -53,6 +54,7 @@ export async function* sendMessage({
     chatSessionId,
     courseId,
     username
+   
 }: SendMessageRequest) {
     console.log("SENDING MESSAGE");
     const sendMessageResponse = await fetch(`${apiUrlPrefix}/chat/send_message`, {
@@ -83,7 +85,9 @@ export async function* sendMessageSocraticLangGraph({
     message,
     chatSessionId,
     courseId,
-    username
+    username,
+    university
+
 }: SendMessageRequest) {
     console.log("SENDING MESSAGE");
     const sendMessageResponse = await fetch(`${apiUrlPrefix}/chat/send_message_socratic_langgraph`, {
@@ -95,7 +99,8 @@ export async function* sendMessageSocraticLangGraph({
             course_id: courseId,
             username: username,
             message: message,
-            chat_id: chatSessionId
+            chat_id: chatSessionId,
+            university: university
         }),
     });
     if (!sendMessageResponse.ok) {
