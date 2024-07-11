@@ -34,6 +34,7 @@
     "start:upenn": "PORT=3001 react-scripts start",
     "start:harvard": "PORT=3002 react-scripts start",
     "start:usyd": "PORT=3003 react-scripts start",
+    "start:columbia": "PORT=3004 react-scripts start",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

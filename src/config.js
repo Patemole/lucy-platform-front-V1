@@ -31,7 +31,9 @@ const getServerUrl = () => {
     if (process.env.REACT_APP_NODE_ENV !== 'production') {
         return 'http://localhost:5001'; // URL pour le développement
     } else {
-        return 'https://lucy-platform-back-ed6ea84d8a6a.herokuapp.com'; // URL pour la production
+        return 'http://lucy-dev.eu-west-3.elasticbeanstalk.com'; // URL pour la production
+        
+        
     }
 };
 

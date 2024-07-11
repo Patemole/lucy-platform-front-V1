@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, KeyboardEvent, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ThemeProvider, TextField, IconButton, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Menu, MenuItem, Avatar, Divider } from '@mui/material';
@@ -213,11 +214,13 @@ const Dashboard_eleve_template: React.FC = () => {
       const courseId = localStorage.getItem('course_id') || 'default_course_id';
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const username = user.name || 'default_user';
+      const university = localStorage.getItem('university') || 'default_university';
 
       console.log("Retrieved from localStorage:", {
         chatSessionId,
         courseId,
         username,
+        university,
       });
 
       const lastMessageIndex = messageHistory.length - 1;
@@ -228,6 +231,8 @@ const Dashboard_eleve_template: React.FC = () => {
         chatSessionId: chatSessionId,
         courseId: courseId,
         username: username,
+        university: university
+        
       })) {
         console.log("Received a bunch of response packets:", packetBunch);
 
@@ -645,4 +650,9 @@ const Dashboard_eleve_template: React.FC = () => {
 };
 
 export default Dashboard_eleve_template;
+
+
+
+
+
 
