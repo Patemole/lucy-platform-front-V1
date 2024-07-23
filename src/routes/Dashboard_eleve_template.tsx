@@ -214,6 +214,7 @@ const Dashboard_eleve_template: React.FC = () => {
       const courseId = localStorage.getItem('course_id') || 'default_course_id';
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const username = user.name || 'default_user';
+      const uid = user.id || 'default_uid'
       const university = localStorage.getItem('university') || 'default_university';
 
       console.log("Retrieved from localStorage:", {
@@ -221,6 +222,7 @@ const Dashboard_eleve_template: React.FC = () => {
         courseId,
         username,
         university,
+        uid,
       });
 
       const lastMessageIndex = messageHistory.length - 1;
@@ -281,7 +283,9 @@ const Dashboard_eleve_template: React.FC = () => {
         chatSessionId: chatSessionId,
         courseId: courseId,
         username: "Lucy",
-        type: 'ai'
+        type: 'ai',
+        uid: uid,
+        input_message: inputValue,
       };
 
       console.log("Message AI to be saved:", Message_AI_to_save);

@@ -121,12 +121,16 @@ export const saveMessageAIToBackend = async ({
     courseId,
     username,
     type,
+    uid,
+    input_message,
 }: {
     message: string;
     chatSessionId: string;
     courseId: string;
     username: string;
     type: string;
+    uid: string,
+    input_message: string
 }) => {
     try {
         const response = await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
@@ -140,6 +144,8 @@ export const saveMessageAIToBackend = async ({
                 courseId,
                 username,
                 type,
+                uid,
+                input_message,
             }),
         });
 
