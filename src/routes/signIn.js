@@ -17,6 +17,7 @@ import { doc, getDoc, updateDoc, arrayUnion, setDoc, serverTimestamp } from "fir
 import './signUp.css';
 import lucyLogo from '../logo_lucy.png';
 import { v4 as uuidv4 } from 'uuid';
+import config from '../config';
 
 const provider = new GoogleAuthProvider();
 
@@ -28,11 +29,15 @@ export default function SignIn() {
   const { course_id } = useParams();
   const [errors, setErrors] = React.useState({});
 
+  /*
   const getSubdomain = () => {
     const hostname = window.location.hostname;
     const subdomain = hostname.split('.')[0];
     return subdomain;
   };
+  */
+  
+  
 
   const generateChatId = () => {
     let chatId = uuidv4(); // Generate a unique chat ID
@@ -40,7 +45,8 @@ export default function SignIn() {
   };
 
   const checkLocalStorage = (user, role, name, lastCourseId, lastChatId) => {
-    const subdomain = getSubdomain();
+    //const subdomain = getSubdomain();
+    const subdomain = config.subdomain
     localStorage.setItem('isAuth', 'true');
     localStorage.setItem('user', JSON.stringify({ id: user.uid, name, email: user.email, role }));
     localStorage.setItem('course_id', lastCourseId);
@@ -57,7 +63,8 @@ export default function SignIn() {
   };
 
   const redirectBasedOnRole = async (role, userName, uid, university) => {
-    const subdomain = getSubdomain();
+    //const subdomain = getSubdomain();
+    const subdomain = config.subdomain
     console.log('Redirect based on role:', { role, userName, uid, university, subdomain });
     if (subdomain !== university) {
       setErrors({ university: `You need to log in to the ${university} portal` });
@@ -165,7 +172,7 @@ export default function SignIn() {
 
               localStorage.setItem('course_id', course_id);
               localStorage.setItem('chat_id', newChatId);
-              localStorage.setItem('university', getSubdomain());
+              localStorage.setItem('university', config.subdomain);
               console.log('Stored in localStorage:', {
                 isAuth: localStorage.getItem('isAuth'),
                 user: localStorage.getItem('user'),
@@ -233,7 +240,7 @@ export default function SignIn() {
 
             localStorage.setItem('course_id', course_id);
             localStorage.setItem('chat_id', newChatId);
-            localStorage.setItem('university', getSubdomain());
+            localStorage.setItem('university', config.subdomain);
             console.log('Stored in localStorage:', {
               isAuth: localStorage.getItem('isAuth'),
               user: localStorage.getItem('user'),

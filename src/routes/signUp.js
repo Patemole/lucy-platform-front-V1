@@ -22,6 +22,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { useAuth } from '../auth/hooks/useAuth';
 import lucyLogo from '../logo_lucy.png';
 import './signUp.css';
+import config from '../config';
 
 const provider = new GoogleAuthProvider();
 
@@ -36,11 +37,13 @@ export default function SignUp() {
   const [errors, setErrors] = React.useState({});
   const [open, setOpen] = React.useState(false);
 
+  /*
   const getSubdomain = () => {
     const hostname = window.location.hostname;
     const subdomain = hostname.split('.')[0];
     return subdomain;
   };
+  */
 
   const courseId = location.pathname.split('/sign-up/')[1] || '';
 
@@ -121,7 +124,8 @@ export default function SignUp() {
         });
 
         // Store the subdomain in localStorage
-        const subdomain = getSubdomain();
+        //const subdomain = getSubdomain();
+        const subdomain = config.subdomain
         localStorage.setItem('university', subdomain);
 
         const onboardingUrl = courseId ? `/onboarding/learningStyleSurvey/${courseId}` : '/onboarding/choose-role';
@@ -161,7 +165,8 @@ export default function SignUp() {
         });
 
         // Store the subdomain in localStorage
-        const subdomain = getSubdomain();
+        //const subdomain = getSubdomain();
+        const subdomain = config.subdomain
         localStorage.setItem('university', subdomain);
 
         const onboardingUrl = courseId ? `/onboarding/learningStyleSurvey/${courseId}` : '/onboarding/choose-role';
