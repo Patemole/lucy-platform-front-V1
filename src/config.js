@@ -26,6 +26,7 @@ const getSubdomain = () => {
     return subdomain;
 };
 
+/*
 // Détermine l'URL du serveur en fonction de l'environnement
 const getServerUrl = () => {
     if (process.env.REACT_APP_NODE_ENV !== 'production') {
@@ -36,6 +37,26 @@ const getServerUrl = () => {
         
     }
 };
+*/
+
+// Détermine l'URL du serveur en fonction de l'environnement
+const getServerUrl = () => {
+    const subdomain = getSubdomain();
+    
+    if (subdomain === 'dev') {
+        return 'http://localhost:5001'; // URL pour le développement
+
+    } else if (subdomain === 'preprod') {
+        return 'https://3anuaekhsu.eu-west-3.awsapprunner.com'; // URL pour la pré-production
+
+    } else if (subdomain === 'production') {
+        return 'https://prod-backend.example.com'; // URL pour la production (A MODIFIER)
+
+    } else {
+        throw new Error(`Unknown environment: ${subdomain}`);
+    }
+};
+
 
 // Configuration de l'application
 const config = {
