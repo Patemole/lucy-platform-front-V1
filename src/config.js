@@ -44,6 +44,7 @@ const getServerUrl = () => {
 
 //NOUVELLE VERSION QUI RÉCUPÈRE LE NOM DE L'ÉCOLE QUE L'ON SOIT EN ENVIRONNEMENT DE PROD OU PAS (DEV.UPENN... ETC)
 // Récupère le sous-domaine spécifique de l'URL actuelle
+/*
 const getSubdomain = () => {
     const hostname = window.location.hostname; // ex: dev.upenn.my-lucy.com ou upenn.my-lucy.com
     const subdomainParts = hostname.split('.');
@@ -58,6 +59,27 @@ const getSubdomain = () => {
         throw new Error('Invalid subdomain structure');
     }
 };
+*/
+
+const getSubdomain = () => {
+    const hostname = window.location.hostname; // ex: dev.upenn.my-lucy.com ou upenn.my-lucy.com
+    const subdomainParts = hostname.split('.');
+
+    // Si le hostname contient au moins trois parties, retourne la deuxième partie
+    // Si le hostname contient exactement deux parties, retourne la première partie
+    if (subdomainParts.length > 2) {
+        return subdomainParts.slice(0, -2).join('.').split('.').pop();
+        
+    } else if (subdomainParts.length === 2) {
+        return subdomainParts[0];
+
+    } else {
+        return 'default'; // Retourne une valeur par défaut
+    }
+};
+
+
+
 
 
 // Détermine l'URL du serveur en fonction de l'environnement

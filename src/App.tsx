@@ -1,4 +1,4 @@
-//nouveau test
+(//nouveau test
 import React, { useMemo, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -30,7 +30,7 @@ const App: React.FC = () => {
     const hostname = window.location.hostname;
     const subdomain = hostname.split('.')[0]; // Supposons que le format est subdomain.localhost
     */
-    const subdomain = config.subdomain;
+    const subdomain = config.subdomain || 'default';
 
 
     const theme = useMemo(() => getTheme(subdomain), [subdomain]);
@@ -102,3 +102,4 @@ const App: React.FC = () => {
 
 export default App;
 
+)
