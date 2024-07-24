@@ -1,4 +1,4 @@
-(//nouveau test
+//nouveau test
 import React, { useMemo, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -102,4 +102,3 @@ const App: React.FC = () => {
 
 export default App;
 
-)
