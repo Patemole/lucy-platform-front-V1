@@ -90,10 +90,10 @@ const getServerUrl = () => {
         return 'http://localhost:5001'; // URL pour le développement
 
     } else if (env === 'preprod') {
-        return 'https://e7ebvj3mt6.eu-west-3.awsapprunner.com'; // URL pour la pré-production
+        return 'https://2bhmhbizbn.us-east-1.awsapprunner.com'; // URL pour la pré-production
 
     } else if (env === 'production') {
-        return 'https://yikk7ek2eq.eu-west-3.awsapprunner.com'; // URL pour la production (A MODIFIER)
+        return 'https://zptxekymkf.us-east-1.awsapprunner.com'; // URL pour la production (A MODIFIER)
 
     } else {
         throw new Error(`Unknown environment: ${env}`);
