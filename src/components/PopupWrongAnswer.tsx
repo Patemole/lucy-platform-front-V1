@@ -1,9 +1,9 @@
-//Ajout de la logique appelle de l'endpoint quand on clique sur submit et qu'il y a du texte dans le placholder 
+//Ajout de la fonction pour appeler l'endpoint dupuis le backend dans api/feedback_wrong_answer
 import React, { useState } from 'react';
 import { Modal, Box, Typography, TextField, Button, IconButton, Backdrop } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
-import { submitFeedbackAnswer } from '../api/feedback_wrong_answer';
+import { submitFeedbackWrongAnswer } from '../api/feedback_wrong_answer';
 
 interface PopupFeedbackProps {
   open: boolean;
@@ -12,7 +12,7 @@ interface PopupFeedbackProps {
   onSubmit: (feedback: string) => void;
 }
 
-const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFilter, onSubmit }) => {
+const PopupWrongAnswer: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFilter, onSubmit }) => {
   const theme = useTheme();
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState(false);
@@ -23,7 +23,7 @@ const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFi
       return;
     }
     onSubmit(feedback);
-    await submitFeedbackAnswer(feedback);
+    await submitFeedbackWrongAnswer(feedback);
     setFeedback('');
     setError(false);
     onClose();
@@ -55,14 +55,14 @@ const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFi
       >
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h5" component="h2">
-            Coming soon!
+            Wrong Answer?
           </Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
         </Box>
         <Typography sx={{ mt: 2, fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary }}>
-          {selectedFilter} will soon be available. Give us some feedback if you have any idea
+          Give us some feedback if you have any trouble 
         </Typography>
         <TextField
           fullWidth
@@ -83,7 +83,7 @@ const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFi
         />
         {error && (
           <Typography color="error" sx={{ mt: 1 }}>
-            Please enter some feedback before submitting.
+            You didn't enter any feedback
           </Typography>
         )}
         <Button onClick={handleSubmit} sx={{ mt: 2 }} variant="contained" color="primary">
@@ -94,10 +94,7 @@ const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFi
   );
 };
 
-export default PopupFeedback;
-
-
-
+export default PopupWrongAnswer;
 
 
 /*
@@ -113,7 +110,7 @@ interface PopupFeedbackProps {
   onSubmit: (feedback: string) => void;
 }
 
-const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFilter, onSubmit }) => {
+const PopupWrongAnswer: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFilter, onSubmit }) => {
   const theme = useTheme();
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState(false);
@@ -125,6 +122,8 @@ const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFi
     }
     onSubmit(feedback);
     setFeedback('');
+    setError(false);
+    onClose();
   };
 
   return (
@@ -153,19 +152,19 @@ const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFi
       >
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h5" component="h2">
-            Coming soon!
+            Wrong Answer?
           </Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
         </Box>
         <Typography sx={{ mt: 2, fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary }}>
-          {selectedFilter} will soon be available. Give us some feedback if you have any idea
+          Give us some feedback if you have any trouble 
         </Typography>
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Enter your ideas here..."
+          placeholder="Enter your feedback here..."
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
           multiline
@@ -181,7 +180,7 @@ const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFi
         />
         {error && (
           <Typography color="error" sx={{ mt: 1 }}>
-            Please enter some feedback before submitting.
+            You didn't enter any feedback
           </Typography>
         )}
         <Button onClick={handleSubmit} sx={{ mt: 2 }} variant="contained" color="primary">
@@ -192,5 +191,5 @@ const PopupFeedback: React.FC<PopupFeedbackProps> = ({ open, onClose, selectedFi
   );
 };
 
-export default PopupFeedback;
+export default PopupWrongAnswer;
 */

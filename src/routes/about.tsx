@@ -1,4 +1,4 @@
-
+//Adding logic to call function for endpoint on submit button
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThemeProvider, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Avatar, Divider, IconButton, Menu, MenuItem, TextField } from '@mui/material';
@@ -12,6 +12,7 @@ import { useTheme } from '@mui/material/styles';
 import logo from '../logo_lucy.png';
 import logo_greg from '../photo_greg.png';
 import { useAuth } from '../auth/hooks/useAuth';
+import { submitFeedbackAnswer } from '../api/feedback_wrong_answer';
 
 const drawerWidth = 240;
 
@@ -52,13 +53,12 @@ const About: React.FC = () => {
     navigate(`/dashboard/student/${uid}`);
   };
 
-  const handleSubmitFeedback = () => {
+  const handleSubmitFeedback = async () => {
     if (feedback.trim() === '') {
       setError(true);
       return;
     }
-    // Handle feedback submission
-    console.log("Feedback submitted:", feedback);
+    await submitFeedbackAnswer(feedback);
     setFeedback('');
     setError(false);
   };
@@ -99,12 +99,6 @@ const About: React.FC = () => {
               </ListItemIcon>
               <ListItemText primary="About" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
             </ListItem>
-            {/*
-            <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
-  */}
-            {/*
-            Here you can add more items if needed
-            */}
           </List>
         </Drawer>
 
@@ -184,7 +178,9 @@ export default About;
 
 
 
-/*import React, { useState } from 'react';
+
+/*
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThemeProvider, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Avatar, Divider, IconButton, Menu, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -316,13 +312,13 @@ const About: React.FC = () => {
 };
 
 export default About;
-
 */
 
 
 
 
-/*import React, { useState } from 'react';
+/*
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThemeProvider, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Menu, MenuItem, Avatar, Divider, IconButton } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';

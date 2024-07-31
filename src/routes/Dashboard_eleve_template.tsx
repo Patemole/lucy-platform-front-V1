@@ -31,7 +31,8 @@ import PopupFeedback from '../components/PopupFeedback';
 
 const drawerWidth = 240;
 
-const ALLOWED_COURSE_IDS = ["Connf4P2TpKXXGooaQD5", "tyPR1RAulPfqLLfNgIqF"];
+//const ALLOWED_COURSE_IDS = ["Connf4P2TpKXXGooaQD5", "tyPR1RAulPfqLLfNgIqF"];
+const ALLOWED_COURSE_IDS = ["Connf4P2TpKXXGooaQD5", "tyPR1RAulPfqLLfNgIqF", "Q1SjXBe30FyX6GxvJVIG"];
 
 const Dashboard_eleve_template: React.FC = () => {
   const theme = useTheme();
@@ -340,7 +341,7 @@ const Dashboard_eleve_template: React.FC = () => {
 
 
 
-  
+
   // POUR CRÉER UNE NOUVELLE CONVERSATION
   const handleNewConversation = async () => {
     const newChatId = uuidv4();
