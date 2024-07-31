@@ -338,6 +338,9 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
 
+
+
+  
   // POUR CRÉER UNE NOUVELLE CONVERSATION
   const handleNewConversation = async () => {
     const newChatId = uuidv4();
@@ -405,6 +408,9 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
 
+
+
+
   // POUR RÉCUPÉRER LES MESSAGES D'UNE CONVERSATION ET L'AFFICHER
   const handleConversationClick = async (chat_id: string) => {
     // On met le chat_id de la conversation dans le localStorage
@@ -424,6 +430,8 @@ const Dashboard_eleve_template: React.FC = () => {
       });
     }
   };
+
+
 
   // POUR CHANGER DE PAGE QUAND ON CLIQUE SUR TA'S HELP
   const handleMeetingClick = () => {
