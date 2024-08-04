@@ -3,8 +3,6 @@ import React, { useMemo, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import getTheme from './themes';
-import Chat_eleve from './routes/Chat_eleve';
-import ScheduleMeeting from './routes/Schedule_meeting';
 
 import Dashboard_teacher_template from './routes/Dashboard_teacher_template';
 import Dashboard_eleve_template from './routes/Dashboard_eleve_template';
@@ -45,6 +43,19 @@ const App: React.FC = () => {
             case 'harvard':
             case 'usyd':
             case 'columbia':
+            case 'mit':
+            case 'lasell':
+            case 'oackland':
+            case 'arizona':
+            case 'uci':
+            case 'ucdavis':
+            case 'cornell':
+            case 'berkeleycollege':
+            case 'brown':
+            case 'stanford':
+            case 'berkeley':
+            case 'umiami':
+                
                 return (
                     <>
                         <Route path={`/auth/sign-up`} element={<SignUp />} />
@@ -55,7 +66,7 @@ const App: React.FC = () => {
                     </>
                 );
             default:
-                return <Route path="*" element={<Navigate to="/sign-in/admin" />} />;
+                return <Route path="*" element={<Navigate to="/notfound" />} />;
         }
     };
 
@@ -65,6 +76,18 @@ const App: React.FC = () => {
             case 'harvard':
             case 'usyd':
             case 'columbia':
+            case 'mit':
+            case 'lasell':
+            case 'oackland':
+            case 'arizona':
+            case 'uci':
+            case 'ucdavis':
+            case 'cornell':
+            case 'berkeleycollege':
+            case 'brown':
+            case 'stanford':
+            case 'berkeley':
+            case 'umiami':
                 return (
                     <>
                         <Route path="/onboarding/choose-role" element={<ChooseRole />} />
@@ -83,17 +106,17 @@ const App: React.FC = () => {
 
                         <Route path="/chat/academic-advisor/:uid" element={<Chat_academic_advisor />} />
                         
-                        <Route path="/schedule-meeting" element={<ScheduleMeeting />} />
+                        
 
                         <Route path="/contact/academic_advisor" element={<AcademicAdvisorContact />} />
 
                         <Route path="/about" element={<About />} />
 
-                        <Route path="/" element={<Chat_eleve />} />
+                       
                     </>
                 );
             default:
-                return <Route path="*" element={<Navigate to="/sign-in/admin" />} />;
+                return <Route path="*" element={<Navigate to="/notfound" />} />;
         }
     };
 

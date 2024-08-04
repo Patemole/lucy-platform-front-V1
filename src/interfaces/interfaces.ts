@@ -72,3 +72,17 @@ export interface AnswerPiecePacket {
 export interface StreamingError {
     error: string;
 }
+
+/*
+export type PopupSpec = {
+    type: 'success' | 'error';
+    message: string;
+  };
+*/
+
+// Define or update PopupSpec interface
+export interface PopupSpec {
+    type: "success" | "error";
+    message: string;
+  }
+  

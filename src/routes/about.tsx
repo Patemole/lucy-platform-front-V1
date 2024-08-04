@@ -1,3 +1,398 @@
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ThemeProvider, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Avatar, Divider, IconButton, Menu, MenuItem, TextField, Snackbar, Alert } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import MapsUgcRoundedIcon from '@mui/icons-material/MapsUgcRounded';
+import HomeIcon from '@mui/icons-material/Home';
+import InsightsIcon from '@mui/icons-material/Insights';
+import InfoIcon from '@mui/icons-material/Info';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useTheme } from '@mui/material/styles';
+import logo from '../logo_lucy.png';
+import logo_greg from '../photo_greg.png';
+import { useAuth } from '../auth/hooks/useAuth';
+import { submitFeedbackAnswer } from '../api/feedback_wrong_answer';
+
+const drawerWidth = 240;
+
+const About: React.FC = () => {
+  const theme = useTheme();
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { logout } = useAuth();
+  const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [feedback, setFeedback] = useState('');
+  const [error, setError] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setProfileMenuAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth/sign-in');
+  };
+
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
+  const handleMeetingClick = () => {
+    navigate('/contact/academic_advisor');
+  };
+
+  const handleHomeClick = () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const uid = user.id;
+    navigate(`/dashboard/student/${uid}`);
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (feedback.trim() === '') {
+      setError(true);
+      return;
+    }
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const uid = user.id;
+
+    const feedbackData = {
+      userId: uid,
+      feedback: feedback,
+      courseId: location.pathname === '/about' ? 'about' : 'default_course_id',
+    };
+
+    await submitFeedbackAnswer(feedbackData);
+    setFeedback('');
+    setError(false);
+    setSnackbarOpen(true);
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <div className="flex h-screen bg-gray-100">
+        <Drawer
+          variant="persistent"
+          anchor="left"
+          open={drawerOpen}
+          PaperProps={{ style: { width: drawerWidth, borderRadius: '0 0 0 0' } }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
+            <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
+              <MenuIcon />
+            </IconButton>
+            <IconButton sx={{ color: theme.palette.primary.main }}>
+              <MapsUgcRoundedIcon />
+            </IconButton>
+          </Box>
+          <List style={{ padding: '0 15px' }}>
+            <ListItem button onClick={handleHomeClick} style={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
+                <HomeIcon />
+              </ListItemIcon>
+              <ListItemText primary="Home" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/dashboard/analytics')} style={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
+                <InsightsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Analytics" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/about')} style={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
+                <InfoIcon />
+              </ListItemIcon>
+              <ListItemText primary="About" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+            </ListItem>
+          </List>
+        </Drawer>
+
+        <div className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : 'ml-0'}`}>
+          <div className="relative p-4 bg-white flex items-center justify-between border-b border-gray-100">
+            {!drawerOpen && (
+              <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Typography variant="h6" style={{ textAlign: 'left' }}>About</Typography>
+            <div style={{ flexGrow: 1 }}></div>
+            <img src={logo_greg} alt="Logo face" className="h-10 w-auto" style={{ marginRight: '10px', cursor: 'pointer' }} onClick={handleProfileMenuClick} />
+            <Menu
+              anchorEl={profileMenuAnchorEl}
+              open={Boolean(profileMenuAnchorEl)}
+              onClose={handleProfileMenuClose}
+              PaperProps={{ style: { borderRadius: '12px' } }}
+            >
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <LogoutIcon fontSize="small" style={{ color: '#F04261' }} />
+                </ListItemIcon>
+                <ListItemText primary={<Typography style={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>Log-out</Typography>} />
+              </MenuItem>
+            </Menu>
+
+            {location.pathname === "/about" && (
+              <Button variant="outlined" color="primary" onClick={handleMeetingClick}>
+                Contact my Academic Advisor
+              </Button>
+            )}
+          </div>
+          <div className="flex-grow p-4 bg-white">
+            <Typography variant="subtitle1" gutterBottom>
+              We are experimenting with Lucy, and all your feedback is welcome:
+            </Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter your feedback here..."
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              multiline
+              rows={4}
+              sx={{ mt: 2, borderRadius: '12px' }}
+              InputProps={{
+                style: {
+                  fontWeight: '500',
+                  fontSize: '0.875rem',
+                  color: theme.palette.text.primary,
+                }
+              }}
+            />
+            {error && (
+              <Typography color="error" sx={{ mt: 1 }}>
+                Please enter some feedback before submitting.
+              </Typography>
+            )}
+            <Button onClick={handleSubmitFeedback} sx={{ mt: 2 }} variant="contained" color="primary">
+              Submit
+            </Button>
+          </div>
+        </div>
+      </div>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          Feedback submitted successfully. Thank you!
+        </Alert>
+      </Snackbar>
+    </ThemeProvider>
+  );
+};
+
+export default About;
+
+
+
+
+
+
+/*
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ThemeProvider, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Avatar, Divider, IconButton, Menu, MenuItem, TextField, Snackbar, Alert } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import MapsUgcRoundedIcon from '@mui/icons-material/MapsUgcRounded';
+import HomeIcon from '@mui/icons-material/Home';
+import InsightsIcon from '@mui/icons-material/Insights';
+import InfoIcon from '@mui/icons-material/Info';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useTheme } from '@mui/material/styles';
+import logo from '../logo_lucy.png';
+import logo_greg from '../photo_greg.png';
+import { useAuth } from '../auth/hooks/useAuth';
+import { submitFeedbackAnswer } from '../api/feedback_wrong_answer';
+
+const drawerWidth = 240;
+
+const About: React.FC = () => {
+  const theme = useTheme();
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const courseId = localStorage.getItem('course_id');
+  const [feedback, setFeedback] = useState('');
+  const [error, setError] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setProfileMenuAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth/sign-in');
+  };
+
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
+  const handleMeetingClick = () => {
+    navigate('/contact/academic_advisor');
+  };
+
+  const handleHomeClick = () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const uid = user.id;
+    navigate(`/dashboard/student/${uid}`);
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (feedback.trim() === '') {
+      setError(true);
+      return;
+    }
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const uid = user.id;
+
+    const feedbackData = {
+      userId: uid,
+      feedback: feedback,
+      courseId: courseId || 'default_course_id',
+    };
+
+    await submitFeedbackAnswer(feedbackData);
+    setFeedback('');
+    setError(false);
+    setSnackbarOpen(true);
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <div className="flex h-screen bg-gray-100">
+        <Drawer
+          variant="persistent"
+          anchor="left"
+          open={drawerOpen}
+          PaperProps={{ style: { width: drawerWidth, borderRadius: '0 0 0 0' } }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
+            <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
+              <MenuIcon />
+            </IconButton>
+            <IconButton sx={{ color: theme.palette.primary.main }}>
+              <MapsUgcRoundedIcon />
+            </IconButton>
+          </Box>
+          <List style={{ padding: '0 15px' }}>
+            <ListItem button onClick={handleHomeClick} style={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
+                <HomeIcon />
+              </ListItemIcon>
+              <ListItemText primary="Home" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/dashboard/analytics')} style={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
+                <InsightsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Analytics" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/about')} style={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
+                <InfoIcon />
+              </ListItemIcon>
+              <ListItemText primary="About" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+            </ListItem>
+          </List>
+        </Drawer>
+
+        <div className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : 'ml-0'}`}>
+          <div className="relative p-4 bg-white flex items-center justify-between border-b border-gray-100">
+            {!drawerOpen && (
+              <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Typography variant="h6" style={{ textAlign: 'left' }}>About</Typography>
+            <div style={{ flexGrow: 1 }}></div>
+            <img src={logo_greg} alt="Logo face" className="h-10 w-auto" style={{ marginRight: '10px', cursor: 'pointer' }} onClick={handleProfileMenuClick} />
+            <Menu
+              anchorEl={profileMenuAnchorEl}
+              open={Boolean(profileMenuAnchorEl)}
+              onClose={handleProfileMenuClose}
+              PaperProps={{ style: { borderRadius: '12px' } }}
+            >
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <LogoutIcon fontSize="small" style={{ color: '#F04261' }} />
+                </ListItemIcon>
+                <ListItemText primary={<Typography style={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>Log-out</Typography>} />
+              </MenuItem>
+            </Menu>
+
+            {courseId === "6f9b98d4-7f92-4f7b-abe5-71c2c634edb2" && (
+              <Button variant="outlined" color="primary" onClick={handleMeetingClick}>
+                Contact my Academic Advisor
+              </Button>
+            )}
+          </div>
+          <div className="flex-grow p-4 bg-white">
+            <Typography variant="subtitle1" gutterBottom>
+              We are experimenting with Lucy, and all your feedback is welcome:
+            </Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter your feedback here..."
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              multiline
+              rows={4}
+              sx={{ mt: 2, borderRadius: '12px' }}
+              InputProps={{
+                style: {
+                  fontWeight: '500',
+                  fontSize: '0.875rem',
+                  color: theme.palette.text.primary,
+                }
+              }}
+            />
+            {error && (
+              <Typography color="error" sx={{ mt: 1 }}>
+                Please enter some feedback before submitting.
+              </Typography>
+            )}
+            <Button onClick={handleSubmitFeedback} sx={{ mt: 2 }} variant="contained" color="primary">
+              Submit
+            </Button>
+          </div>
+        </div>
+      </div>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          Feedback submitted successfully. Thank you!
+        </Alert>
+      </Snackbar>
+    </ThemeProvider>
+  );
+};
+
+export default About;
+*/
+
+
+
+
+
+
+/*
 //Adding logic to call function for endpoint on submit button
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -169,7 +564,7 @@ const About: React.FC = () => {
 };
 
 export default About;
-
+*/
 
 
 
