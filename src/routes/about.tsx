@@ -9,7 +9,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useTheme } from '@mui/material/styles';
 import logo from '../logo_lucy.png';
-import logo_greg from '../photo_greg.png';
+import logo_greg from '../student_new_face_contour2.png';
 import { useAuth } from '../auth/hooks/useAuth';
 import { submitFeedbackAnswer } from '../api/feedback_wrong_answer';
 

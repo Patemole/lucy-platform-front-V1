@@ -8,7 +8,7 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import InfoIcon from '@mui/icons-material/Info';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useTheme } from '@mui/material/styles';
-import logo_greg from '../photo_greg.png';
+import logo_greg from '../student_new_face_contour2.png';
 import { useAuth } from '../auth/hooks/useAuth';
 
 const drawerWidth = 240;

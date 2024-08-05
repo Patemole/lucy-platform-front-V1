@@ -8,7 +8,7 @@ import { FeedbackType } from "./types";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { SourceIcon } from "./icons/SourceIcon";
 import { ValidSources } from "./sources";
-import lucy_face_logo from '../lucy_face.png';
+import lucy_face_logo from '../lucy_new_face_contour2.png';
 
 export const Hoverable: React.FC<{
   children: JSX.Element;
