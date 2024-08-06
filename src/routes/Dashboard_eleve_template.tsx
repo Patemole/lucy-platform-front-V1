@@ -30,6 +30,8 @@ import { v4 as uuidv4 } from 'uuid';
 import PopupWrongAnswer from '../components/PopupWrongAnswer';
 import PopupFeedback from '../components/PopupFeedback';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
+import { Certificate } from 'crypto';
+import certifiate_icon from '../certifiate.png';
 
 const drawerWidth = 240;
 const ALLOWED_COURSE_IDS = ["Connf4P2TpKXXGooaQD5", "tyPR1RAulPfqLLfNgIqF", "Q1SjXBe30FyX6GxvJVIG"];
@@ -686,9 +688,9 @@ const Dashboard_eleve_template: React.FC = () => {
                 <h1 className="text-4xl font-bold text-center mb-6 text-custom-blue">Your Assistant Lucy</h1>
                 
                 <div className="flex flex-col items-center space-y-4">
-                  <Button variant="contained" style={{ borderRadius: '5px' }} color="primary">Which class can I take for next semester?</Button>
-                  <Button variant="contained" style={{ borderRadius: '5px' }} color="primary">How many business models do you know?</Button>
-                  <Button variant="contained" style={{ borderRadius: '5px' }} color="primary" endIcon={<img src={icon_verify} alt="Verify Icon" style={{ width: '20px', height: '20px' }} />}>
+                  {/*<Button variant="contained" style={{ borderRadius: '5px' }} color="primary">Which class can I take for next semester?</Button>
+                  <Button variant="contained" style={{ borderRadius: '5px' }} color="primary">How many business models do you know?</Button>*/}
+                  <Button variant="contained" style={{ borderRadius: '5px' }} color="primary" endIcon={<img src={certifiate_icon} alt="Verify Icon" style={{ width: '20px', height: '20px' }} />}>
                     Based on verified data from {universityDomain}.edu
                   </Button>
                 </div>
