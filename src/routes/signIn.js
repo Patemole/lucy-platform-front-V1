@@ -99,6 +99,20 @@ const getErrorMessage = (subdomain) => {
   const universityNames = {
     upenn: 'Upenn',
     harvard: 'Harvard',
+    mit: 'MIT',
+    lasell: 'Lasell',
+    oackland: 'Oackland',
+    arizona: 'Arizona',
+    uci: 'Uci',
+    ucdavis: 'Ucdavis',
+    cornell: 'Cornell',
+    berkeleycollege: 'BerkeleyCollege',
+    brown: 'Brown',
+    stanford: 'Stanford',
+    berkeley: 'Berkeley',
+    umiami: 'Umiami',
+    usyd: 'Usyd',
+    columbia: 'Columbia'
     // Ajouter d'autres sous-domaines et leurs noms ici
   };
 

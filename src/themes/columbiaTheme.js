@@ -1,5 +1,37 @@
 import { createTheme } from '@mui/material/styles';
 
+const columbiaTheme = createTheme({
+  palette: {
+    primary: {
+      main: '#0033A0', // Couleur bleue de Columbia
+    },
+    secondary: {
+      main: '#C4D8E2', // Couleur secondaire de Columbia
+    },
+    button: {
+      background: '#D6EAF8', // Couleur de fond des boutons
+      text: '#0033A0', // Couleur du texte dans les boutons
+    },
+  },
+  typography: {
+    fontFamily: 'Roboto, Arial, sans-serif',
+  },
+  logo: '/logos/columbia_logo.png', // Chemin du logo spécifique à Columbia
+  university: 'columbia',
+  facultyOptions: [
+    'Columbia College',
+    'School of Engineering and Applied Science',
+    'School of General Studies',
+    'School of International and Public Affairs',
+  ],
+});
+
+export default columbiaTheme;
+
+
+/*
+import { createTheme } from '@mui/material/styles';
+
 const customTheme = createTheme({
   palette: {
     primary: {
@@ -11,6 +43,10 @@ const customTheme = createTheme({
     text: {
       primary: '#100F32', // Couleur du texte par défaut
     },
+    button: {
+      background: '#66B2A3', // Couleur de fond des boutons
+      text: '#005030', // Couleur du texte dans les boutons
+    }
   },
   components: {
     MuiTypography: {
@@ -46,3 +82,4 @@ const customTheme = createTheme({
 });
 
 export default customTheme;
+*/

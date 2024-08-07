@@ -1,5 +1,39 @@
 import { createTheme } from '@mui/material/styles';
 
+const upennTheme = createTheme({
+  palette: {
+    primary: {
+      main: '#011F5B', // Couleur bleue de Upenn
+    },
+    secondary: {
+      main: '#990000', // Couleur rouge de Upenn
+    },
+    button: {
+      background: '#D6EAF8', // Couleur de fond des boutons
+      text: '#011F5B', // Couleur du texte dans les boutons
+    },
+  },
+  typography: {
+    fontFamily: 'Roboto, Arial, sans-serif',
+  },
+  logo: '/logos/upenn_logo.png', // Chemin du logo spécifique à Upenn
+  university: 'upenn',
+  facultyOptions: [
+    'College of Arts and Sciences',
+    'Wharton School',
+    'School of Engineering and Applied Science',
+    'School of Nursing',
+  ],
+});
+
+export default upennTheme;
+
+
+
+
+/*
+import { createTheme } from '@mui/material/styles';
+
 const customTheme = createTheme({
   palette: {
     primary: {
@@ -11,6 +45,10 @@ const customTheme = createTheme({
     text: {
       primary: '#100F32', // Couleur du texte par défaut
     },
+    button: {
+      background: '#66B2A3', // Couleur de fond des boutons
+      text: '#005030', // Couleur du texte dans les boutons
+    }
   },
 
 
@@ -50,3 +88,4 @@ const customTheme = createTheme({
 });
 
 export default customTheme;
+*/

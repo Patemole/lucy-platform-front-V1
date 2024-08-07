@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ThemeProvider, TextField, Button, Typography, Box, Grid, CssBaseline, Avatar } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { TextField, Button, Typography, Box, Grid, CssBaseline, Avatar } from '@mui/material';
+import { ThemeProvider, useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import logo from '../logo_lucy.png';
@@ -71,7 +71,7 @@ const AcademicAdvisorContact: React.FC = () => {
             >
               Back to chat
             </Button>
-            <img src={logo_penn} alt="University Logo" style={{ height: 50, width: 'auto', marginRight: '35px' }} />
+            <img src={theme.logo} alt="University Logo" style={{ height: 50, width: 'auto', marginRight: '35px' }} />
           </Box>
           <Box sx={{ width: '80%', maxWidth: 400, textAlign: 'left', marginTop: '5%' }}>
             <Typography variant="h5" gutterBottom style={{ fontWeight: 'bold', textAlign: 'left' }}>

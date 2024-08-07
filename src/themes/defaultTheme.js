@@ -11,6 +11,10 @@ const defaultTheme = createTheme({
     text: {
       primary: '#100F32', // Couleur du texte par défaut
     },
+    button: {
+      background: '#66B2A3', // Couleur de fond des boutons
+      text: '#005030', // Couleur du texte dans les boutons
+    }
   },
 
   components: {

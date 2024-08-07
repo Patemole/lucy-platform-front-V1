@@ -3,6 +3,38 @@ import { createTheme } from '@mui/material/styles';
 const harvardTheme = createTheme({
   palette: {
     primary: {
+      main: '#A41034', // Couleur rouge de Harvard
+    },
+    secondary: {
+      main: '#FBBA00', // Couleur dorée de Harvard
+    },
+    button: {
+      background: '#F8D7DA', // Couleur de fond des boutons
+      text: '#A41034', // Couleur du texte dans les boutons
+    },
+  },
+  typography: {
+    fontFamily: 'Roboto, Arial, sans-serif',
+  },
+  logo: '/logos/harvard_logo.png', // Chemin du logo spécifique à Harvard
+  university: 'harvard',
+  facultyOptions: [
+    'Faculty of Arts and Sciences',
+    'Harvard Business School',
+    'Harvard Law School',
+    'Harvard Medical School',
+  ],
+});
+
+export default harvardTheme;
+
+
+/*
+import { createTheme } from '@mui/material/styles';
+
+const harvardTheme = createTheme({
+  palette: {
+    primary: {
       main: '#A51C30', // Couleur primaire de Harvard
     },
     secondary: {
@@ -11,6 +43,10 @@ const harvardTheme = createTheme({
     text: {
       primary: '#100F32', // Couleur du texte par défaut
     },
+    button: {
+      background: '#66B2A3', // Couleur de fond des boutons
+      text: '#005030', // Couleur du texte dans les boutons
+    }
   },
   components: {
     MuiTypography: {
@@ -46,3 +82,4 @@ const harvardTheme = createTheme({
 });
 
 export default harvardTheme;
+*/

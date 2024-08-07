@@ -573,9 +573,10 @@ const Dashboard_eleve_template: React.FC = () => {
                   sx={{
                     borderRadius: '8px',
                     margin: '5px 0',
-                    backgroundColor: activeChatId === conversation.chat_id ? '#EBE2FC' : 'transparent',
+                    backgroundColor: activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
                     '&:hover': {
-                      backgroundColor: '#F5F5F5',
+                     // backgroundColor: '#F5F5F5',
+                     backgroundColor: theme.palette.button.background
                     },
                   }}
                 >
@@ -690,7 +691,8 @@ const Dashboard_eleve_template: React.FC = () => {
                 <div className="flex flex-col items-center space-y-4">
                   {/*<Button variant="contained" style={{ borderRadius: '5px' }} color="primary">Which class can I take for next semester?</Button>
                   <Button variant="contained" style={{ borderRadius: '5px' }} color="primary">How many business models do you know?</Button>*/}
-                  <Button variant="contained" style={{ borderRadius: '5px' }} color="primary" endIcon={<img src={certifiate_icon} alt="Verify Icon" style={{ width: '20px', height: '20px' }} />}>
+                  <Button variant="contained" style={{ borderRadius: '5px', backgroundColor: theme.palette.button.background, color: theme.palette.button.text, }} endIcon={<img src={certifiate_icon} alt="Verify Icon" style={{ width: '20px', height: '20px' }} />}>
+                  
                     Based on verified data from {universityDomain}.edu
                   </Button>
                 </div>
