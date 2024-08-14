@@ -53,7 +53,7 @@ const App: React.FC = () => {
             case 'brown':
             case 'stanford':
             case 'berkeley':
-            case 'umiami':
+            case 'miami':
                 return (
                     <>
                         <Route path={`/auth/sign-up`} element={<SignUp />} />
@@ -85,7 +85,7 @@ const App: React.FC = () => {
             case 'brown':
             case 'stanford':
             case 'berkeley':
-            case 'umiami':
+            case 'miami':
                 return (
                     <>
                         <Route path="/onboarding/choose-role" element={<ChooseRole />} />
