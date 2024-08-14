@@ -51,7 +51,7 @@ const getTheme = (subdomain) => {
       return stanfordTheme;
     case 'berkeley':
       return berkeleyTheme;
-    case 'umiami':
+    case 'miami':
       return umiamiTheme;
     default:
       return defaultTheme; // Thème par défaut si nécessaire

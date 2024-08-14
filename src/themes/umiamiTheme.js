@@ -17,7 +17,7 @@ const umiamiTheme = createTheme({
     fontFamily: 'Roboto, Arial, sans-serif', // Police de caractère courante, ajustez selon vos besoins
   },
   logo: '/logos/umiami_logo.png', // Chemin du logo spécifique à Umiami
-  university: 'umiami', // Champ supplémentaire pour l'université
+  university: 'miami', // Champ supplémentaire pour l'université
   facultyOptions: [
     'College of Arts and Sciences',
     'School of Business',
