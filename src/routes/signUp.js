@@ -120,7 +120,7 @@ const getErrorMessage = (subdomain) => {
     brown: 'Brown',
     stanford: 'Stanford',
     berkeley: 'Berkeley',
-    umiami: 'Umiami',
+    miami: 'Miami',
     usyd: 'Usyd',
     columbia: 'Columbia'
 

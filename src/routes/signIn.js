@@ -82,7 +82,7 @@ const allowedDomains = {
     /^.+@my-lucy\.com$/i,
   ],
   umiami: [
-    /^.+@([a-zA-Z0-9._-]+\.)*umiami\.edu$/i,
+    /^.+@([a-zA-Z0-9._-]+\.)*miami\.edu$/i,
     /^.+@my-lucy\.com$/i,
   ],
   // Ajouter d'autres sous-domaines et leurs domaines autorisés ici
@@ -110,7 +110,7 @@ const getErrorMessage = (subdomain) => {
     brown: 'Brown',
     stanford: 'Stanford',
     berkeley: 'Berkeley',
-    umiami: 'Umiami',
+    miami: 'Miami',
     usyd: 'Usyd',
     columbia: 'Columbia'
     // Ajouter d'autres sous-domaines et leurs noms ici
