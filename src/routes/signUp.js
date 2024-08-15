@@ -83,7 +83,7 @@ const allowedDomains = {
     /^.+@([a-zA-Z0-9._-]+\.)*berkeley\.edu$/i,
     /^.+@my-lucy\.com$/i,
   ],
-  umiami: [
+  miami: [
     /^.+@([a-zA-Z0-9._-]+\.)*miami\.edu$/i,
     /^.+@my-lucy\.com$/i,
   ],
