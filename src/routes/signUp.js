@@ -32,7 +32,21 @@ const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(emai
 const allowedDomains = {
   upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
   harvard: [/^.+@([a-zA-Z0-9._-]+\.)*harvard\.edu$/i, /^.+@my-lucy\.com$/i],
-  // Add other domains as needed...
+  mit: [/^.+@([a-zA-Z0-9._-]+\.)*mit\.edu$/i, /^.+@my-lucy\.com$/i],
+  lasell: [/^.+@([a-zA-Z0-9._-]+\.)*lasell\.edu$/i, /^.+@my-lucy\.com$/i],
+  oackland: [/^.+@([a-zA-Z0-9._-]+\.)*oackland\.edu$/i, /^.+@my-lucy\.com$/i],
+  arizona: [/^.+@([a-zA-Z0-9._-]+\.)*arizona\.edu$/i, /^.+@my-lucy\.com$/i],
+  uci: [/^.+@([a-zA-Z0-9._-]+\.)*uci\.edu$/i, /^.+@my-lucy\.com$/i],
+  ucidavis: [/^.+@([a-zA-Z0-9._-]+\.)*ucidavis\.edu$/i, /^.+@my-lucy\.com$/i],
+  cornell: [/^.+@([a-zA-Z0-9._-]+\.)*cornell\.edu$/i, /^.+@my-lucy\.com$/i],
+  berkeleycollege: [/^.+@([a-zA-Z0-9._-]+\.)*berkeleycollege\.edu$/i, /^.+@my-lucy\.com$/i],
+  brown: [/^.+@([a-zA-Z0-9._-]+\.)*brown\.edu$/i, /^.+@my-lucy\.com$/i],
+  stanford: [/^.+@([a-zA-Z0-9._-]+\.)*stanford\.edu$/i, /^.+@my-lucy\.com$/i],
+  berkeley: [/^.+@([a-zA-Z0-9._-]+\.)*berkeley\.edu$/i, /^.+@my-lucy\.com$/i],
+  miami: [/^.+@([a-zA-Z0-9._-]+\.)*miami\.edu$/i, /^.+@my-lucy\.com$/i],
+  usyd: [/^.+@([a-zA-Z0-9._-]+\.)*usyd\.edu$/i, /^.+@my-lucy\.com$/i],
+  columbia: [/^.+@([a-zA-Z0-9._-]+\.)*columbia\.edu$/i, /^.+@my-lucy\.com$/i],
+  // Additional domains go here...
 };
 
 // Check if email belongs to allowed domains
@@ -47,7 +61,20 @@ const getErrorMessage = (subdomain) => {
   const universityNames = {
     upenn: 'Upenn',
     harvard: 'Harvard',
-    // Add other universities here...
+    mit: 'MIT',
+    lasell: 'Lasell',
+    oackland: 'Oackland',
+    arizona: 'Arizona',
+    uci: 'UCI',
+    ucidavis: 'UCI Davis',
+    cornell: 'Cornell',
+    berkeleycollege: 'Berkeley College',
+    brown: 'Brown',
+    stanford: 'Stanford',
+    berkeley: 'Berkeley',
+    miami: 'Miami',
+    usyd: 'USYD',
+    columbia: 'Columbia',
   };
 
   return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} email address can register`;
@@ -92,6 +119,7 @@ export default function SignUp() {
     const password = data.get('password');
     const newErrors = {};
 
+    // Validate form inputs
     if (!firstName) {
       newErrors.firstName = 'First name is required';
     }
@@ -148,7 +176,7 @@ export default function SignUp() {
 
       localStorage.setItem('university', subdomain);
 
-      // Navigation happens only after everything is done
+      // Navigate after everything is complete
       const onboardingUrl = `/onboarding/learningStyleSurvey/${courseId ? courseId : ''}`;
       setIsLoading(false); // Stop loading after process is done
       navigate(onboardingUrl, { state: { uid: user.uid, firstName: firstName } });
@@ -349,6 +377,7 @@ export default function SignUp() {
     </Container>
   );
 }
+
 
 
 
