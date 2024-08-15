@@ -1,3 +1,358 @@
+//NO ASYNCHRONE REQUETE FROM FIRESTORE, WAITING BEFORE NAVIGATE NOW
+import * as React from 'react';
+import Button from '@mui/material/Button';
+import CssBaseline from '@mui/material/CssBaseline';
+import TextField from '@mui/material/TextField';
+import Link from '@mui/material/Link';
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
+import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import { useTheme } from '@mui/material/styles';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../auth/firebase';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { doc, setDoc } from 'firebase/firestore';
+import { useAuth } from '../auth/hooks/useAuth';
+import lucyLogo from '../logo_lucy.png';
+import './signUp.css';
+import config from '../config';
+
+// Regex for email validation
+const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
+
+// Define allowed domains for universities
+const allowedDomains = {
+  upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
+  harvard: [/^.+@([a-zA-Z0-9._-]+\.)*harvard\.edu$/i, /^.+@my-lucy\.com$/i],
+  // Add other domains as needed...
+};
+
+// Check if email belongs to allowed domains
+const getAllowedDomains = (subdomain) => allowedDomains[subdomain] || [];
+
+const isAllowedEmail = (email, subdomain) => {
+  const domains = getAllowedDomains(subdomain);
+  return domains.some((regex) => regex.test(email));
+};
+
+const getErrorMessage = (subdomain) => {
+  const universityNames = {
+    upenn: 'Upenn',
+    harvard: 'Harvard',
+    // Add other universities here...
+  };
+
+  return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} email address can register`;
+};
+
+export default function SignUp() {
+  const theme = useTheme();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [errors, setErrors] = React.useState({});
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+
+  const courseId = location.pathname.split('/sign-up/')[1] || '';
+  const subdomain = config.subdomain;
+
+  React.useEffect(() => {
+    if (courseId) {
+      setOpen(true);
+    }
+  }, [courseId]);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSignIn = () => {
+    navigate(`/auth/sign-in/${courseId}`);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrors({});
+    setIsLoading(true);
+
+    const data = new FormData(event.currentTarget);
+
+    const firstName = data.get('firstName');
+    const lastName = data.get('lastName');
+    const email = data.get('email');
+    const password = data.get('password');
+    const newErrors = {};
+
+    if (!firstName) {
+      newErrors.firstName = 'First name is required';
+    }
+    if (!lastName) {
+      newErrors.lastName = 'Last name is required';
+    }
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!isEmail(email)) {
+      newErrors.email = 'Please provide a valid email';
+    } else if (!isAllowedEmail(email, subdomain)) {
+      newErrors.email = getErrorMessage(subdomain);
+    }
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Create user with Firebase Auth
+      console.log("Creating user with email:", email);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Save user to Firestore
+      console.log("Saving user to Firestore:", user.uid);
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name: `${firstName} ${lastName}`,
+        email: email,
+        university: theme.university,
+        role: "student"
+      });
+
+      // Authenticate the user
+      console.log("Authenticating user with email:", email);
+      await signInWithEmailAndPassword(auth, email, password);
+
+      // Login the user and set the auth context
+      console.log("Logging in user:", user.uid);
+      login({
+        id: user.uid,
+        name: `${firstName} ${lastName}`,
+        email: email,
+        role: "student"
+      });
+
+      localStorage.setItem('university', subdomain);
+
+      // Navigation happens only after everything is done
+      const onboardingUrl = `/onboarding/learningStyleSurvey/${courseId ? courseId : ''}`;
+      setIsLoading(false); // Stop loading after process is done
+      navigate(onboardingUrl, { state: { uid: user.uid, firstName: firstName } });
+
+    } catch (error) {
+      console.error("Error during signup:", error);
+      if (error.code === 'auth/email-already-in-use') {
+        newErrors.email = 'Email address already in use!';
+      }
+      setErrors(newErrors);
+      setIsLoading(false); // Stop loading on error
+    }
+  };
+
+  return (
+    <Container component="main" maxWidth="sm">
+      <CssBaseline />
+      <Box
+        sx={{
+          width: '100%',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          padding: theme.spacing(2),
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <img src={theme.logo} alt="University Logo" style={{ height: 50, width: 'auto' }} />
+      </Box>
+
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3, padding: 4, outline: 0, borderRadius: 3, boxShadow: '2px 2px 12px rgba(0, 0, 0, 0.2)' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Typography sx={{ fontWeight: 'bold', fontSize: '2rem' }}>
+                Create an Account
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography style={{ fontWeight: '800', fontSize: '1rem' }}>
+                Let's get started by filling out the form below.
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                autoComplete="given-name"
+                name="firstName"
+                required
+                fullWidth
+                id="firstName"
+                label="First Name"
+                error={!!errors.firstName}
+                helperText={errors.firstName}
+                autoFocus
+                InputProps={{ sx: { borderRadius: 6 } }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                required
+                fullWidth
+                id="lastName"
+                label="Last Name"
+                name="lastName"
+                error={!!errors.lastName}
+                helperText={errors.lastName}
+                autoComplete="family-name"
+                InputProps={{ sx: { borderRadius: 6 } }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                label="Email Address"
+                name="email"
+                error={!!errors.email}
+                helperText={errors.email}
+                autoComplete="email"
+                InputProps={{ sx: { borderRadius: 6 } }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                error={!!errors.password}
+                helperText={errors.password}
+                autoComplete="new-password"
+                InputProps={{ sx: { borderRadius: 6 } }}
+              />
+            </Grid>
+          </Grid>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              sx={{ mt: 3, mb: 2, padding: 1.5, borderRadius: 5, width: '50%' }}
+              disabled={isLoading} // Disable button while loading
+            >
+              Get Started
+            </Button>
+            {isLoading && (
+              <CircularProgress
+                size={24}
+                sx={{
+                  color: 'primary.contrastText',
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  marginTop: '-12px',
+                  marginLeft: '-12px',
+                }}
+              />
+            )}
+          </Box>
+          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          </Grid>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', m: 2 }}>
+          </Box>
+          <Grid container justifyContent="center">
+            <Grid item>
+              <Link href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} variant="body2">
+                Already have an account? Sign in
+              </Link>
+            </Grid>
+          </Grid>
+        </Box>
+      </Box>
+
+      <Box
+        sx={{
+          width: '100%',
+          position: 'absolute',
+          bottom: 0,
+          right: 0,
+          padding: theme.spacing(2),
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="body2" sx={{ mr: 1 }}>
+          powered by Lucy
+        </Typography>
+        <Avatar
+          src={lucyLogo}
+          alt="Lucy Logo"
+          sx={{ width: 20, height: 20 }}
+        />
+      </Box>
+
+      <Dialog
+        open={open}
+        onClose={(event, reason) => {
+          if (reason !== 'backdropClick') {
+            handleClose();
+          }
+        }}
+        PaperProps={{ style: { borderRadius: 12, padding: '20px', top: '-5vh' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.5rem' }}>Already have an account?</DialogTitle>
+        <DialogContent>
+          <DialogContentText style={{ fontWeight: '500', fontSize: '0.875rem' }}>
+            If you already have an account, sign in to add your new course, otherwise create an account.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ paddingBottom: 2, paddingRight: 2, paddingLeft: 2, justifyContent: 'space-between' }}>
+          <Button
+            onClick={handleSignIn}
+            variant="contained"
+            sx={{ backgroundColor: '#FCE2E1', color: '#F04261', textTransform: 'none', borderRadius: '8px' }}
+          >
+            Sign-in
+          </Button>
+          <Button
+            onClick={handleClose}
+            variant="contained"
+            sx={{ backgroundColor: '#DDFCE5', color: '#43AE58', textTransform: 'none', borderRadius: '8px' }}
+          >
+            Create an account
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+}
+
+
+
+/*
 import * as React from 'react';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -425,7 +780,7 @@ export default function SignUp() {
     </Container>
   );
 }
-
+*/
 
 
 
