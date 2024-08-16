@@ -45,8 +45,8 @@ const allowedDomains = {
     /^.+@([a-zA-Z0-9._-]+\.)*lasell\.edu$/i,
     /^.+@my-lucy\.com$/i,
   ],
-  oackland: [
-    /^.+@([a-zA-Z0-9._-]+\.)*oackland\.edu$/i,
+  oakland: [
+    /^.+@([a-zA-Z0-9._-]+\.)*oakland\.edu$/i,
     /^.+@my-lucy\.com$/i,
   ],
   arizona: [
@@ -101,7 +101,7 @@ const getErrorMessage = (subdomain) => {
     harvard: 'Harvard',
     mit: 'MIT',
     lasell: 'Lasell',
-    oackland: 'Oackland',
+    oakland: 'Oakland',
     arizona: 'Arizona',
     uci: 'Uci',
     ucdavis: 'Ucdavis',

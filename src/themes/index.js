@@ -5,7 +5,7 @@ import defaultTheme from './defaultTheme';
 import columbiaTheme from './columbiaTheme';
 import mitTheme from './mitTheme';
 import lasellTheme from './lasellTheme';
-import oacklandTheme from './oacklandTheme';
+import oaklandTheme from './oaklandTheme';
 import arizonaTheme from './arizonaTheme';
 import uciTheme from './uciTheme';
 import ucdavisTheme from './ucdavisTheme';
@@ -33,8 +33,8 @@ const getTheme = (subdomain) => {
       return mitTheme;
     case 'lasell':
       return lasellTheme;
-    case 'oackland':
-      return oacklandTheme;
+    case 'oakland':
+      return oaklandTheme;
     case 'arizona':
       return arizonaTheme;
     case 'uci':

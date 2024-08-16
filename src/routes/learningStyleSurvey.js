@@ -96,7 +96,7 @@ export default function LearningStyleSurvey() {
     const newErrors = {};
 
     if (!year) {
-      newErrors.year = 'Faculty is required';
+      newErrors.year = 'School is required';
     }
 
     if (!learnerType) {
@@ -281,19 +281,19 @@ export default function LearningStyleSurvey() {
               <Grid container columnSpacing={4} rowSpacing={{ xs: 1 }} sx={{ paddingTop: '4vh' }}>
                 <Grid item xs={2}></Grid>
                 <Grid item xs={6}>
-                  <span>What is your faculty?*</span>
+                  <span>What is your school?*</span>
                 </Grid>
                 <Grid item xs={4}></Grid>
 
                 <Grid item xs={2}></Grid>
                 <Grid item xs={6}>
                   <FormControl required sx={{ width: '100%', borderRadius: '12px', '& fieldset': { borderColor: theme.palette.primary.main }, '& .MuiOutlinedInput-root': { '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main }, borderRadius: '12px' }, '& .MuiSelect-select': { color: theme.palette.text.primary } }}>
-                    <InputLabel id="year">Faculty</InputLabel>
+                    <InputLabel id="year">School</InputLabel>
                     <Select
                       labelId="year"
                       id="year-select"
                       value={year}
-                      label="Faculty"
+                      label="School"
                       error={!!errors.year}
                       helperText={errors.year}
                       onChange={handleYearChange}

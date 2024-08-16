@@ -44,7 +44,7 @@ const App: React.FC = () => {
             case 'columbia':
             case 'mit':
             case 'lasell':
-            case 'oackland':
+            case 'oakland':
             case 'arizona':
             case 'uci':
             case 'ucdavis':
@@ -76,7 +76,7 @@ const App: React.FC = () => {
             case 'columbia':
             case 'mit':
             case 'lasell':
-            case 'oackland':
+            case 'oakland':
             case 'arizona':
             case 'uci':
             case 'ucdavis':
