@@ -6,6 +6,7 @@ import getTheme from './themes';
 import Dashboard_teacher_template from './routes/Dashboard_teacher_template';
 import Dashboard_eleve_template from './routes/Dashboard_eleve_template';
 import Dashboard_academic_advisor from './routes/Dashboard_academic_advisor';
+import Dashboard_admin from './routes/Dashboard_admin';
 import AcademicAdvisorContact from './routes/Academic_advisor_contact';
 import About from './routes/about'; 
 import Analytics_eleve_template from './routes/analytics_student';
@@ -14,6 +15,7 @@ import Chat_academic_advisor from './routes/chat_academic_advisor';
 import SignIn from './routes/signIn';
 import SignUp from './routes/signUp';
 import SignUp_academic_advisor from './routes/signUp_academic_advisor'; 
+import SignUp_admin from './routes/signUp_admin'
 import ChooseRole from './routes/chooseRole';
 import LearningStyleSurvey from './routes/learningStyleSurvey';
 import PrivateRoute from './components/PrivateRoute';
@@ -54,10 +56,12 @@ const App: React.FC = () => {
             case 'stanford':
             case 'berkeley':
             case 'miami':
+            case 'admin':
                 return (
                     <>
                         <Route path={`/auth/sign-up`} element={<SignUp />} />
                         <Route path={`/auth/sign-up/academic_advisor`} element={<SignUp_academic_advisor />} />
+                        <Route path={`/auth/sign-up/admin`} element={<SignUp_admin />} />
                         <Route path={`/auth/sign-up/:course_id`} element={<SignUp />} />
                         <Route path={`/auth/sign-in`} element={<SignIn />} />
                         <Route path={`/auth/sign-in/:course_id`} element={<SignIn />} />
@@ -86,6 +90,7 @@ const App: React.FC = () => {
             case 'stanford':
             case 'berkeley':
             case 'miami':
+            case 'admin':
                 return (
                     <>
                         <Route path="/onboarding/choose-role" element={<ChooseRole />} />
@@ -96,6 +101,7 @@ const App: React.FC = () => {
                         <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
                         <Route path="/dashboard/analytics" element={<Analytics_eleve_template />} />
                         <Route path="/dashboard/academic-advisor/:uid" element={<Dashboard_academic_advisor />} />
+                        <Route path="/dashboard/admin" element={<Dashboard_admin />} />
                         <Route path="/chat/academic-advisor/:uid" element={<Chat_academic_advisor />} />
                         <Route path="/contact/academic_advisor" element={<AcademicAdvisorContact />} />
                         <Route path="/about" element={<About />} />

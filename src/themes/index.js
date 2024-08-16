@@ -15,6 +15,7 @@ import brownTheme from './brownTheme';
 import stanfordTheme from './stanfordTheme';
 import berkeleyTheme from './berkeleyTheme';
 import umiamiTheme from './umiamiTheme';
+import adminTheme from './adminTheme';
 
 // Fonction pour obtenir le thème en fonction du sous-domaine
 const getTheme = (subdomain) => {
@@ -53,6 +54,8 @@ const getTheme = (subdomain) => {
       return berkeleyTheme;
     case 'miami':
       return umiamiTheme;
+    case 'admin':
+      return adminTheme;
     default:
       return defaultTheme; // Thème par défaut si nécessaire
   }
