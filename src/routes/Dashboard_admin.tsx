@@ -25,7 +25,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import { useAuth } from '../auth/hooks/useAuth';
 import picture_face from '../photo_greg.png';
-import getUserData from '../api/fetchStudentsData'; // Fonction pour récupérer les données utilisateurs
+import fetchUserData from '../api/fetchStudentsData'; // Fonction pour récupérer les données utilisateurs
 
 ChartJS.register(
   CategoryScale,
@@ -95,7 +95,7 @@ const AdminDashboard: React.FC = () => {
     // Fonction pour récupérer les données des statistiques globales
     const fetchStatisticsData = async () => {
       try {
-        const { count } = await getUserData(statisticsTimeFilter);
+        const { count } = await fetchUserData(statisticsTimeFilter);
 
         // Mettre à jour le nombre total d'inscriptions d'étudiants dans les statistiques globales
         setStudentCount(count);
@@ -111,7 +111,7 @@ const AdminDashboard: React.FC = () => {
     // Fonction pour récupérer les données des inscriptions étudiantes et mettre à jour le graphe
     const fetchStudentData = async () => {
       try {
-        const { dates } = await getUserData(studentSignupTimeFilter);
+        const { dates } = await fetchUserData(studentSignupTimeFilter);
 
         // Générer des labels et des valeurs pour le graphique en fonction de la période sélectionnée
         const labels: (string | number)[] = [];
