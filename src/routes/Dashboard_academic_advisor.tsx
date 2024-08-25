@@ -147,7 +147,8 @@ const AcademicAdvisorDashboard: React.FC = () => {
     },
   };
 
-  const graphURL_academic_advisor = "http://localhost:5001/static/academic_advisor/cluster_academic_advisor.html";
+  //const graphURL_academic_advisor = "http://localhost:5001/static/academic_advisor/cluster_academic_advisor.html";
+  const graphURL_academic_advisor = "http://localhost:5001/static/academic_advisor/cluster_with_fake_yc_data_improve.html";
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);

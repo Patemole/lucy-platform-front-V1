@@ -6,6 +6,31 @@ export interface AnswerDocument {
 }
 
 
+export interface AnswerImage {
+    image_id: string;
+    image_url: string;
+    image_description?: string;
+}
+
+
+// Interface pour la structure de answer_TAK
+export interface AnswerTAK {
+    document_id: string;
+    question: string;
+    answer_options: string[]; // Liste des options de réponse pour l'utilisateur
+    other_specification?: {
+      label: string;
+      placeholder: string;
+    }; // Spécifications supplémentaires, comme un champ de texte pour "Other"
+  }
+
+  export interface AnswerWaiting {
+    sentence1: string;
+    sentence2: string;
+    sentence3: string;
+  }
+
+
 export enum RetrievalType {
     None = "none",
     Search = "search",
@@ -35,7 +60,10 @@ export interface Message {
     query?: string | null;
     documents?: AnswerDocument[] | null;
     citations?: CitationMap;
-}
+    images?: AnswerImage[] | null; // Utilisation de la nouvelle interface AnswerImage
+    TAK?: AnswerTAK[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
+    waitingMessages?: AnswerWaiting[]| null;
+};
 
 export interface BackendChatSession {
     chat_session_id: number;

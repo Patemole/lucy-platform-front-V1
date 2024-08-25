@@ -46,6 +46,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [conversations, setConversations] = useState<{ chat_id: string, name: string }[]>([]);
   const navigate = useNavigate();
   const { popup, setPopup } = usePopup();
+  const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const { logout } = useAuth();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollableDivRef = useRef<HTMLDivElement>(null);
@@ -274,6 +275,7 @@ const Dashboard_eleve_template: React.FC = () => {
         type: 'ai',
         uid: uid,
         input_message: inputValue,
+        university: university
       };
 
       console.log("Message AI to be saved:", Message_AI_to_save);
@@ -426,6 +428,10 @@ const Dashboard_eleve_template: React.FC = () => {
     const previousMessage = index > 0 ? messages[index - 1] : null;
     console.log("Previous Message:", previousMessage);
     console.log("Current Message:", currentMessage);
+  };
+
+  const handleSourceClick = (link: string) => {
+    setIframeSrc(link); // Update the iframe source when a source is clicked
   };
 
   return (
@@ -595,6 +601,8 @@ const Dashboard_eleve_template: React.FC = () => {
                               console.log(`Feedback received: ${feedbackType}`);
                             }}
                             handleWrongAnswerClick={() => handleWrongAnswerClick(index)} // Pass the index here
+                            handleSourceClick={handleSourceClick} //a RAJOUTER POUR OUVRIR LES SOURCES DANS LA PAGE
+                            drawerOpen={drawerOpen}
                           />
                         )}
                       </div>

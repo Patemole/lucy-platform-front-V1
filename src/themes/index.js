@@ -1,3 +1,99 @@
+import {upennTheme, upennDarkTheme } from './upennTheme';
+import {harvardTheme, harvardDarkTheme } from './harvardTheme';
+import {usydTheme, usydDarkTheme } from './usydTheme';
+import {defaultTheme, defaultDarkTheme } from './defaultTheme';
+import {columbiaTheme, columbiaDarkTheme } from './columbiaTheme';
+import {mitTheme,  mitDarkTheme } from './mitTheme';
+import {lasellTheme,  lasellDarkTheme } from './lasellTheme';
+import {oaklandTheme,  oaklandDarkTheme } from './oaklandTheme';
+import {arizonaTheme,  arizonaDarkTheme } from './arizonaTheme';
+import {uciTheme,  uciDarkTheme } from './uciTheme';
+import {ucdavisTheme,  ucdavisDarkTheme } from './ucdavisTheme';
+import {cornellTheme,  cornellDarkTheme } from './cornellTheme';
+import {berkeleycollegeTheme,  berkeleycollegeDarkTheme } from './berkeleycollegeTheme';
+import {brownTheme,  brownDarkTheme } from './brownTheme';
+import {stanfordTheme,  stanfordDarkTheme } from './stanfordTheme';
+import {berkeleyTheme,  berkeleyDarkTheme } from './berkeleyTheme';
+import {umiamiTheme,  umiamiDarkTheme } from './umiamiTheme';
+import {adminTheme,  adminDarkTheme } from './adminTheme';
+
+// Function to get the theme based on subdomain and selected mode
+const getTheme = (subdomain, themeMode) => {
+  const mode = localStorage.getItem('themeMode') || 'light'; // Default to light mode
+
+  switch (subdomain) {
+    case 'upenn':
+      return themeMode === 'dark' ? upennDarkTheme : upennTheme;
+
+    case 'harvard':
+      return themeMode === 'dark' ? harvardDarkTheme : harvardTheme;
+
+    case 'uci':
+      return themeMode === 'dark' ? uciDarkTheme : uciTheme;
+
+    case 'miami':
+      return themeMode === 'dark' ? umiamiDarkTheme : umiamiTheme;
+
+    case 'admin':
+      return themeMode === 'dark' ? adminDarkTheme : adminTheme;
+
+    default:
+      return themeMode === 'dark' ? defaultDarkTheme : defaultTheme;
+      
+    /* 
+    case 'harvard':
+      return mode === 'dark' ? harvardDarkTheme : harvardTheme;
+    case 'usyd':
+      return mode === 'dark' ? usydDarkTheme : usydTheme;
+    case 'columbia':
+      return mode === 'dark' ? columbiaDarkTheme : columbiaTheme;
+    case 'umiami':
+      return mode === 'dark' ? umiamiDarkTheme : umiamiTheme;
+    case 'mit':
+      return mode === 'dark' ? mitDarkTheme : mitTheme;
+    case 'lasell':
+      return mode === 'dark' ? lasellDarkTheme : lasellTheme;
+    case 'oakland':
+      return mode === 'dark' ? oaklandDarkTheme : oaklandTheme;
+    case 'arizona':
+      return mode === 'dark' ? arizonaDarkTheme : arizonaTheme;
+    case 'uci':
+      return mode === 'dark' ? uciDarkTheme : uciTheme;
+    case 'ucdavis':
+      return mode === 'dark' ? ucdavisDarkTheme : ucdavisTheme;
+    case 'cornell':
+      return mode === 'dark' ? cornellDarkTheme : cornellTheme;
+    case 'berkeleycollege':
+      return mode === 'dark' ? berkeleycollegeDarkTheme : berkeleycollegeTheme;
+    case 'brown':
+      return mode === 'dark' ? brownDarkTheme : brownTheme;
+    case 'stanford':
+      return mode === 'dark' ? stanfordDarkTheme : stanfordTheme;
+    case 'berkeley':
+      return mode === 'dark' ? berkeleyDarkTheme : berkeleyTheme;
+    case 'admin':
+      return mode === 'dark' ? adminDarkTheme : adminTheme;
+    default:
+      return mode === 'dark' ? defaultDarkTheme : defaultTheme; // Default theme with dark mode fallback
+      */
+  }
+};
+
+export const toggleThemeMode = () => {
+  const currentMode = localStorage.getItem('themeMode') || 'light';
+  const newMode = currentMode === 'light' ? 'dark' : 'light';
+  localStorage.setItem('themeMode', newMode);
+  window.location.reload(); // Reload to apply the new theme across the app
+};
+
+export default getTheme;
+
+
+
+
+
+
+/* CODE D'ORIGINE
 import upennTheme from './upennTheme';
 import harvardTheme from './harvardTheme';
 import usydTheme from './usydTheme';
@@ -62,7 +158,7 @@ const getTheme = (subdomain) => {
 };
 
 export default getTheme;
-
+*/
 
 
 
