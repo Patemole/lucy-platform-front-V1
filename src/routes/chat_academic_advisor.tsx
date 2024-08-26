@@ -391,6 +391,15 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
 
+
+  const handleSendTAKMessage = (TAK_message: string) => {
+    // Set the TAK message as the input value
+    setInputValue(TAK_message);
+  
+    // Trigger the same send message function for the placeholder
+    handleSendMessageSocraticLangGraph();
+  };
+
   // POUR CHANGER DE PAGE QUAND ON CLIQUE SUR TA'S HELP
   const handleMeetingClick = () => {
     navigate('/contact/academic_advisor');
@@ -603,6 +612,7 @@ const Dashboard_eleve_template: React.FC = () => {
                             handleWrongAnswerClick={() => handleWrongAnswerClick(index)} // Pass the index here
                             handleSourceClick={handleSourceClick} //a RAJOUTER POUR OUVRIR LES SOURCES DANS LA PAGE
                             drawerOpen={drawerOpen}
+                            handleSendTAKMessage={handleSendTAKMessage}
                           />
                         )}
                       </div>
