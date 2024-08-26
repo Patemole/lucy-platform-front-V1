@@ -148,7 +148,7 @@ const AcademicAdvisorDashboard: React.FC = () => {
   };
 
   //const graphURL_academic_advisor = "http://localhost:5001/static/academic_advisor/cluster_academic_advisor.html";
-  const graphURL_academic_advisor = "http://localhost:5001/static/academic_advisor/cluster_with_fake_yc_data_improve.html";
+  const graphURL_academic_advisor = "http://localhost:5001/static/academic_advisor/cluster_with_fake_yc_data.html";
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
@@ -300,14 +300,14 @@ const AcademicAdvisorDashboard: React.FC = () => {
                     <MoreVertIcon />
                   </IconButton>
                 </Box>
-                <Box sx={{ mt: 2 }}>
+                <Box sx={{ mt: 0.5 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                     <Checkbox />
-                    <Typography sx={{ fontWeight: '500', fontSize: '0.875rem' }}>You shall schedule a meeting with Mathieu Perez</Typography>
+                    <Typography sx={{ fontWeight: '500', fontSize: '0.875rem' }}>Jane Smith struggles with course requirements. Offer an academic planning session for clarification.</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Checkbox />
-                    <Typography sx={{ fontWeight: '500', fontSize: '0.875rem' }}>Missing informations about deadline to drop a course</Typography>
+                    <Typography sx={{ fontWeight: '500', fontSize: '0.875rem' }}>John Doe considers switching majors. Schedule a meeting to discuss academic and financial impacts.</Typography>
                   </Box>
                 </Box>
               </Box>
