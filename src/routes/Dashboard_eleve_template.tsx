@@ -44,7 +44,7 @@ import { AIMessage } from '../components/Messages';
 import { Message, Course, AnswerTAK, AnswerWaiting } from '../interfaces/interfaces_eleve';
 import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
-import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory } from '../api/chat';
+import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
 import { handleAutoScroll } from '../components/utils';
 import { usePopup } from '../components/popup';
@@ -258,7 +258,8 @@ const Dashboard_eleve_template: React.FC = () => {
 
       const lastMessageIndex = messageHistory.length - 1;
 
-      for await (const packetBunch of sendMessageFakeDemo({
+      //for await (const packetBunch of sendMessageFakeDemo({
+      for await (const packetBunch of sendMessageSocraticLangGraph({
         message: inputValue,
         chatSessionId: chatSessionId,
         courseId: courseId,

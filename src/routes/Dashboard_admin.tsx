@@ -431,6 +431,504 @@ export default AdminDashboard;
 
 
 
+
+
+
+
+import React, { useState, useEffect } from 'react';
+import { ThemeProvider, useTheme } from '@mui/material/styles';
+import {
+  Box, Typography, Grid, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Avatar, Select, FormControl, SelectChangeEvent, Divider, Drawer, List, ListItem,
+} from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import GroupIcon from '@mui/icons-material/Group';
+import InfoIcon from '@mui/icons-material/Info';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { useNavigate } from 'react-router-dom';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import { useAuth } from '../auth/hooks/useAuth';
+import picture_face from '../photo_greg.png';
+import fetchUserData from '../api/fetchStudentsData'; // Fonction pour récupérer les données utilisateurs
+import fetchRequestData from '../api/fetchRequestData'; // Fonction pour récupérer les données des requêtes
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+const drawerWidth = 240;
+
+type ChartData = {
+  labels: (string | number)[];
+  datasets: {
+    label: string;
+    data: number[];
+    borderColor: string;
+    backgroundColor: string;
+    fill: boolean;
+    tension: number;
+  }[];
+};
+
+const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
+  const [userName, setUserName] = useState('');
+  const { logout } = useAuth();
+  const theme = useTheme();
+  const [statisticsTimeFilter, setStatisticsTimeFilter] = useState<string>('Today'); // Time filter for statistics block
+  const [studentSignupTimeFilter, setStudentSignupTimeFilter] = useState<string>('Today'); // Time filter for student signup graph
+  const [studentCount, setStudentCount] = useState<number>(0);
+  const [studentCountChart, setStudentCountChart] = useState<ChartData>({ labels: [], datasets: [] });
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [universityFilter, setUniversityFilter] = useState<string>('All');
+  const [requestTimeFilter, setRequestTimeFilter] = useState<string>('Today');
+  const [requestCount, setRequestCount] = useState<number>(0); // New state for request count
+  const [requestChartData, setRequestChartData] = useState<ChartData>({ labels: [], datasets: [] }); // New state for request chart data
+
+  const universities = [
+    'All',
+    'Upenn',
+    'Harvard',
+    'MIT',
+    'Lasell',
+    'Oakland',
+    'Arizona',
+    'Uci',
+    'Ucdavis',
+    'Cornell',
+    'BerkeleyCollege',
+    'Brown',
+    'Stanford',
+    'Berkeley',
+    'Miami',
+    'Usyd',
+    'Columbia',
+  ];
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    setUserName(user.name);
+  }, []);
+
+  useEffect(() => {
+    // Fonction pour récupérer les données des statistiques globales
+    const fetchStatisticsData = async () => {
+      try {
+        const { count } = await fetchUserData(statisticsTimeFilter);
+        setStudentCount(count);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des statistiques globales:', error);
+      }
+    };
+
+    fetchStatisticsData();
+  }, [statisticsTimeFilter]);
+
+  useEffect(() => {
+    // Fonction pour récupérer les données des inscriptions étudiantes et mettre à jour le graphe
+    const fetchStudentData = async () => {
+      try {
+        const { dates } = await fetchUserData(studentSignupTimeFilter);
+
+        const labels: (string | number)[] = [];
+        const counts: number[] = [];
+
+        if (studentSignupTimeFilter === 'Today') {
+          const hours = Array.from({ length: 24 }, (_, i) => i);
+          labels.push(...hours.map(hour => `${hour}:00`));
+          counts.push(...hours.map(hour => dates.filter(date => new Date(date).getHours() === hour).length));
+        } else if (studentSignupTimeFilter === 'Last Week') {
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          labels.push(...days);
+          counts.push(...days.map((_, i) => dates.filter(date => new Date(date).getDay() === i).length));
+        } else if (studentSignupTimeFilter === 'Last Month') {
+          const days = Array.from({ length: 30 }, (_, i) => i + 1);
+          labels.push(...days);
+          counts.push(...days.map(day => dates.filter(date => new Date(date).getDate() === day).length));
+        } else if (studentSignupTimeFilter === 'Last Year') {
+          const months = Array.from({ length: 12 }, (_, i) => i + 1);
+          labels.push(...months.map(month => `Month ${month}`));
+          counts.push(...months.map(month => dates.filter(date => new Date(date).getMonth() + 1 === month).length));
+        }
+
+        setStudentCountChart({
+          labels,
+          datasets: [
+            {
+              label: 'Student Signups',
+              data: counts,
+              borderColor: '#A57EFA',
+              backgroundColor: 'rgba(165, 126, 250, 0.2)',
+              fill: true,
+              tension: 0.4,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données des utilisateurs:', error);
+      }
+    };
+
+    fetchStudentData();
+  }, [studentSignupTimeFilter]);
+
+  useEffect(() => {
+    const fetchRequestDataCount = async () => {
+      try {
+        const { count, dates } = await fetchRequestData(requestTimeFilter, universityFilter);
+        setRequestCount(count);
+  
+        const labels: string[] = [];
+        const counts: number[] = [];
+  
+        if (requestTimeFilter === 'Today') {
+          const hours = Array.from({ length: 24 }, (_, i) => i);
+          labels.push(...hours.map(hour => `${hour}:00`));  // Convertir en chaîne de caractères
+          counts.push(...hours.map(hour => dates.filter(date => new Date(date).getHours() === hour).length));
+        } else if (requestTimeFilter === 'Last Week') {
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          labels.push(...days);  // Pas besoin de conversion, ce sont déjà des chaînes
+          counts.push(...days.map((_, i) => dates.filter(date => new Date(date).getDay() === i).length));
+        } else if (requestTimeFilter === 'Last Month') {
+          const days = Array.from({ length: 30 }, (_, i) => i + 1);
+          labels.push(...days.map(day => day.toString()));  // Convertir en chaîne de caractères
+          counts.push(...days.map(day => dates.filter(date => new Date(date).getDate() === day).length));
+        } else if (requestTimeFilter === 'Last Year') {
+          const months = Array.from({ length: 12 }, (_, i) => i + 1);
+          labels.push(...months.map(month => `Month ${month}`));  // Les mois sont déjà convertis en chaîne ici
+          counts.push(...months.map(month => dates.filter(date => new Date(date).getMonth() + 1 === month).length));
+        }
+  
+        setRequestChartData({
+          labels,
+          datasets: [
+            {
+              label: 'Requests Over Time',
+              data: counts,
+              borderColor: '#FF6384',
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              fill: true,
+              tension: 0.4,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données des requêtes:', error);
+      }
+    };
+  
+    fetchRequestDataCount();
+  }, [requestTimeFilter, universityFilter]);
+  
+
+
+
+  const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setProfileAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth/sign-in');
+  };
+
+  const handleStatisticsTimeFilterChange = (event: SelectChangeEvent<string>) => {
+    setStatisticsTimeFilter(event.target.value); // Gère le filtre de temps des statistiques globales
+  };
+
+  const handleStudentSignupTimeFilterChange = (event: SelectChangeEvent<string>) => {
+    setStudentSignupTimeFilter(event.target.value); // Gère le filtre de temps pour le graphique des inscriptions
+  };
+
+  const handleUniversityFilterChange = (event: SelectChangeEvent<string>) => {
+    setUniversityFilter(event.target.value);
+  };
+
+  const handleRequestTimeFilterChange = (event: SelectChangeEvent<string>) => {
+    setRequestTimeFilter(event.target.value);
+  };
+
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#F6F8FA' }}>
+        <Drawer
+          variant="persistent"
+          anchor="left"
+          open={drawerOpen}
+          PaperProps={{ style: { width: drawerWidth, borderRadius: '0 0 0 0' } }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
+            <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
+              <MenuIcon />
+            </IconButton>
+            <img src={theme.logo} alt="UPenn Logo" style={{ width: '30px', height: 'auto' }} />
+          </Box>
+          <List style={{ padding: '0 15px' }}>
+            <ListItem button  style={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
+                <BarChartIcon />
+              </ListItemIcon>
+              <ListItemText primary="Analytics" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/dashboard/admin/feedback')} style={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
+                <GroupIcon />
+              </ListItemIcon>
+              <ListItemText primary="Chat & Feedback" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+            </ListItem>
+            <ListItem button style={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.primary.main, minWidth: '40px' }}>
+                <InfoIcon />
+              </ListItemIcon>
+              <ListItemText primary="Technical Analytics" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }} />
+            </ListItem>
+            <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
+          </List>
+        </Drawer>
+
+        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', transition: 'margin 0.3s', marginLeft: drawerOpen ? `${drawerWidth}px` : '0' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 2, borderBottom: '1px solid #e0e0e0', position: 'relative', backgroundColor: '#fff' }}>
+            {!drawerOpen && (
+              <>
+                <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.primary.main }}>
+                  <MenuIcon />
+                </IconButton>
+                <img src={theme.logo} alt="UPenn Logo" style={{ width: '30px', height: 'auto', marginLeft: '10px' }} />
+              </>
+            )}
+            <Typography variant="h6" sx={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+              Admin Dashboard
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
+              <FormControl variant="outlined" size="small">
+                <Select
+                  value={universityFilter}
+                  onChange={handleUniversityFilterChange}
+                  IconComponent={ArrowDropDownIcon}
+                  displayEmpty
+                  inputProps={{ 'aria-label': 'Without label' }}
+                  sx={{
+                    border: 'none',
+                    '& .MuiOutlinedInput-notchedOutline': { border: 0 },
+                    '& .MuiSvgIcon-root': { color: '#B3B3B3' },
+                    '& .MuiSelect-select': { padding: 0, fontWeight: '500', fontSize: '0.875rem' }
+                  }}
+                >
+                  {universities.map((uni) => (
+                    <MenuItem key={uni} value={uni}>{uni}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <IconButton>
+                <NotificationsIcon sx={{ color: '#100F32', marginRight: 2 }} />
+              </IconButton>
+              <Avatar src={picture_face} style={{ cursor: 'pointer' }} onClick={handleProfileMenuClick} />
+              <Typography sx={{ marginLeft: 2, fontWeight: '500', fontSize: '0.875rem' }}>{userName}</Typography>
+              <Menu
+                anchorEl={profileAnchorEl}
+                open={Boolean(profileAnchorEl)}
+                onClose={handleProfileMenuClose}
+                PaperProps={{ style: { borderRadius: '12px' } }}
+              >
+                <MenuItem onClick={handleLogout} style={{ fontWeight: '500', fontSize: '0.875rem', color: theme.palette.error.main }}>
+                  <ListItemIcon>
+                    <LogoutIcon fontSize="small" style={{ color: theme.palette.error.main }} />
+                  </ListItemIcon>
+                  <ListItemText primary="Log Out" />
+                </MenuItem>
+              </Menu>
+            </Box>
+          </Box>
+
+          <Grid container spacing={2} style={{ padding: 20, flexGrow: 1 }}>
+            <Grid item xs={12} md={7}>
+              {/* White container for statistics */}
+              <Box sx={{ padding: 2, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)', mb: 2, position: 'relative', backgroundColor: '#fff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6">Statistics Overview</Typography>
+                  <FormControl variant="outlined" size="small">
+                    <Select
+                      value={statisticsTimeFilter}
+                      onChange={handleStatisticsTimeFilterChange}
+                      IconComponent={ArrowDropDownIcon}
+                      displayEmpty
+                      inputProps={{ 'aria-label': 'Without label' }}
+                      sx={{
+                        border: 'none',
+                        '& .MuiOutlinedInput-notchedOutline': { border: 0 },
+                        '& .MuiSvgIcon-root': { color: '#B3B3B3' },
+                        '& .MuiSelect-select': { padding: 0, fontWeight: '500', fontSize: '0.875rem' }
+                      }}
+                    >
+                      <MenuItem value="Today">Today</MenuItem>
+                      <MenuItem value="Last Week">Last Week</MenuItem>
+                      <MenuItem value="Last Month">Last Month</MenuItem>
+                      <MenuItem value="Last Year">Last Year</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                  <Box sx={{ backgroundColor: '#ffe0e0', padding: 2, borderRadius: 2, textAlign: 'left', flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Box sx={{ width: 20, height: 20, backgroundColor: '#ff5c5c', borderRadius: '50%', mr: 1 }}></Box>
+                      <Typography variant="h5" sx={{ fontWeight: 'bold' }}>98</Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ fontWeight: '500' }}>Negative feedback</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: '300', color: '#0000ff' }}>-2% from yesterday</Typography>
+                  </Box>
+
+                  <Box sx={{ backgroundColor: '#e0ffe0', padding: 2, borderRadius: 2, textAlign: 'left', flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Box sx={{ width: 20, height: 20, backgroundColor: '#66ff66', borderRadius: '50%', mr: 1 }}></Box>
+                      <Typography variant="h5" sx={{ fontWeight: 'bold' }}>700</Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ fontWeight: '500' }}>Positive feedback</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: '300', color: '#0000ff' }}>+12% from yesterday</Typography>
+                  </Box>
+
+                  <Box sx={{ backgroundColor: '#fff0e0', padding: 2, borderRadius: 2, textAlign: 'left', flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Box sx={{ width: 20, height: 20, backgroundColor: '#ffb366', borderRadius: '50%', mr: 1 }}></Box>
+                      <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{studentCount}</Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ fontWeight: '500' }}>Nbr Students</Typography>
+                  </Box>
+
+                  <Box sx={{ backgroundColor: '#e0e0ff', padding: 2, borderRadius: 2, textAlign: 'left', flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Box sx={{ width: 20, height: 20, backgroundColor: '#a57efa', borderRadius: '50%', mr: 1 }}></Box>
+                      <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{requestCount}</Typography> {/* Dynamically populated count */}
+                    </Box>
+                    <Typography variant="body2" sx={{ fontWeight: '500' }}>Requests</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: '300', color: '#0000ff' }}>+3% from yesterday</Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* White container for the request chart */}
+              <Box sx={{ padding: 2, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)', mb: 2, position: 'relative', backgroundColor: '#fff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6">Requests Over Time</Typography>
+                  <FormControl variant="outlined" size="small">
+                    <Select
+                      value={requestTimeFilter}
+                      onChange={handleRequestTimeFilterChange}
+                      IconComponent={ArrowDropDownIcon}
+                      displayEmpty
+                      inputProps={{ 'aria-label': 'Without label' }}
+                      sx={{
+                        border: 'none',
+                        '& .MuiOutlinedInput-notchedOutline': { border: 0 },
+                        '& .MuiSvgIcon-root': { color: '#B3B3B3' },
+                        '& .MuiSelect-select': { padding: 0, fontWeight: '500', fontSize: '0.875rem' }
+                      }}
+                    >
+                      <MenuItem value="Today">Today</MenuItem>
+                      <MenuItem value="Last Week">Last Week</MenuItem>
+                      <MenuItem value="Last Month">Last Month</MenuItem>
+                      <MenuItem value="Last Year">Last Year</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+                <Box sx={{ mt: 2, height: '280px', position: 'relative' }}>
+                  <Line data={requestChartData} options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      x: { grid: { display: false } },
+                      y: { beginAtZero: true, ticks: { stepSize: 5 }, grid: { display: false } },
+                    }
+                  }} />
+                </Box>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} md={5}>
+              <Box sx={{ padding: 2, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)', mb: 2, position: 'relative', backgroundColor: '#fff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6">Student Signups</Typography>
+                  <FormControl variant="outlined" size="small">
+                    <Select
+                      value={studentSignupTimeFilter}
+                      onChange={handleStudentSignupTimeFilterChange}
+                      IconComponent={ArrowDropDownIcon}
+                      displayEmpty
+                      inputProps={{ 'aria-label': 'Without label' }}
+                      sx={{
+                        border: 'none',
+                        '& .MuiOutlinedInput-notchedOutline': { border: 0 },
+                        '& .MuiSvgIcon-root': { color: '#B3B3B3' },
+                        '& .MuiSelect-select': { padding: 0, fontWeight: '500', fontSize: '0.875rem' }
+                      }}
+                    >
+                      <MenuItem value="Today">Today</MenuItem>
+                      <MenuItem value="Last Week">Last Week</MenuItem>
+                      <MenuItem value="Last Month">Last Month</MenuItem>
+                      <MenuItem value="Last Year">Last Year</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+                <Box sx={{ mt: 2, height: '280px', position: 'relative' }}>
+                  <Line data={studentCountChart} options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      x: { grid: { display: false } },
+                      y: { beginAtZero: true, ticks: { stepSize: 5 }, grid: { display: false } }, // Ensure y-axis starts at 0 and increments by 5
+                    }
+                  }} />
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
+      </Box>
+    </ThemeProvider>
+  );
+};
+
+export default AdminDashboard;
+
+
+
+
+
+
+
+
+
+//CODE QUI FONCTIONNE POUR LE NOMBRE DE REGISTRATION
+/*
 import React, { useState, useEffect } from 'react';
 import { ThemeProvider, useTheme } from '@mui/material/styles';
 import {
@@ -717,7 +1215,7 @@ const AdminDashboard: React.FC = () => {
 
           <Grid container spacing={2} style={{ padding: 20, flexGrow: 1 }}>
             <Grid item xs={12} md={7}>
-              {/* White container for statistics */}
+              {/* White container for statistics *
               <Box sx={{ padding: 2, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)', mb: 2, position: 'relative', backgroundColor: '#fff' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="h6">Statistics Overview</Typography>
@@ -781,7 +1279,7 @@ const AdminDashboard: React.FC = () => {
                 </Box>
               </Box>
 
-              {/* White container for the request chart */}
+              {/* White container for the request chart *
               <Box sx={{ padding: 2, borderRadius: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.1)', mb: 2, position: 'relative', backgroundColor: '#fff' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="h6">Requests Over Time</Typography>
@@ -807,7 +1305,7 @@ const AdminDashboard: React.FC = () => {
                   </FormControl>
                 </Box>
                 <Box sx={{ mt: 2, height: '280px', position: 'relative' }}>
-                  {/* Empty chart area */}
+                  {/* Empty chart area *
                   <Line data={{ labels: [], datasets: [] }} options={{
                     responsive: true,
                     maintainAspectRatio: false,
@@ -866,6 +1364,7 @@ const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
+*/
 
 
 
