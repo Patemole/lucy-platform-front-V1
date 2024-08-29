@@ -91,6 +91,65 @@ export async function* sendMessageSocraticLangGraph({
 
 
 
+
+
+
+
+
+
+//Endpoint to send a message
+export async function* sendMessageFakeDemo({
+    message,
+    chatSessionId,
+    courseId,
+    username,
+    university,
+    student_profile
+
+}: SendMessageRequest) {
+    console.log("SENDING MESSAGE");
+    const sendMessageResponse = await fetch(`${apiUrlPrefix}/chat/send_message_fake_demo`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            course_id: courseId,
+            username: username,
+            message: message,
+            chat_id: chatSessionId,
+            university: university,
+            student_profile: student_profile
+        }),
+    });
+    if (!sendMessageResponse.ok) {
+        const errorJson = await sendMessageResponse.json();
+        const errorMsg = errorJson.message || errorJson.detail || "";
+        throw Error(`Failed to send message - ${errorMsg}`);
+    }
+
+    yield* handleStream<AnswerPiecePacket | AnswerDocumentPacket | StreamingError>(sendMessageResponse);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Function to save the ai message to the backend
 export const saveMessageAIToBackend = async ({
     message,
@@ -100,6 +159,7 @@ export const saveMessageAIToBackend = async ({
     type,
     uid,
     input_message,
+    university,
 }: {
     message: string;
     chatSessionId: string;
@@ -108,6 +168,7 @@ export const saveMessageAIToBackend = async ({
     type: string;
     uid: string,
     input_message: string
+    university: string
 }) => {
     try {
         const response = await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
@@ -123,6 +184,7 @@ export const saveMessageAIToBackend = async ({
                 type,
                 uid,
                 input_message,
+                university,
             }),
         });
 

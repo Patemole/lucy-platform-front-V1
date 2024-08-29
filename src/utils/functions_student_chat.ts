@@ -211,6 +211,7 @@ export const onSubmit = async (
             type: 'ai',
             uid: uid,
             input_message: inputValue,
+            university: university,
         };
 
         console.log("Message AI to be saved:", Message_AI_to_save);

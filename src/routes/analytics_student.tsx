@@ -1,3 +1,159 @@
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ThemeProvider, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Avatar, IconButton, Menu, MenuItem } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import MapsUgcRoundedIcon from '@mui/icons-material/MapsUgcRounded';
+import HomeIcon from '@mui/icons-material/Home';
+import InsightsIcon from '@mui/icons-material/Insights';
+import InfoIcon from '@mui/icons-material/Info';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useTheme } from '@mui/material/styles';
+import logo_greg from '../student_face.png';
+import { useAuth } from '../auth/hooks/useAuth';
+
+const drawerWidth = 240;
+
+const Analytics_student: React.FC = () => {
+  const theme = useTheme();
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const courseId = localStorage.getItem('course_id');
+
+  const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setProfileMenuAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth/sign-in');
+  };
+
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
+  const handleMeetingClick = () => {
+    navigate('/contact/academic_advisor');
+  };
+
+  const handleHomeClick = () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const uid = user.id;
+    navigate(`/dashboard/student/${uid}`);
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <div className="flex h-screen" style={{ backgroundColor: theme.palette.background.default }}>
+        <Drawer
+          variant="persistent"
+          anchor="left"
+          open={drawerOpen}
+          PaperProps={{ 
+            style: { 
+              width: drawerWidth, 
+              backgroundColor: theme.palette.background.paper, 
+              borderRight: `1px solid ${theme.palette.divider}` 
+            } 
+          }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
+            <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
+              <MenuIcon />
+            </IconButton>
+            <IconButton sx={{ color: theme.palette.sidebar }}>
+              <MapsUgcRoundedIcon />
+            </IconButton>
+          </Box>
+          <List style={{ padding: '0 15px' }}>
+            <ListItem button onClick={handleHomeClick} sx={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
+                <HomeIcon />
+              </ListItemIcon>
+              <ListItemText primary="Home" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary } }} />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/dashboard/analytics')} sx={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
+                <InsightsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Analytics" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary } }} />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/about')} sx={{ borderRadius: '8px' }}>
+              <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
+                <InfoIcon />
+              </ListItemIcon>
+              <ListItemText primary="About" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary } }} />
+            </ListItem>
+          </List>
+        </Drawer>
+
+        <div className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : 'ml-0'}`}>
+          <div className="relative p-4 flex items-center justify-between" style={{ backgroundColor: theme.palette.background.default, borderBottom: `1px solid ${theme.palette.divider}` }}>
+            {!drawerOpen && (
+              <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Typography variant="h6" style={{ textAlign: 'left', color: theme.palette.text.primary }}>Analytics</Typography>
+            <div style={{ flexGrow: 1 }}></div>
+
+            <div 
+              style={{ 
+                backgroundColor: '#FEEAEA', 
+                color: '#F04261', 
+                padding: '4px 8px', 
+                borderRadius: '8px', 
+                marginRight: '10px',
+                fontWeight: '500', 
+                fontSize: '0.875rem'
+              }}
+            >
+              Beta V1.3
+            </div>
+
+            <img src={logo_greg} alt="Logo face" className="h-10 w-auto" style={{ marginRight: '20px', marginLeft: '15px', cursor: 'pointer' }} onClick={handleProfileMenuClick} />
+            <Menu
+              anchorEl={profileMenuAnchorEl}
+              open={Boolean(profileMenuAnchorEl)}
+              onClose={handleProfileMenuClose}
+              PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary } }}
+            >
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <LogoutIcon fontSize="small" style={{ color: '#F04261' }} />
+                </ListItemIcon>
+                <ListItemText primary={<Typography style={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>Log-out</Typography>} />
+              </MenuItem>
+            </Menu>
+
+            {courseId === "6f9b98d4-7f92-4f7b-abe5-71c2c634edb2" && (
+              <Button variant="outlined" onClick={handleMeetingClick} sx={{ borderColor: theme.palette.sidebar, color: theme.palette.sidebar }}>
+                Contact my Academic Advisor
+              </Button>
+            )}
+          </div>
+          <div className="flex-grow p-4 flex items-center justify-center" style={{ backgroundColor: theme.palette.background.default }}>
+            <Typography variant="h4" sx={{ color: theme.palette.text.primary }}>Coming soon</Typography>
+          </div>
+        </div>
+      </div>
+    </ThemeProvider>
+  );
+};
+
+export default Analytics_student;
+
+
+
+
+/*
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThemeProvider, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Avatar, IconButton, Menu, MenuItem } from '@mui/material';
@@ -133,7 +289,7 @@ const Analytics_student: React.FC = () => {
             )}
           </div>
           <div className="flex-grow p-4 bg-white flex items-center justify-center">
-            {/* Content goes here */}
+            {/* Content goes here *
             <Typography variant="h4">Coming soon</Typography>
           </div>
         </div>
@@ -143,7 +299,7 @@ const Analytics_student: React.FC = () => {
 };
 
 export default Analytics_student;
-
+*/
 
 /*
 import React, { useState } from 'react';

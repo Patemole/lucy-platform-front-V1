@@ -1,5 +1,98 @@
 import { createTheme } from '@mui/material/styles';
 
+// Utilitaire pour pxToRem
+const pxToRem = (size) => `${size / 16}rem`;
+
+const columbiaTheme = createTheme({
+  lightMode: {
+    palette: {
+      mode: 'light',
+      primary: {
+        main: '#0033A0', // Bleu pour Columbia
+      },
+      secondary: {
+        main: '#C4D8E2', // Couleur secondaire de Columbia
+      },
+      background: {
+        default: '#ffffff', // Fond blanc pour light mode
+        paper: '#F5F5F5', // Fond pour les éléments "paper" dans light mode
+      },
+      text: {
+        primary: '#000000', // Texte noir pour light mode
+      },
+      button: {
+        background: '#D6EAF8', // Fond des boutons en light mode
+        text: '#0033A0', // Texte bleu dans les boutons en light mode
+      },
+    },
+    typography: {
+      fontFamily: 'Roboto, Arial, sans-serif',
+      pxToRem,
+    },
+  },
+  darkMode: {
+    palette: {
+      mode: 'dark',
+      primary: {
+        main: '#0033A0', // Bleu pour Columbia en dark mode
+      },
+      secondary: {
+        main: '#C4D8E2', // Couleur secondaire de Columbia en dark mode
+      },
+      background: {
+        default: '#2E2E2E', // Fond sombre pour dark mode
+        paper: '#1C1C1C', // Fond pour les éléments "paper" dans dark mode
+      },
+      text: {
+        primary: '#FFFFFF', // Texte blanc pour dark mode
+      },
+      button: {
+        background: '#3E3E3E', // Fond des boutons en dark mode
+        text: '#C4D8E2', // Texte clair dans les boutons en dark mode
+      },
+    },
+    typography: {
+      fontFamily: 'Roboto, Arial, sans-serif',
+      pxToRem,
+    },
+  },
+  components: {
+    MuiButton: {
+      defaultProps: {
+        disableRipple: true, // Désactivation des effets ripple
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          '&:focus': {
+            backgroundColor: 'rgba(0, 0, 0, 0.12)',
+          },
+          '&:active': {
+            backgroundColor: 'rgba(0, 0, 0, 0.24)',
+          },
+        },
+      },
+    },
+  },
+  logo: '/logos/columbia_logo.png', // Chemin du logo spécifique à Columbia
+  university: 'columbia',
+  facultyOptions: [
+    'Columbia College',
+    'School of Engineering and Applied Science',
+    'School of General Studies',
+    'School of International and Public Affairs',
+  ],
+});
+
+export default columbiaTheme;
+
+
+
+
+/*
+import { createTheme } from '@mui/material/styles';
+
 const columbiaTheme = createTheme({
   palette: {
     primary: {
@@ -27,7 +120,7 @@ const columbiaTheme = createTheme({
 });
 
 export default columbiaTheme;
-
+*/
 
 /*
 import { createTheme } from '@mui/material/styles';

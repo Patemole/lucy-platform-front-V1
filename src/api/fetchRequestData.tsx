@@ -5,7 +5,8 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 // Définir le préfixe de l'URL de l'API en fonction de l'environnement
 const apiUrlPrefix: string = config.server_url;
 
-type TimeFilter = 'Today' | 'Last Week' | 'Last Month' | 'Last Year';
+//type TimeFilter = 'Today' | 'Last Week' | 'Last Month' | 'Last Year';
+type TimeFilter = string;
 type UniversityFilter = string; // 'All', 'Harvard', 'MIT', etc.
 
 interface RequestDataResponse {
@@ -23,7 +24,7 @@ export const fetchRequestData = async (timeFilter: TimeFilter, universityFilter:
         };
 
         // API call to fetch filtered request data
-        const response = await fetch(`${apiUrlPrefix}/requests/filtered`, {
+        const response = await fetch(`${apiUrlPrefix}/analytics/requests_filtered`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -42,10 +43,18 @@ export const fetchRequestData = async (timeFilter: TimeFilter, universityFilter:
 
         console.log('Successfully fetched request data:', data);
 
+        // Return the count of matching requests and their corresponding dates as separate variables
+        const { count, dates } = data;
+
+        return { count, dates };
+
         // Return the count of matching requests and their corresponding dates
-        return data;
+        //return data;
     } catch (error) {
         console.error('Error fetching request data:', error);
         throw error;
     }
 };
+
+
+export default fetchRequestData;

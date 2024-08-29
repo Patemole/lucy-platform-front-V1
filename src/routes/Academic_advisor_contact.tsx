@@ -4,6 +4,159 @@ import { ThemeProvider, useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import logo from '../logo_lucy.png';
+import { submitAcademicAdvisorEmailAdress } from '../api/academic_advisor_info';
+
+const AcademicAdvisorContact: React.FC = () => {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+
+  const validateEmail = (email: string) => {
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
+  };
+
+  const handleGoClick = async () => {
+    if (validateEmail(email)) {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const uid = user.id;
+
+      // Ouvrir le client email de l'utilisateur dans un nouvel onglet
+      window.open(`mailto:${email}?subject=Lucy, Need help`, '_blank');
+
+      // Soumettre l'adresse email et le uid à l'endpoint
+      try {
+        await submitAcademicAdvisorEmailAdress(email, uid);
+      } catch (error) {
+        console.error('Failed to submit email:', error);
+      }
+
+      setEmail('');
+    } else {
+      console.error('You need to enter a valid email address');
+    }
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      handleGoClick();
+    }
+  };
+
+  const handleBackToChatClick = () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const uid = user.id;
+    navigate(`/dashboard/student/${uid}`);
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Grid container sx={{ minHeight: '100vh', position: 'fixed', width: '100%', backgroundColor: theme.palette.background.default }}>
+        <Grid item xs={8} sx={{ backgroundColor: theme.palette.background.paper, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Box>
+            {/* Empty box for future content or just to center */}
+          </Box>
+        </Grid>
+        <Grid
+          item
+          xs={4}
+          sx={{
+            backgroundColor: theme.palette.background.default,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            boxShadow: '-5px 0 15px -10px rgba(0,0,0,0.3)',
+            height: '100vh',
+          }}
+        >
+          <Box sx={{ alignSelf: 'flex-start', margin: 2, display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+            <Button
+              variant="text"
+              startIcon={<FiArrowLeft />}
+              onClick={handleBackToChatClick}
+              sx={{ textTransform: 'none', color: theme.palette.text.primary }}
+            >
+              Back to chat
+            </Button>
+            <img src={theme.logo} alt="University Logo" style={{ height: 50, width: 'auto', marginRight: '35px' }} />
+          </Box>
+          <Box sx={{ width: '80%', maxWidth: 400, textAlign: 'left', marginTop: '5%' }}>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
+              Your academic advisor's email
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+              <TextField
+                variant="outlined"
+                placeholder="Enter email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                fullWidth
+                onKeyPress={handleKeyPress}
+                sx={{
+                  marginRight: '10px',
+                  '& fieldset': { borderColor: theme.palette.primary.main },
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main },
+                    borderRadius: '12px',
+                  },
+                  '& .MuiInputBase-input': {
+                    color: theme.palette.text.primary,
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                  },
+                }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleGoClick}
+                sx={{
+                  borderRadius: '12px',
+                  padding: '10px 20px',
+                  backgroundColor: theme.palette.button_sign_in,
+                  color: theme.palette.button_text_sign_in,
+                }}
+              >
+                Go
+              </Button>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              alignSelf: 'flex-end',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: theme.spacing(2),
+              boxSizing: 'border-box',
+              marginBottom: 2,
+            }}
+          >
+            <Typography variant="body2" sx={{ mr: 1, color: theme.palette.text.primary }}>
+              powered by Lucy
+            </Typography>
+            <Avatar src={logo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
+          </Box>
+        </Grid>
+      </Grid>
+    </ThemeProvider>
+  );
+};
+
+export default AcademicAdvisorContact;
+
+
+
+/*
+import React, { useState } from 'react';
+import { TextField, Button, Typography, Box, Grid, CssBaseline, Avatar } from '@mui/material';
+import { ThemeProvider, useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft } from 'react-icons/fi';
+import logo from '../logo_lucy.png';
 import logo_penn from '../upenn_logo.png';
 import { submitAcademicAdvisorEmailAdress } from '../api/academic_advisor_info';
 
@@ -58,7 +211,7 @@ const AcademicAdvisorContact: React.FC = () => {
       <Grid container sx={{ minHeight: '100vh', position: 'fixed', width: '100%' }}>
         <Grid item xs={8} sx={{ backgroundColor: '#f5f5f5', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Box>
-            {/* Empty box for future content or just to center */}
+            {/* Empty box for future content or just to center *
           </Box>
         </Grid>
         <Grid item xs={4} sx={{ backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', boxShadow: '-5px 0 15px -10px rgba(0,0,0,0.3)', height: '100vh' }}>
@@ -132,7 +285,7 @@ const AcademicAdvisorContact: React.FC = () => {
 };
 
 export default AcademicAdvisorContact;
-
+*/
 
 
 
