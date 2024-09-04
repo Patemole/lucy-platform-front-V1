@@ -5,6 +5,7 @@ import getTheme from './themes';
 import Dashboard_teacher_template from './routes/Dashboard_teacher_template';
 import Dashboard_eleve_template from './routes/Dashboard_eleve_template';
 import Dashboard_academic_advisor from './routes/Dashboard_academic_advisor';
+import Student_list_academic_advisor from './routes/Student_list_academic_advisor';
 
 import Dashboard_admin from './routes/Dashboard_admin';
 import Dashboard_feedback_admin from './routes/Dashboard_feedback_admin';
@@ -109,8 +110,11 @@ const App: React.FC = () => {
                         <Route path="/dashboard/teacher/:uid/:course_id" element={<Dashboard_teacher_template />} />
                         <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
                         <Route path="/dashboard/analytics" element={<Analytics_eleve_template />} />
-                        <Route path="/dashboard/academic-advisor/:uid" element={<Dashboard_academic_advisor />} />
 
+                        <Route path="/dashboard/academic-advisor/:uid" element={<Dashboard_academic_advisor />} />
+                        <Route path="/onboarding/student-list/:uid" element={<Student_list_academic_advisor />} />
+
+                        
                         <Route path="/dashboard/admin" element={<Dashboard_admin />} />
                         <Route path="/dashboard/admin/feedback" element={<Dashboard_feedback_admin />} />
 
