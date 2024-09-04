@@ -11,6 +11,7 @@ declare module '@mui/material/styles' {
     sign_up_link: string;
     send_button_message: string;
     hover_button: string;
+    hover_button_with_button_background: string,
     button_text_sign_in: string;
     button: {
       background: string;
@@ -24,6 +25,7 @@ declare module '@mui/material/styles' {
     text_human_message_historic?: string
     button_sign_in?: string
     hover_button?: string
+    hover_button_with_button_background?: string
     sign_up_link?: string
     send_button_message?: string
     button_text_sign_in?: string

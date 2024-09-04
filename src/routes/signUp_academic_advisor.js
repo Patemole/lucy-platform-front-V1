@@ -48,6 +48,125 @@ const getErrorMessage = (subdomain) => {
   return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} email address can register`;
 };
 
+
+
+export default function SignUp() {
+  const theme = useTheme();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
+  const [open, setOpen] = useState(false);
+
+  const subdomain = config.subdomain;
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSignIn = () => {
+    navigate(`/auth/sign-in`);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrors({});
+
+    const data = new FormData(event.currentTarget);
+
+    const firstName = data.get('firstName');
+    const lastName = data.get('lastName');
+    const email = data.get('email');
+    const password = data.get('password');
+    const newErrors = {};
+
+    if (!firstName) {
+      newErrors.firstName = 'First name is required';
+    }
+    if (!lastName) {
+      newErrors.lastName = 'Last name is required';
+    }
+
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!isEmail(email)) {
+      newErrors.email = 'Please provide a valid email';
+    } else if (!isAllowedEmail(email, subdomain)) {
+      newErrors.email = getErrorMessage(subdomain);
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+    } else {
+      try {
+        console.log("Creating user with email:", email);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+        const user = userCredential.user;
+        console.log("User created:", user);
+
+        // Create a new chat session
+        const chatId = uuidv4();
+        const academicAdvisorCourseId = "6f9b98d4-7f92-4f7b-abe5-71c2c634edb2";
+
+        console.log("Saving user to Firestore:", user.uid);
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          name: `${firstName} ${lastName}`,
+          email: email,
+          university: theme.university,
+          role: "academic_advisor",
+          courses: [academicAdvisorCourseId],
+          chatsessions: [chatId]
+        });
+
+        await setDoc(doc(db, "chatsessions", chatId), {
+          chat_id: chatId,
+          name: "New chat",
+          created_at: serverTimestamp(),
+          modified_at: serverTimestamp()
+        });
+
+        console.log("Authenticating user with email:", email);
+        await signInWithEmailAndPassword(auth, email, password);
+
+        console.log("User authenticated:", user);
+        console.log("Logging in user:", user.uid);
+        login({
+          id: user.uid,
+          name: `${firstName} ${lastName}`,
+          email: email,
+          role: "academic_advisor"
+        });
+
+        localStorage.setItem('university', subdomain);
+        localStorage.setItem('chat_id', chatId);
+        localStorage.setItem('course_id', academicAdvisorCourseId);
+
+        const onboardingUrl = `/onboarding/student-list/${user.uid}`;
+        navigate(onboardingUrl, { state: { uid: user.uid, firstName: firstName } });
+      } catch (error) {
+        if (error.code === 'auth/email-already-in-use') {
+          newErrors.email = 'Email address already in use!';
+        }
+        setErrors(newErrors);
+        console.error("Error creating user or signing in:", error.code, error.message);
+      }
+    }
+  };
+
+
+
+
+
+
+//ancienne fonction pour navigate directement vers le dashboard AA
+/*
 export default function SignUp() {
   const theme = useTheme();
   const { login } = useAuth();
@@ -157,6 +276,7 @@ export default function SignUp() {
       }
     }
   };
+  */
 
   return (
     <Container component="main" maxWidth="sm">

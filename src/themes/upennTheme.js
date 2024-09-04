@@ -24,6 +24,7 @@ const upennTheme = createTheme({
     send_button_message: '#011F5B',
     button_sign_in: '#011F5B',
     hover_button: '#022A7C',
+    hover_button_with_button_background: '#AED6F1',
     button_text_sign_in: '#ffffff',
     sign_up_link: '#011F5B',
     button: {
@@ -88,6 +89,7 @@ const upennDarkTheme = createTheme({
     send_button_message: '#011F5B',
     button_sign_in: '#D6EAF8',
     hover_button: '#A9D1F2',
+    hover_button_with_button_background: '#89BEE8',
     button_text_sign_in: '#011F5B',
     sign_up_link: '#ffffff',
     button: {
