@@ -1,4 +1,5 @@
 //CODE QUI FONCTIONNE POUR TOUT
+
 import React, { useState, useRef, KeyboardEvent, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -185,12 +186,30 @@ const Dashboard_eleve_template: React.FC = () => {
     setAnchorEl(event.currentTarget);
   };
 
+  /* FONCTION MARCHE
   const handleMenuClose = (option: string) => {
     const selectedCourse = courseOptions.find((course) => course.name === option);
     if (selectedCourse) {
       setSelectedFilter(selectedCourse.name);
       localStorage.setItem('course_id', selectedCourse.id);
       if (ALLOWED_COURSE_IDS.includes(selectedCourse.id)) {
+        setPreviousFilter(selectedFilter);
+        setFeedbackModalOpen(true);
+      }
+    }
+    setAnchorEl(null);
+  };
+  */
+
+  //Nouvelle fonction qui permet de navigate vers une autre page si le course selection est choisi
+  const handleMenuClose = (option: string) => {
+    const selectedCourse = courseOptions.find((course) => course.name === option);
+    if (selectedCourse) {
+      setSelectedFilter(selectedCourse.name);
+      localStorage.setItem('course_id', selectedCourse.id);
+      if (selectedCourse.id === 'moRgToBTOAJZdMQPs7Ci') {
+        navigate(`/dashboard/student/course_selection/${uid}`);
+      } else if (ALLOWED_COURSE_IDS.includes(selectedCourse.id)) {
         setPreviousFilter(selectedFilter);
         setFeedbackModalOpen(true);
       }
@@ -258,8 +277,8 @@ const Dashboard_eleve_template: React.FC = () => {
 
       const lastMessageIndex = messageHistory.length - 1;
 
-      //for await (const packetBunch of sendMessageFakeDemo({
-      for await (const packetBunch of sendMessageSocraticLangGraph({
+      for await (const packetBunch of sendMessageFakeDemo({
+      //for await (const packetBunch of sendMessageSocraticLangGraph({
         message: inputValue,
         chatSessionId: chatSessionId,
         courseId: courseId,
