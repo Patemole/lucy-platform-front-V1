@@ -3,7 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from '@mui/material/styles';
 import getTheme from './themes';
 import Dashboard_teacher_template from './routes/Dashboard_teacher_template';
+
 import Dashboard_eleve_template from './routes/Dashboard_eleve_template';
+import Course_selection_eleve_template from './routes/Course_selection_eleve_template'
+import Schedule_eleve_template from './routes/Schedule_eleve_template'
+
 import Dashboard_academic_advisor from './routes/Dashboard_academic_advisor';
 import Student_list_academic_advisor from './routes/Student_list_academic_advisor';
 
@@ -108,7 +112,12 @@ const App: React.FC = () => {
                         <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
                         <Route path="/onboarding/course-creation" element={<LearningStyleSurveyTeacher />} />
                         <Route path="/dashboard/teacher/:uid/:course_id" element={<Dashboard_teacher_template />} />
+
                         <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
+                        <Route path="/dashboard/student/course_selection/:uid" element={<Course_selection_eleve_template />} />
+                        <Route path="/dashboard/student/schedule/:uid" element={<Schedule_eleve_template />} />
+                        
+                        
                         <Route path="/dashboard/analytics" element={<Analytics_eleve_template />} />
 
                         <Route path="/dashboard/academic-advisor/:uid" element={<Dashboard_academic_advisor />} />

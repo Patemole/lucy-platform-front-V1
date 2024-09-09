@@ -127,11 +127,12 @@ export default function LearningStyleSurvey() {
         const academicAdvisorCourseId = "6f9b98d4-7f92-4f7b-abe5-71c2c634edb2"; 
         const campuslifeCourseId = "Q1SjXBe30FyX6GxvJVIG"; 
         const careerAdvisorCourseId = "tyPR1RAulPfqLLfNgIqF"; 
-        const studyAbroadCourseId = "Connf4P2TpKXXGooaQD5"; 
+        const studyAbroadCourseId = "Connf4P2TpKXXGooaQD5";
+        const courseSectionCourseId = "moRgToBTOAJZdMQPs7Ci"; 
 
         let chatId = uuidv4();
 
-        let coursesToAdd = [academicAdvisorCourseId, campuslifeCourseId, careerAdvisorCourseId, studyAbroadCourseId];
+        let coursesToAdd = [academicAdvisorCourseId, campuslifeCourseId, careerAdvisorCourseId, studyAbroadCourseId, courseSectionCourseId];
 
         if (course_id) {
           const courseRef = doc(db, 'courses', course_id);
