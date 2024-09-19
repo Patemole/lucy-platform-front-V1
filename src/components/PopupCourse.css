@@ -1,0 +1,64 @@
+.course-slot {
+    cursor: pointer;
+    background-color: #fcfcfc;
+    border: 1px solid #bcbcbc;
+    padding: 12px; /* Réduit le padding pour diminuer la hauteur */
+    margin-bottom: 8px;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center; /* Centre verticalement le contenu */
+  }
+  
+  .course-slot:hover {
+    background-color: #f0f0f0; /* Couleur de hover plus classique */
+  }
+  
+  .course-slot.selected {
+    background-color: #e0f7fa;
+  }
+  
+  .course-slot.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  
+  .semester-tag {
+    background-color: #ffd9bf;
+    color: #f97315;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.675rem;
+    flex-shrink: 0;
+  }
+  
+  .credit-tag {
+    background-color: #d6eaf7;
+    color: #011f5b;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.675rem;
+    flex-shrink: 0;
+  }
+  
+  .prerequisite-tag {
+    background-color: #feeaea;
+    color: #ef4361;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.675rem;
+    word-wrap: break-word;
+  }
+  
+  .link {
+    color: #1a71ff;
+    font-size: 0.875rem;
+    text-decoration: none;
+    flex-shrink: 1;
+  }
+  
+  
+  
+  
+  

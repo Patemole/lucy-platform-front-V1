@@ -228,6 +228,24 @@ const Dashboard_eleve_template: React.FC = () => {
     // Call the onSubmit function with the TAK_message
     onSubmit([...messages, newMessage, loadingMessage], TAK_message);
   };
+
+
+  const handleSendCOURSEMessage = (COURSE_message: string) => {
+    if (COURSE_message.trim() === '') return; // Ensure there's some message to send
+  
+    // Create a new message object using the TAK_message
+    const newMessage: Message = { id: Date.now(), type: 'human', content: COURSE_message };
+  
+    // Add the new message to the messages state
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  
+    // Create a loading message (AI is typing...)
+    const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
+    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
+  
+    // Call the onSubmit function with the COURSE_message
+    onSubmit([...messages, newMessage, loadingMessage], COURSE_message);
+  };
   
   
 
@@ -1038,9 +1056,11 @@ const Dashboard_eleve_template: React.FC = () => {
                             handleSourceClick={handleSourceClick}
                             images={message.images}
                             takData={message.TAK} // Assurez-vous que TAK est bien passé ici
+                            CourseData={message.COURSE}
                             waitingMessages={message.waitingMessages}
                             drawerOpen={drawerOpen}
                             handleSendTAKMessage={handleSendTAKMessage}
+                            handleSendCOURSEMessage={handleSendCOURSEMessage}
                           />
                         )}
                       </div>
