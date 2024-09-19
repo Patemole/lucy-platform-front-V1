@@ -42,7 +42,7 @@ import certifiate_icon from '../certifiate.png';
 
 import '../index.css';
 import { AIMessage } from '../components/Messages';
-import { Message, Course, AnswerTAK, AnswerWaiting } from '../interfaces/interfaces_eleve';
+import { Message, Course, AnswerTAK, AnswerCourse, AnswerWaiting } from '../interfaces/interfaces_eleve';
 import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
@@ -113,12 +113,12 @@ const Dashboard_eleve_template: React.FC = () => {
     if (uid) {
       const userRef = doc(db, 'users', uid);
       const userSnap = await getDoc(userRef);
-
+  
       if (userSnap.exists()) {
         const userData = userSnap.data();
         const courseIds = userData.courses || [];
         const chatSessionIds = userData.chatsessions || [];
-
+  
         const coursePromises = courseIds.map(async (courseId: string) => {
           if (typeof courseId === 'string') {
             const courseRef = doc(db, 'courses', courseId);
@@ -127,18 +127,32 @@ const Dashboard_eleve_template: React.FC = () => {
           }
           return null;
         });
-
+  
         const courses = await Promise.all(coursePromises);
         const validCourses = courses.filter((course): course is Course => course !== null);
-        setCourseOptions(validCourses);
-
-        if (validCourses.length > 0) {
-          const initialCourseId = localStorage.getItem('course_id') || validCourses[0].id;
-          const initialCourse = validCourses.find((course) => course.id === initialCourseId);
-          setSelectedFilter(initialCourse ? initialCourse.name : validCourses[0].name);
-          localStorage.setItem('course_id', initialCourseId);
+  
+        // Your custom order
+        const customOrder = ['Academic Advisor', 'Course Selection', 'Career Advisor', 'Campus Life'];
+  
+        // Filter out unwanted courses and sort by custom order
+        const filteredAndSortedCourses = validCourses
+          .filter((course) => course.name !== 'Study Abroad')
+          .sort((a, b) => customOrder.indexOf(a.name) - customOrder.indexOf(b.name));
+  
+        setCourseOptions(filteredAndSortedCourses);
+  
+        // Handle current course_id (to display the correct course in dropdown)
+        const currentCourseId = localStorage.getItem('course_id');
+        if (currentCourseId) {
+          const currentCourse = filteredAndSortedCourses.find((course) => course.id === currentCourseId);
+          if (currentCourse) {
+            setSelectedFilter(currentCourse.name);
+          } else {
+            setSelectedFilter('Academic Advisor'); // Default fallback if course_id is not found
+          }
         }
-
+  
+        // Now handle the chat sessions...
         const chatPromises = chatSessionIds.map(async (chatId: string) => {
           if (typeof chatId === 'string') {
             const chatRef = doc(db, 'chatsessions', chatId);
@@ -147,7 +161,7 @@ const Dashboard_eleve_template: React.FC = () => {
           }
           return null;
         });
-
+  
         const fetchedConversations = await Promise.all(chatPromises);
         const validConversations = fetchedConversations.filter(
           (conversation): conversation is { chat_id: string; name: string } => conversation !== null
@@ -156,6 +170,8 @@ const Dashboard_eleve_template: React.FC = () => {
       }
     }
   };
+  
+  
 
   useEffect(() => {
     fetchCourseOptionsAndChatSessions();
@@ -202,6 +218,7 @@ const Dashboard_eleve_template: React.FC = () => {
   */
 
   //Nouvelle fonction qui permet de navigate vers une autre page si le course selection est choisi
+  /*
   const handleMenuClose = (option: string) => {
     const selectedCourse = courseOptions.find((course) => course.name === option);
     if (selectedCourse) {
@@ -216,6 +233,106 @@ const Dashboard_eleve_template: React.FC = () => {
     }
     setAnchorEl(null);
   };
+  */
+  
+  //Nouvelle fonction qui permet de navigate vers courseselection si courseselection est choisi
+  //Enregistre l'ancien chat_id, créer un nouveau chat_id pour utiliser une nouvelle conversation de chat dans course_selection
+  const handleMenuClose = async (option: string) => {
+    const selectedCourse = courseOptions.find((course) => course.name === option);
+    if (selectedCourse) {
+      setSelectedFilter(selectedCourse.name);
+      localStorage.setItem('course_id', selectedCourse.id);
+  
+      if (selectedCourse.id === 'moRgToBTOAJZdMQPs7Ci') {
+        // Handle Course Selection behavior
+        const oldChatId = localStorage.getItem('chat_id');
+  
+        const lastCourseSelectionChatId = localStorage.getItem('LastCourseSelectionChat_id');
+        let newChatId = '';
+  
+        if (lastCourseSelectionChatId) {
+          // Use LastCourseSelectionChat_id if it exists
+          newChatId = lastCourseSelectionChatId;
+          localStorage.setItem('chat_id', newChatId);
+          setActiveChatId(newChatId);
+          setMessages([]); // Clear messages for new conversation
+        } else {
+          // Otherwise, create a new chat_id
+          newChatId = uuidv4();
+          localStorage.setItem('chat_id', newChatId);
+          setActiveChatId(newChatId);
+          setMessages([]); // Clear messages for new conversation
+  
+          // Create a new chat session in the backend
+          if (uid) {
+            const userRef = doc(db, 'users', uid);
+            const userSnap = await getDoc(userRef);
+  
+            if (userSnap.exists()) {
+              const userData = userSnap.data();
+              const chatsessions = userData.chatsessions || [];
+  
+              chatsessions.push(newChatId);
+              await updateDoc(userRef, { chatsessions });
+  
+              await setDoc(doc(db, 'chatsessions', newChatId), {
+                chat_id: newChatId,
+                name: 'New chat',
+                created_at: serverTimestamp(),
+                modified_at: serverTimestamp(),
+              });
+  
+              const refreshedUserSnap = await getDoc(userRef);
+              if (refreshedUserSnap.exists()) {
+                const refreshedUserData = refreshedUserSnap.data();
+                const chatSessionIds = refreshedUserData.chatsessions || [];
+  
+                const chatPromises = chatSessionIds.map(async (chatId: string) => {
+                  if (typeof chatId === 'string') {
+                    const chatRef = doc(db, 'chatsessions', chatId);
+                    const chatSnap = await getDoc(chatRef);
+                    if (chatSnap.exists() && chatSnap.data().name) {
+                      return { chat_id: chatId, name: chatSnap.data().name };
+                    }
+                  }
+                  return null;
+                });
+  
+                const fetchedConversations = await Promise.all(chatPromises);
+                const validConversations = fetchedConversations.filter(
+                  (conversation): conversation is { chat_id: string; name: string } => conversation !== null
+                );
+                setConversations(validConversations.reverse());
+              }
+            }
+          }
+        }
+  
+        // Save the previous chat_id before switching
+        if (oldChatId) {
+          localStorage.setItem('lastAcademicAdvisorChat_id', oldChatId);
+        }
+  
+        // Navigate to course selection page
+        navigate(`/dashboard/student/course_selection/${uid}`);
+      } else if (ALLOWED_COURSE_IDS.includes(selectedCourse.id)) {
+        // For other course types (e.g., Career Advisor), show the feedback modal
+        setPreviousFilter(selectedFilter);
+        setFeedbackModalOpen(true);
+      } else {
+        // Ensure that if the modal closes, we default back to Academic Advisor
+        setSelectedFilter('Academic Advisor');
+        localStorage.setItem('course_id', '6f9b98d4-7f92-4f7b-abe5-71c2c634edb2'); // Academic Advisor course_id
+      }
+    }
+  
+    setAnchorEl(null);
+  };
+  
+  
+  
+  
+  
 
   const handleSendTAKMessage = (TAK_message: string) => {
     if (TAK_message.trim() === '') return; // Ensure there's some message to send
@@ -232,6 +349,25 @@ const Dashboard_eleve_template: React.FC = () => {
   
     // Call the onSubmit function with the TAK_message
     onSubmit([...messages, newMessage, loadingMessage], TAK_message);
+  };
+
+
+
+  const handleSendCOURSEMessage = (COURSE_message: string) => {
+    if (COURSE_message.trim() === '') return; // Ensure there's some message to send
+  
+    // Create a new message object using the TAK_message
+    const newMessage: Message = { id: Date.now(), type: 'human', content: COURSE_message };
+  
+    // Add the new message to the messages state
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  
+    // Create a loading message (AI is typing...)
+    const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
+    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
+  
+    // Call the onSubmit function with the COURSE_message
+    onSubmit([...messages, newMessage, loadingMessage], COURSE_message);
   };
   
   
@@ -263,6 +399,7 @@ const Dashboard_eleve_template: React.FC = () => {
     let answerImages: { image_id: string; image_url: string; image_description?: string }[] = [];
     let relatedQuestionsList: string[] = [];
     let answerTAK: AnswerTAK[] = [];
+    let answerCourse: AnswerCourse[] = [];
     let answerWaiting: AnswerWaiting[] = [];
     let error: string | null = null;
 
@@ -298,6 +435,8 @@ const Dashboard_eleve_template: React.FC = () => {
               answerImages.push((packet as any).image_data);
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_TAK_data')) {
               answerTAK.push((packet as any).answer_TAK_data);
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_COURSE_data')) {
+              answerCourse.push((packet as any).answer_COURSE_data);
             } else if (Object.prototype.hasOwnProperty.call(packet, 'related_questions')) {
               relatedQuestionsList = (packet as any).related_questions;
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
@@ -316,6 +455,9 @@ const Dashboard_eleve_template: React.FC = () => {
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_TAK_data')) {
             answerTAK.push((packetBunch as any).answer_TAK_data);
 
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_COURSE_data')) {
+            answerCourse.push((packetBunch as any).answer_COURSE_data);
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'related_questions')) {
             relatedQuestionsList = (packetBunch as any).related_questions;
 
@@ -332,6 +474,7 @@ const Dashboard_eleve_template: React.FC = () => {
 
         const flattenedImages = answerImages.flat();
         const flattenedTAK = answerTAK.flat();
+        const flattenedCourse = answerCourse.flat();
         const flattenedwaitingdata = answerWaiting.flat();
         
         console.log("ANSWER WAITING QUESTIONS")
@@ -339,6 +482,9 @@ const Dashboard_eleve_template: React.FC = () => {
         console.log("\n")
         console.log("ANSWER WAITING QUESTIONS WITH FLATT")
         console.log(flattenedwaitingdata)
+        console.log("\n")
+        console.log("ANSWER COURSE WITH FLATT")
+        console.log(flattenedCourse)
 
         setMessages((prevMessages) => {
           const updatedMessages = [...prevMessages];
@@ -351,6 +497,7 @@ const Dashboard_eleve_template: React.FC = () => {
             citedDocuments: answerDocuments,
             images: flattenedImages,
             TAK: flattenedTAK,
+            COURSE: flattenedCourse,
             waitingMessages: flattenedwaitingdata, // Ajouter les messages d'attente ici
           };
 
@@ -976,9 +1123,11 @@ const Dashboard_eleve_template: React.FC = () => {
                             handleSourceClick={handleSourceClick}
                             images={message.images}
                             takData={message.TAK} // Assurez-vous que TAK est bien passé ici
+                            CourseData={message.COURSE}
                             waitingMessages={message.waitingMessages}
                             drawerOpen={drawerOpen}
                             handleSendTAKMessage={handleSendTAKMessage}
+                            handleSendCOURSEMessage={handleSendCOURSEMessage}
                           />
                         )}
                       </div>

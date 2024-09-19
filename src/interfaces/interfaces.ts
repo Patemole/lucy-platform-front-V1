@@ -24,7 +24,49 @@ export interface AnswerTAK {
     }; // Spécifications supplémentaires, comme un champ de texte pour "Other"
   }
 
-  export interface AnswerWaiting {
+
+// Interface pour la structure de AnswerCourse
+/*
+export interface AnswerCourse {
+    document_id: string; // Identifiant du document du cours
+    title: string; // Titre du cours
+    Semester: string; // Semestre pendant lequel le cours est offert
+    Credit: string; // Crédit attribué au cours
+    Prerequisites: string; // Liste des prérequis pour le cours
+    Description: string; // Brève description du cours
+    Prospectus_link: string; // Lien vers le prospectus du cours
+    Syllabus_link: string; // Lien vers le syllabus du cours
+  }
+*/
+
+
+export interface CourseSlot {
+    CourseID: string;
+    TeacherName: string;       // Name of the professor
+    TeacherQuality: string;    // Quality rating of the professor (e.g., "4.5")
+    Days: string[];            // Array of days when the class takes place (e.g., ["Mon", "Wed"])
+    StartTime: string;         // Class start time in 'HH:MM' format (e.g., "10:00")
+    EndTime: string;           // Class end time in 'HH:MM' format (e.g., "11:30")
+  }
+  
+  // Update the AnswerCourse interface
+  export interface AnswerCourse {
+    document_id: string;          // Identifier of the course document
+    title: string;                // Title of the course
+    code: string;
+    Semester: string;             // Semester during which the course is offered
+    Credit: string;               // Credits attributed to the course
+    Prerequisites: string;        // List of prerequisites for the course
+    Description: string;          // Brief description of the course
+    Prospectus_link: string;      // Link to the course prospectus
+    Syllabus_link: string;        // Link to the course syllabus
+    Work: string;                 // Workload rating (e.g., "2.5")
+    CourseQuality: string;        // Course quality rating (e.g., "3.5")
+    Difficulty: string;           // Difficulty rating (e.g., "2")
+    CoursesSlot: CourseSlot[];    // Array of available course slots
+  }
+
+export interface AnswerWaiting {
     sentence1: string;
     sentence2: string;
     sentence3: string;
@@ -62,6 +104,7 @@ export interface Message {
     citations?: CitationMap;
     images?: AnswerImage[] | null; // Utilisation de la nouvelle interface AnswerImage
     TAK?: AnswerTAK[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
+    COURSE?: AnswerCourse[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
     waitingMessages?: AnswerWaiting[]| null;
 };
 

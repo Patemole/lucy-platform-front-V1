@@ -1,16 +1,54 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Box, Typography, Divider } from '@mui/material';
 import Header from '../components/Header'; // Adjust the path as necessary
 import LeftSectionHeader from '../components/CourseSelectionHeader'; // Adjust the path as necessary
 import LeftSubsectionContent from '../components/CourseSelectionDegreePlanningLeftParameter'; // Adjust the path as necessary
 import Chat from '../components/CourseSelectionChat'; // Adjust the path as necessary
 import CourseMap from '../components/CourseSelectionCircleGraph'; // Import the CourseMap component
+import CurriculumProgress from '../components/ScheduleCourseList'; // Adjust the path as necessary
+import { CourseSlot, AnswerCourse } from '../interfaces/interfaces_eleve';
+import { useNavigate } from 'react-router-dom';
 
 const CourseSelectionEleveTemplate: React.FC = () => {
+  const navigate = useNavigate();
+
+  const [newCourseSlot, setNewCourseSlot] = useState<{ slot: CourseSlot; title: string; code: string; } | null>(null);
+  const [selectedAnswerCourse, setSelectedAnswerCourse] = useState<AnswerCourse | null>(null); // Ajouter cet état
+
+  // Fonction pour gérer l'ajout d'un créneau de cours au calendrier
+  const handleAddCourseToCalendar = (selectedSlot: CourseSlot, answerCourse: AnswerCourse) => {
+    const { title, code } = answerCourse; // Extraire title et code de answerCourse
+    setNewCourseSlot({ slot: selectedSlot, title, code });
+    setSelectedAnswerCourse(answerCourse); // Ajouter l'AnswerCourse ici
+      // Afficher une notification après l'ajout
+  };
+
+  // Fonction pour gérer la redirection vers "Academic Advisor"
+  const handleNavigateToAcademicAdvisor = () => {
+    // Enregistrer le chat_id actuel dans LastCourseSelectionChat_id
+    const currentChatId = localStorage.getItem('chat_id');
+    if (currentChatId) {
+      localStorage.setItem('LastCourseSelectionChat_id', currentChatId); // Stocker le chat_id actuel
+    }
+    // Récupérer le dernier chat_id de l'Academic Advisor
+    const lastAcademicAdvisorChatId = localStorage.getItem('lastAcademicAdvisorChat_id');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Si le chat_id de l'Academic Advisor existe, le remplacer dans le localStorage
+    if (lastAcademicAdvisorChatId) {
+      localStorage.setItem('chat_id', lastAcademicAdvisorChatId); // Remplacer le chat_id par lastAcademicAdvisorChat_id
+    }
+
+    // Récupérer l'uid de l'utilisateur et rediriger vers la page de l'étudiant
+    const uid = user.id;
+    navigate(`/dashboard/student/${uid}`);
+  };
+
   return (
     <Box height="100vh" display="flex" flexDirection="column" sx={{ overflow: 'hidden' }}>
       {/* Header Component */}
-      <Header />
+      <Header handleNavigateToAcademicAdvisor={handleNavigateToAcademicAdvisor} />
 
       {/* Main Page Content */}
       <Box display="flex" flexDirection="row" flex={1} sx={{ overflow: 'hidden' }}>
@@ -27,7 +65,7 @@ const CourseSelectionEleveTemplate: React.FC = () => {
           <Box display="flex" flexDirection="row" flex={1} sx={{ overflow: 'hidden' }}>
             {/* Left Subsection - 30%, scrollable */}
             <Box
-              flex={3.5}
+              flex={2.5}
               sx={{
                 backgroundColor: '#FFFFFF',
                 display: 'flex',
@@ -37,12 +75,12 @@ const CourseSelectionEleveTemplate: React.FC = () => {
               }}
             >
               {/* Left Subsection Content Component */}
-              <LeftSubsectionContent />
+              < CurriculumProgress/>  {/*LeftSubsectionContent*/}
             </Box>
 
             {/* Right Subsection - 70% */}
             <Box 
-              flex={6.5} 
+              flex={7.5} 
               sx={{ 
                 padding: '16px', 
                 backgroundColor: '#FFFFFF', // Remove blue background and make it white
@@ -64,7 +102,7 @@ const CourseSelectionEleveTemplate: React.FC = () => {
         <Box flex={3} sx={{ backgroundColor: '#F5F5F5', display: 'flex', flexDirection: 'column', padding: 0 }}>
           {/* Chat Component */}
           <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
-            <Chat />
+            <Chat handleAddCourseToCalendar={handleAddCourseToCalendar} />
           </Box>
         </Box>
       </Box>

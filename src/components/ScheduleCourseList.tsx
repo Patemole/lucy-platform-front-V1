@@ -47,7 +47,7 @@ const CurriculumProgress: React.FC = () => {
           <Typography variant="body1" sx={{ marginLeft: '8px', fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
             Computing
           </Typography>
-          <IconButton sx={{ marginLeft: 'auto' }}><ExpandMore /></IconButton>
+          <IconButton sx={{ marginLeft: '8px' }}><ExpandMore /></IconButton>
         </ListItem>
 
         {/* Math and Natural Science */}
@@ -56,7 +56,7 @@ const CurriculumProgress: React.FC = () => {
           <Typography variant="body1" sx={{ marginLeft: '8px', fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
             Math and Natural Science
           </Typography>
-          <IconButton sx={{ marginLeft: 'auto' }}><ExpandMore /></IconButton>
+          <IconButton sx={{ marginLeft: '8px' }}><ExpandMore /></IconButton>
         </ListItem>
 
         {/* Artificial Intelligence */}
@@ -65,7 +65,7 @@ const CurriculumProgress: React.FC = () => {
           <Typography variant="body1" sx={{ marginLeft: '8px', fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
             Artificial Intelligence
           </Typography>
-          <IconButton sx={{ marginLeft: 'auto' }}><ExpandMore /></IconButton>
+          <IconButton sx={{ marginLeft: '8px' }}><ExpandMore /></IconButton>
         </ListItem>
 
         {/* Senior Design */}
@@ -74,7 +74,7 @@ const CurriculumProgress: React.FC = () => {
           <Typography variant="body1" sx={{ marginLeft: '8px', fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
             Senior Design
           </Typography>
-          <IconButton sx={{ marginLeft: 'auto' }}><ExpandMore /></IconButton>
+          <IconButton sx={{ marginLeft: '8px' }}><ExpandMore /></IconButton>
         </ListItem>
 
         {/* Technical Electives */}
@@ -83,7 +83,7 @@ const CurriculumProgress: React.FC = () => {
           <Typography variant="body1" sx={{ marginLeft: '8px', fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
             Technical Electives
           </Typography>
-          <IconButton sx={{ marginLeft: 'auto' }}><ExpandMore /></IconButton>
+          <IconButton sx={{ marginLeft: '8px' }}><ExpandMore /></IconButton>
         </ListItem>
 
         {/* General Electives */}
@@ -92,7 +92,7 @@ const CurriculumProgress: React.FC = () => {
           <Typography variant="body1" sx={{ marginLeft: '8px', fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
             General Electives
           </Typography>
-          <IconButton sx={{ marginLeft: 'auto' }}><ExpandMore /></IconButton>
+          <IconButton sx={{ marginLeft: '8px' }}><ExpandMore /></IconButton>
         </ListItem>
 
         {/* Free Elective */}
@@ -101,7 +101,7 @@ const CurriculumProgress: React.FC = () => {
           <Typography variant="body1" sx={{ marginLeft: '8px', fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
             Free Elective
           </Typography>
-          <IconButton sx={{ marginLeft: 'auto' }}><ExpandMore /></IconButton>
+          <IconButton sx={{ marginLeft: '8px' }}><ExpandMore /></IconButton>
         </ListItem>
       </List>
 
@@ -120,7 +120,7 @@ const CurriculumProgress: React.FC = () => {
           <Typography variant="body1" sx={{ marginLeft: '8px', fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
             Physics Requirement
           </Typography>
-          <IconButton sx={{ marginLeft: 'auto' }}>
+          <IconButton sx={{ marginLeft: '8px' }}>
             {openPhysicsRequirement ? <ExpandLess /> : <ExpandMore />}
           </IconButton>
         </ListItem>
@@ -145,7 +145,7 @@ const CurriculumProgress: React.FC = () => {
           <Typography variant="body1" sx={{ marginLeft: '8px', fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
             Other Courses
           </Typography>
-          <IconButton sx={{ marginLeft: 'auto' }}><ExpandMore /></IconButton>
+          <IconButton sx={{ marginLeft: '8px' }}><ExpandMore /></IconButton>
         </ListItem>
       </List>
     </Box>
@@ -153,4 +153,5 @@ const CurriculumProgress: React.FC = () => {
 };
 
 export default CurriculumProgress;
+
 

@@ -82,7 +82,7 @@ const DegreeProgressComponent: React.FC = () => {
             </Box>
           </Box>
           {/* Text next to the circular progress */}
-          <Typography sx={{ color: '#011F5B', fontWeight: '500', fontSize: '1rem' }}>
+          <Typography sx={{ color: '#011F5B', fontWeight: '500', fontSize: '0.875rem' }}>
             {getLabel(key)}
           </Typography>
         </Box>

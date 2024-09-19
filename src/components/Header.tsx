@@ -31,7 +31,11 @@ import '../index.css';
 
 const drawerWidth = 240;
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  handleNavigateToAcademicAdvisor: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ handleNavigateToAcademicAdvisor }) => {
   const theme = useTheme();
   const { uid } = useParams<{ uid: string }>();
   const navigate = useNavigate();
@@ -44,11 +48,11 @@ const Header: React.FC = () => {
 
   // Static course options directly defined in the component
   const courseOptions = [
-    { course_id: '6f9b98d4-7f92-4f7b-abe5-71c2c634edb2', name: 'Academic Advisor' },
-    { course_id: 'Q1SjXBe30FyX6GxvJVIG', name: 'Campus Life' },
-    { course_id: 'tyPR1RAulPfqLLfNgIqF', name: 'Career Advisor' },
-    { course_id: 'Connf4P2TpKXXGooaQD5', name: 'Study Abroad' },
     { course_id: 'moRgToBTOAJZdMQPs7Ci', name: 'Course Selection' },
+    { course_id: '6f9b98d4-7f92-4f7b-abe5-71c2c634edb2', name: 'Academic Advisor' },
+    { course_id: 'tyPR1RAulPfqLLfNgIqF', name: 'Career Advisor' },
+    { course_id: 'Q1SjXBe30FyX6GxvJVIG', name: 'Campus Life' },
+    //{ course_id: 'Connf4P2TpKXXGooaQD5', name: 'Study Abroad' },
   ];
 
   const [selectedFilter, setSelectedFilter] = useState(courseOptions[0].name);
@@ -94,6 +98,7 @@ const Header: React.FC = () => {
     setAnchorEl(event.currentTarget);
   };
 
+  /*
   const handleMenuClose = (option: string) => {
     const selectedCourse = courseOptions.find((course) => course.name === option);
     if (selectedCourse) {
@@ -102,6 +107,23 @@ const Header: React.FC = () => {
       setAnchorEl(null);
     }
   };
+  */
+
+  const handleMenuClose = (option: string) => {
+    const selectedCourse = courseOptions.find((course) => course.name === option);
+    if (selectedCourse) {
+      setSelectedFilter(selectedCourse.name);
+      localStorage.setItem('course_id', selectedCourse.course_id); // Store selected course_id in localStorage
+      
+      // If Academic Advisor is selected, navigate accordingly
+      if (selectedCourse.course_id === '6f9b98d4-7f92-4f7b-abe5-71c2c634edb2') {
+        handleNavigateToAcademicAdvisor();
+      }
+
+      setAnchorEl(null);
+    }
+  };
+  
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
