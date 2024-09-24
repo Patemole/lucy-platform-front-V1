@@ -55,7 +55,7 @@ import PopupFeedback from '../components/PopupFeedback';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
 
 const drawerWidth = 240;
-const ALLOWED_COURSE_IDS = ['Connf4P2TpKXXGooaQD5', 'tyPR1RAulPfqLLfNgIqF', 'Q1SjXBe30FyX6GxvJVIG'];
+const ALLOWED_COURSE_IDS = ['Connf4P2TpKXXGooaQD5', 'tyPR1RAulPfqLLfNgIqF', 'Q1SjXBe30FyX6GxvJVIG', 'moRgToBTOAJZdMQPs7Ci'];
 
 const Dashboard_eleve_template: React.FC = () => {
   const theme = useTheme();
@@ -240,6 +240,21 @@ const Dashboard_eleve_template: React.FC = () => {
   const handleMenuClose = async (option: string) => {
     const selectedCourse = courseOptions.find((course) => course.name === option);
     if (selectedCourse) {
+
+      //BOUT DE CODE À CHANGER POUR AFFICHER UNE POPUP DE COMING SOON POUR COURSE SELECTION
+      setSelectedFilter(selectedCourse.name);
+      localStorage.setItem('course_id', selectedCourse.id);
+      if (ALLOWED_COURSE_IDS.includes(selectedCourse.id)) {
+        setPreviousFilter(selectedFilter);
+        setFeedbackModalOpen(true);
+      }
+    }
+    setAnchorEl(null);
+  };
+
+
+      //BOUT DE CODE RESTANT PERMETTANT D'ALLER SUR COURSE SELECTION POUR L'INSTANT METTRE EN COMMENTAIRE SI EN PROD ON NE VEUT PAS SWITCHER
+      /*
       setSelectedFilter(selectedCourse.name);
       localStorage.setItem('course_id', selectedCourse.id);
   
@@ -328,6 +343,7 @@ const Dashboard_eleve_template: React.FC = () => {
   
     setAnchorEl(null);
   };
+  */
   
   
   
@@ -414,8 +430,8 @@ const Dashboard_eleve_template: React.FC = () => {
 
       const lastMessageIndex = messageHistory.length - 1;
 
-      for await (const packetBunch of sendMessageFakeDemo({
-      //for await (const packetBunch of sendMessageSocraticLangGraph({
+      //for await (const packetBunch of sendMessageFakeDemo({
+      for await (const packetBunch of sendMessageSocraticLangGraph({
         message: inputValue,
         chatSessionId: chatSessionId,
         courseId: courseId,

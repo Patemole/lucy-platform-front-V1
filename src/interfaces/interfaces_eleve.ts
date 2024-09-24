@@ -70,6 +70,19 @@ export interface AnswerCourse {
   CoursesSlot: CourseSlot[];    // Array of available course slots
 }
 
+export interface Event {
+  id: string; // Identifiant unique
+  title: string;
+  date: Date;
+  startHour: number;
+  startMinute: number;
+  endHour: number;
+  endMinute: number;
+  code: string; // Code unique du cours
+  type: string; // Type de cours (pour la couleur/affichage)
+  answerCourse: AnswerCourse; // Détails complets du cours
+}
+
 
 export interface Message {
     id: number;

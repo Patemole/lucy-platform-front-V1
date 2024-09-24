@@ -1,3 +1,4 @@
+// PopupCourseEvent.tsx
 import React, { useState } from 'react';
 import {
   Modal,
@@ -11,39 +12,35 @@ import { useTheme } from '@mui/material/styles';
 import './PopupCourse.css';
 import { AnswerCourse, CourseSlot } from '../interfaces/interfaces_eleve';
 
-interface CourseModalProps {
+interface PopupCourseEventProps {
   course: AnswerCourse;
   isOpen: boolean;
-  onAddCourse: (selectedSlot: CourseSlot, courseTitle: string, code: string) => void;
   onClose: () => void;
   onDeleteCourse: () => void;
-  onConfirmSlot: (newSlotIndex: number) => void;  // Ajout de la prop onConfirmSlot
-  currentSlot: CourseSlot | null; // Le créneau actuel du cours
-
+  onConfirmSlot: (newSlotIndex: number) => void;  // Fonction pour confirmer le changement de créneau
+  currentSlot: CourseSlot; // Le créneau actuel du cours
 }
 
-const CourseModal: React.FC<CourseModalProps> = ({
+const PopupCourseEvent: React.FC<PopupCourseEventProps> = ({
   course,
   isOpen,
-  onAddCourse,
   onClose,
   onDeleteCourse,
-  onConfirmSlot,  // Ajout de la fonction pour confirmer le créneau
+  onConfirmSlot,  // Fonction pour confirmer le changement de créneau
   currentSlot, // Le créneau actuel est passé ici
 }) => {
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const theme = useTheme();
 
-  // Permet de sélectionner un autre créneau
+  // Fonction pour sélectionner un autre créneau
   const handleSlotClick = (index: number) => {
     setSelectedSlotIndex(index);
   };
 
-  const handleConfirmSlot = () => {
+  const handleConfirm = () => {
     if (selectedSlotIndex !== null) {
-      const selectedSlot = availableSlots[selectedSlotIndex];
-      onAddCourse(selectedSlot, course.title, course.code);
+      onConfirmSlot(selectedSlotIndex);
       setSelectedSlotIndex(null);
       setSnackbarOpen(true);
     }
@@ -64,9 +61,9 @@ const CourseModal: React.FC<CourseModalProps> = ({
   // Fonction pour vérifier si un créneau est le créneau actuel
   const isCurrentSlot = (slot: CourseSlot) => {
     return (
-      currentSlot?.Days.join('') === slot.Days.join('') &&
-      currentSlot?.StartTime === slot.StartTime &&
-      currentSlot?.EndTime === slot.EndTime
+      currentSlot.Days.join('') === slot.Days.join('') &&
+      currentSlot.StartTime === slot.StartTime &&
+      currentSlot.EndTime === slot.EndTime
     );
   };
 
@@ -358,7 +355,7 @@ const CourseModal: React.FC<CourseModalProps> = ({
             </Box>
           </Box>
 
-          {/* "Voulez-vous sélectionner un autre créneau?" */}
+          {/* Invitation à sélectionner un autre créneau */}
           <Typography
             sx={{
               color: '#011F5B',
@@ -372,118 +369,129 @@ const CourseModal: React.FC<CourseModalProps> = ({
 
           {/* Créneaux disponibles */}
           <Box>
-            {availableSlots.map((slot, index) => (
-              <Box
-                key={index}
-                onClick={() => handleSlotClick(index)}
-                className={`course-slot ${
-                  selectedSlotIndex === index ? 'selected' : ''
-                } ${
-                  selectedSlotIndex !== null && selectedSlotIndex !== index
-                    ? 'disabled'
-                    : ''
-                }`}
-                sx={{
-                  border: '1px solid #BCBCBC',
-                  backgroundColor: '#FCFCFC',
-                  color: '#011F5B',
-                }}
-              >
-                {/* Contenu du créneau */}
+            {availableSlots.length > 0 ? (
+              availableSlots.map((slot, index) => (
                 <Box
+                  key={index}
+                  onClick={() => handleSlotClick(index)}
+                  className={`course-slot ${
+                    selectedSlotIndex === index ? 'selected' : ''
+                  } ${
+                    selectedSlotIndex !== null && selectedSlotIndex !== index
+                      ? 'disabled'
+                      : ''
+                  }`}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    width: '100%',
+                    border: '1px solid #BCBCBC',
+                    backgroundColor: '#FCFCFC',
+                    color: '#011F5B',
+                    cursor: 'pointer',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    marginBottom: '8px',
+                    opacity: selectedSlotIndex === null || selectedSlotIndex === index ? 1 : 0.6,
                   }}
                 >
-                  {/* Infos sur le professeur et l'horaire */}
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      sx={{
-                        color: '#011F5B',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {slot.TeacherName} - {slot.CourseID}
-                    </Typography>
-
-                    {/* Horaire */}
-                    <Typography
-                      sx={{
-                        fontWeight: '500',
-                        fontSize: '0.875rem',
-                        color: '#011F5B',
-                        marginTop: '4px',
-                      }}
-                    >
-                      {slot.Days.join(' & ')} {slot.StartTime} - {slot.EndTime}
-                    </Typography>
-                  </Box>
-
-                  {/* Qualité de l'instructeur */}
+                  {/* Contenu du créneau */}
                   <Box
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
-                      flexDirection: 'column',
-                      marginLeft: '16px',
+                      width: '100%',
                     }}
                   >
-                    <Box position="relative" display="inline-flex">
-                      <CircularProgress
-                        variant="determinate"
-                        value={100}
-                        size={30}
-                        thickness={5}
-                        sx={{ color: '#E8F4FB', position: 'absolute' }}
-                      />
-                      <CircularProgress
-                        variant="determinate"
-                        value={calculateProgress(parseFloat(slot.TeacherQuality))}
-                        size={30}
-                        thickness={5}
-                        sx={{ color: '#3155CC', zIndex: 1 }}
-                      />
-                      <Box
+                    {/* Infos sur le professeur et l'horaire */}
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
                         sx={{
-                          top: 0,
-                          left: 0,
-                          bottom: 0,
-                          right: 0,
-                          position: 'absolute',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          color: '#011F5B',
+                          fontWeight: 'bold',
                         }}
                       >
-                        <Typography
-                          variant="h6"
-                          component="div"
-                          sx={{
-                            color: '#011F5B',
-                            fontWeight: 'bold',
-                            fontSize: '0.675rem',
-                          }}
-                        >
-                          {slot.TeacherQuality}
-                        </Typography>
-                      </Box>
+                        {slot.TeacherName} - {slot.CourseID}
+                      </Typography>
+
+                      {/* Horaire */}
+                      <Typography
+                        sx={{
+                          fontWeight: '500',
+                          fontSize: '0.875rem',
+                          color: '#011F5B',
+                          marginTop: '4px',
+                        }}
+                      >
+                        {slot.Days.join(' & ')} {slot.StartTime} - {slot.EndTime}
+                      </Typography>
                     </Box>
-                    <Typography
+
+                    {/* Qualité de l'instructeur */}
+                    <Box
                       sx={{
-                        fontWeight: '500',
-                        fontSize: '0.675rem',
-                        color: '#011F5B',
-                        marginTop: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexDirection: 'column',
+                        marginLeft: '16px',
                       }}
                     >
-                      Instructor Quality
-                    </Typography>
+                      <Box position="relative" display="inline-flex">
+                        <CircularProgress
+                          variant="determinate"
+                          value={100}
+                          size={30}
+                          thickness={5}
+                          sx={{ color: '#E8F4FB', position: 'absolute' }}
+                        />
+                        <CircularProgress
+                          variant="determinate"
+                          value={calculateProgress(parseFloat(slot.TeacherQuality))}
+                          size={30}
+                          thickness={5}
+                          sx={{ color: '#3155CC', zIndex: 1 }}
+                        />
+                        <Box
+                          sx={{
+                            top: 0,
+                            left: 0,
+                            bottom: 0,
+                            right: 0,
+                            position: 'absolute',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Typography
+                            variant="h6"
+                            component="div"
+                            sx={{
+                              color: '#011F5B',
+                              fontWeight: 'bold',
+                              fontSize: '0.675rem',
+                            }}
+                          >
+                            {slot.TeacherQuality}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontWeight: '500',
+                          fontSize: '0.675rem',
+                          color: '#011F5B',
+                          marginTop: '4px',
+                        }}
+                      >
+                        Instructor Quality
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
-            ))}
+              ))
+            ) : (
+              <Typography sx={{ color: '#011F5B' }}>
+                Aucun autre créneau disponible.
+              </Typography>
+            )}
           </Box>
         </Box>
 
@@ -508,19 +516,25 @@ const CourseModal: React.FC<CourseModalProps> = ({
               color: '#EF4361',
               textTransform: 'none',
               fontWeight: 'bold',
+              '&:hover': {
+                backgroundColor: '#FEEAEA',
+              },
             }}
           >
             Supprimer le cours
           </Button>
 
           <Button
-            onClick={handleConfirmSlot}
+            onClick={handleConfirm}
             variant="contained"
             sx={{
               backgroundColor: '#D6EAF7',
               color: '#011F5B',
               textTransform: 'none',
               fontWeight: 'bold',
+              '&:hover': {
+                backgroundColor: '#D6EAF7',
+              },
             }}
             disabled={selectedSlotIndex === null}
           >
@@ -528,18 +542,23 @@ const CourseModal: React.FC<CourseModalProps> = ({
           </Button>
         </Box>
 
+        {/* Snackbar pour le feedback utilisateur */}
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={3000}
           onClose={handleCloseSnackbar}
-          message="Le cours a été ajouté à votre calendrier"
+          message="Le créneau du cours a été mis à jour"
         />
       </Box>
     </Modal>
   );
 };
 
-export default CourseModal;
+export default PopupCourseEvent;
+
+
+
+
 
 
 

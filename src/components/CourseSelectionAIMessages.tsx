@@ -1,3 +1,9 @@
+
+
+// src/components/CourseSelectionAIMessages.tsx
+
+// src/components/CourseSelectionAIMessages.tsx
+
 import React, { useState, useEffect } from 'react';
 import {
   FiCheck,
@@ -25,7 +31,6 @@ import certifiate_icon from '../certifiate.png';
 import remarkGfm from 'remark-gfm';
 import { useTheme } from '@mui/material/styles';
 import { ThreeDots } from 'react-loader-spinner';
-import CourseModal from './PopupCourse';
 
 export const Hoverable: React.FC<{
   children: JSX.Element;
@@ -68,8 +73,8 @@ interface AIMessageProps {
   handleSendCOURSEMessage?: (COURSE_message: string) => void;
   drawerOpen: boolean;
   handleShowSnackbar: () => void;
-  // Ajout de la propriété manquante
   handleAddCourseToCalendar: (selectedSlot: CourseSlot, answerCourse: AnswerCourse) => void;
+  handleOpenDrawer: (course: AnswerCourse) => void; // Renommé pour gérer l'ouverture du panneau intégré
 }
 
 const AIMessage: React.FC<AIMessageProps> = ({
@@ -97,8 +102,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
   drawerOpen,
   handleShowSnackbar,
   handleAddCourseToCalendar,
-
-
+  handleOpenDrawer,
 }) => {
   const [copyClicked, setCopyClicked] = useState(false);
   const [feedbackClicked, setFeedbackClicked] = useState(false);
@@ -106,15 +110,9 @@ const AIMessage: React.FC<AIMessageProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
   const [otherInput, setOtherInput] = useState<string>('');
-  const [currentWaitingMessage, setCurrentWaitingMessage] =
-    useState<string | null>(null);
+  const [currentWaitingMessage, setCurrentWaitingMessage] = useState<string | null>(null);
   const [waitingMessageIndex, setWaitingMessageIndex] = useState<number>(0);
-  const [selectedCourse, setSelectedCourse] = useState<AnswerCourse | null>(
-    null
-  );
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const theme = useTheme();
-
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -185,53 +183,8 @@ const AIMessage: React.FC<AIMessageProps> = ({
   const isSendDisabled =
     selectedAnswers.length === 0 && otherInput.trim() === '';
 
-
-  // Handle course selection and modal actions
-  /*
   const handleCourseClick = (course: AnswerCourse) => {
-    setSelectedCourse(course);
-    setIsModalOpen(true);
-  };
-  */
-
-  /*
-  const handleAddCourseToCalendar = (
-    selectedSlot: CourseSlot) => {
-    
-    // Implement logic to add the course to the calendar here
-    // Close the modal
-    setIsModalOpen(false);
-    // Show the snackbar notification
-    handleShowSnackbar();
-  };
-  */
-
-
-  const handleCourseClick = (course: AnswerCourse) => {
-    setSelectedCourse(course);
-    setIsModalOpen(true);
-  };
-
-
-  /*
-  const handleAddCourse = (selectedSlot: CourseSlot) => {
-    const courseTitle = selectedCourse?.title || '';
-    const courseCode = selectedCourse?.code || '';
-    handleAddCourseToCalendar(selectedSlot, courseTitle, courseCode);  // Ajouter le cours au calendrier via la fonction prop
-    setIsModalOpen(false);
-  };
-  */
-
-  const handleAddCourse = (selectedSlot: CourseSlot) => {
-    if (selectedCourse) {
-      handleAddCourseToCalendar(selectedSlot, selectedCourse); // Passe l'objet complet
-      setIsModalOpen(false); // Ferme la modal après l'ajout
-    }
-  };
-
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+    handleOpenDrawer(course); // Appel de la fonction pour ouvrir le panneau de cours
   };
 
   return (
@@ -402,12 +355,12 @@ const AIMessage: React.FC<AIMessageProps> = ({
                         className="block mb-1"
                         style={{ color: theme.palette.text.primary }}
                       >
-                        If other, please specify
+                        Si autre, veuillez préciser
                       </label>
                       <TextField
                         fullWidth
                         id={`other-${idx}`}
-                        placeholder="e.g., None"
+                        placeholder="e.g., Aucun"
                         value={otherInput}
                         onChange={handleOtherInputChange}
                         variant="outlined"
@@ -429,12 +382,12 @@ const AIMessage: React.FC<AIMessageProps> = ({
                   <div className="flex justify-end mt-4 gap-x-4">
                     <Button
                       variant="outlined"
-                      onClick={() => console.log('Ignored')}
+                      onClick={() => console.log('Ignoré')}
                       style={{
                         color: theme.palette.text.primary,
                       }}
                     >
-                      Ignore
+                      Ignorer
                     </Button>
                     <Button
                       variant="contained"
@@ -446,7 +399,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
                       disabled={isSendDisabled}
                     >
                       <FiSend className="mr-2" />
-                      Send
+                      Envoyer
                     </Button>
                   </div>
                 </div>
@@ -456,7 +409,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
 
           {CourseData && CourseData.length > 0 && (
             <div style={{ width: '100%' }}>
-              {/* Margin between text and first course block */}
+              {/* Marge entre le texte et le premier bloc de cours */}
               <div style={{ marginBottom: '24px' }}></div>
 
               {CourseData.map((course, idx) => (
@@ -478,7 +431,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
                   }}
                 >
                   <div style={{ maxWidth: '100%' }}>
-                    {/* Title */}
+                    {/* Titre */}
                     <p
                       style={{
                         color: '#011F5B',
@@ -491,7 +444,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
                       {course.title}
                     </p>
 
-                    {/* Semester, Credit, Prerequisites */}
+                    {/* Semestre, Crédit, Prérequis */}
                     <div
                       style={{
                         display: 'flex',
@@ -501,35 +454,29 @@ const AIMessage: React.FC<AIMessageProps> = ({
                         marginBottom: '12px',
                       }}
                     >
-                      {/* Semester */}
+                      {/* Semestre */}
                       <span
+                        className="tag"
                         style={{
                           backgroundColor: '#FFD9BF',
                           color: '#F97315',
-                          padding: '4px 8px',
-                          borderRadius: '8px',
-                          fontSize: '0.675rem',
-                          flexShrink: 0,
                         }}
                       >
                         {course.Semester}
                       </span>
 
-                      {/* Credit */}
+                      {/* Crédit */}
                       <span
+                        className="tag"
                         style={{
                           backgroundColor: '#D6EAF7',
                           color: '#011F5B',
-                          padding: '4px 8px',
-                          borderRadius: '8px',
-                          fontSize: '0.675rem',
-                          flexShrink: 0,
                         }}
                       >
                         {course.Credit}
                       </span>
 
-                      {/* Prerequisites */}
+                      {/* Prérequis */}
                       <div
                         style={{
                           display: 'flex',
@@ -538,30 +485,17 @@ const AIMessage: React.FC<AIMessageProps> = ({
                         }}
                       >
                         <span
+                          className="tag"
                           style={{
                             backgroundColor: '#FEEAEA',
                             color: '#EF4361',
-                            padding: '4px 8px',
-                            borderRadius: '8px',
-                            fontSize: '0.675rem',
-                            wordWrap: 'break-word',
                           }}
                         >
                           {course.Prerequisites}
                         </span>
 
-                        {/* Green check icon */}
-                        <div
-                          style={{
-                            width: '15px',
-                            height: '15px',
-                            backgroundColor: '#25C35E',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
+                        {/* Icône de vérification */}
+                        <div className="iconCircle">
                           <FiCheck style={{ color: 'white' }} />
                         </div>
                       </div>
@@ -579,7 +513,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
                       {course.Description}
                     </p>
 
-                    {/* Prospectus and Syllabus links */}
+                    {/* Liens vers le Prospectus et le Syllabus */}
                     <div
                       style={{
                         display: 'flex',
@@ -592,12 +526,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
                         href={course.Prospectus_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                          color: '#1A71FF',
-                          fontSize: '0.875rem',
-                          textDecoration: 'none',
-                          flexShrink: 1,
-                        }}
+                        className="link"
                       >
                         Prospectus
                       </a>
@@ -605,12 +534,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
                         href={course.Syllabus_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                          color: '#1A71FF',
-                          fontSize: '0.875rem',
-                          textDecoration: 'none',
-                          flexShrink: 1,
-                        }}
+                        className="link"
                       >
                         Syllabus
                       </a>
@@ -618,15 +542,6 @@ const AIMessage: React.FC<AIMessageProps> = ({
                   </div>
                 </div>
               ))}
-
-              {selectedCourse && (
-                <CourseModal
-                  course={selectedCourse}
-                  isOpen={isModalOpen}
-                  onAddCourse={handleAddCourse}
-                  onClose={handleCloseModal} // Ajout de la prop onClose
-                />
-              )}
             </div>
           )}
 
@@ -723,6 +638,14 @@ const AIMessage: React.FC<AIMessageProps> = ({
 export default AIMessage;
 
 
+
+
+
+
+
+
+
+//NOUVEAU CODE POUR LA SIDEBAR DE CRENEAU
 
 
 

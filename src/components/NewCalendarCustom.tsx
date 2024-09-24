@@ -417,104 +417,29 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot }) => {
 }
 export default Calendar;
 */
+// src/components/NewCalendarCustom.tsx
 
-
-
-
-
-
-
-
-
-import React, { useState, useEffect } from 'react';
-import CourseEvent from './CourseEvent'; // Ensure the path is correct
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import CourseEvent from './CourseEvent'; // Assurez-vous que le chemin est correct
 import './CalendarCustom.css';
-import { CourseSlot } from '../interfaces/interfaces_eleve';
-import EventPopup from './PopupCourseEvent'; // Import the new EventPopup component
-import { AnswerCourse } from '../interfaces/interfaces_eleve'; // Import AnswerCourse for modal props
+import { CourseSlot, AnswerCourse, Event } from '../interfaces/interfaces_eleve';
 
-interface Event {
-  id: string; // Use string for unique IDs
-  title: string;
-  date: Date;
-  startHour: number;
-  startMinute: number;
-  endHour: number;
-  endMinute: number;
-  code: string; // Now required
-  type: string; // Now required
-  answerCourse: AnswerCourse; // Include all course details in the event
+export interface CalendarHandles {
+  addCourse: (selectedSlot: CourseSlot, answerCourse: AnswerCourse) => void;
+  deleteCourse: (courseCode: string) => void;
+  confirmSlot: (courseCode: string, newSlotIndex: number) => void;
 }
 
 interface CalendarProps {
-  newCourseSlot?: { slot: CourseSlot; title: string; code: string } | null;
-  answerCourse?: AnswerCourse | null;
+  onEventClick: (event: Event) => void; // Callback quand un événement est cliqué
 }
 
-const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
-  const [popupOpen, setPopupOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [currentSlotIndex, setCurrentSlotIndex] = useState<number | null>(null); // Track the currently selected slot
+const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick }, ref) => {
+  const [events, setEvents] = useState<Event[]>([]); // Liste des événements du calendrier
+  const [currentWeekStartDate, setCurrentWeekStartDate] = useState<Date>(getMonday(new Date()));
+  const [animationDirection, setAnimationDirection] = useState<'slide-left' | 'slide-right' | ''>('');
 
-  const openPopup = (event: Event) => {
-    setSelectedEvent(event);
-    setCurrentSlotIndex(
-      event.answerCourse.CoursesSlot.findIndex(
-        (slot) => slot.CourseID === event.answerCourse.CoursesSlot[0].CourseID
-      )
-    ); // Get index of the current slot
-    setPopupOpen(true);
-  };
-
-  const closePopup = () => {
-    setPopupOpen(false);
-    setSelectedEvent(null);
-  };
-
-  const handleAddCourse = (selectedSlot: CourseSlot, title: string, code: string) => {
-    // Logic to handle adding a course
-    console.log('Course added:', selectedSlot, title, code);
-  };
-
-  const handleDeleteCourse = () => {
-    if (selectedEvent) {
-      // Suppression de toutes les instances du cours
-      setEvents((prevEvents) =>
-        prevEvents.filter(
-          (event) =>
-            event.answerCourse.CoursesSlot[0].CourseID !==
-            selectedEvent.answerCourse.CoursesSlot[0].CourseID
-        )
-      );
-      closePopup(); // Close the popup after deletion
-      console.log('All instances of course deleted:', selectedEvent.title);
-    }
-  };
-
-  const handleConfirmSlot = (newSlotIndex: number) => {
-    console.log("This is the newSLotIndex")
-    console.log(newSlotIndex)
-    if (selectedEvent) {
-      // Remplacer toutes les instances du créneau précédent par le nouveau créneau
-      const newSlot = selectedEvent.answerCourse.CoursesSlot[newSlotIndex];
-      setEvents((prevEvents) =>
-        prevEvents
-          .filter(
-            (event) =>
-              event.answerCourse.CoursesSlot[0].CourseID !==
-              selectedEvent.answerCourse.CoursesSlot[0].CourseID
-          )
-          .concat(
-            addCourseSlot(newSlot, selectedEvent.answerCourse)
-          )
-      );
-      setCurrentSlotIndex(newSlotIndex);
-      closePopup();
-      console.log('Course slot updated:', selectedEvent.title);
-    }
-  };
-
-  // Function to get the Monday of the week for a given date
+  // Fonction pour obtenir le lundi de la semaine d'une date donnée
   function getMonday(d: Date): Date {
     const date = new Date(d);
     const day = date.getDay();
@@ -524,85 +449,7 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
     return date;
   }
 
-  // State for the start date of the current week
-  const [currentWeekStartDate, setCurrentWeekStartDate] = useState<Date>(getMonday(new Date()));
-  const [animationDirection, setAnimationDirection] = useState<'slide-left' | 'slide-right' | ''>('');
-
-  // State for events
-  const [events, setEvents] = useState<Event[]>([]);
-
-  // Function to add a new CourseSlot with all AnswerCourse information
-  const addCourseSlot = (
-    courseSlot: CourseSlot,  // Informations spécifiques au créneau
-    answerCourse: AnswerCourse  // Toutes les informations sur le cours
-  ) => {
-    const SEMESTER_END = new Date(2024, 11, 31); // December 31, 2024
-    SEMESTER_END.setHours(0, 0, 0, 0); // Ensure time is set to midnight
-  
-    const dayMap: { [key: string]: number } = {
-      Sun: 0,
-      Mon: 1,
-      Tue: 2,
-      Wed: 3,
-      Thu: 4,
-      Fri: 5,
-      Sat: 6,
-    };
-  
-    // Parse the start and end times from the courseSlot
-    const [startHour, startMinute] = courseSlot.StartTime.split(':').map(Number);
-    const [endHour, endMinute] = courseSlot.EndTime.split(':').map(Number);
-  
-    let newEvents: Event[] = [];
-  
-    // Extract the base title (before the "-")
-    const baseTitle = answerCourse.title.split(' - ')[0];
-    const eventTitle = ` ${baseTitle} - ${courseSlot.CourseID}`;
-  
-    for (const day of courseSlot.Days) {
-      const dayNumber = dayMap[day];
-  
-      // Get the first occurrence of the day from today
-      let currentDate = getNextDateForDay(dayNumber, new Date());
-  
-      while (currentDate <= SEMESTER_END) {
-        // Create the event with all AnswerCourse information
-        const event: Event = {
-          id: `${answerCourse.title}-${currentDate.getTime()}-${courseSlot.CourseID}`, // Unique ID
-          title: eventTitle,
-          date: new Date(currentDate),  // Date of the course occurrence
-          startHour: startHour,
-          startMinute: startMinute,
-          endHour: endHour,
-          endMinute: endMinute,
-          code: answerCourse.code,  // Course code
-          type: answerCourse.code,  // Type of course (used for color/display purposes)
-          
-          // Include all AnswerCourse details
-          answerCourse: { ...answerCourse },  // Embedding the whole AnswerCourse object
-        };
-  
-        newEvents.push(event);
-  
-        // Move to next week
-        currentDate.setDate(currentDate.getDate() + 7);
-      }
-    }
-  
-    return newEvents;
-  };
-
-  // Update events when newCourseSlot prop changes
-  useEffect(() => {
-    if (newCourseSlot && answerCourse) {
-      setEvents((prevEvents) => [
-        ...prevEvents,
-        ...addCourseSlot(newCourseSlot.slot, answerCourse),
-      ]);
-    }
-  }, [newCourseSlot, answerCourse]);
-
-  // Function to get the next date for a specific day of the week
+  // Fonction pour obtenir la prochaine date correspondant à un jour spécifique
   const getNextDateForDay = (dayNumber: number, fromDate: Date): Date => {
     const resultDate = new Date(fromDate);
     const currentDay = resultDate.getDay();
@@ -615,7 +462,7 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
     return resultDate;
   };
 
-  // Function to navigate to the previous week
+  // Fonction pour naviguer vers la semaine précédente
   const prevWeek = (): void => {
     setAnimationDirection('slide-right');
     setCurrentWeekStartDate((prevDate) => {
@@ -625,7 +472,7 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
     });
   };
 
-  // Function to navigate to the next week
+  // Fonction pour naviguer vers la semaine suivante
   const nextWeek = (): void => {
     setAnimationDirection('slide-left');
     setCurrentWeekStartDate((prevDate) => {
@@ -635,21 +482,21 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
     });
   };
 
-  // Reset animation direction after animation ends
+  // Réinitialiser la direction de l'animation après la fin de l'animation
   useEffect(() => {
     if (animationDirection) {
       const timer = setTimeout(() => {
         setAnimationDirection('');
-      }, 500); // Duration of the animation in milliseconds
+      }, 500); // Durée de l'animation en millisecondes
       return () => clearTimeout(timer);
     }
   }, [animationDirection]);
 
-  // Get dates from Monday to Friday of the current week
+  // Obtenir les dates du lundi au vendredi de la semaine actuelle
   const getWeekDays = (startDate: Date): Date[] => {
     const days: Date[] = [];
     for (let i = 0; i < 5; i++) {
-      // Monday to Friday
+      // Du lundi au vendredi
       const date = new Date(startDate);
       date.setDate(date.getDate() + i);
       days.push(date);
@@ -659,15 +506,15 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
 
   const weekDays: Date[] = getWeekDays(currentWeekStartDate);
 
-  // Generate time slots in 30-minute increments from 9:00 AM to 6:00 PM
+  // Générer les créneaux horaires par tranches de 30 minutes de 9h00 à 18h00
   const timeSlots: { hour: number; minute: number }[] = [];
   for (let hour = 9; hour <= 17; hour++) {
     timeSlots.push({ hour, minute: 0 });
     timeSlots.push({ hour, minute: 30 });
   }
-  timeSlots.push({ hour: 18, minute: 0 }); // Add the last slot at 6:00 PM
+  timeSlots.push({ hour: 18, minute: 0 }); // Ajouter le dernier créneau à 18h00
 
-  // Function to format the date
+  // Fonction pour formater la date
   const formatDate = (date: Date): string => {
     const options: Intl.DateTimeFormatOptions = {
       month: 'short',
@@ -677,38 +524,132 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
     return date.toLocaleDateString('en-US', options);
   };
 
-  // Function to get the day abbreviation
+  // Fonction pour obtenir l'abréviation du jour
   const getDayAbbreviation = (date: Date): string => {
     const options: Intl.DateTimeFormatOptions = { weekday: 'short' };
     return date.toLocaleDateString('en-US', options);
   };
 
-  // Get the period to display
+  // Obtenir la période à afficher
   const period: string = `${formatDate(weekDays[0])} - ${formatDate(weekDays[4])}`;
 
-  // Filter events for the current week
+  // Filtrer les événements pour la semaine actuelle
   const eventsThisWeek = events.filter((event) => {
     const eventDate = event.date.getTime();
     const weekStart = currentWeekStartDate.getTime();
-    const weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000; // Add 7 days
+    const weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000; // Ajouter 7 jours
     return eventDate >= weekStart && eventDate < weekEnd;
   });
 
-  // Function to get the duration of the event in number of slots (30-minute increments)
+  // Fonction pour obtenir la durée d'un événement en nombre de créneaux (30 minutes chacun)
   const getEventDurationSlots = (event: Event): number => {
     const start = event.startHour * 60 + event.startMinute;
     const end = event.endHour * 60 + event.endMinute;
     return (end - start) / 30;
   };
 
-  // Function to get the index of the time slot
+  // Fonction pour obtenir l'index d'un créneau horaire
   const getTimeSlotIndex = (hour: number, minute: number): number => {
     return (hour - 9) * 2 + (minute === 30 ? 1 : 0);
   };
 
+  // Fonctions exposées via ref
+  useImperativeHandle(ref, () => ({
+    addCourse: (selectedSlot: CourseSlot, answerCourse: AnswerCourse) => {
+      const newEvents = addCourseSlot(selectedSlot, answerCourse);
+      setEvents((prevEvents) => [...prevEvents, ...newEvents]);
+    },
+    deleteCourse: (courseCode: string) => {
+      setEvents((prevEvents) =>
+        prevEvents.filter((event) => event.code !== courseCode)
+      );
+    },
+    confirmSlot: (courseCode: string, newSlotIndex: number) => {
+      const course = events.find((event) => event.code === courseCode)?.answerCourse;
+      if (!course) {
+        console.error(`Course with code ${courseCode} not found.`);
+        return;
+      }
+
+      const newSlot = course.CoursesSlot[newSlotIndex];
+      if (!newSlot) {
+        console.error("Invalid slot index.");
+        return;
+      }
+
+      // Remove old events
+      setEvents((prevEvents) =>
+        prevEvents.filter((event) => event.code !== courseCode)
+      );
+
+      // Add new events with the new slot
+      const updatedEvents = addCourseSlot(newSlot, course);
+      setEvents((prevEvents) => [...prevEvents, ...updatedEvents]);
+    },
+  }));
+
+  // Fonction pour ajouter des événements basés sur un créneau de cours
+  const addCourseSlot = (
+    courseSlot: CourseSlot,
+    answerCourse: AnswerCourse
+  ): Event[] => {
+    const SEMESTER_END = new Date(2024, 11, 31); // 31 décembre 2024
+    SEMESTER_END.setHours(0, 0, 0, 0); // Heure à minuit
+
+    const dayMap: { [key: string]: number } = {
+      Sun: 0,
+      Mon: 1,
+      Tue: 2,
+      Wed: 3,
+      Thu: 4,
+      Fri: 5,
+      Sat: 6,
+    };
+
+    // Parse des heures de début et de fin
+    const [startHour, startMinute] = courseSlot.StartTime.split(':').map(Number);
+    const [endHour, endMinute] = courseSlot.EndTime.split(':').map(Number);
+
+    let newEvents: Event[] = [];
+
+    // Extraction du titre de base (avant le "-")
+    const baseTitle = answerCourse.title.split(' - ')[0];
+    const eventTitle = `${baseTitle} - ${courseSlot.CourseID}`;
+
+    for (const day of courseSlot.Days) {
+      const dayNumber = dayMap[day];
+
+      // Obtenir la première occurrence du jour à partir de la semaine actuelle
+      let currentDate = getNextDateForDay(dayNumber, getMonday(new Date()));
+
+      while (currentDate <= SEMESTER_END) {
+        // Création de l'événement avec tous les détails du cours
+        const event: Event = {
+          id: `${answerCourse.code}-${currentDate.getTime()}-${courseSlot.CourseID}`, // Identifiant unique utilisant le code du cours et CourseID
+          title: eventTitle,
+          date: new Date(currentDate), // Date de l'occurrence du cours
+          startHour: startHour,
+          startMinute: startMinute,
+          endHour: endHour,
+          endMinute: endMinute,
+          code: answerCourse.code, // Code du cours
+          type: answerCourse.code, // Type de cours (pour la couleur/affichage)
+          answerCourse: { ...answerCourse }, // Inclusion complète de l'objet AnswerCourse
+        };
+
+        newEvents.push(event);
+
+        // Passer à la semaine suivante
+        currentDate.setDate(currentDate.getDate() + 7);
+      }
+    }
+
+    return newEvents;
+  };
+
   return (
-    <div className="calendar-container">
-      {/* Header */}
+    <div className={`calendar-container ${animationDirection}`}>
+      {/* En-tête */}
       <div className="calendar-header">
         <div className="calendar-header-left">
           <button onClick={prevWeek} style={{ marginLeft: '10px' }}>
@@ -725,9 +666,9 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
         </div>
       </div>
 
-      {/* Calendar Grid */}
+      {/* Grille du calendrier */}
       <div className={`calendar-grid ${animationDirection}`} onAnimationEnd={() => setAnimationDirection('')}>
-        {/* Day Headers */}
+        {/* En-têtes des jours */}
         <div className="calendar-grid-header">
           <div className="calendar-time-column"></div>
           {weekDays.map((date, index) => (
@@ -737,7 +678,7 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
           ))}
         </div>
 
-        {/* Time Slots */}
+        {/* Créneaux horaires */}
         <div className="calendar-grid-body">
           <div className="calendar-time-column">
             {timeSlots.map((slot, index) => (
@@ -751,7 +692,7 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
             <div key={dayIndex} className="calendar-day-column">
               {timeSlots.map((slot, slotIndex) => {
                 const timeSlotKey = `${date.toDateString()}-${slot.hour}-${slot.minute}`;
-                // Find the event that starts at this time slot
+                // Trouver l'événement qui commence à ce créneau horaire
                 const event = eventsThisWeek.find(
                   (event) =>
                     event.date.getFullYear() === date.getFullYear() &&
@@ -767,7 +708,7 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
                       key={timeSlotKey}
                       className="calendar-cell"
                       style={{
-                        height: 30 * durationSlots,
+                        height: 30 * durationSlots, // Hauteur basée sur la durée
                         position: 'relative',
                       }}
                     >
@@ -775,12 +716,12 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
                         title={event.title}
                         code={event.code}
                         type={event.type}
-                        onClick={() => openPopup(event)} // Handle event click to open the popup
+                        onClick={() => onEventClick(event)} // Appeler le callback passé via les props
                       />
                     </div>
                   );
                 } else {
-                  // Check if this time slot is covered by an event
+                  // Vérifier si ce créneau est couvert par un événement
                   const isCovered = eventsThisWeek.some((event) => {
                     if (
                       event.date.getFullYear() === date.getFullYear() &&
@@ -790,13 +731,13 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
                       const eventStartIndex = getTimeSlotIndex(event.startHour, event.startMinute);
                       const eventDurationSlots = getEventDurationSlots(event);
                       const eventEndIndex = eventStartIndex + eventDurationSlots;
-                      const currentIndex = slotIndex;
+                      const currentIndex = getTimeSlotIndex(slot.hour, slot.minute);
                       return currentIndex > eventStartIndex && currentIndex < eventEndIndex;
                     }
                     return false;
                   });
                   if (isCovered) {
-                    // Do not render this slot as it's covered by an event
+                    // Ne pas afficher ce créneau car il est couvert par un événement
                     return null;
                   } else {
                     return <div key={timeSlotKey} className="calendar-cell"></div>;
@@ -807,24 +748,17 @@ const Calendar: React.FC<CalendarProps> = ({ newCourseSlot, answerCourse }) => {
           ))}
         </div>
       </div>
-
-      {/* Popup for event details */}
-      {selectedEvent && (
-        <EventPopup
-          course={selectedEvent.answerCourse}  // Pass the course details to the modal
-          isOpen={popupOpen}  // Use `isOpen` to control the popup
-          onClose={closePopup}  // Close the modal
-          onAddCourse={handleAddCourse}  // Pass the function to add the course
-          onDeleteCourse={handleDeleteCourse}  // Pass the function to delete all instances of the course
-          onConfirmSlot={handleConfirmSlot}  // Pass the function to update the course slot
-          currentSlot={selectedEvent.answerCourse.CoursesSlot[currentSlotIndex!]}  // Pass the current slot
-        />
-      )}
     </div>
   );
-};
+});
 
 export default Calendar;
+
+  
+
+
+
+
 
 
 
