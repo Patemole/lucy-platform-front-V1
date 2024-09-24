@@ -1,0 +1,44 @@
+/* src/components/PopupCourseEvent.css */
+
+.tag {
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.675rem;
+    flex-shrink: 0;
+  }
+  
+  .semester-tag {
+    background-color: #FFD9BF;
+    color: #F97315;
+  }
+  
+  .credit-tag {
+    background-color: #D6EAF7;
+    color: #011F5B;
+  }
+  
+  .prerequisite-tag {
+    background-color: #FEEAEA;
+    color: #EF4361;
+  }
+  
+  .course-slot {
+    transition: opacity 0.3s ease;
+  }
+  
+  .course-slot.selected {
+    border-color: #3155CC;
+    background-color: #E0EFFF;
+  }
+  
+  .link {
+    color: #1A71FF;
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+  
+  .link:hover {
+    text-decoration: underline;
+  }
+  
+  

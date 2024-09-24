@@ -13,6 +13,11 @@ import { useNavigate } from 'react-router-dom';
 const CourseSelectionEleveTemplate: React.FC = () => {
   const navigate = useNavigate();
 
+  // State for selected course and Drawer visibility
+  const [selectedCourse, setSelectedCourse] = useState<AnswerCourse | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // State for storing the course slot
   const [newCourseSlot, setNewCourseSlot] = useState<{ slot: CourseSlot; title: string; code: string; } | null>(null);
   const [selectedAnswerCourse, setSelectedAnswerCourse] = useState<AnswerCourse | null>(null); // Ajouter cet état
 
@@ -22,6 +27,12 @@ const CourseSelectionEleveTemplate: React.FC = () => {
     setNewCourseSlot({ slot: selectedSlot, title, code });
     setSelectedAnswerCourse(answerCourse); // Ajouter l'AnswerCourse ici
       // Afficher une notification après l'ajout
+  };
+
+  // Handlers for Drawer
+  const handleOpenDrawer = (course: AnswerCourse) => {
+    setSelectedCourse(course);
+    setDrawerOpen(true);
   };
 
   // Fonction pour gérer la redirection vers "Academic Advisor"
@@ -102,7 +113,10 @@ const CourseSelectionEleveTemplate: React.FC = () => {
         <Box flex={3} sx={{ backgroundColor: '#F5F5F5', display: 'flex', flexDirection: 'column', padding: 0 }}>
           {/* Chat Component */}
           <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
-            <Chat handleAddCourseToCalendar={handleAddCourseToCalendar} />
+            <Chat 
+            handleAddCourseToCalendar={handleAddCourseToCalendar}
+            handleOpenDrawer={handleOpenDrawer} 
+             />
           </Box>
         </Box>
       </Box>
