@@ -70,6 +70,8 @@ const App: React.FC = () => {
             case 'stanford':
             case 'berkeley':
             case 'miami':
+            case 'drexel':
+            case 'temple':
             case 'admin':
                 return (
                     <>
@@ -104,6 +106,8 @@ const App: React.FC = () => {
             case 'stanford':
             case 'berkeley':
             case 'miami':
+            case 'drexel':
+            case 'temple':
             case 'admin':
                 return (
                     <>
