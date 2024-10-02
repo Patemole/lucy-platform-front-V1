@@ -40,6 +40,8 @@ const allowedDomains = {
   stanford: [/^.+@([a-zA-Z0-9._-]+\.)*stanford\.edu$/i, /^.+@my-lucy\.com$/i],
   berkeley: [/^.+@([a-zA-Z0-9._-]+\.)*berkeley\.edu$/i, /^.+@my-lucy\.com$/i],
   miami: [/^.+@([a-zA-Z0-9._-]+\.)*miami\.edu$/i, /^.+@my-lucy\.com$/i],
+  drexel: [/^.+@([a-zA-Z0-9._-]+\.)*drexel\.edu$/i, /^.+@my-lucy\.com$/i],
+  temple: [/^.+@([a-zA-Z0-9._-]+\.)*temple\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i],
 };
 
@@ -69,6 +71,8 @@ const getErrorMessage = (subdomain) => {
     stanford: 'Stanford',
     berkeley: 'Berkeley',
     miami: 'Miami',
+    drexel: 'Drexel',
+    temple:'Temple',
     admin: 'Admin',
   };
 
