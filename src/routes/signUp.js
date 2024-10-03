@@ -1,3 +1,6 @@
+
+
+//ANCIEN CODE DU 2 OCTOBRE QUI MARCHE
 import * as React from 'react';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -390,6 +393,13 @@ export default function SignUp() {
     </Container>
   );
 }
+
+
+
+
+
+
+
 
 
 /*
