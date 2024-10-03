@@ -717,7 +717,15 @@ const Dashboard_eleve_template: React.FC = () => {
           variant="persistent"
           anchor="left"
           open={drawerOpen}
-          PaperProps={{ style: { width: drawerWidth, borderRadius: '0 0 0 0', backgroundColor: theme.palette.background.paper } }}
+          PaperProps={{
+            style: {
+              width: drawerWidth,
+              borderRadius: '0 0 0 0',
+              backgroundColor: theme.palette.background.paper,
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          }}
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
             <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
@@ -727,98 +735,130 @@ const Dashboard_eleve_template: React.FC = () => {
               <MapsUgcRoundedIcon />
             </IconButton>
           </Box>
-          <List style={{ padding: '0 15px' }}>
-            <ListItem
-              button
-              onClick={() => navigate(`/dashboard/student/${uid}`)}
-              sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
-            >
-              <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                <HomeIcon />
-              </ListItemIcon>
-              <ListItemText
-                primary="Home"
-                primaryTypographyProps={{
-                  style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                }}
-              />
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => navigate('/dashboard/analytics')}
-              sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
-            >
-              <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                <InsightsIcon />
-              </ListItemIcon>
-              <ListItemText
-                primary="Analytics"
-                primaryTypographyProps={{
-                  style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                }}
-              />
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => navigate('/about')}
-              sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
-            >
-              <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                <InfoIcon />
-              </ListItemIcon>
-              <ListItemText
-                primary="About"
-                primaryTypographyProps={{
-                  style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                }}
-              />
-            </ListItem>
-            <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
-            {conversations.length > 0 ? (
-              conversations.map((conversation) => (
-                <ListItem
-                  button
-                  key={conversation.chat_id}
-                  onClick={() => handleConversationClick(conversation.chat_id)}
+          <div style={{ flexGrow: 1, overflowY: 'auto' }}>
+            <List style={{ padding: '0 15px' }}>
+              <ListItem
+                button
+                onClick={() => navigate(`/dashboard/student/${uid}`)}
+                sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
+              >
+                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
+                  <HomeIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Home"
+                  primaryTypographyProps={{
+                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
+                  }}
+                />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => navigate('/dashboard/analytics')}
+                sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
+              >
+                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
+                  <InsightsIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Analytics"
+                  primaryTypographyProps={{
+                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
+                  }}
+                />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => navigate('/about')}
+                sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
+              >
+                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
+                  <InfoIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="About"
+                  primaryTypographyProps={{
+                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
+                  }}
+                />
+              </ListItem>
+              <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
+              {conversations.length > 0 ? (
+                conversations.map((conversation) => (
+                  <ListItem
+                    button
+                    key={conversation.chat_id}
+                    onClick={() => handleConversationClick(conversation.chat_id)}
+                    sx={{
+                      borderRadius: '8px',
+                      margin: '5px 0',
+                      backgroundColor:
+                        activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
+                      '&:hover': {
+                        backgroundColor: theme.palette.button.background,
+                        color: theme.palette.text_human_message_historic,
+                      },
+                      '& .MuiTypography-root': {
+                        color:
+                          activeChatId === conversation.chat_id
+                            ? theme.palette.text_human_message_historic
+                            : theme.palette.text.primary,
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={conversation.name}
+                      primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }}
+                    />
+                  </ListItem>
+                ))
+              ) : (
+                <Typography
+                  align="center"
                   sx={{
-                    borderRadius: '8px',
-                    margin: '5px 0',
-                    backgroundColor:
-                      activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
-                    '&:hover': {
-                      backgroundColor: theme.palette.button.background,
-                      color: theme.palette.text_human_message_historic,
-                    },
-                    '& .MuiTypography-root': {
-                      color:
-                        activeChatId === conversation.chat_id
-                          ? theme.palette.text_human_message_historic
-                          : theme.palette.text.primary,
-                    },
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    color: theme.palette.text.secondary,
+                    marginTop: '30px',
                   }}
                 >
-                  <ListItemText
-                    primary={conversation.name}
-                    primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }}
-                  />
-                </ListItem>
-              ))
-            ) : (
-              <Typography
-                align="center"
-                sx={{
-                  fontWeight: '500',
-                  fontSize: '0.875rem',
-                  color: theme.palette.text.secondary,
-                  marginTop: '30px',
-                }}
+                  You have no conversations yet
+                </Typography>
+              )}
+            </List>
+          </div>
+          {isSmallScreen && (
+            <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
+              <img
+                src={logo_greg}
+                alt="Logo face"
+                className="h-10 w-auto"
+                style={{ cursor: 'pointer', margin: '0 auto' }}
+                onClick={handleProfileMenuClick}
+              />
+              <Menu
+                anchorEl={profileMenuAnchorEl}
+                open={Boolean(profileMenuAnchorEl)}
+                onClose={handleProfileMenuClose}
+                PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
               >
-                You have no conversations yet
-              </Typography>
-            )}
-          </List>
+                <MenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
+                        Log-out
+                      </Typography>
+                    }
+                  />
+                </MenuItem>
+              </Menu>
+            </Box>
+          )}
         </Drawer>
-
+  
         <div
           className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : ''} ${
             iframeSrc ? 'mr-[33vw]' : ''
@@ -834,13 +874,23 @@ const Dashboard_eleve_template: React.FC = () => {
                   <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
                     <MenuIcon />
                   </IconButton>
-
-                  <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
-                    <MapsUgcRoundedIcon />
-                  </IconButton>
+                  {isSmallScreen && (
+                    <img
+                      src={theme.logo}
+                      alt="University Logo"
+                      style={{ height: '40px', marginLeft: '10px', marginRight: '10px' }}
+                    />
+                  )}
+                  {!isSmallScreen && (
+                    <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
+                      <MapsUgcRoundedIcon />
+                    </IconButton>
+                  )}
                 </>
               )}
               <div style={{ width: '16px' }} />
+              {/* Commented out course_id dropdown menu */}
+              {/*
               <div
                 onClick={handleDropDownClick}
                 style={{
@@ -862,9 +912,13 @@ const Dashboard_eleve_template: React.FC = () => {
                   }}
                 >
                   {selectedFilter}
-              </Typography>
-              <ArrowDropDownIcon sx={{ fontSize: '1rem', color: getBackgroundColor(selectedFilter).color }} />
+                </Typography>
+                <ArrowDropDownIcon sx={{ fontSize: '1rem', color: getBackgroundColor(selectedFilter).color }} />
+              </div>
+              */}
             </div>
+  
+            {/* Menu for course options (kept active so it works when uncommented) */}
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
@@ -887,82 +941,102 @@ const Dashboard_eleve_template: React.FC = () => {
                 </MenuItem>
               ))}
             </Menu>
+  
             <div style={{ flexGrow: 1 }}></div>
-
-              <div
-                style={{
-                  backgroundColor: '#FEEAEA',
-                  color: '#F04261',
-                  padding: '4px 8px',
-                  borderRadius: '8px',
-                  marginLeft: '10px',
-                  marginRight: '10px',
-                  fontWeight: '500',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                }}
-                onClick={toggleBetaView}
-              >
-                Beta V1.3
-              </div>
-            </div>
-
-            <div style={{ flexGrow: 1 }}></div>
-
+  
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              {courseId === '6f9b98d4-7f92-4f7b-abe5-71c2c634edb2' && (
-                isSmallScreen ? (
-                  <IconButton
-                    onClick={handleMeetingClick}
-                    sx={{ color: theme.palette.button_sign_in }}
+              {isSmallScreen ? (
+                <>
+                  <div
+                    style={{
+                      backgroundColor: '#FEEAEA',
+                      color: '#F04261',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      marginRight: '10px',
+                      fontWeight: '500',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                    }}
+                    onClick={toggleBetaView}
                   >
-                    <ContactMailIcon />
+                    Beta V1.3
+                  </div>
+                  <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
+                    <MapsUgcRoundedIcon />
                   </IconButton>
-                ) : (
-                  <Button
-                    variant="outlined"
-                    onClick={handleMeetingClick}
-                    sx={{ borderColor: theme.palette.button_sign_in, color: theme.palette.button_sign_in }}
+                </>
+              ) : (
+                <>
+                  {courseId === '6f9b98d4-7f92-4f7b-abe5-71c2c634edb2' && (
+                    <Button
+                      variant="outlined"
+                      onClick={handleMeetingClick}
+                      sx={{ borderColor: theme.palette.button_sign_in, color: theme.palette.button_sign_in }}
+                    >
+                      Contact my Academic Advisor
+                    </Button>
+                  )}
+                  <div
+                    style={{
+                      backgroundColor: '#FEEAEA',
+                      color: '#F04261',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      marginLeft: '10px',
+                      marginRight: '10px',
+                      fontWeight: '500',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                    }}
+                    onClick={toggleBetaView}
                   >
-                    Contact my Academic Advisor
-                  </Button>
-                )
-              )}
-
-              <img
-                src={logo_greg}
-                alt="Logo face"
-                className="h-10 w-auto"
-                style={{ cursor: 'pointer', marginRight: '20px', marginLeft: '15px' }}
-                onClick={handleProfileMenuClick}
-              />
-              <Menu
-                anchorEl={profileMenuAnchorEl}
-                open={Boolean(profileMenuAnchorEl)}
-                onClose={handleProfileMenuClose}
-                PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
-              >
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon>
-                    <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>Log-out</Typography>
-                    }
+                    Beta V1.3
+                  </div>
+                  <img
+                    src={logo_greg}
+                    alt="Logo face"
+                    className="h-10 w-auto"
+                    style={{ cursor: 'pointer', marginRight: '20px', marginLeft: '15px' }}
+                    onClick={handleProfileMenuClick}
                   />
-                </MenuItem>
-              </Menu>
+                  <Menu
+                    anchorEl={profileMenuAnchorEl}
+                    open={Boolean(profileMenuAnchorEl)}
+                    onClose={handleProfileMenuClose}
+                    PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
+                  >
+                    <MenuItem onClick={handleLogout}>
+                      <ListItemIcon>
+                        <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
+                            Log-out
+                          </Typography>
+                        }
+                      />
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
             </div>
           </div>
 
           {messages.length === 0 ? (
             <div
-              className="flex-grow flex items-center justify-center w-full"
+              className="flex-grow flex flex-col items-center justify-center w-full"
               style={{ backgroundColor: theme.palette.background.default }}
             >
-              <div className="w-full h-full p-8 flex flex-col items-center justify-center" style={{ backgroundColor: theme.palette.background.default }}>
-                <h1 className="text-4xl font-bold text-center mb-6" style={{ color: theme.palette.text.primary }}>
+              <div
+                className="w-full h-full p-8 flex flex-col items-center justify-center"
+                style={{ backgroundColor: theme.palette.background.default }}
+              >
+                <h1
+                  className="text-4xl font-bold text-center mb-6"
+                  style={{ color: theme.palette.text.primary }}
+                >
                   Your Assistant Lucy
                 </h1>
 
@@ -973,6 +1047,9 @@ const Dashboard_eleve_template: React.FC = () => {
                       borderRadius: '5px',
                       backgroundColor: theme.palette.button.background,
                       color: theme.palette.text_human_message_historic,
+                      fontSize: isSmallScreen ? '0.75rem' : '1rem',
+                      padding: isSmallScreen ? '4px 8px' : '8px 16px',
+                      whiteSpace: 'nowrap',
                     }}
                     endIcon={
                       <img
@@ -1024,13 +1101,16 @@ const Dashboard_eleve_template: React.FC = () => {
             </div>
           ) : (
             <div
-              className="flex-grow p-4 overflow-auto"
-              style={{ backgroundColor: theme.palette.background.default }}
+              className="flex-grow overflow-y-auto"
+              style={{ backgroundColor: theme.palette.background.default, paddingBottom: '100px' }}
             >
-              <div className="flex flex-col space-y-2" ref={scrollableDivRef}>
+              <div className="flex flex-col space-y-2 p-4" ref={scrollableDivRef}>
                 {messages.map((message, index) =>
                   message.type === 'human' ? (
-                    <div key={message.id} className={`flex justify-end ${messageMarginX} ${index === 0 ? 'mt-8' : ''}`}>
+                    <div
+                      key={message.id}
+                      className={`flex justify-end ${messageMarginX} ${index === 0 ? 'mt-8' : ''}`}
+                    >
                       <div className="max-w-3/4 w-full text-right">
                         <div className="flex items-center justify-end mb-1">
                           <span className="font-bold mr-2" style={{ color: theme.palette.text.primary }}>
@@ -1055,7 +1135,9 @@ const Dashboard_eleve_template: React.FC = () => {
                             {message.fileType ? (
                               <embed
                                 src={message.content}
-                                type={message.fileType === 'pdf' ? 'application/pdf' : 'video/mp4'}
+                                type={
+                                  message.fileType === 'pdf' ? 'application/pdf' : 'video/mp4'
+                                }
                                 width="100%"
                                 height="200px"
                               />
@@ -1071,7 +1153,11 @@ const Dashboard_eleve_template: React.FC = () => {
                       <div className="max-w-3/4 w-full flex items-center">
                         {message.content === '' ? (
                           <div className="flex items-center">
-                            <Avatar alt="Lucy Avatar" src={logo_lucy_face} sx={{ width: 25, height: 25 }} />
+                            <Avatar
+                              alt="Lucy Avatar"
+                              src={logo_lucy_face}
+                              sx={{ width: 25, height: 25 }}
+                            />
                             <div className="ml-2">
                               <ThreeDots height="30" width="50" color={theme.palette.primary.main} />
                             </div>
@@ -1131,8 +1217,13 @@ const Dashboard_eleve_template: React.FC = () => {
           )}
 
           <div
-            className="flex justify-center p-4 relative"
-            style={{ backgroundColor: theme.palette.background.default }}
+            className="flex justify-center p-4"
+            style={{
+              backgroundColor: theme.palette.background.default,
+              position: 'fixed',
+              bottom: 0,
+              width: '100%',
+            }}
           >
             <div style={{ maxWidth: '800px', width: '100%', position: 'relative' }}>
               <TextField
@@ -1140,7 +1231,7 @@ const Dashboard_eleve_template: React.FC = () => {
                 variant="outlined"
                 multiline
                 maxRows={6}
-                placeholder="Ask a question about anything to Lucy..."
+                placeholder="Message"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleInputKeyPressSocraticLangGraph}
@@ -1149,7 +1240,12 @@ const Dashboard_eleve_template: React.FC = () => {
                     <IconButton
                       color="primary"
                       onClick={handleSendMessageSocraticLangGraph}
-                      style={{ position: 'absolute', right: '10px', bottom: '25px', transform: 'translateY(50%)' }}
+                      style={{
+                        position: 'absolute',
+                        right: '10px',
+                        bottom: '25px',
+                        transform: 'translateY(50%)',
+                      }}
                     >
                       <SendIcon style={{ color: theme.palette.button_sign_in }} />
                     </IconButton>
