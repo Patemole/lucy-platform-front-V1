@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { FiCheck, FiCopy, FiThumbsDown, FiThumbsUp, FiSend } from "react-icons/fi";
 import { AiOutlineStop } from "react-icons/ai";
@@ -98,6 +97,9 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [waitingMessageIndex, setWaitingMessageIndex] = useState<number>(0);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Adjust font size based on screen size
+  const messageFontSize = isSmallScreen ? 'text-base' : 'text-lg';
 
   useEffect(() => {
     console.log("CourseData passed to the component: ", CourseData);
@@ -211,7 +213,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
           {content && (
             <div
-              className="w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-1 ml-8 text-justify text-lg"
+              className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-1 ${!isSmallScreen ? 'ml-8' : ''} text-justify ${messageFontSize}`}
               style={{ color: theme.palette.text.primary }}
             >
               <ReactMarkdown
@@ -251,7 +253,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
           )}
 
           {images && images.length > 0 && (
-            <div className="mt-4 flex justify-start ml-8 gap-4">
+            <div className={`mt-4 flex justify-start ${!isSmallScreen ? 'ml-8' : ''} gap-4`}>
               {images.map((image, ind) => (
                 <div
                   key={image.image_id}
@@ -277,7 +279,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
           )}
 
           {takData && takData.length > 0 && (
-            <div className="mt-4 bg-gray-100 p-4 rounded-lg ml-8">
+            <div className={`mt-4 bg-gray-100 p-4 rounded-lg ${!isSmallScreen ? 'ml-8' : ''}`}>
               {takData.map((tak, idx) => (
                 <div key={idx} className="mb-4">
                   <p className="text-left" style={{ color: theme.palette.text.primary }}>
@@ -525,7 +527,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
           )}
 
           {citedDocuments && citedDocuments.length > 0 && (
-            <div className="mt-2 ml-8">
+            <div className={`mt-2 ${!isSmallScreen ? 'ml-8' : ''}`}>
               <b className="text-sm" style={{ color: theme.palette.text.primary }}>
                 Sources:
               </b>
@@ -568,7 +570,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
           )}
 
           {handleFeedback && (
-            <div className="flex flex-row gap-x-0.5 ml-8 mt-1">
+            <div className={`flex flex-row gap-x-0.5 ${!isSmallScreen ? 'ml-8' : ''} mt-1`}>
               <Hoverable onClick={handleCopyClick}>
                 {copyClicked ? (
                   <FiCheck style={{ color: theme.palette.text.primary }} />
