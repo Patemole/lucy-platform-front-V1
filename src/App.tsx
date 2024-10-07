@@ -81,7 +81,7 @@ const App: React.FC = () => {
                 return (
                     <>
                         
-                        <Route path={`/`} element={<TrustPage />} />
+                        <Route path={`/trust`} element={<TrustPage />} />
                         <Route path={`/controls`} element={<TrustControlPage />} />
 
                         <Route path={`/auth/sign-up`} element={<SignUp />} />
@@ -121,7 +121,7 @@ const App: React.FC = () => {
             case 'trust':
                 return (
                     <>
-                        <Route path={`/`} element={<TrustPage />} />
+                        <Route path={`/trust`} element={<TrustPage />} />
                         <Route path="/onboarding/choose-role" element={<ChooseRole />} />
                         <Route path="/onboarding/learningStyleSurvey" element={<LearningStyleSurvey />} />
                         <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
