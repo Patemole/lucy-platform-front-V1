@@ -45,6 +45,9 @@ const getTheme = (subdomain, themeMode) => {
     case 'admin':
       return themeMode === 'dark' ? adminDarkTheme : adminTheme;
 
+    case 'trust':
+      return themeMode === 'dark' ? adminDarkTheme : adminTheme;
+
     default:
       return themeMode === 'dark' ? defaultDarkTheme : defaultTheme;
       
