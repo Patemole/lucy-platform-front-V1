@@ -17,7 +17,7 @@ const SecurityDashboard: React.FC = () => {
     'Data Protection Policy',
     'Data Retention Policy',
     'Business Continuity Plan',
-    'Third-Party Management Policy',
+    'Vendor Management Policy',
     'Security Awareness and Training Policy',
     'Access Control Policy',
     'Encryption Policy',
