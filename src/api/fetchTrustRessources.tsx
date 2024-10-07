@@ -104,6 +104,11 @@ export const requestDocumentDownload = async ({
             downloadUrl = "https://trust-ressources.s3.amazonaws.com/Risk+Assessment+Policy+-+My+Lucy+Corp+-+2024.pdf";
         }
 
+
+        if (documentName === "Vendor Management Policy") {
+            downloadUrl = "https://trust-ressources.s3.amazonaws.com/Vendor+Management+Policy+-+My+Lucy+Corp+-+2024.pdf";
+        }
+
         // Ajouter d'autres conditions pour d'autres documents si nécessaire
         // if (documentName === "Autre Nom") {
         //     downloadUrl = "https://trust-ressources.s3.amazonaws.com/Autre+Nom.pdf";
