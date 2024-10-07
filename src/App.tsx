@@ -21,6 +21,10 @@ import LearningStyleSurveyTeacher from './routes/learningStyleSurvey_teacher';
 import Chat_academic_advisor from './routes/chat_academic_advisor';
 import SignIn from './routes/signIn';
 import SignUp from './routes/signUp';
+
+import TrustPage from './routes/trust';
+import TrustControlPage from './routes/trust_controls';
+
 import SignUp_academic_advisor from './routes/signUp_academic_advisor';
 import SignUp_admin from './routes/signUp_admin';
 import ChooseRole from './routes/chooseRole';
@@ -73,8 +77,13 @@ const App: React.FC = () => {
             case 'drexel':
             case 'temple':
             case 'admin':
+            case 'trust':
                 return (
                     <>
+                        
+                        <Route path={`/`} element={<TrustPage />} />
+                        <Route path={`/controls`} element={<TrustControlPage />} />
+
                         <Route path={`/auth/sign-up`} element={<SignUp />} />
                         <Route path={`/auth/sign-up/academic_advisor`} element={<SignUp_academic_advisor />} />
                         <Route path={`/auth/sign-up/admin`} element={<SignUp_admin />} />
@@ -109,6 +118,7 @@ const App: React.FC = () => {
             case 'drexel':
             case 'temple':
             case 'admin':
+            case 'trust':
                 return (
                     <>
                         <Route path="/onboarding/choose-role" element={<ChooseRole />} />
