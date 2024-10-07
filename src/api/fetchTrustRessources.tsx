@@ -109,6 +109,10 @@ export const requestDocumentDownload = async ({
             downloadUrl = "https://trust-ressources.s3.amazonaws.com/Vendor+Management+Policy+-+My+Lucy+Corp+-+2024.pdf";
         }
 
+        if (documentName === "Data Retention Policy") {
+            downloadUrl = "https://trust-ressources.s3.amazonaws.com/Data+Retention+Policy+-+My+Lucy+Corp+-+2024.pdf";
+        }
+
         // Ajouter d'autres conditions pour d'autres documents si nécessaire
         // if (documentName === "Autre Nom") {
         //     downloadUrl = "https://trust-ressources.s3.amazonaws.com/Autre+Nom.pdf";
