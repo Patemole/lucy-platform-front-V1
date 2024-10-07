@@ -12,15 +12,15 @@ const SecurityDashboard: React.FC = () => {
   const navigate = useNavigate(); // Utilisation du hook pour la navigation
 
   const documents = [
-    'Incidence Response Plan',
+    'Incidence Response Plan (Comimg soon)',
     'Risk Assessment Policy',
-    'Data Protection Policy',
+    'Data Protection Policy (Comimg soon)',
     'Data Retention Policy',
-    'Business Continuity Plan',
+    'Business Continuity Plan (Comimg soon)',
     'Vendor Management Policy',
-    'Security Awareness and Training Policy',
-    'Access Control Policy',
-    'Encryption Policy',
+    'Security Awareness and Training Policy (Comimg soon)',
+    'Access Control Policy (Comimg soon)',
+    'Encryption Policy (Comimg soon)',
   ];
 
   const controls = [
