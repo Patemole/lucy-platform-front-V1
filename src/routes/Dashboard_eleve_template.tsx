@@ -414,6 +414,7 @@ const Dashboard_eleve_template: React.FC = () => {
 
       const lastMessageIndex = messageHistory.length - 1;
 
+      //for await (const packetBunch of sendMessageFakeDemo({
       for await (const packetBunch of sendMessageSocraticLangGraph({
         message: inputValue,
         chatSessionId: chatSessionId,
@@ -462,10 +463,25 @@ const Dashboard_eleve_template: React.FC = () => {
           }
         }
 
+        console.log('Raw answerTAK data before flattening:', answerTAK);
+
         const flattenedImages = answerImages.flat();
         const flattenedTAK = answerTAK.flat();
         const flattenedCourse = answerCourse.flat();
         const flattenedwaitingdata = answerWaiting.flat();
+
+        // Detection de TAK
+        if (flattenedTAK.length > 0) {
+          const randomMessages = [
+              "Give me some clarification 🤓",
+          ];
+      
+          // Choisir une chaîne de manière aléatoire
+          answer = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+      }
+
+
+        console.log('Raw answerTAK data after flattening:', flattenedTAK);
 
         setMessages((prevMessages) => {
           const updatedMessages = [...prevMessages];
@@ -474,6 +490,7 @@ const Dashboard_eleve_template: React.FC = () => {
             ...prevMessages[lastMessageIndex],
             type: 'ai',
             content: answer,
+            //content: 'This is a test',
             personaName: 'Lucy',
             citedDocuments: answerDocuments,
             images: flattenedImages,

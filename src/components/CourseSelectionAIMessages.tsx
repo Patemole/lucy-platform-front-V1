@@ -119,7 +119,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
 
     if (waitingMessages && waitingMessages.length > 0 && !content) {
       const messagesArray = waitingMessages.map(
-        (msg) => `${msg.sentence1} ${msg.sentence2} ${msg.sentence3}`
+        (msg) => `${msg.Sentence1} ${msg.Sentence2} ${msg.Sentence3}`
       );
 
       interval = setInterval(() => {

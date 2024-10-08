@@ -81,9 +81,9 @@ export interface CourseSlot {
   }
 
 export interface AnswerWaiting {
-    sentence1: string;
-    sentence2: string;
-    sentence3: string;
+    Sentence1: string;
+    Sentence2: string;
+    Sentence3: string;
   }
 
 
