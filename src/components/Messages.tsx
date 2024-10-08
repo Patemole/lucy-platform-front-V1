@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { FiCheck, FiCopy, FiThumbsDown, FiThumbsUp, FiSend } from "react-icons/fi";
+import {
+  FiCheck,
+  FiCopy,
+  FiThumbsDown,
+  FiThumbsUp,
+  FiSend,
+} from "react-icons/fi";
 import { AiOutlineStop } from "react-icons/ai";
 import ReactMarkdown from "react-markdown";
 import { Button, TextField } from "@mui/material";
@@ -87,69 +93,122 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   handleSendCOURSEMessage,
   drawerOpen,
 }) => {
+  // États pour la gestion des interactions utilisateur
   const [copyClicked, setCopyClicked] = useState(false);
   const [feedbackClicked, setFeedbackClicked] = useState(false);
   const [thumbsUpClicked, setThumbsUpClicked] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
   const [otherInput, setOtherInput] = useState<string>("");
-  const [currentWaitingMessage, setCurrentWaitingMessage] = useState<string | null>(null);
-  const [waitingMessageIndex, setWaitingMessageIndex] = useState<number>(0);
+
+  // États pour la gestion des messages
+  const [messages, setMessages] = useState<string[]>([]);
+  const [isWaiting, setIsWaiting] = useState<boolean>(false);
+
+  // Thème et responsive
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Adjust font size based on screen size
-  const messageFontSize = isSmallScreen ? 'text-base' : 'text-lg';
+  // Ajustement de la taille de la police en fonction de la taille de l'écran
+  const messageFontSize = isSmallScreen ? "text-base" : "text-lg";
 
+  // Initialisation des messages avec le contenu initial
   useEffect(() => {
-    console.log("CourseData passed to the component: ", CourseData);
-  }, [CourseData]);
+    if (content) {
+      setMessages([content]);
+    }
+  }, [content]);
 
+  // Gestion de l'affichage unique de la waitingSentence
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let timer: NodeJS.Timeout;
 
-    if (waitingMessages && waitingMessages.length > 0 && !content) {
-      const messagesArray = waitingMessages.map(
-        (msg) => `${msg.sentence1} ${msg.sentence2} ${msg.sentence3}`
-      );
+    if (waitingMessages && waitingMessages.length > 0) {
+      const waitingSentence = waitingMessages[0].Sentence1;
 
-      interval = setInterval(() => {
-        setCurrentWaitingMessage(messagesArray[waitingMessageIndex]);
-        setWaitingMessageIndex((prevIndex) => (prevIndex + 1) % messagesArray.length);
-      }, 1500);
-    } else {
-      setCurrentWaitingMessage(null);
+      if (!isWaiting) {
+        setMessages((prevMessages) => {
+          // Insérer la waitingSentence après le premier message si elle n'est pas déjà présente
+          if (prevMessages.length >= 1 && prevMessages[1] !== waitingSentence) {
+            const newMessages = [...prevMessages];
+            newMessages.splice(1, 0, waitingSentence);
+            return newMessages;
+          }
+          return prevMessages;
+        });
+
+        setIsWaiting(true);
+
+        // Définir un timer pour supprimer la waitingSentence après 2 secondes
+        timer = setTimeout(() => {
+          setMessages((prevMessages) =>
+            prevMessages.filter((msg, idx) => !(idx === 1 && msg === waitingSentence))
+          );
+          setIsWaiting(false);
+        }, 2000); // 2000 millisecondes = 2 secondes
+      }
     }
 
-    return () => clearInterval(interval);
-  }, [waitingMessages, waitingMessageIndex, content]);
+    // Nettoyage du timer lorsque le composant est démonté ou que waitingMessages change
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [waitingMessages, isWaiting]);
 
+  // Gestion des mises à jour du contenu supplémentaire
+  useEffect(() => {
+    if (content) {
+      setMessages((prevMessages) => {
+        // Éviter de dupliquer le contenu initial
+        if (prevMessages[0] !== content) {
+          // Vérifier si une waitingSentence est présente
+          if (isWaiting && prevMessages.length > 1) {
+            // Ajouter le contenu après la waitingSentence
+            return [...prevMessages.slice(0, 2), content, ...prevMessages.slice(2)];
+          } else {
+            // Pas de waitingSentence, ajouter à la fin
+            return [...prevMessages, content];
+          }
+        }
+        return prevMessages;
+      });
+    }
+  }, [content, isWaiting]);
+
+  // Fonction pour copier le contenu dans le presse-papiers
   const handleCopyClick = () => {
     navigator.clipboard.writeText(content);
     setCopyClicked(true);
     setTimeout(() => setCopyClicked(false), 3000);
   };
 
+  // Fonction pour gérer les retours d'information "mauvaise réponse"
   const handleWrongAnswer = () => {
     setFeedbackClicked(true);
     handleWrongAnswerClick(content);
-    setTimeout(() => setFeedbackClicked(false), 50);
+    setTimeout(() => setFeedbackClicked(false), 500); // Augmenté à 500ms pour une meilleure UX
   };
 
+  // Fonction pour gérer les clics sur le pouce en l'air
   const handleThumbUpClick = () => {
     setThumbsUpClicked(true);
     handleFeedback && handleFeedback("like");
     setTimeout(() => setThumbsUpClicked(false), 2000);
   };
 
+  // Fonction pour gérer le clic sur une image
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
   };
 
+  // Fonction pour fermer l'image agrandie
   const handleCloseImage = () => {
     setSelectedImage(null);
   };
 
+  // Fonction pour gérer les changements de checkbox
   const handleCheckboxChange = (option: string) => {
     setSelectedAnswers((prev) =>
       prev.includes(option)
@@ -158,16 +217,23 @@ export const AIMessage: React.FC<AIMessageProps> = ({
     );
   };
 
+  // Fonction pour gérer les changements de l'input "Autre"
   const handleOtherInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOtherInput(e.target.value);
   };
 
+  // Fonction pour envoyer les réponses TAK
   const handleSendClick = () => {
     const message = otherInput ? otherInput : selectedAnswers.join(", ");
     handleSendTAKMessage(message);
+    // Réinitialiser les réponses après envoi
+    setSelectedAnswers([]);
+    setOtherInput("");
   };
 
-  const isSendDisabled = selectedAnswers.length === 0 && otherInput.trim() === "";
+  // Désactiver le bouton "Envoyer" si aucune réponse n'est sélectionnée ou si l'input "Autre" est vide
+  const isSendDisabled =
+    selectedAnswers.length === 0 && otherInput.trim() === "";
 
   return (
     <div className="py-5 px-5 flex -mr-6 w-full relative">
@@ -178,7 +244,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
         >
           <img
             src={selectedImage}
-            alt="Enlarged view"
+            alt="Vue agrandie"
             className="shadow-lg"
             style={{
               margin: "2rem",
@@ -195,7 +261,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
           <div className="flex">
             <div className="p-1 pr-0 bg-ai rounded-lg h-fit my-auto">
               <div className="text-inverted">
-                <Avatar alt="Lucy Avatar" src={lucy_face_logo} sx={{ width: 25, height: 25 }} />
+                <Avatar
+                  alt="Avatar Lucy"
+                  src={lucy_face_logo}
+                  sx={{ width: 25, height: 25 }}
+                />
               </div>
             </div>
             <div
@@ -203,17 +273,21 @@ export const AIMessage: React.FC<AIMessageProps> = ({
               style={{ color: theme.palette.text.primary }}
             >
               {personaName || "Lucy"}
-              <img src={certifiate_icon} alt="Certificate Icon" className="ml-1 w-4 h-4" />
+              <img
+                src={certifiate_icon}
+                alt="Icône de certificat"
+                className="ml-1 w-4 h-4"
+              />
             </div>
           </div>
 
-          {!content && currentWaitingMessage && (
-            <div className="mt-2 text-gray-500 text-lg">[{currentWaitingMessage}]</div>
-          )}
-
-          {content && (
+          {/* Affichage des messages accumulés */}
+          {messages.map((msg, index) => (
             <div
-              className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-1 ${!isSmallScreen ? 'ml-8' : ''} text-justify ${messageFontSize}`}
+              key={index}
+              className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-1 ${
+                !isSmallScreen ? "ml-8" : ""
+              } text-justify ${messageFontSize}`}
               style={{ color: theme.palette.text.primary }}
             >
               <ReactMarkdown
@@ -230,12 +304,20 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       rel="noopener noreferrer"
                     />
                   ),
-                  ul: ({ node, ...props }) => <ul className="list-disc ml-6" {...props} />,
-                  ol: ({ node, ...props }) => <ol className="list-decimal ml-6" {...props} />,
+                  ul: ({ node, ...props }) => (
+                    <ul className="list-disc ml-6" {...props} />
+                  ),
+                  ol: ({ node, ...props }) => (
+                    <ol className="list-decimal ml-6" {...props} />
+                  ),
                   code: ({ node, className, children, ...props }) => {
                     const match = /language-(\w+)/.exec(className || "");
                     return match ? (
-                      <SyntaxHighlighter language={match[1]} PreTag="div" {...props}>
+                      <SyntaxHighlighter
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
                         {children}
                       </SyntaxHighlighter>
                     ) : (
@@ -247,13 +329,18 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   br: () => <br />,
                 }}
               >
-                {content.replace(/\n/g, "  \n")}
+                {msg.replace(/\n/g, "  \n")}
               </ReactMarkdown>
             </div>
-          )}
+          ))}
 
+          {/* Gestion des images */}
           {images && images.length > 0 && (
-            <div className={`mt-4 flex justify-start ${!isSmallScreen ? 'ml-8' : ''} gap-4`}>
+            <div
+              className={`mt-4 flex justify-start ${
+                !isSmallScreen ? "ml-8" : ""
+              } gap-4`}
+            >
               {images.map((image, ind) => (
                 <div
                   key={image.image_id}
@@ -278,11 +365,19 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </div>
           )}
 
+          {/* Gestion des données TAK */}
           {takData && takData.length > 0 && (
-            <div className={`mt-4 bg-gray-100 p-4 rounded-lg ${!isSmallScreen ? 'ml-8' : ''}`}>
+            <div
+              className={`mt-4 bg-gray-100 p-4 rounded-lg ${
+                !isSmallScreen ? "ml-8" : ""
+              }`}
+            >
               {takData.map((tak, idx) => (
                 <div key={idx} className="mb-4">
-                  <p className="text-left" style={{ color: theme.palette.text.primary }}>
+                  <p
+                    className="text-left"
+                    style={{ color: theme.palette.text.primary }}
+                  >
                     {tak.question}
                   </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
@@ -312,12 +407,12 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         className="block mb-1"
                         style={{ color: theme.palette.text.primary }}
                       >
-                        If other, please specify
+                        Si autre, veuillez spécifier
                       </label>
                       <TextField
                         fullWidth
                         id={`other-${idx}`}
-                        placeholder="e.g., None"
+                        placeholder="e.g., Aucun"
                         value={otherInput}
                         onChange={handleOtherInputChange}
                         variant="outlined"
@@ -327,7 +422,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                           fontSize: "0.875rem",
                         }}
                         InputProps={{
-                          style: { fontWeight: "500", fontSize: "0.875rem", color: "gray" },
+                          style: {
+                            fontWeight: "500",
+                            fontSize: "0.875rem",
+                            color: "gray",
+                          },
                         }}
                       />
                     </div>
@@ -335,13 +434,13 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   <div className="flex justify-end mt-4 gap-x-4">
                     <Button
                       variant="outlined"
-                      onClick={() => console.log("Ignored")}
+                      onClick={() => console.log("Ignoré")}
                       style={{
                         color: theme.palette.text.primary,
                       }}
                     >
                       <AiOutlineStop className="mr-2" />
-                      Ignore
+                      Ignorer
                     </Button>
                     <Button
                       variant="contained"
@@ -353,7 +452,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       disabled={isSendDisabled}
                     >
                       <FiSend className="mr-2" />
-                      Send
+                      Envoyer
                     </Button>
                   </div>
                 </div>
@@ -361,10 +460,10 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </div>
           )}
 
-          {/* Render CourseData */}
+          {/* Gestion des données Course */}
           {CourseData && CourseData.length > 0 && (
             <div style={{ width: "100%" }}>
-              {/* Margin between text and first course block */}
+              {/* Marge entre le texte et le premier bloc de cours */}
               <div style={{ marginBottom: "24px" }}></div>
 
               {CourseData.map((course, idx) => (
@@ -374,7 +473,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                     backgroundColor: "#FCFCFC",
                     border: "1px solid #BCBCBC",
                     padding: "16px",
-                    marginBottom: idx === CourseData.length - 1 ? "16px" : "8px",
+                    marginBottom:
+                      idx === CourseData.length - 1 ? "16px" : "8px",
                     borderRadius: "8px",
                     width: "95%",
                     marginLeft: "auto",
@@ -383,7 +483,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   }}
                 >
                   <div style={{ maxWidth: "100%" }}>
-                    {/* Title */}
+                    {/* Titre */}
                     <p
                       style={{
                         color: "#011F5B",
@@ -396,7 +496,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       {course.title}
                     </p>
 
-                    {/* Semester, Credit, Prerequisites */}
+                    {/* Semestre, Crédit, Prérequis */}
                     <div
                       style={{
                         display: "flex",
@@ -406,7 +506,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         marginBottom: "12px",
                       }}
                     >
-                      {/* Semester */}
+                      {/* Semestre */}
                       <span
                         style={{
                           backgroundColor: "#FFD9BF",
@@ -420,7 +520,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         {course.Semester}
                       </span>
 
-                      {/* Credit */}
+                      {/* Crédit */}
                       <span
                         style={{
                           backgroundColor: "#D6EAF7",
@@ -434,7 +534,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         {course.Credit}
                       </span>
 
-                      {/* Prerequisites */}
+                      {/* Prérequis */}
                       <div
                         style={{
                           display: "flex",
@@ -455,7 +555,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                           {course.Prerequisites}
                         </span>
 
-                        {/* Green check icon */}
+                        {/* Icône de coche verte */}
                         <div
                           style={{
                             width: "20px",
@@ -484,7 +584,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       {course.Description}
                     </p>
 
-                    {/* Prospectus and Syllabus links */}
+                    {/* Liens Prospectus et Syllabus */}
                     <div
                       style={{
                         display: "flex",
@@ -526,8 +626,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </div>
           )}
 
+          {/* Gestion des documents cités */}
           {citedDocuments && citedDocuments.length > 0 && (
-            <div className={`mt-2 ${!isSmallScreen ? 'ml-8' : ''}`}>
+            <div
+              className={`mt-2 ${!isSmallScreen ? "ml-8" : ""}`}
+            >
               <b className="text-sm" style={{ color: theme.palette.text.primary }}>
                 Sources:
               </b>
@@ -569,8 +672,13 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </div>
           )}
 
+          {/* Gestion des feedbacks */}
           {handleFeedback && (
-            <div className={`flex flex-row gap-x-0.5 ${!isSmallScreen ? 'ml-8' : ''} mt-1`}>
+            <div
+              className={`flex flex-row gap-x-0.5 ${
+                !isSmallScreen ? "ml-8" : ""
+              } mt-1`}
+            >
               <Hoverable onClick={handleCopyClick}>
                 {copyClicked ? (
                   <FiCheck style={{ color: theme.palette.text.primary }} />
@@ -590,9 +698,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   style={{ color: theme.palette.text.primary }}
                 >
                   <FiThumbsDown
-                    className={`mr-1 ${feedbackClicked ? "fill-current text-primary" : ""}`}
+                    className={`mr-1 ${
+                      feedbackClicked ? "fill-current text-primary" : ""
+                    }`}
                   />
-                  {!isSmallScreen && "Wrong answer give us feedback"}
+                  {!isSmallScreen && "Mauvaise réponse, donnez-nous votre avis"}
                 </div>
               </Hoverable>
             </div>
@@ -602,7 +712,6 @@ export const AIMessage: React.FC<AIMessageProps> = ({
     </div>
   );
 };
-
 
 
 // ancienne version pas adequoite pour le telephone 3/10/2024
