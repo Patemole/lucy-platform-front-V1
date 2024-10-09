@@ -977,7 +977,7 @@ const Dashboard_eleve_template: React.FC = () => {
                     }}
                     onClick={toggleBetaView}
                   >
-                    Beta V1.3
+                    Beta V2.3
                   </div>
                   <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
                     <MapsUgcRoundedIcon />
