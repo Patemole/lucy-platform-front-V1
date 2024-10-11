@@ -78,6 +78,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     },
   ];
 
+  // Séparer les boutons en deux lignes pour les petits écrans
+  const firstRowButtons = buttons.filter(
+    (button) =>
+      button.visible &&
+      (button.value === 'Academic' ||
+        button.value === 'Academic Information' ||
+        button.value === 'Events')
+  );
+  const secondRowButtons = buttons.filter(
+    (button) =>
+      button.visible &&
+      (button.value === 'Policies' ||
+        button.value === 'Processes and Policies' ||
+        button.value === 'Financial Aid')
+  );
+
   return (
     <Box
       display="flex"
@@ -143,34 +159,100 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       <Box
         mt={3}
         display="flex"
+        flexDirection="column"
+        alignItems="center"
         justifyContent="center"
-        flexDirection={isSmallScreen ? 'row' : 'row'}
-        flexWrap={isSmallScreen ? 'wrap' : 'nowrap'}
-        gap={2}
         width={isSmallScreen ? '90%' : '800px'} // Assurer que la largeur correspond au champ de recherche
+        gap={isSmallScreen ? 2 : 2}
       >
-        {buttons
-          .filter((button) => button.visible)
-          .map((button, index) => (
-            <Button
-              key={index}
-              variant="outlined"
-              size="large"
-              onClick={() => onSend(button.value)}
-              sx={{
-                borderColor: '#011F5B',
-                color: '#011F5B',
-                borderRadius: '15px',
-                padding: '6px 16px', // Padding réduit pour une hauteur de bouton plus petite
-                textTransform: 'none',
-                whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
-                width: isSmallScreen ? '48%' : 'auto', // Deux boutons par ligne sur petits écrans
-              }}
-              startIcon={button.icon}
+        {isSmallScreen ? (
+          <>
+            {/* Première ligne de boutons */}
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              width="100%"
+              mb={2}
             >
-              {button.label}
-            </Button>
-          ))}
+              {firstRowButtons.map((button, index) => (
+                <Button
+                  key={index}
+                  variant="outlined"
+                  size="large"
+                  onClick={() => onSend(button.value)}
+                  sx={{
+                    borderColor: '#011F5B',
+                    color: '#011F5B',
+                    borderRadius: '15px',
+                    padding: '6px 16px', // Padding réduit pour une hauteur de bouton plus petite
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
+                    width: '48%', // Deux boutons par ligne
+                  }}
+                  startIcon={button.icon}
+                >
+                  {button.label}
+                </Button>
+              ))}
+            </Box>
+            {/* Deuxième ligne de boutons */}
+            <Box display="flex" justifyContent="space-between" width="100%">
+              {secondRowButtons.map((button, index) => (
+                <Button
+                  key={index}
+                  variant="outlined"
+                  size="large"
+                  onClick={() => onSend(button.value)}
+                  sx={{
+                    borderColor: '#011F5B',
+                    color: '#011F5B',
+                    borderRadius: '15px',
+                    padding: '6px 16px',
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap',
+                    width: '48%',
+                  }}
+                  startIcon={button.icon}
+                >
+                  {button.label}
+                </Button>
+              ))}
+            </Box>
+          </>
+        ) : (
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            width="100%"
+          >
+            {buttons
+              .filter((button) => button.visible)
+              .map((button, index) => (
+                <Button
+                  key={index}
+                  variant="outlined"
+                  size="large"
+                  onClick={() => onSend(button.value)}
+                  sx={{
+                    borderColor: '#011F5B',
+                    color: '#011F5B',
+                    borderRadius: '15px',
+                    padding: '6px 16px',
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap',
+                    flexGrow: 1,
+                    marginRight:
+                      index !== buttons.length - 1 && !isSmallScreen
+                        ? '16px'
+                        : '0px', // Ajouter un espace entre les boutons sauf pour le dernier
+                  }}
+                  startIcon={button.icon}
+                >
+                  {button.label}
+                </Button>
+              ))}
+          </Box>
+        )}
       </Box>
 
       {/* Footer */}
