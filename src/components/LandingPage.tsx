@@ -102,7 +102,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       justifyContent={isSmallScreen ? 'flex-start' : 'center'} // Remonter le contenu sur petits écrans
       height="100vh" // Hauteur complète de la page
       bgcolor={theme.palette.background.default}
-      p={4}
+      p={isSmallScreen ? 2 : 4} // Réduire le padding sur petits écrans
       position="relative" // Pour le positionnement du footer
       overflow="hidden" // Empêcher le défilement
     >
@@ -114,17 +114,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       >
         {/* Titre principal */}
         <Typography
-          variant={isSmallScreen ? 'h4' : 'h3'} // Ajustement de la taille de la police sur petits écrans
+          variant={isSmallScreen ? 'h5' : 'h4'} // Ajustement de la taille de la police sur petits écrans
           fontWeight="bold"
           align="center"
           gutterBottom
           sx={{
             color: theme.palette.text.primary,
             maxWidth: '100%',
-            // Supprimer les propriétés qui coupent le texte
-            // whiteSpace: 'nowrap',
-            // overflow: 'hidden',
-            // textOverflow: 'ellipsis',
             wordBreak: 'break-word', // Permet de casser le mot si nécessaire
           }}
         >
@@ -163,7 +159,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                 fontSize: isSmallScreen ? '0.9rem' : '1rem', // Ajuster la taille du texte
                 padding: isSmallScreen ? '2px 8px' : '4px 8px', // Réduire la hauteur sur petits écrans
                 borderRadius: '35px',
-                whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
+                // whiteSpace: 'nowrap', // Retiré pour permettre le wrapping si nécessaire
               },
             }}
           />
