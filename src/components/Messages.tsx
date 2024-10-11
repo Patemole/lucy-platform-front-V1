@@ -407,12 +407,12 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         className="block mb-1"
                         style={{ color: theme.palette.text.primary }}
                       >
-                        Si autre, veuillez spécifier
+                        If other, please specify
                       </label>
                       <TextField
                         fullWidth
                         id={`other-${idx}`}
-                        placeholder="e.g., Aucun"
+                        placeholder="e.g., None"
                         value={otherInput}
                         onChange={handleOtherInputChange}
                         variant="outlined"
@@ -440,7 +440,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       }}
                     >
                       <AiOutlineStop className="mr-2" />
-                      Ignorer
+                      Ignore
                     </Button>
                     <Button
                       variant="contained"
@@ -452,7 +452,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       disabled={isSendDisabled}
                     >
                       <FiSend className="mr-2" />
-                      Envoyer
+                      Send
                     </Button>
                   </div>
                 </div>
@@ -702,7 +702,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       feedbackClicked ? "fill-current text-primary" : ""
                     }`}
                   />
-                  {!isSmallScreen && "Mauvaise réponse, donnez-nous votre avis"}
+                  {!isSmallScreen && "Wrong answer give us feedback"}
                 </div>
               </Hoverable>
             </div>

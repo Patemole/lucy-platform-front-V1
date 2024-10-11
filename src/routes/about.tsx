@@ -102,17 +102,12 @@ const About: React.FC = () => {
               </ListItemIcon>
               <ListItemText primary="Home" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary } }} />
             </ListItem>
-            <ListItem button onClick={() => navigate('/dashboard/analytics')} sx={{ borderRadius: '8px' }}>
-              <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                <InsightsIcon />
-              </ListItemIcon>
-              <ListItemText primary="Analytics" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary } }} />
-            </ListItem>
+
             <ListItem button onClick={() => navigate('/about')} sx={{ borderRadius: '8px' }}>
               <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
                 <InfoIcon />
               </ListItemIcon>
-              <ListItemText primary="About" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary } }} />
+              <ListItemText primary="Give us feedback" primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary } }} />
             </ListItem>
           </List>
         </Drawer>
@@ -124,7 +119,7 @@ const About: React.FC = () => {
                 <MenuIcon />
               </IconButton>
             )}
-            <Typography variant="h6" style={{ textAlign: 'left', color: theme.palette.text.primary }}>About</Typography>
+            <Typography variant="h6" style={{ textAlign: 'left', color: theme.palette.text.primary }}>Give us feedback</Typography>
             <div style={{ flexGrow: 1 }}></div>
 
             <div 
@@ -164,7 +159,7 @@ const About: React.FC = () => {
           </div>
           <div className="flex-grow p-4" style={{ backgroundColor: theme.palette.background.default }}>
             <Typography variant="subtitle1" gutterBottom sx={{ color: theme.palette.text.primary }}>
-              We are experimenting with Lucy, and all your feedback is welcome:
+              We are experimenting with Lucy, and we welcome your feedback:
             </Typography>
             <TextField
               fullWidth
