@@ -118,10 +118,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           fontWeight="bold"
           align="center"
           gutterBottom
-          noWrap
           sx={{
             color: theme.palette.text.primary,
             maxWidth: '100%',
+            // Supprimer les propriétés qui coupent le texte
+            // whiteSpace: 'nowrap',
+            // overflow: 'hidden',
+            // textOverflow: 'ellipsis',
+            wordBreak: 'break-word', // Permet de casser le mot si nécessaire
           }}
         >
           How can I help you today?
@@ -156,7 +160,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               style: {
                 backgroundColor: '#F4F4F4',
                 border: '1px solid #BCBCBC',
-                fontSize: '1rem',
+                fontSize: isSmallScreen ? '0.9rem' : '1rem', // Ajuster la taille du texte
                 padding: isSmallScreen ? '2px 8px' : '4px 8px', // Réduire la hauteur sur petits écrans
                 borderRadius: '35px',
                 whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
@@ -199,6 +203,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                       textTransform: 'none',
                       whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
                       width: '48%', // Deux boutons par ligne
+                      fontSize: '0.9rem', // Ajuster la taille du texte
                     }}
                     startIcon={button.icon}
                   >
@@ -218,10 +223,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                       borderColor: '#011F5B',
                       color: '#011F5B',
                       borderRadius: '15px',
-                      padding: '6px 8px',
+                      padding: '6px 8px', // Réduire le padding pour une hauteur plus petite
                       textTransform: 'none',
                       whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
                       width: '48%', // Deux boutons par ligne
+                      fontSize: '0.9rem', // Ajuster la taille du texte
                     }}
                     startIcon={button.icon}
                   >
@@ -252,6 +258,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                         index !== buttons.length - 1 && !isSmallScreen
                           ? '16px'
                           : '0px', // Ajouter un espace entre les boutons sauf pour le dernier
+                      fontSize: '1rem', // Taille du texte normale
                     }}
                     startIcon={button.icon}
                   >
