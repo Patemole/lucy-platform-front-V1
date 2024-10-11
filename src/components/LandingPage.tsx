@@ -47,8 +47,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   // Définition des boutons en fonction de la taille de l'écran
   const buttons = [
     {
-      label: isSmallScreen ? 'Academic' : 'Academic Information',
-      value: isSmallScreen ? 'Academic' : 'Academic Information',
+      label: isSmallScreen ? 'Academic Info' : 'Academic Information',
+      value: isSmallScreen ? 'Academic Info' : 'Academic Information',
       icon: <SchoolIcon style={{ color: '#3DD957' }} />,
       visible: true,
     },
@@ -110,7 +110,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       <Box
         width="100%"
         maxWidth={isSmallScreen ? '90%' : '800px'}
-        mt={isSmallScreen ? 4 : 0} // Ajouter une marge supérieure sur petits écrans
+        mt={isSmallScreen ? 5 : 0} // Ajouter une marge supérieure sur petits écrans
       >
         {/* Titre principal */}
         <Typography
@@ -123,8 +123,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
             color: theme.palette.text.primary,
             maxWidth: '100%',
             whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
           }}
         >
           How can I help you today?
