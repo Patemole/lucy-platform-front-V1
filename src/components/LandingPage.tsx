@@ -82,7 +82,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const firstRowButtons = buttons.filter(
     (button) =>
       button.visible &&
-      (button.value === 'Academic' ||
+      (button.value === 'Academic Info' ||
         button.value === 'Academic Information' ||
         button.value === 'Events')
   );
@@ -122,7 +122,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           sx={{
             color: theme.palette.text.primary,
             maxWidth: '100%',
-            whiteSpace: 'nowrap',
           }}
         >
           How can I help you today?
