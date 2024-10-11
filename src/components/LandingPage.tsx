@@ -99,167 +99,171 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       display="flex"
       flexDirection="column"
       alignItems="center"
-      justifyContent="center"
+      justifyContent={isSmallScreen ? 'flex-start' : 'center'} // Remonter le contenu sur petits écrans
       height="100vh" // Hauteur complète de la page
       bgcolor={theme.palette.background.default}
       p={4}
       position="relative" // Pour le positionnement du footer
       overflow="hidden" // Empêcher le défilement
     >
-      {/* Titre principal */}
-      <Typography
-        variant={isSmallScreen ? 'h5' : 'h4'} // Ajustement de la taille de la police sur petits écrans
-        fontWeight="bold"
-        align="center"
-        gutterBottom
-        noWrap // Empêche le texte de passer à la ligne
-        sx={{
-          color: theme.palette.text.primary,
-          maxWidth: '100%',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
-      >
-        How can I help you today?
-      </Typography>
-
-      {/* Champ de recherche */}
+      {/* Conteneur pour ajuster le positionnement sur petits écrans */}
       <Box
         width="100%"
-        maxWidth={isSmallScreen ? '90%' : '800px'} // Ajustement de la largeur en fonction de la taille de l'écran
-        mt={2}
+        maxWidth={isSmallScreen ? '90%' : '800px'}
+        mt={isSmallScreen ? 4 : 0} // Ajouter une marge supérieure sur petits écrans
       >
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Ask Lucy..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={handleKeyPress}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={handleSend}>
-                  <ArrowCircleUpIcon
-                    style={{
-                      color: '#011F5B',
-                      fontSize: '2rem',
-                    }}
-                  />
-                </IconButton>
-              </InputAdornment>
-            ),
-            style: {
-              backgroundColor: '#F4F4F4',
-              border: '1px solid #BCBCBC',
-              fontSize: '1rem',
-              padding: '4px 8px', // Padding réduit pour une hauteur plus petite
-              borderRadius: '35px',
-              whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
-            },
+        {/* Titre principal */}
+        <Typography
+          variant={isSmallScreen ? 'h5' : 'h4'} // Ajustement de la taille de la police sur petits écrans
+          fontWeight="bold"
+          align="center"
+          gutterBottom
+          noWrap // Empêche le texte de passer à la ligne
+          sx={{
+            color: theme.palette.text.primary,
+            maxWidth: '100%',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
-        />
-      </Box>
+        >
+          How can I help you today?
+        </Typography>
 
-      {/* Boutons d'action */}
-      <Box
-        mt={3}
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        width={isSmallScreen ? '90%' : '800px'} // Assurer que la largeur correspond au champ de recherche
-        gap={isSmallScreen ? 1 : 2} // Réduction de la marge entre les lignes sur petits écrans
-      >
-        {isSmallScreen ? (
-          <>
-            {/* Première ligne de boutons */}
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              width="100%"
-              mb={1} // Réduction de la marge inférieure entre les deux lignes
-            >
-              {firstRowButtons.map((button, index) => (
-                <Button
-                  key={index}
-                  variant="outlined"
-                  size="large"
-                  onClick={() => onSend(button.value)}
-                  sx={{
-                    borderColor: '#011F5B',
-                    color: '#011F5B',
-                    borderRadius: '15px',
-                    padding: '6px 16px',
-                    textTransform: 'none',
-                    whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
-                    width: '48%', // Deux boutons par ligne
-                  }}
-                  startIcon={button.icon}
-                >
-                  {button.label}
-                </Button>
-              ))}
-            </Box>
-            {/* Deuxième ligne de boutons */}
+        {/* Champ de recherche */}
+        <Box
+          width="100%"
+          maxWidth={isSmallScreen ? '100%' : '800px'} // Augmenter la largeur sur petits écrans
+          mt={2}
+        >
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Ask Lucy..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleSend}>
+                    <ArrowCircleUpIcon
+                      style={{
+                        color: '#011F5B',
+                        fontSize: '2rem',
+                      }}
+                    />
+                  </IconButton>
+                </InputAdornment>
+              ),
+              style: {
+                backgroundColor: '#F4F4F4',
+                border: '1px solid #BCBCBC',
+                fontSize: '1rem',
+                padding: isSmallScreen ? '2px 8px' : '4px 8px', // Réduire la hauteur sur petits écrans
+                borderRadius: '35px',
+                whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
+              },
+            }}
+          />
+        </Box>
+
+        {/* Boutons d'action */}
+        <Box
+          mt={3}
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          width="100%"
+          maxWidth={isSmallScreen ? '100%' : '800px'}
+          gap={isSmallScreen ? 1 : 2} // Ajuster l'espacement sur petits écrans
+        >
+          {isSmallScreen ? (
+            <>
+              {/* Première ligne de boutons */}
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                width="100%"
+                mb={1} // Réduire la marge entre les lignes
+              >
+                {firstRowButtons.map((button, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    size="large"
+                    onClick={() => onSend(button.value)}
+                    sx={{
+                      borderColor: '#011F5B',
+                      color: '#011F5B',
+                      borderRadius: '15px',
+                      padding: '6px 8px', // Réduire le padding pour une hauteur plus petite
+                      textTransform: 'none',
+                      whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
+                      width: '48%', // Deux boutons par ligne
+                    }}
+                    startIcon={button.icon}
+                  >
+                    {button.label}
+                  </Button>
+                ))}
+              </Box>
+              {/* Deuxième ligne de boutons */}
+              <Box display="flex" justifyContent="space-between" width="100%">
+                {secondRowButtons.map((button, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    size="large"
+                    onClick={() => onSend(button.value)}
+                    sx={{
+                      borderColor: '#011F5B',
+                      color: '#011F5B',
+                      borderRadius: '15px',
+                      padding: '6px 8px',
+                      textTransform: 'none',
+                      whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
+                      width: '48%', // Deux boutons par ligne
+                    }}
+                    startIcon={button.icon}
+                  >
+                    {button.label}
+                  </Button>
+                ))}
+              </Box>
+            </>
+          ) : (
             <Box display="flex" justifyContent="space-between" width="100%">
-              {secondRowButtons.map((button, index) => (
-                <Button
-                  key={index}
-                  variant="outlined"
-                  size="large"
-                  onClick={() => onSend(button.value)}
-                  sx={{
-                    borderColor: '#011F5B',
-                    color: '#011F5B',
-                    borderRadius: '15px',
-                    padding: '6px 16px',
-                    textTransform: 'none',
-                    whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
-                    width: '48%', // Deux boutons par ligne
-                  }}
-                  startIcon={button.icon}
-                >
-                  {button.label}
-                </Button>
-              ))}
+              {buttons
+                .filter((button) => button.visible)
+                .map((button, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    size="large"
+                    onClick={() => onSend(button.value)}
+                    sx={{
+                      borderColor: '#011F5B',
+                      color: '#011F5B',
+                      borderRadius: '15px',
+                      padding: '6px 16px',
+                      textTransform: 'none',
+                      whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
+                      flexGrow: 1,
+                      marginRight:
+                        index !== buttons.length - 1 && !isSmallScreen
+                          ? '16px'
+                          : '0px', // Ajouter un espace entre les boutons sauf pour le dernier
+                    }}
+                    startIcon={button.icon}
+                  >
+                    {button.label}
+                  </Button>
+                ))}
             </Box>
-          </>
-        ) : (
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            width="100%"
-          >
-            {buttons
-              .filter((button) => button.visible)
-              .map((button, index) => (
-                <Button
-                  key={index}
-                  variant="outlined"
-                  size="large"
-                  onClick={() => onSend(button.value)}
-                  sx={{
-                    borderColor: '#011F5B',
-                    color: '#011F5B',
-                    borderRadius: '15px',
-                    padding: '6px 16px',
-                    textTransform: 'none',
-                    whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
-                    flexGrow: 1,
-                    marginRight:
-                      index !== buttons.length - 1 && !isSmallScreen
-                        ? '16px'
-                        : '0px', // Ajouter un espace entre les boutons sauf pour le dernier
-                  }}
-                  startIcon={button.icon}
-                >
-                  {button.label}
-                </Button>
-              ))}
-          </Box>
-        )}
+          )}
+        </Box>
       </Box>
 
       {/* Footer */}
