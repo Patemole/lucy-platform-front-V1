@@ -118,7 +118,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           fontWeight="bold"
           align="center"
           gutterBottom
-          noWrap // Empêche le texte de passer à la ligne
           sx={{
             color: theme.palette.text.primary,
             maxWidth: '100%',
