@@ -775,7 +775,7 @@ const Dashboard_eleve_template: React.FC = () => {
                   )}
                 </>
               )}
-              <div style={{ width: '16px' }} />
+              
             </div>
             <img
                       src={theme.logo}
