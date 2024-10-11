@@ -33,6 +33,10 @@ export const useAuth = () => {
     localStorage.removeItem('course_id');
     localStorage.removeItem('chat_id');
     localStorage.removeItem('university');
+    localStorage.removeItem('major');
+    localStorage.removeItem('minor');
+    localStorage.removeItem('faculty');
+    localStorage.removeItem('year');
     localStorage.removeItem('student_profile');
   };
 

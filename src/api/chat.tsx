@@ -15,8 +15,12 @@ export interface SendMessageRequest {
     chatSessionId: string;
     courseId: string;
     username: string;
-    university: string
-    student_profile: string
+    university: string;
+    student_profile: string; 
+    major: string[];
+    minor: string[];
+    year: string;
+    faculty: string[];
 }
 
 
@@ -62,7 +66,11 @@ export async function* sendMessageSocraticLangGraph({
     courseId,
     username,
     university,
-    student_profile
+    student_profile,
+    major,
+    minor,
+    year,
+    faculty,
 
 }: SendMessageRequest) {
     console.log("SENDING MESSAGE");
@@ -77,7 +85,11 @@ export async function* sendMessageSocraticLangGraph({
             message: message,
             chat_id: chatSessionId,
             university: university,
-            student_profile: student_profile
+            student_profile: student_profile,
+            major: major,
+            minor:minor,
+            year: year,
+            faculty: faculty,
         }),
     });
     if (!sendMessageResponse.ok) {

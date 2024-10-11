@@ -646,15 +646,16 @@ const Chat: React.FC<ChatProps> = ({ handleAddCourseToCalendar, handleOpenDrawer
     let error: string | null = null;
 
     try {
-      const chatSessionId =
-        localStorage.getItem('chat_id') || 'default_chat_id';
-      const courseId =
-        localStorage.getItem('course_id') || 'default_course_id';
+      const chatSessionId = localStorage.getItem('chat_id') || 'default_chat_id';
+      const courseId = localStorage.getItem('course_id') || 'default_course_id';
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const username = user.name || 'default_user';
       const uid = user.id || 'default_uid';
-      const university =
-        localStorage.getItem('university') || 'default_university';
+      const university = localStorage.getItem('university') || 'default_university';
+      const major = localStorage.getItem('major') || 'default_major';
+      const minor = localStorage.getItem('minor') || 'default_minor';
+      const year = localStorage.getItem('year') || 'default_year';
+      const faculty = localStorage.getItem('faculty') || 'default_faculty';
       const student_profile = localStorage.getItem('student_profile') || '';
 
       const lastMessageIndex = messageHistory.length - 1;
@@ -667,6 +668,10 @@ const Chat: React.FC<ChatProps> = ({ handleAddCourseToCalendar, handleOpenDrawer
         username: username,
         university: university,
         student_profile: student_profile,
+        major: [major],
+        minor: [minor],
+        year: year,
+        faculty: [faculty],
       })) {
         if (Array.isArray(packetBunch)) {
           for (const packet of packetBunch) {

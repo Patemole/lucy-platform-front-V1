@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -46,7 +45,7 @@ const allowedDomains = {
 };
 
 const isEmail = (email) =>
-  /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
+  /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
 
 const getAllowedDomains = (subdomain) => allowedDomains[subdomain] || [];
 
@@ -63,16 +62,16 @@ const getErrorMessage = (subdomain) => {
     lasell: 'Lasell',
     oakland: 'Oakland',
     arizona: 'Arizona',
-    uci: 'Uci',
-    ucdavis: 'Ucdavis',
+    uci: 'UCI',
+    ucdavis: 'UC Davis',
     cornell: 'Cornell',
-    berkeleycollege: 'BerkeleyCollege',
+    berkeleycollege: 'Berkeley College',
     brown: 'Brown',
     stanford: 'Stanford',
     berkeley: 'Berkeley',
     miami: 'Miami',
     drexel: 'Drexel',
-    temple:'Temple',
+    temple: 'Temple',
     admin: 'Admin',
   };
 
@@ -83,11 +82,22 @@ export default function SignIn({ handleToggleThemeMode }) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { course_id } = useParams();
-  const theme = useTheme(); // Using the external theme
+  const theme = useTheme();
   const [errors, setErrors] = React.useState({});
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const checkLocalStorage = (user, role, name, firstCourseId, lastChatId, studentProfile) => {
+  const checkLocalStorage = (
+    user,
+    role,
+    name,
+    firstCourseId,
+    lastChatId,
+    studentProfile,
+    major,
+    minor,
+    year,
+    faculty
+  ) => {
     const subdomain = config.subdomain;
     localStorage.setItem('isAuth', 'true');
     localStorage.setItem('user', JSON.stringify({ id: user.uid, name, email: user.email, role }));
@@ -95,6 +105,10 @@ export default function SignIn({ handleToggleThemeMode }) {
     localStorage.setItem('chat_id', lastChatId);
     localStorage.setItem('university', subdomain);
     localStorage.setItem('student_profile', JSON.stringify(studentProfile));
+    localStorage.setItem('major', JSON.stringify(major) || 'default_major');
+    localStorage.setItem('minor', JSON.stringify(minor) || 'default_minor');
+    localStorage.setItem('year', year || 'default_year');
+    localStorage.setItem('faculty', JSON.stringify(faculty) || 'default_faculty');
   };
 
   const redirectBasedOnRole = async (role, userName, uid) => {
@@ -144,13 +158,29 @@ export default function SignIn({ handleToggleThemeMode }) {
           const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
-            const userRole = docSnap.data().role;
-            const userName = docSnap.data().name;
-            const firstCourseId = docSnap.data().courses ? docSnap.data().courses[0] : null;
-            const lastChatId = docSnap.data().chatsessions ? docSnap.data().chatsessions.slice(-1)[0] : null;
-            const studentProfile = docSnap.data().student_profile;
+            const userData = docSnap.data();
+            const userRole = userData.role;
+            const userName = userData.name;
+            const firstCourseId = userData.courses ? userData.courses[0] : null;
+            const lastChatId = userData.chatsessions ? userData.chatsessions.slice(-1)[0] : null;
+            const studentProfile = userData.student_profile;
+            const major = userData.major || 'default_major';
+            const minor = userData.minor || 'default_minor';
+            const year = userData.year || 'default_year';
+            const faculty = userData.faculty || 'default_faculty';
 
-            checkLocalStorage(user, userRole, userName, firstCourseId, lastChatId, studentProfile);
+            checkLocalStorage(
+              user,
+              userRole,
+              userName,
+              firstCourseId,
+              lastChatId,
+              studentProfile,
+              major,
+              minor,
+              year,
+              faculty
+            );
             redirectBasedOnRole(userRole, userName, user.uid);
             login({ id: user.uid, name: userName, email: email, role: userRole });
           }
@@ -208,16 +238,24 @@ export default function SignIn({ handleToggleThemeMode }) {
             padding: 4,
             outline: 0,
             borderRadius: 3,
-            boxShadow: `2px 2px 12px ${theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'}`,
+            boxShadow: `2px 2px 12px ${
+              theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
+            }`,
             backgroundColor: theme.palette.background.paper,
           }}
         >
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <Typography sx={{ fontWeight: 'bold', fontSize: '2rem', color: theme.palette.text.primary }}>Sign In</Typography>
+              <Typography
+                sx={{ fontWeight: 'bold', fontSize: '2rem', color: theme.palette.text.primary }}
+              >
+                Sign In
+              </Typography>
             </Grid>
             <Grid item xs={12}>
-              <Typography sx={{ fontWeight: '800', fontSize: '1rem', color: theme.palette.text.primary }}>
+              <Typography
+                sx={{ fontWeight: '800', fontSize: '1rem', color: theme.palette.text.primary }}
+              >
                 For the purpose of industry regulation, your details are required.
               </Typography>
             </Grid>
@@ -273,7 +311,7 @@ export default function SignIn({ handleToggleThemeMode }) {
                 backgroundColor: theme.palette.button_sign_in,
                 color: theme.palette.button_text_sign_in,
                 '&:hover': {
-                  backgroundColor: theme.palette.hover_button, // Using the hover color from the theme
+                  backgroundColor: theme.palette.hover_button,
                 },
               }}
               disabled={isLoading}
@@ -296,7 +334,11 @@ export default function SignIn({ handleToggleThemeMode }) {
           </Box>
           <Grid container justifyContent="center">
             <Grid item>
-              <Link href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} variant="body2" sx={{ color: theme.palette.sign_up_link }}>
+              <Link
+                href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`}
+                variant="body2"
+                sx={{ color: theme.palette.sign_up_link }}
+              >
                 Don't have an account yet? Create one now!
               </Link>
             </Grid>
@@ -319,11 +361,7 @@ export default function SignIn({ handleToggleThemeMode }) {
         <Typography variant="body2" sx={{ mr: 1, color: theme.palette.text.primary }}>
           powered by Lucy
         </Typography>
-        <Avatar
-          src={lucyLogo}
-          alt="Lucy Logo"
-          sx={{ width: 20, height: 20 }}
-        />
+        <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
       </Box>
     </Container>
   );
