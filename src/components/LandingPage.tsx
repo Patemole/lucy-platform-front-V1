@@ -6,6 +6,7 @@ import {
   TextField,
   IconButton,
   InputAdornment,
+  useMediaQuery,
 } from '@mui/material';
 import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
 import SchoolIcon from '@mui/icons-material/School';
@@ -15,7 +16,7 @@ import ApartmentIcon from '@mui/icons-material/Apartment';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useTheme } from '@mui/material/styles';
 
-// Import the certificate icon
+// Import de l'icône du certificat
 import certifiate_icon from '../certifiate.png';
 
 interface LandingPageProps {
@@ -24,9 +25,10 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [inputValue, setInputValue] = useState('');
 
-  // Function to send the message
+  // Fonction pour envoyer le message
   const handleSend = () => {
     if (inputValue.trim() !== '') {
       onSend(inputValue.trim());
@@ -34,7 +36,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     }
   };
 
-  // Handle "Enter" key
+  // Gestion de la touche "Entrée"
   const handleKeyPress = (event: KeyboardEvent) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       handleSend();
@@ -42,19 +44,53 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     }
   };
 
+  // Définition des boutons en fonction de la taille de l'écran
+  const buttons = [
+    {
+      label: isSmallScreen ? 'Academic' : 'Academic Information',
+      value: isSmallScreen ? 'Academic' : 'Academic Information',
+      icon: <SchoolIcon style={{ color: '#3DD957' }} />,
+      visible: true,
+    },
+    {
+      label: 'Events',
+      value: 'Events',
+      icon: <EventIcon style={{ color: '#F97315' }} />,
+      visible: true,
+    },
+    {
+      label: isSmallScreen ? 'Policies' : 'Processes and Policies',
+      value: isSmallScreen ? 'Policies' : 'Processes and Policies',
+      icon: <GavelIcon style={{ color: '#1565D8' }} />,
+      visible: true,
+    },
+    {
+      label: 'Facilities',
+      value: 'Facilities',
+      icon: <ApartmentIcon style={{ color: '#7C3BEC' }} />,
+      visible: !isSmallScreen, // Masqué sur les petits écrans
+    },
+    {
+      label: 'Financial Aid',
+      value: 'Financial Aid',
+      icon: <FavoriteIcon style={{ color: '#EF4361' }} />,
+      visible: true,
+    },
+  ];
+
   return (
     <Box
       display="flex"
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      height="100vh" // Full page height
+      height="100vh" // Hauteur complète de la page
       bgcolor={theme.palette.background.default}
       p={4}
-      position="relative" // For footer positioning
-      overflow="hidden" // Prevent scrolling
+      position="relative" // Pour le positionnement du footer
+      overflow="hidden" // Empêcher le défilement
     >
-      {/* Main title */}
+      {/* Titre principal */}
       <Typography
         variant="h4"
         fontWeight="bold"
@@ -65,8 +101,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         How can I help you today?
       </Typography>
 
-      {/* Search input */}
-      <Box width="100%" maxWidth="800px" mt={2}>
+      {/* Champ de recherche */}
+      <Box
+        width="100%"
+        maxWidth={isSmallScreen ? '90%' : '800px'} // Ajustement de la largeur en fonction de la taille de l'écran
+        mt={2}
+      >
         <TextField
           fullWidth
           variant="outlined"
@@ -78,10 +118,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={handleSend}>
-                  <ArrowCircleUpIcon style={{ 
-                    color: '#011F5B',
-                    fontSize: '2rem',
-                     }} />
+                  <ArrowCircleUpIcon
+                    style={{
+                      color: '#011F5B',
+                      fontSize: '2rem',
+                    }}
+                  />
                 </IconButton>
               </InputAdornment>
             ),
@@ -89,117 +131,76 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               backgroundColor: '#F4F4F4',
               border: '1px solid #BCBCBC',
               fontSize: '1rem',
-              padding: '4px 8px', // Reduced padding for smaller height
+              padding: '4px 8px', // Padding réduit pour une hauteur plus petite
               borderRadius: '35px',
+              whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
             },
           }}
         />
       </Box>
 
-      {/* Action buttons */}
-      <Box mt={3} display="flex" justifyContent="center" flexWrap="wrap" gap={2}>
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={() => onSend('Academic Information')}
-          sx={{
-            borderColor: '#011F5B',
-            color: '#011F5B',
-            borderRadius: '15px',
-            padding: '6px 16px', // Reduced padding for smaller button height
-            textTransform: 'none',
-          }}
-          startIcon={<SchoolIcon style={{ color: '#3DD957' }} />} // School icon for academic info
-        >
-          Academic Information
-        </Button>
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={() => onSend('Events')}
-          sx={{
-            borderColor: '#011F5B',
-            color: '#011F5B',
-            borderRadius: '15px',
-            padding: '6px 16px',
-            textTransform: 'none',
-          }}
-          startIcon={<EventIcon style={{ color: '#F97315' }} />} // Event icon for events
-        >
-          Events
-        </Button>
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={() => onSend('Processes and Policies')}
-          sx={{
-            borderColor: '#011F5B',
-            color: '#011F5B',
-            borderRadius: '15px',
-            padding: '6px 16px',
-            textTransform: 'none',
-          }}
-          startIcon={<GavelIcon style={{ color: '#1565D8' }} />} // Gavel icon for processes and policies
-        >
-          Processes and Policies
-        </Button>
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={() => onSend('Facilities')}
-          sx={{
-            borderColor: '#011F5B',
-            color: '#011F5B',
-            borderRadius: '15px',
-            padding: '6px 16px',
-            textTransform: 'none',
-          }}
-          startIcon={<ApartmentIcon style={{ color: '#7C3BEC' }} />} // Apartment icon for facilities
-        >
-          Facilities
-        </Button>
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={() => onSend('Financial Aid')}
-          sx={{
-            borderColor: '#011F5B',
-            color: '#011F5B',
-            borderRadius: '15px',
-            padding: '6px 16px',
-            textTransform: 'none',
-          }}
-          startIcon={<FavoriteIcon style={{ color: '#EF4361' }} />} // Favorite icon for financial aid
-        >
-          Financial Aid
-        </Button>
+      {/* Boutons d'action */}
+      <Box
+        mt={3}
+        display="flex"
+        justifyContent="center"
+        flexDirection={isSmallScreen ? 'row' : 'row'}
+        flexWrap={isSmallScreen ? 'wrap' : 'nowrap'}
+        gap={2}
+        width={isSmallScreen ? '90%' : '800px'} // Assurer que la largeur correspond au champ de recherche
+      >
+        {buttons
+          .filter((button) => button.visible)
+          .map((button, index) => (
+            <Button
+              key={index}
+              variant="outlined"
+              size="large"
+              onClick={() => onSend(button.value)}
+              sx={{
+                borderColor: '#011F5B',
+                color: '#011F5B',
+                borderRadius: '15px',
+                padding: '6px 16px', // Padding réduit pour une hauteur de bouton plus petite
+                textTransform: 'none',
+                whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
+                width: isSmallScreen ? '48%' : 'auto', // Deux boutons par ligne sur petits écrans
+              }}
+              startIcon={button.icon}
+            >
+              {button.label}
+            </Button>
+          ))}
       </Box>
 
       {/* Footer */}
-      <Box 
-        display="flex" 
-        alignItems="center" 
-        justifyContent="center" 
-        position="absolute" // Position footer at the bottom
-        bottom={0} // Stick it to the bottom
-        width="100%" // Full width
-        pb={4} // More padding at the bottom for extra space
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        position="absolute" // Positionner le footer en bas
+        bottom={0} // Coller au bas
+        width="100%" // Largeur complète
+        pb={4} // Padding supplémentaire en bas pour plus d'espace
       >
         <Typography
           variant="body2"
           align="center"
           sx={{ color: '#011F5B', mr: 1 }}
         >
-          BASED ON VERIFIED DATA FROM {theme.university.toUpperCase()}.EDU
+          BASED ON VERIFIED DATA FROM {theme.university?.toUpperCase() || 'UNIVERSITY'}.EDU
         </Typography>
-        <img src={certifiate_icon} alt="Verified" style={{ width: '24px', height: '24px' }} />
+        <img
+          src={certifiate_icon}
+          alt="Verified"
+          style={{ width: '24px', height: '24px' }}
+        />
       </Box>
     </Box>
   );
 };
 
 export default LandingPage;
-
 
 
 
