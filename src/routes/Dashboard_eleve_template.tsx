@@ -281,6 +281,10 @@ const Dashboard_eleve_template: React.FC = () => {
       const username = user.name || 'default_user';
       const uid = user.id || 'default_uid';
       const university = localStorage.getItem('university') || 'default_university';
+      const major = localStorage.getItem('major') || 'default_major';
+      const minor = localStorage.getItem('minor') || 'default_minor';
+      const year = localStorage.getItem('year') || 'default_year';
+      const faculty = localStorage.getItem('faculty') || 'default_faculty';
       const student_profile = localStorage.getItem('student_profile') || '';
 
       const lastMessageIndex = messageHistory.length - 1;
@@ -292,6 +296,11 @@ const Dashboard_eleve_template: React.FC = () => {
         username: username,
         university: university,
         student_profile: student_profile,
+        major: [major],
+        minor: [minor],
+        year: year,
+        faculty: [faculty],
+
       })) {
         if (Array.isArray(packetBunch)) {
           for (const packet of packetBunch) {

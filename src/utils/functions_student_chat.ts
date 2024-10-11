@@ -133,13 +133,17 @@ export const onSubmit = async (
     let error: string | null = null;
 
     try {
-        const chatSessionId = localStorage.getItem('chat_id') || 'default_chat_id';
-        const courseId = localStorage.getItem('course_id') || 'default_course_id';
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const username = user.name || 'default_user';
-        const uid = user.id || 'default_uid'
-        const university = localStorage.getItem('university') || 'default_university';
-        const student_profile = localStorage.getItem('student_profile') || '';
+      const chatSessionId = localStorage.getItem('chat_id') || 'default_chat_id';
+      const courseId = localStorage.getItem('course_id') || 'default_course_id';
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const username = user.name || 'default_user';
+      const uid = user.id || 'default_uid';
+      const university = localStorage.getItem('university') || 'default_university';
+      const major = localStorage.getItem('major') || 'default_major';
+      const minor = localStorage.getItem('minor') || 'default_minor';
+      const year = localStorage.getItem('year') || 'default_year';
+      const faculty = localStorage.getItem('faculty') || 'default_faculty';
+      const student_profile = localStorage.getItem('student_profile') || '';
 
         console.log("Retrieved from localStorage:", {
             chatSessionId,
@@ -153,12 +157,16 @@ export const onSubmit = async (
         console.log("Last message index before streaming:", lastMessageIndex);
 
         for await (const packetBunch of sendMessageSocraticLangGraph({
-            message: inputValue,
-            chatSessionId: chatSessionId,
-            courseId: courseId,
-            username: username,
-            university: university,
-            student_profile: student_profile
+          message: inputValue,
+          chatSessionId: chatSessionId,
+          courseId: courseId,
+          username: username,
+          university: university,
+          student_profile: student_profile,
+          major: [major],
+          minor: [minor],
+          year: year,
+          faculty: [faculty],
 
         })) {
             console.log("Received a bunch of response packets:", packetBunch);

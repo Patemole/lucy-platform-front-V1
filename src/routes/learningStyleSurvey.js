@@ -23,7 +23,6 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import logo from '../logo_lucy.png';
 import { v4 as uuidv4 } from 'uuid';
-import config from '../config';
 
 export default function LearningStyleSurvey() {
   const { login } = useAuth();
@@ -126,7 +125,7 @@ export default function LearningStyleSurvey() {
           year: learnerType,
           academic_advisor: advisor,
           major: major,
-          minor: minor
+          minor: minor,
         });
 
         const userSnap = await getDoc(userRef);
@@ -196,22 +195,23 @@ export default function LearningStyleSurvey() {
         localStorage.setItem('course_id', academicAdvisorCourseId);
         localStorage.setItem('chat_id', chatId);
 
-        await sendStudentProfile({
+        // Store the data in localStorage instead of sending to an endpoint
+        const profileData = {
           academic_advisor: advisor,
           faculty: year,
           major: major,
           minor: minor,
           name: userData.name,
           university: userData.university,
-          year: learnerType
-        }, location.state.uid);
+          year: learnerType,
+        };
 
-        const updatedUserSnap = await getDoc(userRef);
-        const updatedUserData = updatedUserSnap.data();
-
-        if (updatedUserData.student_profile) {
-          localStorage.setItem('student_profile', JSON.stringify(updatedUserData.student_profile));
-        }
+        localStorage.setItem('university', userData.university || 'default_university');
+        localStorage.setItem('major', JSON.stringify(major) || 'default_major');
+        localStorage.setItem('minor', JSON.stringify(minor) || 'default_minor');
+        localStorage.setItem('year', learnerType || 'default_year');
+        localStorage.setItem('faculty', JSON.stringify(year) || 'default_faculty');
+        localStorage.setItem('student_profile', JSON.stringify(profileData));
 
         navigate(`/dashboard/student/${location.state.uid}`);
 
@@ -220,26 +220,6 @@ export default function LearningStyleSurvey() {
       } finally {
         setIsLoading(false);
       }
-    }
-  };
-
-  const sendStudentProfile = async (profileData, uid) => {
-    const apiUrlPrefix = config.server_url;
-    try {
-      const response = await fetch(`${apiUrlPrefix}/chat/student_profile`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(profileData)
-      });
-      const result = await response.json();
-      const userRef = doc(db, "users", uid);
-      await updateDoc(userRef, {
-        student_profile: result.student_profile
-      });
-    } catch (error) {
-      console.error("Error sending student profile:", error);
     }
   };
 
@@ -338,8 +318,8 @@ export default function LearningStyleSurvey() {
                     <MenuItem value={'Sophomore'}>Sophomore</MenuItem>
                     <MenuItem value={'Junior'}>Junior</MenuItem>
                     <MenuItem value={'Senior'}>Senior</MenuItem>
-                    <MenuItem value={'Senior'}>Grad 1</MenuItem>
-                    <MenuItem value={'Senior'}>Grad 2</MenuItem>
+                    <MenuItem value={'Grad 1'}>Grad 1</MenuItem>
+                    <MenuItem value={'Grad 2'}>Grad 2</MenuItem>
                   </Select>
                   <FormHelperText sx={{ marginLeft: 0, color: theme.palette.error.main }}>{errors.learnerType}</FormHelperText>
                 </FormControl>
