@@ -270,7 +270,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         position="absolute" // Positionner le footer en bas
         bottom={0} // Coller au bas
         width="100%" // Largeur complète
-        pb={4} // Padding supplémentaire en bas pour plus d'espace
+        pb={{ xs: 6, sm: 4 }} // Augmenter le padding-bottom sur les petits écrans
       >
         <Typography
           variant="body2"
