@@ -780,7 +780,7 @@ const Dashboard_eleve_template: React.FC = () => {
             <img
                       src={theme.logo}
                       alt="University Logo"
-                      style={{ height: '40px', marginLeft: '10px', marginRight: '10px' }}
+                      style={{ height: '40px', marginRight: '10px' }}
             />
 
             {/* Menu for course options */}
