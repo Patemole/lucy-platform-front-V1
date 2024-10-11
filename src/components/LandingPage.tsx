@@ -114,7 +114,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       >
         {/* Titre principal */}
         <Typography
-          variant={isSmallScreen ? 'h5' : 'h4'} // Ajustement de la taille de la police sur petits écrans
+          variant={isSmallScreen ? 'h4' : 'h4'} // Ajustement de la taille de la police sur petits écrans
           fontWeight="bold"
           align="center"
           gutterBottom
@@ -124,7 +124,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
             wordBreak: 'break-word', // Permet de casser le mot si nécessaire
           }}
         >
-          How can I help you today?
+          How can I help today?
         </Typography>
 
         {/* Champ de recherche */}
