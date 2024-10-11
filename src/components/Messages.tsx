@@ -693,17 +693,10 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                 />
               </Hoverable>
               <Hoverable onClick={handleWrongAnswer}>
-                <div
-                  className="flex items-center text-sm"
+              <FiThumbsDown
+                  className={feedbackClicked ? "text-green-400 fill-current" : ""}
                   style={{ color: theme.palette.text.primary }}
-                >
-                  <FiThumbsDown
-                    className={`mr-1 ${
-                      feedbackClicked ? "fill-current text-primary" : ""
-                    }`}
-                  />
-                  {!isSmallScreen && "Wrong answer give us feedback"}
-                </div>
+                />
               </Hoverable>
             </div>
           )}
