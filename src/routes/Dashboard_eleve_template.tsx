@@ -767,13 +767,7 @@ const Dashboard_eleve_template: React.FC = () => {
                   <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
                     <MenuIcon />
                   </IconButton>
-                  {isSmallScreen && (
-                    <img
-                      src={theme.logo}
-                      alt="University Logo"
-                      style={{ height: '40px', marginLeft: '10px', marginRight: '10px' }}
-                    />
-                  )}
+                  
                   {!isSmallScreen && (
                     <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
                       <MapsUgcRoundedIcon />
