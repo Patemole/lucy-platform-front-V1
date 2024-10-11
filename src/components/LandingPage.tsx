@@ -110,7 +110,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       <Box
         width="100%"
         maxWidth={isSmallScreen ? '90%' : '800px'}
-        mt={isSmallScreen ? 5 : 0} // Ajouter une marge supérieure sur petits écrans
+        mt={isSmallScreen ? 8 : 0} // Ajouter une marge supérieure sur petits écrans
       >
         {/* Titre principal */}
         <Typography
@@ -118,6 +118,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           fontWeight="bold"
           align="center"
           gutterBottom
+          noWrap
           sx={{
             color: theme.palette.text.primary,
             maxWidth: '100%',
@@ -270,7 +271,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         position="absolute" // Positionner le footer en bas
         bottom={0} // Coller au bas
         width="100%" // Largeur complète
-        pb={{ xs: 6, sm: 4 }} // Augmenter le padding-bottom sur les petits écrans
+        pb={{ xs: 10, sm: 4 }} // Augmenter le padding-bottom sur les petits écrans
       >
         <Typography
           variant="body2"
