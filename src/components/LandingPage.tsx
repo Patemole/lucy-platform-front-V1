@@ -108,11 +108,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     >
       {/* Titre principal */}
       <Typography
-        variant="h4"
+        variant={isSmallScreen ? 'h5' : 'h4'} // Ajustement de la taille de la police sur petits écrans
         fontWeight="bold"
         align="center"
         gutterBottom
-        style={{ color: theme.palette.text.primary }}
+        noWrap // Empêche le texte de passer à la ligne
+        sx={{
+          color: theme.palette.text.primary,
+          maxWidth: '100%',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
       >
         How can I help you today?
       </Typography>
@@ -163,7 +170,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         alignItems="center"
         justifyContent="center"
         width={isSmallScreen ? '90%' : '800px'} // Assurer que la largeur correspond au champ de recherche
-        gap={isSmallScreen ? 2 : 2}
+        gap={isSmallScreen ? 1 : 2} // Réduction de la marge entre les lignes sur petits écrans
       >
         {isSmallScreen ? (
           <>
@@ -172,7 +179,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               display="flex"
               justifyContent="space-between"
               width="100%"
-              mb={2}
+              mb={1} // Réduction de la marge inférieure entre les deux lignes
             >
               {firstRowButtons.map((button, index) => (
                 <Button
@@ -184,7 +191,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                     borderColor: '#011F5B',
                     color: '#011F5B',
                     borderRadius: '15px',
-                    padding: '6px 16px', // Padding réduit pour une hauteur de bouton plus petite
+                    padding: '6px 16px',
                     textTransform: 'none',
                     whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
                     width: '48%', // Deux boutons par ligne
@@ -209,8 +216,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                     borderRadius: '15px',
                     padding: '6px 16px',
                     textTransform: 'none',
-                    whiteSpace: 'nowrap',
-                    width: '48%',
+                    whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
+                    width: '48%', // Deux boutons par ligne
                   }}
                   startIcon={button.icon}
                 >
@@ -239,7 +246,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                     borderRadius: '15px',
                     padding: '6px 16px',
                     textTransform: 'none',
-                    whiteSpace: 'nowrap',
+                    whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
                     flexGrow: 1,
                     marginRight:
                       index !== buttons.length - 1 && !isSmallScreen
