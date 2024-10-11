@@ -79,7 +79,7 @@ const getSubdomain = () => {
 };
 
 
-
+ 
 
 
 // Détermine l'URL du serveur en fonction de l'environnement

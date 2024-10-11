@@ -338,6 +338,8 @@ export default function LearningStyleSurvey() {
                     <MenuItem value={'Sophomore'}>Sophomore</MenuItem>
                     <MenuItem value={'Junior'}>Junior</MenuItem>
                     <MenuItem value={'Senior'}>Senior</MenuItem>
+                    <MenuItem value={'Senior'}>Grad 1</MenuItem>
+                    <MenuItem value={'Senior'}>Grad 2</MenuItem>
                   </Select>
                   <FormHelperText sx={{ marginLeft: 0, color: theme.palette.error.main }}>{errors.learnerType}</FormHelperText>
                 </FormControl>

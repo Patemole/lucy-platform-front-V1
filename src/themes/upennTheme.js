@@ -62,6 +62,19 @@ const upennTheme = createTheme({
     'Wharton School',
     'School of Engineering and Applied Science',
     'School of Nursing',
+    'Annenberg School for Communication',
+    'School of Dental Medicine',
+    'Graduate School of Education',
+    'Law School (Penn Carey Law)',
+    'Perelman School of Medicine',
+    'School of Social Policy & Practice',
+    'Stuart Weitzman School of Design',
+    'School of Veterinary Medicine',
+
+
+
+
+
   ],
 });
 
@@ -129,6 +142,14 @@ const upennDarkTheme = createTheme({
     'Wharton School',
     'School of Engineering and Applied Science',
     'School of Nursing',
+    'Annenberg School for Communication',
+    'School of Dental Medicine',
+    'Graduate School of Education',
+    'Law School (Penn Carey Law)',
+    'Perelman School of Medicine',
+    'School of Social Policy & Practice',
+    'Stuart Weitzman School of Design',
+    'School of Veterinary Medicine',
   ],
 });
 
