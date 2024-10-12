@@ -1,48 +1,45 @@
-import { useEffect, useContext } from "react";
-import { useUser } from "./useUser";
+// src/auth/hooks/useAuth.js
+
+import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { useLocalStorage } from "./useLocalStorage";
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
 export const useAuth = () => {
-  const { user, addUser, removeUser, setUser } = useUser();
-  const { getItem, setItem } = useLocalStorage();
-  const { isAuth, setIsAuth } = useContext(AuthContext);
+  const { user, setUser, isAuth, setIsAuth, loading } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const storedUser = getItem("user");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      addUser(parsedUser);
-      setIsAuth(true);
+  const login = (userData) => {
+    console.log("useAuth: Login appelé avec:", userData);
+    setUser(userData);
+    setIsAuth(true);
+    // La persistance est gérée par Firebase via AuthContext
+  };
+
+  const logout = async () => {
+    try {
+      console.log("useAuth: Tentative de déconnexion.");
+      await signOut(auth);
+      setUser(null);
+      setIsAuth(false);
+      // Supprime les autres données non sensibles stockées dans le localStorage
+      localStorage.removeItem('course_id');
+      localStorage.removeItem('chat_id');
+      localStorage.removeItem('faculty');
+      localStorage.removeItem('major');
+      localStorage.removeItem('minor');
+      localStorage.removeItem('student_profile');
+      localStorage.removeItem('year');
+      // Redirige vers la page de connexion
+      navigate('/auth/sign-in');
+    } catch (error) {
+      console.error("useAuth: Erreur lors de la déconnexion:", error);
     }
-  }, []); 
-
-  const login = (user) => {
-    setIsAuth(true); // Update authentication state in the application
-    localStorage.setItem('isAuth', 'true'); // Store authentication state in localStorage
-    addUser(user); // Update user data in the application state
-    localStorage.setItem('user', JSON.stringify(user)); // Store user data in localStorage
   };
 
-  const logout = () => {
-    setIsAuth(false);
-    setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuth');
-    localStorage.removeItem('pinecone_index_name');
-    localStorage.removeItem('course_id');
-    localStorage.removeItem('chat_id');
-    localStorage.removeItem('university');
-    localStorage.removeItem('major');
-    localStorage.removeItem('minor');
-    localStorage.removeItem('faculty');
-    localStorage.removeItem('year');
-    localStorage.removeItem('student_profile');
-  };
-
-  return { user, login, logout, setUser, isAuth, setIsAuth };
+  return { user, login, logout, isAuth, loading };
 };
-
 
 
 
