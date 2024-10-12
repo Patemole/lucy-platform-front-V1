@@ -27,6 +27,7 @@ import ChooseRole from './routes/chooseRole';
 import LearningStyleSurvey from './routes/learningStyleSurvey';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './auth/context/AuthContext'; // Import AuthProvider
+import ErrorBoundary from './components/ErrorBoundary';
 import config from './config';
 
 const App: React.FC = () => {
@@ -144,18 +145,21 @@ const App: React.FC = () => {
     };
 
     return (
-        <AuthProvider> {/* Encapsuler l'application avec AuthProvider */}
-            <ThemeProvider theme={theme}>
-                <Router>
-                    <Routes>
-                        {getPublicRoutesForSubdomain(subdomain)}
-                        <Route path="/" element={<PrivateRoute />}>
-                            {getPrivateRoutesForSubdomain(subdomain)}
-                        </Route>
-                    </Routes>
-                </Router>
-            </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider theme={theme}>
+            <ErrorBoundary> {/* Enveloppe avec ErrorBoundary */}
+              <Router>
+                <Routes>
+                  {getPublicRoutesForSubdomain(subdomain)}
+                  <Route path="/" element={<PrivateRoute />}>
+                    {getPrivateRoutesForSubdomain(subdomain)}
+                  </Route>
+                </Routes>
+              </Router>
+            </ErrorBoundary>
+          </ThemeProvider>
         </AuthProvider>
+        
     );
 };
 
