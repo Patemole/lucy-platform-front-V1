@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '@mui/material/Avatar';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
@@ -12,7 +12,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import { useTheme } from '@mui/material/styles';
 import { auth, db } from '../auth/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
+} from 'firebase/auth';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -75,16 +79,41 @@ const getErrorMessage = (subdomain) => {
     admin: 'Admin',
   };
 
-  return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} can register`;
+  return `Only ${
+    universityNames[subdomain] || 'email addresses from allowed domains'
+  } can register`;
 };
 
 export default function SignIn({ handleToggleThemeMode }) {
-  const { login } = useAuth();
+  const { login, isAuth, loading } = useAuth();
   const navigate = useNavigate();
   const { course_id } = useParams();
   const theme = useTheme();
-  const [errors, setErrors] = React.useState({});
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Redirection automatique si l'utilisateur est déjà authentifié
+  useEffect(() => {
+    if (!loading && isAuth) {
+      console.log('SignIn: Utilisateur déjà authentifié, redirection...');
+      // Récupérer les informations utilisateur depuis localStorage
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const userRole = storedUser.role;
+      const uid = storedUser.id;
+      const userName = storedUser.name;
+
+      if (config.subdomain === 'admin') {
+        navigate(`/dashboard/admin`, { state: { userName } });
+      } else if (userRole === 'student') {
+        navigate(`/dashboard/student/${uid}`, { state: { userName } });
+      } else if (userRole === 'academic_advisor') {
+        navigate(`/dashboard/academic-advisor/${uid}`, { state: { userName } });
+      } else {
+        // Redirection par défaut si le rôle n'est pas reconnu
+        navigate('/dashboard');
+      }
+    }
+  }, [isAuth, loading, navigate]);
 
   const checkLocalStorage = (
     user,
@@ -99,20 +128,28 @@ export default function SignIn({ handleToggleThemeMode }) {
     faculty
   ) => {
     const subdomain = config.subdomain;
+    console.log("SignIn: Stockage des données dans localStorage.");
     localStorage.setItem('isAuth', 'true');
-    localStorage.setItem('user', JSON.stringify({ id: user.uid, name, email: user.email, role }));
-    localStorage.setItem('course_id', firstCourseId);
-    localStorage.setItem('chat_id', lastChatId);
+    localStorage.setItem(
+      'user',
+      JSON.stringify({ id: user.uid, name, email: user.email, role })
+    );
+    localStorage.setItem('course_id', firstCourseId || '');
+    localStorage.setItem('chat_id', lastChatId || '');
     localStorage.setItem('university', subdomain);
     localStorage.setItem('student_profile', JSON.stringify(studentProfile));
     localStorage.setItem('major', JSON.stringify(major) || 'default_major');
     localStorage.setItem('minor', JSON.stringify(minor) || 'default_minor');
     localStorage.setItem('year', year || 'default_year');
-    localStorage.setItem('faculty', JSON.stringify(faculty) || 'default_faculty');
+    localStorage.setItem(
+      'faculty',
+      JSON.stringify(faculty) || 'default_faculty'
+    );
   };
 
-  const redirectBasedOnRole = async (role, userName, uid) => {
+  const redirectBasedOnRole = (role, userName, uid) => {
     const subdomain = config.subdomain;
+    console.log(`SignIn: Redirection basée sur le rôle ${role}.`);
     if (subdomain === 'admin') {
       navigate(`/dashboard/admin`, { state: { userName } });
       return;
@@ -122,6 +159,9 @@ export default function SignIn({ handleToggleThemeMode }) {
       navigate(`/dashboard/student/${uid}`, { state: { userName } });
     } else if (role === 'academic_advisor') {
       navigate(`/dashboard/academic-advisor/${uid}`, { state: { userName } });
+    } else {
+      // Redirection par défaut si le rôle n'est pas reconnu
+      navigate('/dashboard');
     }
   };
 
@@ -148,55 +188,106 @@ export default function SignIn({ handleToggleThemeMode }) {
     }
 
     if (Object.keys(newErrors).length > 0) {
+      console.log("SignIn: Erreurs de validation détectées:", newErrors);
       setErrors(newErrors);
       setIsLoading(false);
-    } else {
-      await signInWithEmailAndPassword(auth, email, password)
-        .then(async (userCredential) => {
-          const user = userCredential.user;
-          const docRef = doc(db, 'users', user.uid);
-          const docSnap = await getDoc(docRef);
+      return;
+    }
 
-          if (docSnap.exists()) {
-            const userData = docSnap.data();
-            const userRole = userData.role;
-            const userName = userData.name;
-            const firstCourseId = userData.courses ? userData.courses[0] : null;
-            const lastChatId = userData.chatsessions ? userData.chatsessions.slice(-1)[0] : null;
-            const studentProfile = userData.student_profile;
-            const major = userData.major || 'default_major';
-            const minor = userData.minor || 'default_minor';
-            const year = userData.year || 'default_year';
-            const faculty = userData.faculty || 'default_faculty';
+    try {
+      console.log("SignIn: Définition de la persistance de la session.");
+      // Définir la persistance de la session avec Firebase
+      await setPersistence(auth, browserLocalPersistence);
 
-            checkLocalStorage(
-              user,
-              userRole,
-              userName,
-              firstCourseId,
-              lastChatId,
-              studentProfile,
-              major,
-              minor,
-              year,
-              faculty
-            );
-            redirectBasedOnRole(userRole, userName, user.uid);
-            login({ id: user.uid, name: userName, email: email, role: userRole });
-          }
-        })
-        .catch((error) => {
-          if (error.code === 'auth/invalid-credential') {
-            newErrors.email = 'Invalid email and/or password';
-            newErrors.password = 'Invalid email and/or password';
-          } else if (error.code === 'auth/too-many-requests') {
-            newErrors.email = 'Account access blocked! Try again later';
-          }
-          setErrors(newErrors);
-          setIsLoading(false);
+      console.log("SignIn: Tentative de connexion avec Firebase.");
+      // Connexion avec email et mot de passe
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+      console.log("SignIn: Connexion réussie:", user);
+
+      // Récupérer les informations supplémentaires de l'utilisateur depuis Firestore
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        console.log("SignIn: Données utilisateur trouvées dans Firestore.");
+        const userData = docSnap.data();
+        const userRole = userData.role;
+        const userName = userData.name;
+        const firstCourseId = userData.courses ? userData.courses[0] : null;
+        const lastChatId = userData.chatsessions ? userData.chatsessions.slice(-1)[0] : null;
+        const studentProfile = userData.student_profile;
+        const major = userData.major || ['default_major'];
+        const minor = userData.minor || ['default_minor'];
+        const year = userData.year || 'default_year';
+        const faculty = userData.faculty || 'default_faculty';
+
+        // Stocker les données additionnelles dans le localStorage
+        checkLocalStorage(
+          user,
+          userRole,
+          userName,
+          firstCourseId,
+          lastChatId,
+          studentProfile,
+          major,
+          minor,
+          year,
+          faculty
+        );
+
+        // Mettre à jour le contexte d'authentification
+        console.log("SignIn: Mise à jour du contexte d'authentification.");
+        login({
+          id: user.uid,
+          name: userName,
+          email: email,
+          role: userRole,
         });
+
+        // Rediriger l'utilisateur selon son rôle
+        redirectBasedOnRole(userRole, userName, user.uid);
+      } else {
+        console.log("SignIn: Aucune donnée utilisateur trouvée dans Firestore.");
+        setErrors({ email: 'No user data found' });
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("SignIn: Erreur lors de la connexion:", error);
+      const newErrors = {};
+      if (error.code === 'auth/user-not-found') {
+        newErrors.email = 'No user found with this email';
+      } else if (error.code === 'auth/wrong-password') {
+        newErrors.password = 'Incorrect password';
+      } else if (error.code === 'auth/too-many-requests') {
+        newErrors.email = 'Account access blocked! Try again later';
+      } else {
+        newErrors.email = 'Login failed';
+      }
+      setErrors(newErrors);
+      setIsLoading(false);
     }
   };
+
+  if (loading) {
+    // Afficher un loader pendant que l'état d'authentification est vérifié
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Container component="main" maxWidth="sm">
@@ -214,10 +305,21 @@ export default function SignIn({ handleToggleThemeMode }) {
           alignItems: 'center',
         }}
       >
-        <img src={theme.logo} alt="University Logo" style={{ height: 50, width: 'auto' }} />
+        <img
+          src={theme.logo}
+          alt="University Logo"
+          style={{ height: 50, width: 'auto' }}
+        />
 
-        <IconButton onClick={handleToggleThemeMode} sx={{ color: theme.palette.sidebar }}>
-          {theme.palette.mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+        <IconButton
+          onClick={handleToggleThemeMode}
+          sx={{ color: theme.palette.sidebar }}
+        >
+          {theme.palette.mode === 'dark' ? (
+            <LightModeIcon />
+          ) : (
+            <DarkModeIcon />
+          )}
         </IconButton>
       </Box>
 
@@ -239,7 +341,9 @@ export default function SignIn({ handleToggleThemeMode }) {
             outline: 0,
             borderRadius: 3,
             boxShadow: `2px 2px 12px ${
-              theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
+              theme.palette.mode === 'light'
+                ? 'rgba(0, 0, 0, 0.2)'
+                : 'rgba(255, 255, 255, 0.2)'
             }`,
             backgroundColor: theme.palette.background.paper,
           }}
@@ -247,14 +351,22 @@ export default function SignIn({ handleToggleThemeMode }) {
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <Typography
-                sx={{ fontWeight: 'bold', fontSize: '2rem', color: theme.palette.text.primary }}
+                sx={{
+                  fontWeight: 'bold',
+                  fontSize: '2rem',
+                  color: theme.palette.text.primary,
+                }}
               >
                 Sign In
               </Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography
-                sx={{ fontWeight: '800', fontSize: '1rem', color: theme.palette.text.primary }}
+                sx={{
+                  fontWeight: '800',
+                  fontSize: '1rem',
+                  color: theme.palette.text.primary,
+                }}
               >
                 For the purpose of industry regulation, your details are required.
               </Typography>
@@ -268,7 +380,12 @@ export default function SignIn({ handleToggleThemeMode }) {
                 error={!!errors.email}
                 helperText={errors.email}
                 autoComplete="email"
-                InputProps={{ sx: { borderRadius: 6, color: theme.palette.text.primary } }}
+                InputProps={{
+                  sx: {
+                    borderRadius: 6,
+                    color: theme.palette.text.primary,
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -282,7 +399,12 @@ export default function SignIn({ handleToggleThemeMode }) {
                 error={!!errors.password}
                 helperText={errors.password}
                 autoComplete="new-password"
-                InputProps={{ sx: { borderRadius: 6, color: theme.palette.text.primary } }}
+                InputProps={{
+                  sx: {
+                    borderRadius: 6,
+                    color: theme.palette.text.primary,
+                  },
+                }}
               />
             </Grid>
           </Grid>
@@ -358,7 +480,10 @@ export default function SignIn({ handleToggleThemeMode }) {
           alignItems: 'center',
         }}
       >
-        <Typography variant="body2" sx={{ mr: 1, color: theme.palette.text.primary }}>
+        <Typography
+          variant="body2"
+          sx={{ mr: 1, color: theme.palette.text.primary }}
+        >
           powered by Lucy
         </Typography>
         <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
