@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import React, { useMemo, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -26,9 +24,11 @@ import SignUp_admin from './routes/signUp_admin';
 import ChooseRole from './routes/chooseRole';
 import LearningStyleSurvey from './routes/learningStyleSurvey';
 import PrivateRoute from './components/PrivateRoute';
-import { AuthProvider } from './auth/context/AuthContext'; // Import AuthProvider
+import { AuthProvider } from './auth/context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import config from './config';
+import { useAuth } from './auth/hooks/useAuth';
+import NotFound from './routes/NotFound';
 
 const App: React.FC = () => {
     const subdomain = config.subdomain || 'default';
@@ -52,6 +52,9 @@ const App: React.FC = () => {
         localStorage.setItem('themeMode', newMode);
         console.log(`App: Mode thème changé en ${newMode}.`);
     };
+
+    // Get uid from localStorage
+    const uid = localStorage.getItem('uid') || '';
 
     const getPublicRoutesForSubdomain = (subdomain: string) => {
         switch (subdomain) {
@@ -95,6 +98,7 @@ const App: React.FC = () => {
     };
 
     const getPrivateRoutesForSubdomain = (subdomain: string) => {
+        const uid = localStorage.getItem('uid') || '';
         switch (subdomain) {
             case 'upenn':
             case 'harvard':
@@ -136,6 +140,7 @@ const App: React.FC = () => {
                         <Route path="/chat/academic-advisor/:uid" element={<Chat_academic_advisor />} />
                         <Route path="/contact/academic_advisor" element={<AcademicAdvisorContact />} />
                         <Route path="/about" element={<About />} />
+                        <Route path="/" element={<Navigate to={`/dashboard/student/${uid}`} />} />
                     </>
                 );
             default:
@@ -146,20 +151,21 @@ const App: React.FC = () => {
 
     return (
         <AuthProvider>
-          <ThemeProvider theme={theme}>
-            <ErrorBoundary> {/* Enveloppe avec ErrorBoundary */}
-              <Router>
-                <Routes>
-                  {getPublicRoutesForSubdomain(subdomain)}
-                  <Route path="/" element={<PrivateRoute />}>
-                    {getPrivateRoutesForSubdomain(subdomain)}
-                  </Route>
-                </Routes>
-              </Router>
-            </ErrorBoundary>
-          </ThemeProvider>
+            <ThemeProvider theme={theme}>
+                <ErrorBoundary>
+                    <Router>
+                        <Routes>
+                            <Route path="/auth/sign-in" element={<SignIn handleToggleThemeMode={handleToggleThemeMode} />} />
+                            <Route path="/auth/sign-up" element={<SignUp />} />
+                            <Route path="/" element={<PrivateRoute />}>
+                                <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
+                                <Route path="*" element={<NotFound />} /> {/* Catch all route */}
+                            </Route>
+                        </Routes>
+                    </Router>
+                </ErrorBoundary>
+            </ThemeProvider>
         </AuthProvider>
-        
     );
 };
 
