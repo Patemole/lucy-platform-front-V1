@@ -18,7 +18,7 @@ const upennTheme = createTheme({
       paper: '#f4f4f4', // Fond pour les éléments "paper" dans light mode
     },
     text: {
-      primary: '#000000', // Texte en noir pour light mode
+      primary: '#011F5B', // Texte en noir pour light mode
     },
     text_human_message_historic: '#000000',
     send_button_message: '#011F5B',

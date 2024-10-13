@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { FiSend } from 'react-icons/fi'; // Modern send icon
+import SendIcon from '@mui/icons-material/Send';
 import { FaGraduationCap, FaRegCalendarAlt, FaBalanceScale, FaBuilding, FaHandHoldingUsd } from 'react-icons/fa';
 
 // Import de l'icône du certificat
@@ -96,8 +97,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       visible: true,
     },
     {
-      label: isSmallScreen ? 'Policies' : 'Processes and Policies',
-      value: isSmallScreen ? 'Policies' : 'Processes and Policies',
+      label: isSmallScreen ? 'Policies' : 'Processes & Policies',
+      value: isSmallScreen ? 'Policies' : 'Processes & Policies',
       icon: <FaBalanceScale style={{ color: '#1565D8' }} size={20} />,
       visible: true,
     },
@@ -127,7 +128,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     (button) =>
       button.visible &&
       (button.value === 'Policies' ||
-        button.value === 'Processes and Policies' ||
+        button.value === 'Processes & Policies' ||
         button.value === 'Financial Aid')
   );
 
@@ -181,7 +182,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton onClick={handleSend}>
-                    <FiSend
+                    <SendIcon
                       style={{
                         color: '#011F5B',
                         fontSize: '1.5rem',
