@@ -1,0 +1,245 @@
+.calendar-container {
+    width: 100%;
+    background-color: #FFFFFF;
+  }
+  
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px;
+    background-color: #FFFFFF;
+  }
+  
+  .calendar-header-left,
+  .calendar-header-center,
+  .calendar-header-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+  
+  .calendar-header-left {
+    justify-content: flex-start;
+  }
+  
+  .calendar-header-center {
+    justify-content: center;
+  }
+  
+  .calendar-header-right {
+    justify-content: flex-end;
+  }
+  
+  .calendar-header button,
+  .calendar-period {
+    font-weight: bold;
+    font-size: 1.05rem;
+    color: #011F5B;
+  }
+  
+  .calendar-header button {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .calendar-grid {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .calendar-grid.slide-left {
+    animation: slideLeft 0.5s forwards;
+  }
+  
+  .calendar-grid.slide-right {
+    animation: slideRight 0.5s forwards;
+  }
+  
+  @keyframes slideLeft {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0%);
+    }
+  }
+  
+  @keyframes slideRight {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0%);
+    }
+  }
+  
+  .calendar-grid-header {
+    display: flex;
+  }
+  
+  .calendar-time-column {
+    width: 60px;
+  }
+  
+  .calendar-day-header {
+    flex: 1;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #BCBCBC;
+    padding: 5px 0;
+  }
+  
+  .calendar-grid-body {
+    display: flex;
+    height: 420px; /* Adjust as needed */
+    overflow-y: auto;
+  }
+  
+  .calendar-time-column {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .calendar-time-slot {
+    height: 30px; /* 30-minute slot */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #ccc;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #BCBCBC;
+  }
+  
+  .calendar-day-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .calendar-cell {
+    height: 30px; /* 30-minute slot */
+    border-bottom: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    position: relative;
+  }
+  
+  .custom-event {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border: none !important; /* No borders on events */
+    box-shadow: none !important; /* Remove any shadows */
+    border-radius: 4px;
+  }
+  
+  .event-top-bar {
+    height: 8px; /* Adjust this value for the top bar height */
+    width: 100%;
+    border-radius: 0px 0px 0 0; /* Rounded corners at the top */
+  }
+  
+  .event-title {
+    text-align: center;
+    font-weight: bold;
+    padding-top: 10px; /* Center the title vertically */
+    font-size: 0.85rem; /* Adjust font size */
+  }
+  
+  .no-border .fc-event-main {
+    border: none !important; /* This ensures that FullCalendar doesn't add its default borders */
+  }
+  
+
+
+
+
+
+
+
+
+/* Calendar.css */
+/*
+.calendar-container {
+    width: 100%;
+    border: 1px solid #ccc;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    background-color: #f5f5f5;
+}
+
+.calendar-header button {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+
+.calendar-period {
+    margin: 0 20px;
+    font-size: 1.2em;
+}
+
+.calendar-grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-grid-header {
+    display: flex;
+}
+
+.calendar-time-column {
+    width: 60px;
+}
+
+.calendar-day-header {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    padding: 5px 0;
+    border-bottom: 1px solid #ccc;
+}
+
+.calendar-grid-body {
+    display: flex;
+    height: 420px; /* 7 hours * 60px *
+    overflow-y: auto;
+}
+
+.calendar-time-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-time-slot {
+    height: 60px; /* Adjust based on desired hour slot height *
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+}
+
+.calendar-day-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-cell {
+    height: 60px; /* Same as calendar-time-slot *
+    border-bottom: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+}
+*/
