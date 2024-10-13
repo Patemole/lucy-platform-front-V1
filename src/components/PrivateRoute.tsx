@@ -1,5 +1,58 @@
-// src/components/PrivateRoute.tsx
+import React, { useEffect } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../auth/hooks/useAuth';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
 
+const PrivateRoute: React.FC = () => {
+    const { isAuth, loading, user } = useAuth();
+    const location = useLocation();
+
+    useEffect(() => {
+        console.log("PrivateRoute: Current location:", location.pathname);
+    }, [location]);
+
+    console.log("PrivateRoute: isAuth =", isAuth, ", loading =", loading);
+
+    if (loading) {
+        console.log("PrivateRoute: Chargement en cours, affichage du loader.");
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (!isAuth) {
+        console.log("PrivateRoute: Utilisateur non authentifié, redirection vers /auth/sign-in.");
+        return <Navigate to="/auth/sign-in" />;
+    }
+
+    if (location.pathname === '/') {
+        // Check if the user exists in localStorage and parse it safely
+        const storedUser = localStorage.getItem('user');
+        const uid = storedUser ? JSON.parse(storedUser).id : '';
+
+        if (uid) {
+            console.log(`PrivateRoute: Redirection vers /dashboard/student/${uid}`);
+            return <Navigate to={`/dashboard/student/${uid}`} />;
+        } else {
+            console.log("PrivateRoute: UID non disponible, redirection vers /auth/sign-in.");
+            return <Navigate to="/auth/sign-in" />;
+        }
+    }
+
+    console.log("PrivateRoute: Utilisateur authentifié, accès aux routes protégées.");
+    return <Outlet />;
+};
+
+export default PrivateRoute;
+
+
+
+
+
+/*
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
@@ -30,6 +83,7 @@ const PrivateRoute: React.FC = () => {
 };
 
 export default PrivateRoute;
+*/
 
 
 
