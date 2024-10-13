@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent } from 'react';
+import React, { useState, useEffect, KeyboardEvent } from 'react';
 import {
   Button,
   Typography,
@@ -8,13 +8,9 @@ import {
   InputAdornment,
   useMediaQuery,
 } from '@mui/material';
-import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
-import SchoolIcon from '@mui/icons-material/School';
-import EventIcon from '@mui/icons-material/Event';
-import GavelIcon from '@mui/icons-material/Gavel';
-import ApartmentIcon from '@mui/icons-material/Apartment';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useTheme } from '@mui/material/styles';
+import { FiSend } from 'react-icons/fi'; // Modern send icon
+import { FaGraduationCap, FaRegCalendarAlt, FaBalanceScale, FaBuilding, FaHandHoldingUsd } from 'react-icons/fa';
 
 // Import de l'icône du certificat
 import certifiate_icon from '../certifiate.png';
@@ -27,6 +23,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [inputValue, setInputValue] = useState('');
+  const [placeholder, setPlaceholder] = useState('');
 
   // Fonction pour envoyer le message
   const handleSend = () => {
@@ -44,36 +41,76 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     }
   };
 
-  // Définition des boutons en fonction de la taille de l'écran
+  useEffect(() => {
+    const text = 'Ask Lucy...';
+    let index = 0;
+    let currentText = '';
+    let isCursorVisible = true;
+
+    const typingSpeed = 100; // Vitesse d'écriture du texte
+    const cursorBlinkSpeed = 500; // Vitesse du clignotement du curseur
+
+    let typingInterval: NodeJS.Timeout | null = null;
+    let cursorBlinkInterval: NodeJS.Timeout | null = null;
+
+    // Fonction pour le clignotement du curseur
+    const startCursorBlink = () => {
+      cursorBlinkInterval = setInterval(() => {
+        isCursorVisible = !isCursorVisible;
+        setPlaceholder(currentText + (isCursorVisible ? '|' : ''));
+      }, cursorBlinkSpeed);
+    };
+
+    // Démarrer la frappe du texte
+    typingInterval = setInterval(() => {
+      if (index < text.length) {
+        currentText += text.charAt(index);
+        index++;
+        setPlaceholder(currentText);
+      } else {
+        // Arrêter la frappe et démarrer le clignotement du curseur
+        if (typingInterval) clearInterval(typingInterval);
+        startCursorBlink();
+      }
+    }, typingSpeed);
+
+    return () => {
+      // Nettoyer les intervalles
+      if (typingInterval) clearInterval(typingInterval);
+      if (cursorBlinkInterval) clearInterval(cursorBlinkInterval);
+    };
+  }, []);
+
+  // Définition des boutons avec des icônes plus modernes
   const buttons = [
     {
       label: isSmallScreen ? 'Academic Info' : 'Academic Information',
       value: isSmallScreen ? 'Academic Info' : 'Academic Information',
-      icon: <SchoolIcon style={{ color: '#3DD957' }} />,
+      icon: <FaGraduationCap style={{ color: '#3DD957' }} size={20} />,
       visible: true,
     },
     {
       label: 'Events',
       value: 'Events',
-      icon: <EventIcon style={{ color: '#F97315' }} />,
+      icon: <FaRegCalendarAlt style={{ color: '#F97315' }} size={20} />,
       visible: true,
     },
     {
       label: isSmallScreen ? 'Policies' : 'Processes and Policies',
       value: isSmallScreen ? 'Policies' : 'Processes and Policies',
-      icon: <GavelIcon style={{ color: '#1565D8' }} />,
+      icon: <FaBalanceScale style={{ color: '#1565D8' }} size={20} />,
       visible: true,
     },
     {
       label: 'Facilities',
       value: 'Facilities',
-      icon: <ApartmentIcon style={{ color: '#7C3BEC' }} />,
+      icon: <FaBuilding style={{ color: '#7C3BEC' }} size={20} />,
       visible: !isSmallScreen, // Masqué sur les petits écrans
     },
     {
       label: 'Financial Aid',
       value: 'Financial Aid',
-      icon: <FavoriteIcon style={{ color: '#EF4361' }} />,
+      icon: <FaHandHoldingUsd style={{ color: '#EF4361' }} size={20} />,
       visible: true,
     },
   ];
@@ -99,29 +136,29 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       display="flex"
       flexDirection="column"
       alignItems="center"
-      justifyContent={isSmallScreen ? 'flex-start' : 'center'} // Remonter le contenu sur petits écrans
-      height="100vh" // Hauteur complète de la page
+      justifyContent={isSmallScreen ? 'flex-start' : 'center'}
+      height="100vh"
       bgcolor={theme.palette.background.default}
-      p={isSmallScreen ? 2 : 4} // Réduire le padding sur petits écrans
-      position="relative" // Pour le positionnement du footer
-      overflow="hidden" // Empêcher le défilement
+      p={isSmallScreen ? 2 : 4}
+      position="relative"
+      overflow="hidden"
     >
       {/* Conteneur pour ajuster le positionnement sur petits écrans */}
       <Box
         width="100%"
         maxWidth={isSmallScreen ? '90%' : '800px'}
-        mt={isSmallScreen ? 8 : 0} // Ajouter une marge supérieure sur petits écrans
+        mt={isSmallScreen ? 8 : 0}
       >
         {/* Titre principal */}
         <Typography
-          variant={isSmallScreen ? 'h4' : 'h4'} // Ajustement de la taille de la police sur petits écrans
+          variant={isSmallScreen ? 'h4' : 'h4'}
           fontWeight="bold"
           align="center"
           gutterBottom
           sx={{
             color: theme.palette.text.primary,
             maxWidth: '100%',
-            wordBreak: 'break-word', // Permet de casser le mot si nécessaire
+            wordBreak: 'break-word',
           }}
         >
           {isSmallScreen ? 'How can I help today?' : 'How can I help you today?'}
@@ -130,13 +167,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         {/* Champ de recherche */}
         <Box
           width="100%"
-          maxWidth={isSmallScreen ? '100%' : '800px'} // Augmenter la largeur sur petits écrans
+          maxWidth={isSmallScreen ? '100%' : '800px'}
           mt={2}
         >
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Ask Lucy..."
+            placeholder={placeholder}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -144,10 +181,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton onClick={handleSend}>
-                    <ArrowCircleUpIcon
+                    <FiSend
                       style={{
                         color: '#011F5B',
-                        fontSize: '2rem',
+                        fontSize: '1.5rem',
                       }}
                     />
                   </IconButton>
@@ -156,10 +193,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               style: {
                 backgroundColor: '#F4F4F4',
                 border: '1px solid #BCBCBC',
-                fontSize: isSmallScreen ? '0.9rem' : '1rem', // Ajuster la taille du texte
-                padding: isSmallScreen ? '2px 8px' : '4px 8px', // Réduire la hauteur sur petits écrans
+                fontSize: isSmallScreen ? '0.9rem' : '1rem',
+                padding: isSmallScreen ? '2px 8px' : '4px 8px',
                 borderRadius: '35px',
-                // whiteSpace: 'nowrap', // Retiré pour permettre le wrapping si nécessaire
               },
             }}
           />
@@ -174,7 +210,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           justifyContent="center"
           width="100%"
           maxWidth={isSmallScreen ? '100%' : '800px'}
-          gap={isSmallScreen ? 1 : 2} // Ajuster l'espacement sur petits écrans
+          gap={isSmallScreen ? 1 : 2}
         >
           {isSmallScreen ? (
             <>
@@ -183,7 +219,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                 display="flex"
                 justifyContent="space-between"
                 width="100%"
-                mb={1} // Réduire la marge entre les lignes
+                mb={1}
               >
                 {firstRowButtons.map((button, index) => (
                   <Button
@@ -195,11 +231,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                       borderColor: '#011F5B',
                       color: '#011F5B',
                       borderRadius: '15px',
-                      padding: '6px 8px', // Réduire le padding pour une hauteur plus petite
+                      padding: '6px 8px',
                       textTransform: 'none',
-                      whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
-                      width: '48%', // Deux boutons par ligne
-                      fontSize: '0.9rem', // Ajuster la taille du texte
+                      whiteSpace: 'nowrap',
+                      width: '48%',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
                     }}
                     startIcon={button.icon}
                   >
@@ -219,11 +256,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                       borderColor: '#011F5B',
                       color: '#011F5B',
                       borderRadius: '15px',
-                      padding: '6px 8px', // Réduire le padding pour une hauteur plus petite
+                      padding: '6px 8px',
                       textTransform: 'none',
-                      whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
-                      width: '48%', // Deux boutons par ligne
-                      fontSize: '0.9rem', // Ajuster la taille du texte
+                      whiteSpace: 'nowrap',
+                      width: '48%',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
                     }}
                     startIcon={button.icon}
                   >
@@ -233,7 +271,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               </Box>
             </>
           ) : (
-            <Box display="flex" justifyContent="space-between" width="100%">
+            <Box display="flex" justifyContent="center" width="100%" gap="16px">
               {buttons
                 .filter((button) => button.visible)
                 .map((button, index) => (
@@ -248,15 +286,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                       borderRadius: '15px',
                       padding: '6px 16px',
                       textTransform: 'none',
-                      whiteSpace: 'nowrap', // Empêcher le texte de passer à la ligne
-                      flexGrow: 1,
-                      marginRight:
-                        index !== buttons.length - 1 && !isSmallScreen
-                          ? '16px'
-                          : '0px', // Ajouter un espace entre les boutons sauf pour le dernier
-                      fontSize: '1rem', // Taille du texte normale
+                      whiteSpace: 'nowrap',
+                      fontSize: '1rem',
+                      cursor: 'pointer',
+                      minWidth: 'auto',
                     }}
-                    startIcon={button.icon}
+                    startIcon={
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          marginLeft: '8px',
+                        }}
+                      >
+                        {button.icon}
+                      </Box>
+                    }
                   >
                     {button.label}
                   </Button>
@@ -271,10 +316,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         display="flex"
         alignItems="center"
         justifyContent="center"
-        position="absolute" // Positionner le footer en bas
-        bottom={0} // Coller au bas
-        width="100%" // Largeur complète
-        pb={{ xs: 10, sm: 4 }} // Augmenter le padding-bottom sur les petits écrans
+        position="absolute"
+        bottom={0}
+        width="100%"
+        pb={{ xs: 10, sm: 4 }}
       >
         <Typography
           variant="body2"
