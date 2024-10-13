@@ -8,6 +8,24 @@ import config from '../config';  // Utilisez import au lieu de require
 // Définir le préfixe de l'URL de l'API en fonction de l'environnement
 const apiUrlPrefix: string = config.server_url;
 
+
+
+export interface SendMessageRequest {
+    message: string;
+    chatSessionId: string;
+    courseId: string;
+    username: string;
+    university: string;
+    student_profile: string; 
+    major: string[];
+    minor: string[];
+    year: string;
+    faculty: string[];
+}
+
+
+
+
 export async function getChatHistory(chat_id: string) {
     const getChatHistoryResponse = await fetch(
         `${apiUrlPrefix}/chat/get_chat_history/${chat_id}`,
@@ -40,53 +58,19 @@ export async function getChatHistory(chat_id: string) {
 
 
 
-export interface SendMessageRequest {
-    message: string;
-    chatSessionId: string;
-    courseId: string;
-    username: string;
-    university: string
-}
 
-// fonction dépréciée à enlever
-export async function* sendMessage({
-    message,
-    chatSessionId,
-    courseId,
-    username
-   
-}: SendMessageRequest) {
-    console.log("SENDING MESSAGE");
-    const sendMessageResponse = await fetch(`${apiUrlPrefix}/chat/send_message`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            course_id: courseId,
-            username: username,
-            message: message,
-            chat_id: chatSessionId
-        }),
-    });
-    if (!sendMessageResponse.ok) {
-        const errorJson = await sendMessageResponse.json();
-        const errorMsg = errorJson.message || errorJson.detail || "";
-        throw Error(`Failed to send message - ${errorMsg}`);
-    }
-
-    yield* handleStream<
-        AnswerPiecePacket | AnswerDocumentPacket | StreamingError
-    >(sendMessageResponse);
-}
-
-// nouvelle version test 1
+//Endpoint to send a message
 export async function* sendMessageSocraticLangGraph({
     message,
     chatSessionId,
     courseId,
     username,
-    university
+    university,
+    student_profile,
+    major,
+    minor,
+    year,
+    faculty,
 
 }: SendMessageRequest) {
     console.log("SENDING MESSAGE");
@@ -100,7 +84,12 @@ export async function* sendMessageSocraticLangGraph({
             username: username,
             message: message,
             chat_id: chatSessionId,
-            university: university
+            university: university,
+            student_profile: student_profile,
+            major: major,
+            minor:minor,
+            year: year,
+            faculty: faculty,
         }),
     });
     if (!sendMessageResponse.ok) {
@@ -114,6 +103,65 @@ export async function* sendMessageSocraticLangGraph({
 
 
 
+
+
+
+
+
+
+//Endpoint to send a message
+export async function* sendMessageFakeDemo({
+    message,
+    chatSessionId,
+    courseId,
+    username,
+    university,
+    student_profile
+
+}: SendMessageRequest) {
+    console.log("SENDING MESSAGE");
+    const sendMessageResponse = await fetch(`${apiUrlPrefix}/chat/send_message_fake_demo`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            course_id: courseId,
+            username: username,
+            message: message,
+            chat_id: chatSessionId,
+            university: university,
+            student_profile: student_profile
+        }),
+    });
+    if (!sendMessageResponse.ok) {
+        const errorJson = await sendMessageResponse.json();
+        const errorMsg = errorJson.message || errorJson.detail || "";
+        throw Error(`Failed to send message - ${errorMsg}`);
+    }
+
+    yield* handleStream<AnswerPiecePacket | AnswerDocumentPacket | StreamingError>(sendMessageResponse);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Function to save the ai message to the backend
 export const saveMessageAIToBackend = async ({
     message,
@@ -121,12 +169,18 @@ export const saveMessageAIToBackend = async ({
     courseId,
     username,
     type,
+    uid,
+    input_message,
+    university,
 }: {
     message: string;
     chatSessionId: string;
     courseId: string;
     username: string;
     type: string;
+    uid: string,
+    input_message: string
+    university: string
 }) => {
     try {
         const response = await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
@@ -140,6 +194,9 @@ export const saveMessageAIToBackend = async ({
                 courseId,
                 username,
                 type,
+                uid,
+                input_message,
+                university,
             }),
         });
 
