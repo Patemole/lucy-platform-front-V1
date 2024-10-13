@@ -1,5 +1,5 @@
 // src/auth/context/AuthContext.js
-/*
+
 import React, { createContext, useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
@@ -44,11 +44,13 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-*/
+
+
+
 
 
 // src/auth/context/AuthContext.js
-
+/*
 import React, { createContext, useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "firebase/auth"; // Importe la persistance
 
@@ -104,3 +106,4 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+*/
