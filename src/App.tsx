@@ -125,11 +125,15 @@ const App: React.FC = () => {
                     <>
                         <Route path="/overview" element={<TrustPage />} />
                         <Route path="/onboarding/choose-role" element={<ChooseRole />} />
+
                         <Route path="/onboarding/learningStyleSurvey" element={<LearningStyleSurvey />} />
                         <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
+
                         <Route path="/onboarding/course-creation" element={<LearningStyleSurveyTeacher />} />
                         <Route path="/dashboard/teacher/:uid/:course_id" element={<Dashboard_teacher_template />} />
+
                         <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
+
                         <Route path="/dashboard/student/course_selection/:uid" element={<Course_selection_eleve_template />} />
                         <Route path="/dashboard/student/schedule/:uid" element={<Schedule_eleve_template />} />
                         <Route path="/dashboard/analytics" element={<Analytics_eleve_template />} />
@@ -159,6 +163,9 @@ const App: React.FC = () => {
                             <Route path="/auth/sign-up" element={<SignUp />} />
                             <Route path="/" element={<PrivateRoute />}>
                                 <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
+                                <Route path="/onboarding/learningStyleSurvey" element={<LearningStyleSurvey />} />
+                                <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
+                                <Route path="/about" element={<About />} />
                                 <Route path="*" element={<NotFound />} /> {/* Catch all route */}
                             </Route>
                         </Routes>
