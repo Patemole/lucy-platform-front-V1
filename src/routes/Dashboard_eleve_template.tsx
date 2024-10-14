@@ -120,55 +120,59 @@ const Dashboard_eleve_template: React.FC = () => {
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
 
 
+  //For display sentence above three dots for waiting
   useEffect(() => {
     if (isStreaming) {
       let isCancelled = false;
   
-      const phrasesCount = waitingPhrases.length;
+      // Wait for 5 seconds before starting to display the phrases
+      const startDelayTimeout = setTimeout(() => {
+        const phrasesCount = waitingPhrases.length;
   
-      const startDisplayingPhrase = (phraseIndex: number) => {
-        if (isCancelled) return;
-  
-        const currentPhrase = waitingPhrases[phraseIndex];
-        if (!currentPhrase) {
-          console.error(`Phrase at index ${phraseIndex} is undefined.`);
-          return;
-        }
-  
-        const words = currentPhrase.split(' ');
-        let wordIndex = 0;
-        setDisplayedText('');
-  
-        const displayNextWord = () => {
+        const startDisplayingPhrase = (phraseIndex: number) => {
           if (isCancelled) return;
   
-          if (wordIndex < words.length) {
-            const nextWord = words[wordIndex];
-            if (nextWord === undefined) {
-              console.error(`Word at index ${wordIndex} is undefined.`);
-              return;
-            }
-  
-            setDisplayedText((prevText) =>
-              prevText ? `${prevText} ${nextWord}` : nextWord
-            );
-            wordIndex += 1;
-  
-            wordTimeoutRef.current = setTimeout(displayNextWord, 100); // Delay between words
-          } else {
-            // Entire phrase displayed, wait 1 second then move to next phrase
-            phraseTimeoutRef.current = setTimeout(() => {
-              const nextPhraseIndex = (phraseIndex + 1) % phrasesCount;
-              startDisplayingPhrase(nextPhraseIndex);
-            }, 1500); // Wait 1 second before next phrase
+          const currentPhrase = waitingPhrases[phraseIndex];
+          if (!currentPhrase) {
+            console.error(`Phrase at index ${phraseIndex} is undefined.`);
+            return;
           }
+  
+          const words = currentPhrase.split(' ');
+          let wordIndex = 0;
+          setDisplayedText('');
+  
+          const displayNextWord = () => {
+            if (isCancelled) return;
+  
+            if (wordIndex < words.length) {
+              const nextWord = words[wordIndex];
+              if (nextWord === undefined) {
+                console.error(`Word at index ${wordIndex} is undefined.`);
+                return;
+              }
+  
+              setDisplayedText((prevText) =>
+                prevText ? `${prevText} ${nextWord}` : nextWord
+              );
+              wordIndex += 1;
+  
+              wordTimeoutRef.current = setTimeout(displayNextWord, 100); // Delay between words
+            } else {
+              // Entire phrase displayed, wait 1 second then move to next phrase
+              phraseTimeoutRef.current = setTimeout(() => {
+                const nextPhraseIndex = (phraseIndex + 1) % phrasesCount;
+                startDisplayingPhrase(nextPhraseIndex);
+              }, 1500); // Wait 1 second before next phrase
+            }
+          };
+  
+          displayNextWord();
         };
   
-        displayNextWord();
-      };
-  
-      // Start with the first phrase
-      startDisplayingPhrase(0);
+        // Start with the first phrase after 5 seconds
+        startDisplayingPhrase(0);
+      }, 6000); // Delay of 5 seconds before showing any phrases
   
       return () => {
         isCancelled = true;
@@ -177,6 +181,9 @@ const Dashboard_eleve_template: React.FC = () => {
         }
         if (phraseTimeoutRef.current) {
           clearTimeout(phraseTimeoutRef.current);
+        }
+        if (startDelayTimeout) {
+          clearTimeout(startDelayTimeout);  // Clear the delay if the component unmounts
         }
         setDisplayedText('');
       };
