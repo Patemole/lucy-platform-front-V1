@@ -165,6 +165,7 @@ const App: React.FC = () => {
                                 <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
                                 <Route path="/onboarding/learningStyleSurvey" element={<LearningStyleSurvey />} />
                                 <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
+                                <Route path="/dashboard/admin" element={<Dashboard_admin />} />
                                 <Route path="/about" element={<About />} />
                                 <Route path="*" element={<NotFound />} /> {/* Catch all route */}
                             </Route>
