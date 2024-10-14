@@ -56,6 +56,19 @@ import LandingPage from '../components/LandingPage'; // Import du composant Land
 const drawerWidth = 240;
 const ALLOWED_COURSE_IDS = ['Connf4P2TpKXXGooaQD5', 'tyPR1RAulPfqLLfNgIqF', 'Q1SjXBe30FyX6GxvJVIG', 'moRgToBTOAJZdMQPs7Ci'];
 
+const waitingPhrases = [
+  "I'm gathering relevant information from UPenn...",
+  "Just a little longer...",
+  "I'm pulling together more details for you...",
+  "Almost done...",
+  "Thank you for your patience...",
+  "Just a few more seconds...",
+  "I'm verifying the UPenn data...",
+  "Still analyzing the information for you...",
+  "Putting the final pieces together...",
+  "Your answer is arriving shortly!"
+];
+
 const Dashboard_eleve_template: React.FC = () => {
   const theme = useTheme();
   const { uid } = useParams<{ uid: string }>();
@@ -87,6 +100,14 @@ const Dashboard_eleve_template: React.FC = () => {
   const [selectedAiMessage, setSelectedAiMessage] = useState<string | null>(null);
   const [selectedHumanMessage, setSelectedHumanMessage] = useState<string | null>(null);
   const [relatedQuestions, setRelatedQuestions] = useState<string[]>([]);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  //const [isIAResponseReady, setIsIAResponseReady] = useState(false); // Simulation de l'attente
+  const [displayedText, setDisplayedText] = useState('');
+  const typingTimeoutRef = useRef<number | null>(null);
+  const phraseIntervalRef = useRef<number | null>(null);
+  const chunkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const phraseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const wordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const courseId = localStorage.getItem('course_id');
   const universityDomain = localStorage.getItem('university') || 'example.edu';
@@ -97,6 +118,91 @@ const Dashboard_eleve_template: React.FC = () => {
 
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
+
+
+  useEffect(() => {
+    if (isStreaming) {
+      let isCancelled = false;
+  
+      const phrasesCount = waitingPhrases.length;
+  
+      const startDisplayingPhrase = (phraseIndex: number) => {
+        if (isCancelled) return;
+  
+        const currentPhrase = waitingPhrases[phraseIndex];
+        if (!currentPhrase) {
+          console.error(`Phrase at index ${phraseIndex} is undefined.`);
+          return;
+        }
+  
+        const words = currentPhrase.split(' ');
+        let wordIndex = 0;
+        setDisplayedText('');
+  
+        const displayNextWord = () => {
+          if (isCancelled) return;
+  
+          if (wordIndex < words.length) {
+            const nextWord = words[wordIndex];
+            if (nextWord === undefined) {
+              console.error(`Word at index ${wordIndex} is undefined.`);
+              return;
+            }
+  
+            setDisplayedText((prevText) =>
+              prevText ? `${prevText} ${nextWord}` : nextWord
+            );
+            wordIndex += 1;
+  
+            wordTimeoutRef.current = setTimeout(displayNextWord, 100); // Delay between words
+          } else {
+            // Entire phrase displayed, wait 1 second then move to next phrase
+            phraseTimeoutRef.current = setTimeout(() => {
+              const nextPhraseIndex = (phraseIndex + 1) % phrasesCount;
+              startDisplayingPhrase(nextPhraseIndex);
+            }, 1500); // Wait 1 second before next phrase
+          }
+        };
+  
+        displayNextWord();
+      };
+  
+      // Start with the first phrase
+      startDisplayingPhrase(0);
+  
+      return () => {
+        isCancelled = true;
+        if (wordTimeoutRef.current) {
+          clearTimeout(wordTimeoutRef.current);
+        }
+        if (phraseTimeoutRef.current) {
+          clearTimeout(phraseTimeoutRef.current);
+        }
+        setDisplayedText('');
+      };
+    } else {
+      // Cleanup when isStreaming becomes false
+      if (wordTimeoutRef.current) {
+        clearTimeout(wordTimeoutRef.current);
+      }
+      if (phraseTimeoutRef.current) {
+        clearTimeout(phraseTimeoutRef.current);
+      }
+      setDisplayedText('');
+    }
+  }, [isStreaming]);
+
+
+  const splitPhraseIntoChunks = (phrase: string, chunkSize: number): string[] => {
+    const words = phrase.split(' ');
+    const chunks = [];
+    for (let i = 0; i < words.length; i += chunkSize) {
+      chunks.push(words.slice(i, i + chunkSize).join(' '));
+    }
+    return chunks;
+  };
+
+
 
   const getBackgroundColor = (filter: string) => {
     switch (filter) {
@@ -944,6 +1050,47 @@ const Dashboard_eleve_template: React.FC = () => {
                   ) : (
                     <div key={message.id} className={`flex justify-start ${messageMarginX}`}>
                       <div className="max-w-3/4 w-full flex items-center">
+
+
+                      {message.content === '' ? (
+                        <div className="flex items-center">
+                          <Avatar
+                            alt="Lucy Avatar"
+                            src={logo_lucy_face}
+                            sx={{ width: 25, height: 25 }}
+                          />
+                          <div className="ml-2 flex flex-col">
+                            {/* Affichage des phrases dynamiques */}
+                            <Typography variant="body2" sx={{ color: theme.palette.primary.main, marginBottom: '8px' }}>
+                              {displayedText}
+                            </Typography>
+                            {/* Spinner des trois points */}
+                            <ThreeDots height="30" width="50" color={theme.palette.primary.main} />
+                          </div>
+                        </div>
+                      ) : (
+                        <AIMessage
+                          messageId={message.id}
+                          content={message.content}
+                          personaName={message.personaName}
+                          citedDocuments={message.citedDocuments}
+                          isComplete={isComplete}
+                          hasDocs={!!message.citedDocuments?.length}
+                          handleFeedback={(feedbackType: FeedbackType) => handleFeedbackClick(index)}
+                          handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
+                          handleSourceClick={handleSourceClick}
+                          images={message.images}
+                          takData={message.TAK}
+                          CourseData={message.COURSE}
+                          waitingMessages={message.waitingMessages}
+                          drawerOpen={drawerOpen}
+                          handleSendTAKMessage={handleSendTAKMessage}
+                          handleSendCOURSEMessage={handleSendCOURSEMessage}
+                        />
+                      )}
+
+
+                        {/*
                         {message.content === '' ? (
                           <div className="flex items-center">
                             <Avatar
@@ -975,6 +1122,12 @@ const Dashboard_eleve_template: React.FC = () => {
                             handleSendCOURSEMessage={handleSendCOURSEMessage}
                           />
                         )}
+                        */}
+
+
+
+
+
                       </div>
                     </div>
                   )
