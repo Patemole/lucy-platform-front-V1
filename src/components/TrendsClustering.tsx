@@ -12,7 +12,7 @@ const TrendsClustering = () => {
           variant="h6"
           style={{
             fontWeight: 'bold',
-            color: '#0a0a0a',
+            color: '#011F5B',
             fontSize: '1.25rem',
             marginLeft: '0px', // Suppression du décalage inutile
           }}

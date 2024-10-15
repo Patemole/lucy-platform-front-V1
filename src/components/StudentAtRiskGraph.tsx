@@ -182,7 +182,7 @@ const StudentAtRiskPerformance = () => {
         variant="h6"
         style={{
           fontWeight: 'bold',
-          color: '#0a0a0a',
+          color: '#011F5B',
           fontSize: '1.25rem',
           marginLeft: '0px',
           marginBottom: '10px', // Ajout de la marge en bas

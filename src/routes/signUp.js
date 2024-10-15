@@ -1,6 +1,3 @@
-
-
-//ANCIEN CODE DU 2 OCTOBRE QUI MARCHE
 import * as React from 'react';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -36,7 +33,7 @@ const allowedDomains = {
   oakland: [/^.+@([a-zA-Z0-9._-]+\.)*oakland\.edu$/i, /^.+@my-lucy\.com$/i],
   arizona: [/^.+@([a-zA-Z0-9._-]+\.)*arizona\.edu$/i, /^.+@my-lucy\.com$/i],
   uci: [/^.+@([a-zA-Z0-9._-]+\.)*uci\.edu$/i, /^.+@my-lucy\.com$/i],
-  ucidavis: [/^.+@([a-zA-Z0-9._-]+\.)*ucidavis\.edu$/i, /^.+@my-lucy\.com$/i],
+  ucdavis: [/^.+@([a-zA-Z0-9._-]+\.)*ucidavis\.edu$/i, /^.+@my-lucy\.com$/i],
   cornell: [/^.+@([a-zA-Z0-9._-]+\.)*cornell\.edu$/i, /^.+@my-lucy\.com$/i],
   berkeleycollege: [/^.+@([a-zA-Z0-9._-]+\.)*berkeleycollege\.edu$/i, /^.+@my-lucy\.com$/i],
   brown: [/^.+@([a-zA-Z0-9._-]+\.)*brown\.edu$/i, /^.+@my-lucy\.com$/i],
@@ -76,7 +73,7 @@ const getErrorMessage = (subdomain) => {
     usyd: 'Usyd',
     columbia: 'Columbia',
     drexel: 'Drexel',
-    temple:'Temple',
+    temple: 'Temple',
     admin: 'Admin'
   };
 
@@ -324,8 +321,9 @@ export default function SignUp() {
         sx={{
           width: '100%',
           position: 'absolute',
-          bottom: 0,
           right: 0,
+          bottom: { xs: 'auto', sm: 0 },
+          top: { xs: 0, sm: 'auto' },
           padding: theme.spacing(2),
           display: 'flex',
           justifyContent: 'flex-end',
@@ -333,7 +331,7 @@ export default function SignUp() {
         }}
       >
         <Typography variant="body2" sx={{ mr: 1, color: theme.palette.text.primary }}>
-          powered by Lucy
+          Powered by Lucy
         </Typography>
         <Avatar
           src={lucyLogo}
