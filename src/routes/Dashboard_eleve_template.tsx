@@ -288,7 +288,6 @@ const Dashboard_eleve_template: React.FC = () => {
       const student_profile = localStorage.getItem('student_profile') || '';
 
       const lastMessageIndex = messageHistory.length - 1;
-
       for await (const packetBunch of sendMessageSocraticLangGraph({
         message: inputValue,
         chatSessionId: chatSessionId,
