@@ -148,8 +148,11 @@ export default function SignUp() {
         localStorage.setItem('chat_id', chatId);
         localStorage.setItem('course_id', academicAdvisorCourseId);
 
-        const onboardingUrl = `/onboarding/student-list/${user.uid}`;
-        navigate(onboardingUrl, { state: { uid: user.uid, firstName: firstName } });
+
+        //const onboardingUrl = `/dashboard/academic-advisor/${user.uid}`;
+        navigate(`/dashboard/academic-advisor/${user.uid}`);
+        //const onboardingUrl = `/onboarding/student-list/${user.uid}`;
+        //navigate(onboardingUrl, { state: { uid: user.uid, firstName: firstName } });
       } catch (error) {
         if (error.code === 'auth/email-already-in-use') {
           newErrors.email = 'Email address already in use!';

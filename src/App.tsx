@@ -7,6 +7,9 @@ import Dashboard_eleve_template from './routes/Dashboard_eleve_template';
 import Course_selection_eleve_template from './routes/Course_selection_eleve_template';
 import Schedule_eleve_template from './routes/Schedule_eleve_template';
 import Dashboard_academic_advisor from './routes/Dashboard_academic_advisor';
+
+import FlagingDashboard from './routes/FlagingDashboard';
+
 import Student_list_academic_advisor from './routes/Student_list_academic_advisor';
 import Dashboard_admin from './routes/Dashboard_admin';
 import Dashboard_feedback_admin from './routes/Dashboard_feedback_admin';
@@ -138,6 +141,10 @@ const App: React.FC = () => {
                         <Route path="/dashboard/student/schedule/:uid" element={<Schedule_eleve_template />} />
                         <Route path="/dashboard/analytics" element={<Analytics_eleve_template />} />
                         <Route path="/dashboard/academic-advisor/:uid" element={<Dashboard_academic_advisor />} />
+
+                        <Route path="/dashboard/academic-advisor/:uid" element={<FlagingDashboard />} />
+
+
                         <Route path="/onboarding/student-list/:uid" element={<Student_list_academic_advisor />} />
                         <Route path="/dashboard/admin" element={<Dashboard_admin />} />
                         <Route path="/dashboard/admin/feedback" element={<Dashboard_feedback_admin />} />
@@ -161,11 +168,16 @@ const App: React.FC = () => {
                         <Routes>
                             <Route path="/auth/sign-in" element={<SignIn handleToggleThemeMode={handleToggleThemeMode} />} />
                             <Route path="/auth/sign-up" element={<SignUp />} />
+                            <Route path="/auth/sign-up/academic_advisor" element={<SignUp_academic_advisor />} />
+                            <Route path="/overview" element={<TrustPage />} />
+                            <Route path="/controls" element={<TrustControlPage />} />
+
                             <Route path="/" element={<PrivateRoute />}>
                                 <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
                                 <Route path="/onboarding/learningStyleSurvey" element={<LearningStyleSurvey />} />
                                 <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
                                 <Route path="/dashboard/admin" element={<Dashboard_admin />} />
+                                <Route path="/dashboard/academic-advisor/:uid" element={<FlagingDashboard />} />
                                 <Route path="/about" element={<About />} />
                                 <Route path="*" element={<NotFound />} /> {/* Catch all route */}
                             </Route>
