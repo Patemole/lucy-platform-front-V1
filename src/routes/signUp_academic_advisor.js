@@ -151,6 +151,7 @@ export default function SignUp() {
 
         //const onboardingUrl = `/dashboard/academic-advisor/${user.uid}`;
         navigate(`/dashboard/academic-advisor/${user.uid}`);
+        //navigate(`/dataselection/academic-advisor/${user.uid}`);
         //const onboardingUrl = `/onboarding/student-list/${user.uid}`;
         //navigate(onboardingUrl, { state: { uid: user.uid, firstName: firstName } });
       } catch (error) {

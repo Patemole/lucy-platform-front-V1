@@ -23,6 +23,7 @@ import SignUp from './routes/signUp';
 import TrustPage from './routes/trust';
 import TrustControlPage from './routes/trust_controls';
 import SignUp_academic_advisor from './routes/signUp_academic_advisor';
+import DataSelectionPage from './routes/DataSelectionPage';
 import SignUp_admin from './routes/signUp_admin';
 import ChooseRole from './routes/chooseRole';
 import LearningStyleSurvey from './routes/learningStyleSurvey';
@@ -178,6 +179,7 @@ const App: React.FC = () => {
                                 <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
                                 <Route path="/dashboard/admin" element={<Dashboard_admin />} />
                                 <Route path="/dashboard/academic-advisor/:uid" element={<FlagingDashboard />} />
+                                <Route path="/dataselection/academic-advisor/:uid" element={<DataSelectionPage />} />
                                 <Route path="/about" element={<About />} />
                                 <Route path="*" element={<NotFound />} /> {/* Catch all route */}
                             </Route>

@@ -211,6 +211,7 @@ export default function LearningStyleSurvey() {
         localStorage.setItem('minor', JSON.stringify(minor) || 'default_minor');
         localStorage.setItem('year', learnerType || 'default_year');
         localStorage.setItem('faculty', JSON.stringify(year) || 'default_faculty');
+        localStorage.setItem('username', profileData.name || 'default_username');
         localStorage.setItem('student_profile', JSON.stringify(profileData));
 
         navigate(`/dashboard/student/${location.state.uid}`);

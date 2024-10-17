@@ -184,7 +184,8 @@ const StudentAtRiskPerformance = () => {
           fontWeight: 'bold',
           color: '#011F5B',
           fontSize: '1.25rem',
-          marginLeft: '0px',
+          marginLeft: '20px',
+          marginTop: '10px',
           marginBottom: '10px', // Ajout de la marge en bas
         }}
       >

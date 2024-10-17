@@ -51,8 +51,6 @@ const Dashboard = () => {
                             padding: '20px',
                             borderRadius: '8px',
                             boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-                            display: 'flex',
-                            justifyContent: 'center',
                             alignItems: 'center',
                         }}
                     >
@@ -66,8 +64,6 @@ const Dashboard = () => {
                             padding: '20px',
                             borderRadius: '8px',
                             boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-                            display: 'flex',
-                            justifyContent: 'center',
                             alignItems: 'center',
                         }}
                     >
