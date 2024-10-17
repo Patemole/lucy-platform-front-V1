@@ -17,6 +17,7 @@ import {berkeleyTheme,  berkeleyDarkTheme } from './berkeleyTheme';
 import {umiamiTheme,  umiamiDarkTheme } from './umiamiTheme';
 import {drexelTheme,  drexelDarkTheme } from './drexelTheme';
 import {templeTheme,  templeDarkTheme } from './templeTheme';
+import {pennStateTheme,  pennStateDarkTheme } from './pennStateTheme';
 import {adminTheme,  adminDarkTheme } from './adminTheme';
 
 // Function to get the theme based on subdomain and selected mode
@@ -41,6 +42,9 @@ const getTheme = (subdomain, themeMode) => {
 
     case 'temple':
       return themeMode == 'dark' ? templeDarkTheme : templeTheme;
+
+    case 'psu':
+      return themeMode == 'dark' ? pennStateDarkTheme : pennStateTheme;
 
     case 'admin':
       return themeMode === 'dark' ? adminDarkTheme : adminTheme;

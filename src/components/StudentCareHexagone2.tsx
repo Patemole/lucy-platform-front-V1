@@ -16,7 +16,7 @@ const HexbinHeatmap: React.FC = () => {
     // Set dimensions and margins dynamically based on parent width
     const svgElement = svgRef.current;
     const width = svgElement ? svgElement.clientWidth : 700; // Dynamic width based on the parent
-    const height = 500;
+    const height = 450;
     const margin = { top: 20, right: 30, bottom: 70, left: 70 }; // Adjusted for axis labels
 
     // Remove any existing content
@@ -176,6 +176,7 @@ const HexbinHeatmap: React.FC = () => {
           fontWeight: 'bold',
           color: '#011F5B',
           fontSize: '1.25rem',
+          marginTop: '10px',
           marginLeft: '20px',
           marginBottom: '10px', // Ajout de la marge en bas
         }}
