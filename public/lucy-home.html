@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucy - Votre Assistant Universitaire</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://upenn.my-lucy.com/lucy-widget.js"></script>
+</head>
+<body>
+
+    <!-- En-tête -->
+    <header>
+        <div class="container">
+            <h1>Lucy</h1>
+            <nav>
+                <ul>
+                    <li><a href="#">Accueil</a></li>
+                    <li><a href="#">Fonctionnalités</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Section d'accueil -->
+    <section id="hero">
+        <div class="container">
+            <h2>Votre assistant universitaire, toujours à votre service.</h2>
+            <p>Découvrez Lucy, l'assistant qui simplifie la vie universitaire, de la gestion des cours à l'accès aux ressources.</p>
+            <a href="#" class="cta-button">Découvrir Lucy</a>
+        </div>
+    </section>
+
+    <!-- Section Fonctionnalités -->
+    <section id="features">
+        <div class="container">
+            <h3>Pourquoi choisir Lucy ?</h3>
+            <div class="feature-box">
+                <h4>Assistance personnalisée</h4>
+                <p>Lucy vous aide à naviguer dans les ressources de votre université en fonction de vos besoins spécifiques.</p>
+            </div>
+            <div class="feature-box">
+                <h4>Accessible 24/7</h4>
+                <p>Que ce soit pour planifier vos cours ou rechercher des informations, Lucy est toujours là pour vous.</p>
+            </div>
+            <div class="feature-box">
+                <h4>Sécurité et confidentialité</h4>
+                <p>Vos données sont protégées et jamais partagées. Nous respectons votre vie privée.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Conteneur pour le widget Lucy -->
+    <div id="lucy-widget"></div>
+
+    <!-- Pied de page -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Lucy. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <!-- Script pour le widget Lucy -->
+    <script>
+      LucyWidget.init({
+        container: '#lucy-widget',
+        university: 'University of Pennsylvania',
+        theme: 'light',
+        language: 'fr'
+      });
+    </script>
+
+</body>
+</html>
