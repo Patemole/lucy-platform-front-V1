@@ -147,11 +147,13 @@ export default function SignUp() {
         localStorage.setItem('university', subdomain);
         localStorage.setItem('chat_id', chatId);
         localStorage.setItem('course_id', academicAdvisorCourseId);
+        localStorage.setItem('userID', user.uid);
 
 
         //const onboardingUrl = `/dashboard/academic-advisor/${user.uid}`;
         navigate(`/dashboard/academic-advisor/${user.uid}`);
         //navigate(`/dataselection/academic-advisor/${user.uid}`);
+        //navigate('/dashboard/academic-advisor/student_profile/${user.uid}')
         //const onboardingUrl = `/onboarding/student-list/${user.uid}`;
         //navigate(onboardingUrl, { state: { uid: user.uid, firstName: firstName } });
       } catch (error) {

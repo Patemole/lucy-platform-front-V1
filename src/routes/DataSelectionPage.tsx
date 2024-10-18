@@ -363,7 +363,8 @@ const DataSelectionPage: React.FC = () => {
     console.log("Selected Data:", selectedData);
     // Send selectedData to the algorithm or server
     // Navigate to the dashboard after submission
-    navigate('/dashboard');
+    const userID = localStorage.getItem('userID') || 'default_userID';
+    navigate(`/dashboard/academic-advisor/${userID}`);
   };
 
   return (
