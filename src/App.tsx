@@ -33,6 +33,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import config from './config';
 import { useAuth } from './auth/hooks/useAuth';
 import NotFound from './routes/NotFound';
+import StudentProfilePage from './routes/StudentProfilePage'
 
 const App: React.FC = () => {
     const subdomain = config.subdomain || 'default';
@@ -179,6 +180,7 @@ const App: React.FC = () => {
                                 <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
                                 <Route path="/dashboard/admin" element={<Dashboard_admin />} />
                                 <Route path="/dashboard/academic-advisor/:uid" element={<FlagingDashboard />} />
+                                <Route path="/dashboard/academic-advisor/student_profile/:uid" element={<StudentProfilePage />} />
                                 <Route path="/dataselection/academic-advisor/:uid" element={<DataSelectionPage />} />
                                 <Route path="/about" element={<About />} />
                                 <Route path="*" element={<NotFound />} /> {/* Catch all route */}
