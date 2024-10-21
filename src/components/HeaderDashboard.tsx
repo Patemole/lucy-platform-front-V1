@@ -1,6 +1,11 @@
 import React from 'react';
 import { FaBell } from 'react-icons/fa'; // Icone de cloche
 import { useNavigate } from 'react-router-dom';
+import {
+    Badge,
+    IconButton,
+  } from '@mui/material';
+  import NotificationsIcon from '@mui/icons-material/Notifications';
 
 const Header: React.FC = () => {
     const navigate = useNavigate();
@@ -84,13 +89,23 @@ const Header: React.FC = () => {
                 </button>
 
                 {/* Icône de notification */}
-                <FaBell 
-                    style={{
-                        color: '#0a0a0a', // Couleur noire pour l'icône de la cloche
-                        fontSize: '20px',
-                        cursor: 'pointer',
-                    }} 
-                />
+                {/* Notification Bell Icon with Badge */}
+                <IconButton>
+                <Badge
+                    badgeContent={8}
+                    color="error"
+                    sx={{
+                    '& .MuiBadge-badge': {
+                        fontSize: '1rem',
+                        height: '20px',
+                        minWidth: '20px',
+                        backgroundColor: '#E60000',
+                    },
+                    }}
+                >
+                    <NotificationsIcon sx={{ color: '#011F5B', fontSize: '1.7rem' }} />
+                </Badge>
+                </IconButton>
             </div>
         </div>
     );
