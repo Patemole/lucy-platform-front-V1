@@ -1,4 +1,3 @@
-// RiskTable.tsx
 import React from 'react';
 import {
   Table,
@@ -11,7 +10,10 @@ import {
   Typography,
   Box,
   LinearProgress,
+  Badge,
+  IconButton,
 } from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 // Define the Risk interface with a numerical riskScore
 interface Risk {
@@ -30,7 +32,7 @@ const riskData: Risk[] = [
     riskDescription:
       'During chat with Lucy, John repeatedly mentioned suicidal thoughts and asked if Lucy could help him “end the pain.”',
     lastAdvisorVisit: '10/05/2024',
-    riskScore: 98,
+    riskScore: 89,
   },
   {
     studentName: 'Sarah Thompson',
@@ -38,7 +40,7 @@ const riskData: Risk[] = [
     riskDescription:
       'Used highly aggressive language in chats with Lucy, including threats towards others and expressing violent intentions.',
     lastAdvisorVisit: '09/20/2024',
-    riskScore: 97,
+    riskScore: 75,
   },
   {
     studentName: 'Alex Martinez',
@@ -46,7 +48,7 @@ const riskData: Risk[] = [
     riskDescription:
       'Discussed drug use multiple times in chats with Lucy, asking for advice on getting “high” and mentioning attending class under the influence.',
     lastAdvisorVisit: '08/15/2024',
-    riskScore: 92,
+    riskScore: 67,
   },
   {
     studentName: 'Emily Johnson',
@@ -54,7 +56,7 @@ const riskData: Risk[] = [
     riskDescription:
       'Repeatedly chatted with Lucy about experiencing panic attacks and feeling hopeless, refusing help when Lucy suggested speaking with a counselor.',
     lastAdvisorVisit: '10/12/2024',
-    riskScore: 90,
+    riskScore: 58,
   },
   {
     studentName: 'Michael Green',
@@ -62,7 +64,7 @@ const riskData: Risk[] = [
     riskDescription:
       'Expressed feeling isolated and hopeless multiple times in chats with Lucy.',
     lastAdvisorVisit: '10/10/2024',
-    riskScore: 86,
+    riskScore: 47,
   },
   {
     studentName: 'Rachel Adams',
@@ -70,7 +72,7 @@ const riskData: Risk[] = [
     riskDescription:
       'Discussed alcohol consumption problems and difficulty focusing in class.',
     lastAdvisorVisit: '09/30/2024',
-    riskScore: 78,
+    riskScore: 49,
   },
   {
     studentName: 'David Lee',
@@ -78,7 +80,7 @@ const riskData: Risk[] = [
     riskDescription:
       'Constantly expressed stress about grades and performance in multiple courses.',
     lastAdvisorVisit: '10/07/2024',
-    riskScore: 64,
+    riskScore: 90,
   },
   {
     studentName: 'Nina Patel',
@@ -86,7 +88,7 @@ const riskData: Risk[] = [
     riskDescription:
       'Shared recurring anxiety issues and fears of failure.',
     lastAdvisorVisit: '09/28/2024',
-    riskScore: 55,
+    riskScore: 47,
   },
 ];
 
@@ -108,19 +110,46 @@ const RiskTable: React.FC = () => {
 
   return (
     <Box sx={{ padding: 2, height: '100%', overflow: 'hidden' }}>
-      {/* Table Title */}
-      <Typography
-        variant="h6"
-        style={{
-          fontWeight: 'bold',
-          color: '#011F5B',
-          fontSize: '1.25rem',
-          marginLeft: '0px',
+      {/* Title Section */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           marginBottom: '15px',
         }}
       >
-        High Risk Students
-      </Typography>
+        {/* Table Title */}
+        <Typography
+          variant="h6"
+          style={{
+            fontWeight: 'bold',
+            color: '#011F5B',
+            fontSize: '1.25rem',
+            marginLeft: '0px',
+          }}
+        >
+          High Priority Students
+        </Typography>
+
+        {/* Notification Bell Icon with Badge */}
+        <IconButton>
+          <Badge
+            badgeContent={riskData.length}
+            color="error"
+            sx={{
+              '& .MuiBadge-badge': {
+                fontSize: '1rem',
+                height: '20px',
+                minWidth: '20px',
+                backgroundColor: '#E60000',
+              },
+            }}
+          >
+            <NotificationsIcon sx={{ color: '#011F5B', fontSize: '1.8rem' }} />
+          </Badge>
+        </IconButton>
+      </Box>
 
       {/* Table Container */}
       <TableContainer
