@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 
 // URL statique du graphique intégré
-const graphURL_academic_advisor = "http://localhost:5001/static/academic_advisor/cluster_with_fake_yc_data.html";
+const graphURL_academic_advisor = "http://localhost:5001/static/academic_advisor/cluster_with_fake_flagging_health_data.html";
 
 const TrendsClustering = () => {
   return (
