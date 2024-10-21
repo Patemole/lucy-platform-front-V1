@@ -1,0 +1,22 @@
+User-agent: Amazonbot
+Disallow: /
+
+User-Agent: *
+Disallow: /search
+Disallow: /*/search
+Disallow: /search/*
+Disallow: /*/search/*
+Disallow: /coas/search
+Disallow: /api/du/search
+Disallow: /Search
+Disallow: /*/Search
+Disallow: /Search/*
+Disallow: /*/Search/*
+Disallow: /coas/Search
+Disallow: /api/du/Search
+Disallow: /SEARCH
+Disallow: /*/SEARCH
+Disallow: /SEARCH/*
+Disallow: /*/SEARCH/*
+Disallow: /coas/SEARCH
+Disallow: /api/du/SEARCH

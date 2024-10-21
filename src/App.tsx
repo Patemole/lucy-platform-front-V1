@@ -27,6 +27,8 @@ import DataSelectionPage from './routes/DataSelectionPage';
 import SignUp_admin from './routes/signUp_admin';
 import ChooseRole from './routes/chooseRole';
 import LearningStyleSurvey from './routes/learningStyleSurvey';
+import DashboardAAchat from './routes/DashboardAAchat'
+import AllStudentTable from './routes/AllStudentTable'
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './auth/context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -176,10 +178,12 @@ const App: React.FC = () => {
 
                             <Route path="/" element={<PrivateRoute />}>
                                 <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
+                                <Route path="/dashboard/academic-advisor/chat/:uid" element={<DashboardAAchat />} />
                                 <Route path="/onboarding/learningStyleSurvey" element={<LearningStyleSurvey />} />
                                 <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
                                 <Route path="/dashboard/admin" element={<Dashboard_admin />} />
                                 <Route path="/dashboard/academic-advisor/:uid" element={<FlagingDashboard />} />
+                                <Route path="/dashboard/academic-advisor/all_profile/:uid" element={<AllStudentTable />} />
                                 <Route path="/dashboard/academic-advisor/student_profile/:uid" element={<StudentProfilePage />} />
                                 <Route path="/dataselection/academic-advisor/:uid" element={<DataSelectionPage />} />
                                 <Route path="/about" element={<About />} />

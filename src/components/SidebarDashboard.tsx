@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHome, FaComments, FaUserCircle } from 'react-icons/fa'; // Icons for home, chat, and student
+import { FaHome, FaComments, FaUserCircle, FaUsers } from 'react-icons/fa'; // Added FaUsers for the students page
 import { useNavigate, useLocation } from 'react-router-dom'; // Used for navigation
 import { useTheme } from '@mui/material/styles';
 
@@ -12,6 +12,9 @@ const Sidebar = () => {
 
     // Check if the current page is active
     const isActive = (path: string) => location.pathname === path;
+
+    // Get the uid from localStorage
+    const userID = localStorage.getItem('userID');
 
     return (
         <div
@@ -44,7 +47,7 @@ const Sidebar = () => {
                         ...styles.iconContainer,
                         backgroundColor: isActive('/dashboard') ? '#EBE2FC' : '#f3f3f9', // Violet background for active page
                     }}
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate(`/dashboard/academic-advisor/${userID}`)} // Navigate to user profile
                 >
                     <FaHome style={styles.iconStyle} />
                 </div>
@@ -53,17 +56,29 @@ const Sidebar = () => {
                 <div
                     style={{
                         ...styles.iconContainer,
-                        backgroundColor: isActive('/chat') ? '#EBE2FC' : '#f3f3f9', // Violet background if active
+                        backgroundColor: isActive(`/dashboard/student/${userID}`) ? '#EBE2FC' : '#f3f3f9', // Violet background if active
                     }}
-                    onClick={() => navigate('/chat')}
+                    onClick={() => navigate(`/dashboard/academic-advisor/chat/${userID}`)} // Navigate to student dashboard
                 >
                     <FaComments style={styles.iconStyle} />
+                </div>
+
+                {/* Students Icon */}
+                <div
+                    style={{
+                        ...styles.iconContainer,
+                        backgroundColor: isActive('/students') ? '#EBE2FC' : '#f3f3f9', // Violet background for active page
+                    }}
+                    onClick={() => navigate(`/dashboard/academic-advisor/all_profile/${userID}`)} // Navigate to all profiles
+                >
+                    <FaUsers style={styles.iconStyle} />
                 </div>
             </div>
 
             {/* Student Icon at the bottom */}
             <div
                 style={{ marginTop: 'auto', paddingBottom: '20px' }}
+                onClick={() => navigate(`/dashboard/academic-advisor/${userID}`)} // Navigate to user profile when clicking the profile image
             >
                 <img
                     src={logo_greg}

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lucy - Votre Assistant Universitaire</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://upenn.my-lucy.com/lucy-widget.js"></script>
 </head>
 <body>
 
@@ -61,14 +60,22 @@
         </div>
     </footer>
 
-    <!-- Script pour le widget Lucy -->
+    <!-- Inclusion du script qui définit LucyWidget -->
+    <script src="lucy-widget.js"></script>
+
+    <!-- Script pour initialiser le widget Lucy -->
     <script>
-      LucyWidget.init({
-        container: '#lucy-widget',
-        university: 'University of Pennsylvania',
-        theme: 'light',
-        language: 'fr'
-      });
+        console.log("Initialisation du widget Lucy...");
+
+        // Appel de la méthode init avec les options
+        LucyWidget.init({
+            container: '#lucy-widget',
+            university: 'University of Pennsylvania',
+            theme: 'light',
+            language: 'fr'
+        });
+
+        console.log("Appel de LucyWidget.init terminé.");
     </script>
 
 </body>
