@@ -57,7 +57,7 @@ const drawerWidth = 240;
 const ALLOWED_COURSE_IDS = ['Connf4P2TpKXXGooaQD5', 'tyPR1RAulPfqLLfNgIqF', 'Q1SjXBe30FyX6GxvJVIG', 'moRgToBTOAJZdMQPs7Ci'];
 
 const waitingPhrases = [
-  "I'm gathering relevant information from UPenn...",
+  "I'm gathering relevant information from Drexel...",
   "Just a little longer...",
   "I'm pulling together more details for you...",
   "Almost done...",
