@@ -46,6 +46,7 @@ const allowedDomains = {
   drexel: [/^.+@([a-zA-Z0-9._-]+\.)*drexel\.edu$/i, /^.+@my-lucy\.com$/i],
   temple: [/^.+@([a-zA-Z0-9._-]+\.)*temple\.edu$/i, /^.+@my-lucy\.com$/i],
   psu: [/^.+@([a-zA-Z0-9._-]+\.)*psu\.edu$/i, /^.+@my-lucy\.com$/i],
+  ccp: [/^.+@([a-zA-Z0-9._-]+\.)*ccp\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i],
 };
 
@@ -78,6 +79,7 @@ const getErrorMessage = (subdomain) => {
     drexel: 'Drexel',
     temple: 'Temple',
     psu: 'PennState',
+    ccp: 'Ccp',
     admin: 'Admin',
   };
 
