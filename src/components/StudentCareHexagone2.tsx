@@ -1,19 +1,22 @@
+// HexbinHeatmap.tsx
 import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
 import { hexbin as d3Hexbin } from "d3-hexbin";
 import { Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-// Étendre l'interface DataPoint pour inclure les noms
+// Interface for data points including new information
 interface DataPoint {
   x: number;
   y: number;
   severity: number;
   firstName: string;
   lastName: string;
+  lastMeetingDate: string;
+  lastServiceName: string;
 }
 
-// Définir un type pour les hexagones avec un nom unique
+// Interface for hexagons with a unique name
 interface HexbinWithName {
   bin: DataPoint[];
   x: number;
@@ -26,7 +29,7 @@ const HexbinHeatmap: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Listes de prénoms et de noms pour la génération aléatoire
+    // Lists of first names and last names for random generation
     const firstNames = [
       "Emma", "Liam", "Olivia", "Noah", "Ava",
       "William", "Sophia", "James", "Isabella", "Oliver",
@@ -41,7 +44,14 @@ const HexbinHeatmap: React.FC = () => {
       "Thomas", "Taylor", "Moore", "Jackson", "Martin"
     ];
 
-    // Fonctions pour obtenir un prénom et un nom aléatoires
+    // Service name options
+    const serviceNames = [
+      'Financial Services',
+      'Academic Advising',
+      'Mental Health Services'
+    ];
+
+    // Functions to get random first name, last name, and service name
     const getRandomFirstName = () => {
       return firstNames[Math.floor(Math.random() * firstNames.length)];
     };
@@ -50,48 +60,49 @@ const HexbinHeatmap: React.FC = () => {
       return lastNames[Math.floor(Math.random() * lastNames.length)];
     };
 
-    // Récupérer le userID depuis localStorage
+    const getRandomServiceName = () => {
+      return serviceNames[Math.floor(Math.random() * serviceNames.length)];
+    };
+
+    // Retrieve userID from localStorage
     const storedUser = localStorage.getItem('userID');
     let userID: string | null = null;
 
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        userID = parsedUser.uid || storedUser; // Si c'est un objet avec uid, sinon utiliser la chaîne directement
+        userID = parsedUser.uid || storedUser;
       } catch (error) {
-        // Si ce n'est pas un JSON valide, considérer que c'est directement l'uid
         userID = storedUser;
       }
     }
 
     if (!userID) {
-      console.error('Aucun userID trouvé dans localStorage');
-      // Vous pouvez choisir de gérer ce cas différemment, par exemple en affichant un message à l'utilisateur
+      console.error('No userID found in localStorage');
       return;
     }
 
-    // Définir les dimensions et marges
+    // Define dimensions and margins
     const svgElement = svgRef.current;
     if (!svgElement) {
-      console.error('Élément SVG non trouvé');
+      console.error('SVG element not found');
       return;
     }
 
-    // Utiliser getBoundingClientRect pour obtenir la largeur actuelle de l'élément SVG
     const boundingRect = svgElement.getBoundingClientRect();
-    const width = boundingRect.width || 700; // Utiliser 700 par défaut si la largeur est indéfinie
+    const width = boundingRect.width || 700;
     const height = 450;
     const margin = { top: 20, right: 30, bottom: 70, left: 70 };
 
-    // Supprimer tout contenu existant dans le SVG
+    // Clear existing content in SVG
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    // Définir la vue pour rendre le SVG responsive
+    // Make SVG responsive
     svg.attr("viewBox", `0 0 ${width} ${height}`)
        .attr("preserveAspectRatio", "xMidYMid meet");
 
-    // Créer un groupe pour le graphique avec les marges
+    // Group for the chart with margins
     const chartGroup = svg
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
@@ -99,21 +110,39 @@ const HexbinHeatmap: React.FC = () => {
     const chartWidth = width - margin.left - margin.right;
     const chartHeight = height - margin.top - margin.bottom;
 
-    // Définir les échelles
+    // Define scales
     const xScale = d3.scaleLinear().domain([0, 100]).range([0, chartWidth]);
     const yScale = d3.scaleLinear().domain([0, 100]).range([chartHeight, 0]);
 
-    // Générer des données aléatoires avec noms et prénoms
+    // Generate random data with new information
     const data: DataPoint[] = d3.range(1000).map(() => {
       const xValue = Math.random() * 100;
       const yValue = Math.random() * 100;
       const severity = Math.ceil((yValue / 100) * 5);
       const firstName = getRandomFirstName();
       const lastName = getRandomLastName();
-      return { x: xValue, y: yValue, severity, firstName, lastName };
+
+      // Calculate the last meeting date
+      const daysSinceLastMeeting = xValue;
+      const lastMeetingDate = new Date();
+      lastMeetingDate.setDate(lastMeetingDate.getDate() - Math.floor(daysSinceLastMeeting));
+      const formattedLastMeetingDate = lastMeetingDate.toLocaleDateString();
+
+      // Get a random service name
+      const lastServiceName = getRandomServiceName();
+
+      return {
+        x: xValue,
+        y: yValue,
+        severity,
+        firstName,
+        lastName,
+        lastMeetingDate: formattedLastMeetingDate,
+        lastServiceName
+      };
     });
 
-    // Générateur de hexagones
+    // Hexbin generator
     const hexRadius = 9;
     const hexbin = d3Hexbin<DataPoint>()
       .x(d => xScale(d.x))
@@ -121,10 +150,10 @@ const HexbinHeatmap: React.FC = () => {
       .radius(hexRadius)
       .extent([[0, 0], [chartWidth, chartHeight]]);
 
-    // Générer les données de hexagones
+    // Generate hexbin data
     const hexbinData = hexbin(data);
 
-    // Générer des noms uniques pour chaque hexagone
+    // Assign unique names to each hexagon
     const hexbinDataWithName: HexbinWithName[] = hexbinData.map(bin => ({
       bin,
       x: bin.x,
@@ -132,7 +161,7 @@ const HexbinHeatmap: React.FC = () => {
       name: `${getRandomFirstName()} ${getRandomLastName()}`
     }));
 
-    // Échelle de couleurs
+    // Color scale based on severity
     const severityColors: { [key: number]: string } = {
       1: '#9CD5AD',
       2: '#80C092',
@@ -151,8 +180,9 @@ const HexbinHeatmap: React.FC = () => {
         severityColors[5],
       ]);
 
-    // Créer un tooltip
+    // Create a tooltip
     const tooltip = d3.select("body").append("div")
+      .attr("class", "tooltip")
       .style("position", "absolute")
       .style("background", "#f9f9f9")
       .style("border", "1px solid #d3d3d3")
@@ -161,7 +191,7 @@ const HexbinHeatmap: React.FC = () => {
       .style("pointer-events", "none")
       .style("display", "none");
 
-    // Dessiner les hexagones
+    // Draw hexagons
     chartGroup.append("g")
       .selectAll(".hexagon")
       .data(hexbinDataWithName)
@@ -176,18 +206,24 @@ const HexbinHeatmap: React.FC = () => {
       })
       .style("stroke", "white")
       .style("stroke-width", 0.5)
-      // Gestionnaires d'événements pour le survol et le clic
+      // Event handlers for hover and click
       .on("mouseover", function(event, d) {
-        const meanSeverity = Math.round(d3.mean(d.bin, p => p.severity)!);
+        // Calculate the mean y value for Risk Score
+        const meanY = Math.round(d3.mean(d.bin, p => p.y)!);
 
-        // Générer le HTML pour le nom
+        // Retrieve information from the first data point in the hexagon
+        const lastMeetingDate = d.bin[0].lastMeetingDate;
+        const lastServiceName = d.bin[0].lastServiceName;
+
         const nameHtml = `<strong>Name:</strong> ${d.name}`;
 
         tooltip
           .style("display", "block")
           .html(
             `${nameHtml}<br/>
-             <strong>Attrition rate:</strong> ${meanSeverity}<br/>`
+             <strong>Risk Score:</strong> ${meanY}<br/>
+             <strong>Last meeting:</strong> ${lastMeetingDate}<br/>
+             <strong>Last service meet:</strong> ${lastServiceName}<br/>`
           )
           .style("left", `${event.pageX + 15}px`)
           .style("top", `${event.pageY}px`);
@@ -203,15 +239,15 @@ const HexbinHeatmap: React.FC = () => {
         tooltip.style("display", "none");
         d3.select(this).style("fill-opacity", 1);
       })
-      .on("click", function() {
+      .on("click", function(event, d) {
         if (userID) {
-          navigate(`/dashboard/academic-advisor/student_profile/${userID}`);
+          navigate(`/dashboard/academic-advisor/student_profile/${userID}`, { state: { name: d.name } });
         } else {
-          console.error('Impossible de naviguer : userID manquant');
+          console.error('Cannot navigate: userID missing');
         }
       });
 
-    // Ajouter les axes
+    // Add axes
     const xAxis = d3.axisBottom(xScale);
     const yAxis = d3.axisLeft(yScale);
 
@@ -222,7 +258,7 @@ const HexbinHeatmap: React.FC = () => {
     chartGroup.append("g")
       .call(yAxis);
 
-    // Label de l'axe X
+    // X-axis label
     svg.append("text")
       .attr("x", margin.left + chartWidth / 2)
       .attr("y", height - 30)
@@ -231,7 +267,7 @@ const HexbinHeatmap: React.FC = () => {
       .style("font-size", "14px")
       .text("Days since last meeting with Academic Advisor");
 
-    // Label de l'axe Y
+    // Y-axis label
     svg.append("text")
       .attr("transform", "rotate(-90)")
       .attr("x", - (margin.top + chartHeight / 2))
@@ -239,9 +275,9 @@ const HexbinHeatmap: React.FC = () => {
       .attr("text-anchor", "middle")
       .style("fill", "#808080")
       .style("font-size", "14px")
-      .text("Severity");
+      .text("Risk Score");
 
-    // Fonction de nettoyage pour retirer le tooltip lors du démontage du composant
+    // Cleanup function to remove the tooltip when the component unmounts
     return () => {
       tooltip.remove();
     };
@@ -250,7 +286,7 @@ const HexbinHeatmap: React.FC = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", width: "100%" }}>
-      {/* Titre */}
+      {/* Title */}
       <Typography
         variant="h6"
         style={{
@@ -265,7 +301,7 @@ const HexbinHeatmap: React.FC = () => {
         Student Care Alignment
       </Typography>
 
-      {/* Conteneur du graphique */}
+      {/* Chart container */}
       <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", padding: "20px", width: "100%" }}>
         <svg ref={svgRef} style={{ width: '100%', height: '450px' }}></svg>
       </div>

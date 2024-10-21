@@ -1,3 +1,4 @@
+// Dashboard.tsx
 import React from 'react';
 import Sidebar from '../components/SidebarDashboard'; // Sidebar component
 import HeaderDashboard from '../components/HeaderDashboard'; // Header component
@@ -5,9 +6,9 @@ import Metrics from '../components/MetrixDashboard'; // Component for metrics
 import HexbinHeatmap from '../components/StudentCareHexagone2'; // New component Students Care Alignment
 import StudentAtRiskPerformance from '../components/StudentAtRiskGraph'; // Component for Student at Risk Performance graph
 import TrendsClustering from '../components/TrendsClustering'; // Component for trends clustering
-import RiskTable from '../components/RiskTable'; // Nouveau composant pour le tableau des risques
+import RiskTable from '../components/RiskTable'; // New component for risk table
 
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
     return (
         <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f9f9f9' }}>
             {/* Sidebar */}
@@ -70,7 +71,7 @@ const Dashboard = () => {
                         <StudentAtRiskPerformance />
                     </div>
 
-                    {/* Nouveau composant RiskTable, prenant toute la largeur */}
+                    {/* New RiskTable component, taking full width */}
                     <div
                         style={{
                             gridColumn: '1 / span 2', // Span across both columns

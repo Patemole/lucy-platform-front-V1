@@ -100,7 +100,7 @@ const StudentAtRiskPerformance = () => {
       y: {
         title: {
           display: true,
-          text: 'Severity Level',
+          text: 'Risk Score',
           font: {
             size: 14,
           },
