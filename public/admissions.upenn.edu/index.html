@@ -19,6 +19,9 @@
     <link rel="stylesheet" media="all" href="sites/default/files/css/css_8AVO8mvL3jeIdObCVpdgo0nq0o2iw1Xlf3GI0R3wdpU.css%3Fdelta=0&amp;language=en&amp;theme=penn_admissions&amp;include=eJxlzlEKxCAMBNALtfVIJdasDcQoTqR4-_VvYfv7ZgYm15qVTzLS6XIh5D_YMOFcQiTw1tjspFQEkGqrrDWS7vCpjFf6qeY7PYxa3lMo-VLqlDu1GyH10UiPnxzD2ogquDltEO.css" />
 <link rel="stylesheet" media="all" href="sites/default/files/css/css_pCBgOasp4P-kAInROjrJGySKLMZPhGv9cBfvYgS2O38.css%3Fdelta=1&amp;language=en&amp;theme=penn_admissions&amp;include=eJxlzlEKxCAMBNALtfVIJdasDcQoTqR4-_VvYfv7ZgYm15qVTzLS6XIh5D_YMOFcQiTw1tjspFQEkGqrrDWS7vCpjFf6qeY7PYxa3lMo-VLqlDu1GyH10UiPnxzD2ogquDltEO.css" />
 
+<script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+
     
   </head>
 
@@ -341,7 +344,7 @@
         
         
         <li class="site-nav__menu-item site-nav__menu-item--level-2">
-            <a href="https://ask.admissions.upenn.edu/" class="site-nav__menu-link site-nav__menu-link--level-2">Ask</a>
+            <a href="https://upenn.my-lucy.com" class="site-nav__menu-link site-nav__menu-link--level-2">Ask</a>
                     </li>
           </ul>
   
@@ -910,6 +913,27 @@
 <script src="https://kit.fontawesome.com/b2d8387473.js" crossorigin></script>
 <script src="https://key.admissions.upenn.edu/ping" async></script>
 <script src="sites/default/files/js/js_4Rzdu1FubXTuyFK1u_hzy1YxEiEbTE8qwmqiNMLmTl0.js%3Fscope=footer&amp;delta=3&amp;language=en&amp;theme=penn_admissions&amp;include=eJxlzlEKxCAMBNALtfVIJdasDcQoTqR4-_VvYfv7ZgYm15qVTzLS6XIh5D_YMOFcQiTw1tjspFQEkGqrrDWS7vCpjFf6qeY7PYxa3lMo-VLqlDu1GyH10UiPnxz"></script>
+
+<!-- Le conteneur pour le widget Lucy -->
+<div id="lucy-widget-container"></div>
+
+<!-- Inclusion du script qui définit LucyWidget -->
+<script src="lucy-widget.js"></script>
+
+<!-- Script pour initialiser le widget Lucy -->
+<script>
+    console.log("Initialisation du widget Lucy...");
+
+    // Appel de la méthode init avec les options
+    LucyWidget.init({
+        container: '#lucy-widget-container',  // Utilise le bon ID ici
+        university: 'University of Pennsylvania',
+        theme: 'light',
+        language: 'fr'
+    });
+
+    console.log("Appel de LucyWidget.init terminé.");
+</script>
 
   </body>
   
