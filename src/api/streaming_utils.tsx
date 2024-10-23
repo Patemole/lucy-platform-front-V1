@@ -61,6 +61,12 @@ export async function* handleStream<T extends NonEmptyObject>(
 
     while (true) {
         const { done, value } = await reader?.read() || {};
+
+        // Ajout du log pour voir les valeurs de done et value
+        console.log("Valeur de done:", done);
+        console.log("Valeur de value (chunk brut):", value ? new TextDecoder("utf-8").decode(value) : value);
+
+        
         if (done) {
             console.log("Lecture du flux terminée");
 
