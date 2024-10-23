@@ -52,7 +52,7 @@ const SecurityControlsPage: React.FC = () => {
       { title: 'Code of Conduct acknowledged by employees and enforced', description: 'The company requires employees to acknowledge a code of conduct at the time of hire. Employees who violate the code of conduct are subject to disciplinary actions in accordance with a disciplinary policy.' },
       { title: 'Confidentiality Agreement acknowledged by contractors', description: 'The company requires contractors to sign a confidentiality agreement at the time of engagement.' },
       { title: 'Confidentiality Agreement acknowledged by employees', description: 'The company requires employees to sign a confidentiality agreement during onboarding.' },
-      { title: 'Performance evaluations conducted', description: 'The company managers are required to complete performance evaluations for direct reports at least annually.' },
+      //{ title: 'Performance evaluations conducted', description: 'The company managers are required to complete performance evaluations for direct reports at least annually.' },
       { title: 'Password policy enforced', description: 'The company requires passwords for in-scope system components to be configured according to the company’s policy.' },
       { title: 'MDM system utilized', description: 'The company has a mobile device management (MDM) system in place to centrally manage mobile devices supporting the service.' },
       { title: 'Visitor procedures enforced', description: 'The company requires visitors to sign-in, wear a visitor badge, and be escorted by an authorized employee when accessing the data center or secure areas.' },
@@ -60,14 +60,14 @@ const SecurityControlsPage: React.FC = () => {
     ],
     'Product security': [
       { title: 'Data encryption utilized', description: 'The company’s datastores housing sensitive customer data are encrypted at rest.' },
-      { title: 'Control self-assessments conducted', description: 'The company performs control self-assessments at least annually to gain assurance that controls are in place and operating effectively.' },
-      { title: 'Penetration testing performed', description: 'The company’s penetration testing is performed at least annually. A remediation plan is developed and changes are implemented to remediate vulnerabilities in accordance with SLAs.' },
+      //{ title: 'Control self-assessments conducted', description: 'The company performs control self-assessments at least annually to gain assurance that controls are in place and operating effectively.' },
+      //{ title: 'Penetration testing performed', description: 'The company’s penetration testing is performed at least annually. A remediation plan is developed and changes are implemented to remediate vulnerabilities in accordance with SLAs.' },
       { title: 'Data transmission encrypted', description: 'The company uses secure data transmission protocols to encrypt confidential and sensitive data when transmitted over public networks.' },
       { title: 'Vulnerability and system monitoring procedures established', description: 'The company’s formal policies outline the requirements for the following functions related to IT / Engineering: vulnerability management and system monitoring.' }
     ],
     'Internal security procedures': [
       { title: 'Continuity and Disaster Recovery plans established', description: 'The company has Business Continuity and Disaster Recovery Plans in place that outline communication plans in order to maintain information security continuity in the event of the unavailability of key personnel.' },
-      { title: 'Continuity and disaster recovery plans tested', description: 'The company has a documented business continuity/disaster recovery (BC/DR) plan and tests it at least annually.' },
+      //{ title: 'Continuity and disaster recovery plans tested', description: 'The company has a documented business continuity/disaster recovery (BC/DR) plan and tests it at least annually.' },
       { title: 'Cybersecurity insurance maintained', description: 'The company maintains cybersecurity insurance to mitigate the financial impact of business disruptions.' },
       { title: 'Configuration management system established', description: 'The company has a configuration management procedure in place to ensure that system configurations are deployed consistently throughout the environment.' },
       { title: 'Change management procedures enforced', description: 'The company requires changes to software and infrastructure components of the service to be authorized, formally documented, tested, reviewed, and approved prior to being implemented in the production environment.' },
@@ -96,10 +96,11 @@ const SecurityControlsPage: React.FC = () => {
         <Typography 
           variant="body1" 
           sx={{ marginRight: '20px', cursor: 'pointer', color: 'gray', '&:hover': { color: 'purple' }}}
-          onClick={() => navigate('/')}  // Redirection vers la page Overview
+          onClick={() => navigate('/overview')}  // Redirection vers la page Overview
         >
           Overview
         </Typography>
+        {/*
         <Typography 
           variant="body1" 
           sx={{ marginRight: '20px', color: 'gray', cursor: 'pointer', '&:hover': { color: 'purple' }}}
@@ -107,6 +108,7 @@ const SecurityControlsPage: React.FC = () => {
         >
           Resources
         </Typography>
+        */}
         <Typography 
           variant="body1" 
           sx={{ fontWeight: 'bold', marginRight: '20px', cursor: 'pointer', color: 'black', borderBottom: '2px solid purple' }}
