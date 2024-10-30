@@ -401,7 +401,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       'Are there virtual tours available?',
       'How do I get involved in campus activities?',
     ],
-    'Admission Processes': [
+    'Admission': [
       'How do I apply for admission?',
       'What are the admission requirements?',
       'What is the deadline for applications?',
