@@ -19,6 +19,10 @@ const StudentProfilePage: React.FC = () => {
     // Utiliser l'opérateur de coalescence nulle (??) pour définir une valeur par défaut
     const name: string = state?.name ?? "Mathieu Perez";
 
+    const handleModifyDashboard = () => {
+        // Logique à exécuter pour la modification du tableau de bord
+    };
+
     return (
         <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f9f9f9' }}>
             {/* Sidebar */}
@@ -27,7 +31,7 @@ const StudentProfilePage: React.FC = () => {
             {/* Main content */}
             <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                 {/* Header */}
-                <HeaderDashboard />
+                <HeaderDashboard onModifyDashboard={handleModifyDashboard} />
 
                 {/* Page content */}
                 <div

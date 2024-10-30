@@ -120,6 +120,7 @@ export interface Message {
     TAK?: AnswerTAK[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
     COURSE?: AnswerCourse[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
     waitingMessages?: AnswerWaiting[]| null;
+    CHART?: AnswerCHART[] | null; // Ajout de AnswerChart pour gérer les graphiques
 };
 
 export interface BackendChatSession {
@@ -170,4 +171,13 @@ export interface PopupSpec {
     type: "success" | "error";
     message: string;
   }
+
+
+export interface AnswerCHART {
+  chartType: 'line' | 'bar' | 'pie'; // Types de graphiques supportés
+  chartTitle: string; // Titre du graphique
+  xAxisTitle: string; // Titre de l'axe X
+  yAxisTitle: string; // Titre de l'axe Y
+  data: { label: string; x: number; y: number }[]; // Données pour les axes X et Y
+    }
   

@@ -85,26 +85,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   // Définition des boutons avec des icônes plus modernes
   const buttons = [
     {
-      label: isSmallScreen ? 'Academic Info' : 'Academic Information',
-      value: isSmallScreen ? 'Academic Info' : 'Academic Information',
+      label: isSmallScreen ? 'Academic Adv' : 'Academic Advisor',
+      value: isSmallScreen ? 'Academic Adv' : 'Academic Advisor',
       icon: <FaGraduationCap style={{ color: '#3DD957' }} size={20} />,
       visible: true,
     },
     {
-      label: 'Events',
-      value: 'Events',
+      label: 'Enrollment',
+      value: 'Enrollment',
       icon: <FaRegCalendarAlt style={{ color: '#F97315' }} size={20} />,
       visible: true,
     },
     {
-      label: isSmallScreen ? 'Policies' : 'Processes & Policies',
-      value: isSmallScreen ? 'Policies' : 'Processes & Policies',
+      label: isSmallScreen ? 'Executive' : 'Executive',
+      value: isSmallScreen ? 'Executive' : 'Executive',
       icon: <FaBalanceScale style={{ color: '#1565D8' }} size={20} />,
       visible: true,
     },
     {
-      label: 'Facilities',
-      value: 'Facilities',
+      label: 'Mental Health',
+      value: 'Mental Health',
       icon: <FaBuilding style={{ color: '#7C3BEC' }} size={20} />,
       visible: !isSmallScreen, // Masqué sur les petits écrans
     },
@@ -120,15 +120,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const firstRowButtons = buttons.filter(
     (button) =>
       button.visible &&
-      (button.value === 'Academic Info' ||
-        button.value === 'Academic Information' ||
+      (button.value === 'Academic Adv' ||
+        button.value === 'Academic Advisor' ||
         button.value === 'Events')
   );
   const secondRowButtons = buttons.filter(
     (button) =>
       button.visible &&
-      (button.value === 'Policies' ||
-        button.value === 'Processes & Policies' ||
+      (button.value === 'Enrollment' ||
+        button.value === 'Enrollment' ||
         button.value === 'Financial Aid')
   );
 
@@ -162,7 +162,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
             wordBreak: 'break-word',
           }}
         >
-          {isSmallScreen ? 'Find informations for your students' : 'Find informations for your students'}
+          {isSmallScreen ? 'Ask analytics or find informations' : 'Ask analytics or find informations'}
         </Typography>
 
         {/* Champ de recherche */}

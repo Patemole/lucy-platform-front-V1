@@ -8,6 +8,8 @@ import { AnswerDocument } from '../interfaces/interfaces';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import logo_lucy_face from '../lucy_new_face_contour2.png';
 
+
+
 interface AIMessageProps {
   messageId: number | null;
   content: string;

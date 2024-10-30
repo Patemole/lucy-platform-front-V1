@@ -38,7 +38,7 @@ import logo_lucy_face from '../lucy_new_face_contour2.png';
 
 import '../index.css';
 import { AIMessage } from '../components/Messages';
-import { Message, Course, AnswerTAK, AnswerCourse, AnswerWaiting } from '../interfaces/interfaces_eleve';
+import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting } from '../interfaces/interfaces_eleve';
 import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
@@ -50,6 +50,7 @@ import PopupWrongAnswer from '../components/PopupWrongAnswer';
 import PopupFeedback from '../components/PopupFeedback';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
 import LandingPage from '../components/LandingPageAA'; // Import du composant LandingPage
+import SidebarDashboard from '../components/SidebarDashboard'; // Chemin d'import à ajuster selon votre structure de fichiers
 
 const drawerWidth = 240;
 const ALLOWED_COURSE_IDS = ['Connf4P2TpKXXGooaQD5', 'tyPR1RAulPfqLLfNgIqF', 'Q1SjXBe30FyX6GxvJVIG', 'moRgToBTOAJZdMQPs7Ci'];
@@ -381,6 +382,7 @@ const Dashboard_eleve_template: React.FC = () => {
     let answerImages: { image_id: string; image_url: string; image_description?: string }[] = [];
     let relatedQuestionsList: string[] = [];
     let answerTAK: AnswerTAK[] = [];
+    let answerCHART: AnswerCHART[] = [];
     let answerCourse: AnswerCourse[] = [];
     let answerWaiting: AnswerWaiting[] = [];
     let error: string | null = null;
@@ -400,7 +402,8 @@ const Dashboard_eleve_template: React.FC = () => {
 
       const lastMessageIndex = messageHistory.length - 1;
 
-      for await (const packetBunch of sendMessageSocraticLangGraph({
+      //for await (const packetBunch of sendMessageSocraticLangGraph({
+      for await (const packetBunch of sendMessageFakeDemo({
         message: inputValue,
         chatSessionId: chatSessionId,
         courseId: courseId,
@@ -419,18 +422,28 @@ const Dashboard_eleve_template: React.FC = () => {
               answer = packet.replace(/\|/g, '');
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
               answer = (packet as AnswerPiecePacket).answer_piece;
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_document')) {
               answerDocuments.push((packet as AnswerDocumentPacket).answer_document);
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'image_data')) {
               answerImages.push((packet as any).image_data);
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_TAK_data')) {
               answerTAK.push((packet as any).answer_TAK_data);
+
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_CHART_data')) {
+              answerCHART.push((packet as any).answer_CHART_data);
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_COURSE_data')) {
               answerCourse.push((packet as any).answer_COURSE_data);
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'related_questions')) {
               relatedQuestionsList = (packet as any).related_questions;
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
               answerWaiting = (packet as any).answer_waiting;
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
               error = (packet as StreamingError).error;
             }
@@ -440,12 +453,19 @@ const Dashboard_eleve_template: React.FC = () => {
             answerDocuments.push((packetBunch as AnswerDocumentPacket).answer_document);
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'image_data')) {
             answerImages.push((packetBunch as any).image_data);
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_TAK_data')) {
             answerTAK.push((packetBunch as any).answer_TAK_data);
+
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
+            answerCHART.push((packetBunch as any).answer_CHART_data);
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_COURSE_data')) {
             answerCourse.push((packetBunch as any).answer_COURSE_data);
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'related_questions')) {
             relatedQuestionsList = (packetBunch as any).related_questions;
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_waiting')) {
             answerWaiting = (packetBunch as any).answer_waiting;
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'error')) {
@@ -455,6 +475,7 @@ const Dashboard_eleve_template: React.FC = () => {
 
         const flattenedImages = answerImages.flat();
         const flattenedTAK = answerTAK.flat();
+        const flattenedCHART = answerCHART.flat();
         const flattenedCourse = answerCourse.flat();
         const flattenedwaitingdata = answerWaiting.flat();
 
@@ -475,6 +496,7 @@ const Dashboard_eleve_template: React.FC = () => {
             citedDocuments: answerDocuments,
             images: flattenedImages,
             TAK: flattenedTAK,
+            CHART: flattenedCHART,
             COURSE: flattenedCourse,
             waitingMessages: flattenedwaitingdata,
           };
@@ -740,9 +762,17 @@ const Dashboard_eleve_template: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <div className="flex h-screen" style={{ backgroundColor: theme.palette.background.default }}>
+        <SidebarDashboard /> {/* Intégrez Sidebar ici sans extra div pour éviter tout espace ajouté */}
+        {/*
+        {/* Sidebar gauche pour SidebarDashboard *
+        <div style={{ width: drawerWidth, backgroundColor: theme.palette.background.paper, margin:0, padding:0  }}>
+            <SidebarDashboard />
+        </div>
+        */}
+    
         <Drawer
           variant="persistent"
-          anchor="left"
+          anchor="right" //left previously
           open={drawerOpen}
           PaperProps={{
             style: {
@@ -763,39 +793,7 @@ const Dashboard_eleve_template: React.FC = () => {
             </IconButton>
           </Box>
           <div style={{ flexGrow: 1, overflowY: 'auto' }}>
-            <List style={{ padding: '0 15px' }}>
-              <ListItem
-                button
-                onClick={() => navigate(`/dashboard/student/${uid}`)}
-                sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
-              >
-                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                  <HomeIcon />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Home"
-                  primaryTypographyProps={{
-                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                  }}
-                />
-              </ListItem>
-
-              <ListItem
-                button
-                onClick={() => navigate('/about')}
-                sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
-              >
-                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                  <InfoIcon />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Give us feedback"
-                  primaryTypographyProps={{
-                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                  }}
-                />
-              </ListItem>
-              <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
+            <List style={{ padding: '0 10px' }}>
               {conversations.length > 0 ? (
                 conversations.map((conversation) => (
                   <ListItem
@@ -873,9 +871,14 @@ const Dashboard_eleve_template: React.FC = () => {
         </Drawer>
 
         <div
-          className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : ''} ${
-            iframeSrc ? 'mr-[33vw]' : ''
+          className={`flex flex-col flex-grow transition-all duration-300 
           }`}
+          style={{
+            flexGrow: 1,
+            width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%', // Ajustement de largeur
+            marginRight: drawerOpen ? `${drawerWidth}px` : '0px', // Création d'un effet de décalage
+          }}
+          
         >
           <div
             className="relative p-4 flex items-center justify-between border-b"
@@ -884,9 +887,6 @@ const Dashboard_eleve_template: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {!drawerOpen && (
                 <>
-                  <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
-                    <MenuIcon />
-                  </IconButton>
                   
                   {!isSmallScreen && (
                     <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
@@ -897,11 +897,13 @@ const Dashboard_eleve_template: React.FC = () => {
               )}
               
             </div>
+            {/*
             <img
                       src={theme.logo}
                       alt="University Logo"
                       style={{ height: '40px', marginRight: '10px' }}
             />
+            */}
 
             {/* Menu for course options */}
             <Menu
@@ -976,6 +978,12 @@ const Dashboard_eleve_template: React.FC = () => {
                     style={{ cursor: 'pointer', marginRight: '20px', marginLeft: '15px' }}
                     onClick={handleProfileMenuClick}
                   />
+                  {/* Bouton MenuIcon, affiché seulement si drawerOpen est false */}
+                  {!drawerOpen && (
+                    <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
+                    <MenuIcon />
+                    </IconButton>
+                   )}
                   <Menu
                     anchorEl={profileMenuAnchorEl}
                     open={Boolean(profileMenuAnchorEl)}
@@ -1089,6 +1097,7 @@ const Dashboard_eleve_template: React.FC = () => {
                           CourseData={message.COURSE}
                           waitingMessages={message.waitingMessages}
                           drawerOpen={drawerOpen}
+                          chartData={message.CHART}  // Ajoutez cette ligne pour passer les données du graphique
                           handleSendTAKMessage={handleSendTAKMessage}
                           handleSendCOURSEMessage={handleSendCOURSEMessage}
                         />
