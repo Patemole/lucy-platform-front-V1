@@ -289,7 +289,7 @@ const Metrics = () => {
               }}
             ></div>
             <Typography variant="h5" style={{ fontWeight: 'bold', fontSize: '1.5rem' }}>
-              35h
+              72h
             </Typography>
           </div>
           <div>
@@ -329,7 +329,7 @@ const Metrics = () => {
               }}
             ></div>
             <Typography variant="h5" style={{ fontWeight: 'bold', fontSize: '1.5rem' }}>
-              700
+              2,243
             </Typography>
           </div>
           <div>
@@ -340,7 +340,7 @@ const Metrics = () => {
               variant="caption"
               style={{ fontWeight: '300', fontSize: '0.75rem', color: '#0000ff', marginTop: '5px' }}
             >
-              +12% from yesterday
+              +12% from last week
             </Typography>
           </div>
         </div>
@@ -380,7 +380,7 @@ const Metrics = () => {
               variant="caption"
               style={{ fontWeight: '300', fontSize: '0.75rem', color: '#0000ff', marginTop: '5px' }}
             >
-              +12% from yesterday
+              +12% from last week
             </Typography>
           </div>
         </div>
@@ -409,7 +409,7 @@ const Metrics = () => {
               }}
             ></div>
             <Typography variant="h5" style={{ fontWeight: 'bold', fontSize: '1.5rem' }}>
-              186
+              574
             </Typography>
           </div>
           <div>
@@ -420,7 +420,7 @@ const Metrics = () => {
               variant="caption"
               style={{ fontWeight: '300', fontSize: '0.75rem', color: '#0000ff', marginTop: '5px' }}
             >
-              +1% from yesterday
+              +1% from last week
             </Typography>
           </div>
         </div>

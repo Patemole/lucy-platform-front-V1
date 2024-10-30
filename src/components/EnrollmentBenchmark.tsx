@@ -6,11 +6,11 @@ import { Typography, Box } from '@mui/material';
 const WidgetSixBenchmark: React.FC = () => {
   // Sample data for benchmark comparison
   const benchmarkData = [
-    { name: 'Private Universities', y: 75 },
+    { name: 'Ivy League', y: 75 },
     { name: 'Upenn', y: 70 },
-    { name: 'Ivy League', y: 65 },
-    { name: 'State Schools', y: 55 },
-    { name: 'Community Colleges', y: 40 },
+    { name: 'Private Universities', y: 65 },
+    { name: 'Top 20 National Universities', y: 55 },
+    { name: 'Philadelphia Area Universities', y: 40 },
    
     
   ];

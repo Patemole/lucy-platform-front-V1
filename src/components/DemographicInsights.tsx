@@ -12,9 +12,9 @@ HighchartsMap(Highcharts);
 const geographicData = [
   { code: 'USA', name: 'United States', value: 50 },
   { code: 'CAN', name: 'Canada', value: 20 },
-  { code: 'DEU', name: 'Germany', value: 15 },
+  { code: 'ESP', name: 'Spanish', value: 15 },
   { code: 'BRA', name: 'Brasil', value: 15 },
-  { code: 'RUS', name: 'Russia', value: 25 },
+  { code: 'CHN', name: 'China', value: 30 },
   { code: 'GBR', name: 'United Kingdom', value: 10 },
   { code: 'AUS', name: 'Australia', value: 5 },
   { code: 'ETH', name: 'Ethiopia', value: 5},
