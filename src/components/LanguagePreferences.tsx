@@ -11,11 +11,11 @@ if (typeof Highcharts === 'object') {
 
 // Data for preferred languages by number of interactions
 const languageData = [
-  { name: 'English', y: 50, z: 80 },
-  { name: 'Spanish', y: 20, z: 70 },
-  { name: 'French', y: 15, z: 60 },
-  { name: 'German', y: 18, z: 35 },
-  { name: 'Mandarin', y: 5, z: 25 },
+  { name: 'English', y: 800, z: 20 },
+  { name: 'Chinese', y: 240, z: 12 },
+  { name: 'Spanish', y: 160, z: 8 },
+  { name: 'French', y: 60, z: 3 },
+  { name: 'Other', y: 40, z: 2 },
 ];
 
 const WidgetFour: React.FC = () => {

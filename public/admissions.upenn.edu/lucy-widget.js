@@ -559,7 +559,7 @@ var LucyWidget = {
 
         // Create a button-like link (anchor element)
         var infoButton = document.createElement('a');
-        infoButton.href = 'https://votre-lien.com'; // Replace with actual URL
+        infoButton.href = 'http://localhost:3001'; // Replace with actual URL
         infoButton.innerHTML = 'Fullscreen'; // Display text
         infoButton.style.textDecoration = 'none'; // Remove underline
         infoButton.style.color = '#fff'; // Text color
@@ -587,7 +587,7 @@ var LucyWidget = {
         container.appendChild(chatArea);
 
         // Display the initial AI message
-        this.displayLucyMessage(chatArea, "Hi! I’m Lucy, your AI assistant. How can I help you today?", null);
+        this.displayLucyMessage(chatArea, "Hey! I’m Lucy, your AI Penn guide. How can I help?", null);
 
         // Create the input area (text field and send button)
         var inputArea = document.createElement('div');
