@@ -559,7 +559,7 @@ var LucyWidget = {
 
         // Create a button-like link (anchor element)
         var infoButton = document.createElement('a');
-        infoButton.href = 'http://localhost:3001'; // Replace with actual URL
+        infoButton.href = 'http://upenn.localhost:3001'; // Replace with actual URL
         infoButton.innerHTML = 'Fullscreen'; // Display text
         infoButton.style.textDecoration = 'none'; // Remove underline
         infoButton.style.color = '#fff'; // Text color
