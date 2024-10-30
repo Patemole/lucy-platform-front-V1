@@ -95,6 +95,7 @@ export interface Message {
     TAK?: AnswerTAK[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
     COURSE?: AnswerCourse[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
     waitingMessages?: AnswerWaiting[]| null;
+    CHART?: AnswerCHART[] | null; // Ajout de AnswerChart pour gérer les graphiques
   };
 
 
@@ -102,3 +103,49 @@ export interface Course {
     id: string;
     name: string;
   };
+
+
+  /*
+export interface AnswerCHART {
+  chartType: 'line' | 'bar' | 'pie'; // Types de graphiques supportés
+  chartTitle: string; // Titre du graphique
+  xAxisTitle: string; // Titre de l'axe X
+  yAxisTitle: string; // Titre de l'axe Y
+  data: { label: string; x: number; y: number }[]; // Données pour les axes X et Y
+  }
+  */
+
+/*
+  // Définition de ChartData si ce n'est pas déjà fait
+export interface ChartData {
+  chartType: 'line' | 'bar' | 'pie';
+  chartTitle: string;
+  xAxisTitle: string;
+  yAxisTitle: string;
+  data: { label: string; x: number; y: number }[];
+}
+*/
+
+
+export interface ChartData {
+  chartType: 'line' | 'bar' | 'pie' | 'column' | 'doughnut' | 'scatter' | 'pyramid' | 'gauge' | 'bubble' | 'treemap' | 'waterfall';
+  chartTitle: string;                 // Titre principal du graphique
+  xAxisTitle: string;                 // Titre de l'axe X
+  yAxisTitle: string;                 // Titre de l'axe Y
+  series: {
+    seriesName: string;               // Nom de la série (ex: "2023", "2022", "Graduate", etc.)
+    data: { label: string; x: number; y: number; z?: number }[]; // Points de données, avec `z` optionnel pour les bulles
+  }[];                                // Tableau de séries pour supporter des comparaisons
+}
+
+/*
+// Définition de AnswerCHART
+export interface AnswerCHART {
+  answer_chart: ChartData;
+}
+*/
+
+export interface AnswerCHART {
+  answer_chart?: ChartData;
+  answer_charts?: ChartData[];
+}

@@ -9,6 +9,7 @@ import Schedule_eleve_template from './routes/Schedule_eleve_template';
 import Dashboard_academic_advisor from './routes/Dashboard_academic_advisor';
 
 import FlagingDashboard from './routes/FlagingDashboard';
+import EnrollmentDashboard from './routes/EnrollmentDashboard';
 
 import Student_list_academic_advisor from './routes/Student_list_academic_advisor';
 import Dashboard_admin from './routes/Dashboard_admin';
@@ -23,6 +24,7 @@ import SignUp from './routes/signUp';
 import TrustPage from './routes/trust';
 import TrustControlPage from './routes/trust_controls';
 import SignUp_academic_advisor from './routes/signUp_academic_advisor';
+import SignUp_enrollment from './routes/signUp_Enrollment'
 import DataSelectionPage from './routes/DataSelectionPage';
 import SignUp_admin from './routes/signUp_admin';
 import ChooseRole from './routes/chooseRole';
@@ -173,6 +175,7 @@ const App: React.FC = () => {
                             <Route path="/auth/sign-in" element={<SignIn handleToggleThemeMode={handleToggleThemeMode} />} />
                             <Route path="/auth/sign-up" element={<SignUp />} />
                             <Route path="/auth/sign-up/academic_advisor" element={<SignUp_academic_advisor />} />
+                            <Route path="/auth/sign-up/enrollment" element={<SignUp_enrollment />} />
                             <Route path="/overview" element={<TrustPage />} />
                             <Route path="/controls" element={<TrustControlPage />} />
 
@@ -182,7 +185,10 @@ const App: React.FC = () => {
                                 <Route path="/onboarding/learningStyleSurvey" element={<LearningStyleSurvey />} />
                                 <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
                                 <Route path="/dashboard/admin" element={<Dashboard_admin />} />
+
                                 <Route path="/dashboard/academic-advisor/:uid" element={<FlagingDashboard />} />
+                                <Route path="/dashboard/enrollment/:uid" element={<EnrollmentDashboard />} />
+
                                 <Route path="/dashboard/academic-advisor/all_profile/:uid" element={<AllStudentTable />} />
                                 <Route path="/dashboard/academic-advisor/student_profile/:uid" element={<StudentProfilePage />} />
                                 <Route path="/dataselection/academic-advisor/:uid" element={<DataSelectionPage />} />

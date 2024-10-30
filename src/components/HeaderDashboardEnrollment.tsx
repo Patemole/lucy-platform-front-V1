@@ -33,8 +33,8 @@ const Header: React.FC<HeaderDashboardProps> = ({ onModifyDashboard }) => {
                 <button 
                     onClick={onModifyDashboard}
                     style={{
-                        backgroundColor: '#DFF2BF',
-                        color: '#4F8A10',
+                        backgroundColor: 'rgba(0, 123, 255, 0.15)', // Pastel transparent blue
+                        color: '#004080', // Darker blue for contrast
                         border: 'none',
                         borderRadius: '8px',
                         padding: '5px 15px',
@@ -47,7 +47,8 @@ const Header: React.FC<HeaderDashboardProps> = ({ onModifyDashboard }) => {
                     Modify Dashboard
                 </button>
 
-                {/* Bouton pour changer les variables de score */}
+
+                {/* Bouton pour changer les variables de score *
                 <button 
                     onClick={() => navigate('/change-score')}
                     style={{
@@ -65,7 +66,7 @@ const Header: React.FC<HeaderDashboardProps> = ({ onModifyDashboard }) => {
                     Change Score Variables
                 </button>
 
-                {/* Bouton Beta */}
+                {/* Bouton Beta *
                 <button 
                     style={{
                         backgroundColor: '#FEEAEA',

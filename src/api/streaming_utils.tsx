@@ -46,6 +46,9 @@ export async function* handleStream<T extends NonEmptyObject>(
     let isInTak = false;
     let takBuffer = "";
 
+    let isInChart = false;
+    let chartBuffer = "";
+
     let isInCourse = false;
     let courseBuffer = "";
 
@@ -66,7 +69,7 @@ export async function* handleStream<T extends NonEmptyObject>(
         console.log("Valeur de done:", done);
         console.log("Valeur de value (chunk brut):", value ? new TextDecoder("utf-8").decode(value) : value);
 
-        
+
         if (done) {
             console.log("Lecture du flux terminée");
 
@@ -108,6 +111,19 @@ export async function* handleStream<T extends NonEmptyObject>(
                 }
                 takBuffer = "";
                 isInTak = false;
+            }
+
+            if (isInChart && chartBuffer) {
+                try {
+                    console.log("Tentative de parsing du chart JSON final:", chartBuffer);
+                    const chartJson = JSON.parse(chartBuffer); // Convertir le tak final en JSON
+                    console.log("chart JSON émise à la fin du flux:", chartJson);
+                    yield chartJson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du tak JSON à la fin du flux:", err);
+                }
+                chartBuffer = "";
+                isInChart = false;
             }
 
 
@@ -196,6 +212,29 @@ export async function* handleStream<T extends NonEmptyObject>(
                     takBuffer = "";
                 } catch (err) {
                     console.error("Erreur lors du parsing de tak JSON:", err);
+                }
+            }
+            continue;
+        }
+
+
+        // Detection and processing of <ANSWER_CHART> and <ANSWER_CHART_END>
+        if (decodedValue.includes("<ANSWER_CHART>")) {
+            console.log("Détection de <ANSWER_CHART> dans le chunk:", decodedValue);
+            isInChart = true;
+            chartBuffer = decodedValue.split("<ANSWER_CHART>")[1].split("<ANSWER_CHART_END>")[0]; // Extract content between tags
+            console.log("Début d'accumulation de chart JSON, buffer actuel:", chartBuffer);
+
+            if (decodedValue.includes("<ANSWER_CHART_END>")) {
+                try {
+                    console.log("Détection de <ANSWER_CHART_END> dans le même chunk.");
+                    const chartJson = JSON.parse(chartBuffer);
+                    console.log("tak JSON reçue et convertie:", chartJson);
+                    yield chartJson;
+                    isInChart = false;
+                    chartBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de chart JSON:", err);
                 }
             }
             continue;

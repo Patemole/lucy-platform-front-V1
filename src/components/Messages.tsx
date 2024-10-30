@@ -1,3 +1,5 @@
+// src/components/AIMessage.tsx
+
 import React, { useState, useEffect } from "react";
 import {
   FiCheck,
@@ -10,6 +12,7 @@ import { AiOutlineStop } from "react-icons/ai";
 import ReactMarkdown from "react-markdown";
 import { Button, TextField } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
+import { useNavigate } from 'react-router-dom';
 import {
   AnswerCourse,
   AnswerDocument,
@@ -26,6 +29,12 @@ import certifiate_icon from "../certifiate.png";
 import remarkGfm from "remark-gfm";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
+import HighchartsMore from 'highcharts/highcharts-more';
+import TrackPopup from '../components/TrackPopup';
+
+HighchartsMore(Highcharts);
 
 export const Hoverable: React.FC<{
   children: JSX.Element;
@@ -43,6 +52,35 @@ export const Hoverable: React.FC<{
     </div>
   );
 };
+
+
+interface ChartData {
+  chartType:
+    | "line"
+    | "bar"
+    | "pie"
+    | "column"
+    | "doughnut"
+    | "scatter"
+    | "pyramid"
+    | "gauge"
+    | "bubble"
+    | "treemap"
+    | "waterfall";
+  chartTitle: string; // Titre principal du graphique
+  xAxisTitle: string; // Titre de l'axe X
+  yAxisTitle: string; // Titre de l'axe Y
+  series: {
+    seriesName: string; // Nom de la série
+    data: { label: string; x: number; y: number; z?: number }[]; // Points de données
+  }[]; // Tableau de séries pour supporter des comparaisons
+}
+
+interface AnswerCHART {
+  answer_chart?: ChartData;
+  answer_charts?: ChartData[];
+}
+  
 
 interface AIMessageProps {
   messageId: number | null;
@@ -67,6 +105,7 @@ interface AIMessageProps {
   handleSendTAKMessage: (TAK_message: string) => void;
   handleSendCOURSEMessage: (COURSE_message: string) => void;
   drawerOpen: boolean;
+  chartData?: AnswerCHART[] | null; // Modifié pour correspondre à la structure des données
 }
 
 export const AIMessage: React.FC<AIMessageProps> = ({
@@ -92,12 +131,16 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   handleSendTAKMessage,
   handleSendCOURSEMessage,
   drawerOpen,
+  chartData, // Ajusté pour être de type AnswerCHART[] | null
 }) => {
   // États pour la gestion des interactions utilisateur
   const [copyClicked, setCopyClicked] = useState(false);
   const [feedbackClicked, setFeedbackClicked] = useState(false);
   const [thumbsUpClicked, setThumbsUpClicked] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isTrackPopupOpen, setIsTrackPopupOpen] = useState(false);
+  //const [selectedCharts, setSelectedCharts] = useState<number[]>([]);
+  const [selectedCharts, setSelectedCharts] = useState<string[]>([]); // Changed from number[] to string[]
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
   const [otherInput, setOtherInput] = useState<string>("");
 
@@ -111,6 +154,10 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
   // Ajustement de la taille de la police en fonction de la taille de l'écran
   const messageFontSize = isSmallScreen ? "text-base" : "text-lg";
+
+
+  const navigate = useNavigate(); // Initialise le hook navigate
+
 
   // Initialisation des messages avec le contenu initial
   useEffect(() => {
@@ -188,7 +235,76 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const handleWrongAnswer = () => {
     setFeedbackClicked(true);
     handleWrongAnswerClick(content);
-    setTimeout(() => setFeedbackClicked(false), 500); // Augmenté à 500ms pour une meilleure UX
+    setTimeout(() => setFeedbackClicked(false), 500);
+  };
+
+  const handleTrackDataClick = () => {
+    console.log("Data has been tracked to the dashboard!");
+    setIsTrackPopupOpen(true);
+
+    // Here, you would implement the actual tracking functionality.
+  };
+
+  const handleChartSelection = (uniqueId: string) => { // Changed to accept string
+    setSelectedCharts((prevSelected) =>
+      prevSelected.includes(uniqueId)
+        ? prevSelected.filter((id) => id !== uniqueId)
+        : [...prevSelected, uniqueId]
+    );
+  };
+
+  const handleConfirmTrack = () => {
+    if (!chartData) {
+      console.error("No chart data available to track.");
+      return;
+    }
+  
+    // Sélectionner les graphiques basés sur les identifiants uniques
+    const chartsToTrack: AnswerCHART[] = selectedCharts.map((uniqueId) => {
+      const [chartIndexStr, subChartIndexStr] = uniqueId.split('-');
+      const chartIndex = parseInt(chartIndexStr, 10);
+      const subChartIndex = parseInt(subChartIndexStr, 10);
+  
+      const chart = chartData[chartIndex];
+      if (!chart) {
+        console.error(`No chart found at index ${chartIndex}`);
+        return undefined;
+      }
+  
+      if (chart.answer_chart && subChartIndex === 0) {
+        return { answer_chart: chart.answer_chart };
+      } else if (chart.answer_charts && chart.answer_charts[subChartIndex]) {
+        return { answer_chart: chart.answer_charts[subChartIndex] };
+      } else {
+        console.error(`No sub-chart found at index ${subChartIndex} for chartIndex ${chartIndex}`);
+        return undefined;
+      }
+    }).filter(Boolean) as AnswerCHART[]; // Retirer les éléments undefined
+  
+    if (chartsToTrack.length === 0) {
+      console.warn("No valid charts selected to track.");
+      return;
+    }
+  
+    console.log("Charts to track:", chartsToTrack); // Log des graphiques sélectionnés
+  
+    const userID = localStorage.getItem('userID');
+    if (userID) {
+      // Naviguer vers le Dashboard en passant les graphiques sélectionnés via location.state
+      navigate(`/dashboard/enrollment/${userID}`, { state: { trackedCharts: chartsToTrack } });
+      console.log(`Navigating to /dashboard/enrollment/${userID} with trackedCharts:`, chartsToTrack); // Log de la navigation
+    } else {
+      console.error("User ID is not available in localStorage.");
+    }
+  
+    // Fermer la popup et réinitialiser la sélection
+    setIsTrackPopupOpen(false);
+    setSelectedCharts([]);
+  };
+
+  const handleReportClick = () => {
+    console.log("Report is in building");
+    // Here, you would implement the actual tracking functionality.
   };
 
   // Fonction pour gérer les clics sur le pouce en l'air
@@ -234,6 +350,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   // Désactiver le bouton "Envoyer" si aucune réponse n'est sélectionnée ou si l'input "Autre" est vide
   const isSendDisabled =
     selectedAnswers.length === 0 && otherInput.trim() === "";
+
+  // Logs pour vérifier le contenu de chartData
+  useEffect(() => {
+    console.log("ChartData reçu:", chartData);
+  }, [chartData]);
 
   return (
     <div className="py-5 px-5 flex -mr-6 w-full relative">
@@ -318,7 +439,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         PreTag="div"
                         {...props}
                       >
-                        {children}
+                        {String(children).replace(/\n$/, '')}
                       </SyntaxHighlighter>
                     ) : (
                       <code className={className} {...props}>
@@ -628,6 +749,1672 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
           {/* Gestion des documents cités */}
           {citedDocuments && citedDocuments.length > 0 && (
+            <div className={`mt-2 ${!isSmallScreen ? "ml-8" : ""}`}>
+              <b className="text-sm" style={{ color: theme.palette.text.primary }}>
+                Sources:
+              </b>
+              <div className="flex flex-wrap gap-2">
+                {citedDocuments.map((document, ind) => {
+                  const display = (
+                    <div
+                      className="max-w-350 text-ellipsis flex text-sm border border-border py-1 px-2 rounded flex"
+                      style={{ color: theme.palette.text.primary }}
+                    >
+                      <div className="mr-1 my-auto">
+                        <SourceIcon
+                          sourceType={document.source_type as ValidSources}
+                          iconSize={16}
+                        />
+                      </div>
+                      {document.document_name}
+                    </div>
+                  );
+                  if (document.link) {
+                    return (
+                      <a
+                        key={document.document_id}
+                        href={document.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cursor-pointer hover:bg-hover"
+                      >
+                        {display}
+                      </a>
+                    );
+                  } else {
+                    return (
+                      <div key={document.document_id} className="cursor-default">
+                        {display}
+                      </div>
+                    );
+                  }
+                })}
+              </div>
+            </div>
+          )}
+        
+
+        {chartData && chartData.length > 0 && (
+          <div className="flex justify-center mt-4">
+            <div className={`w-full max-w-5xl ${!isSmallScreen ? "ml-8" : ""}`}>
+              {chartData.map((item: AnswerCHART, index: number) => {
+                console.log(`Processing chartData at index ${index}:`, item);
+
+                let chartsArray: ChartData[] = [];
+
+                if (item.answer_charts && item.answer_charts.length > 0) {
+                  chartsArray = item.answer_charts;
+                } else if (item.answer_chart) {
+                  chartsArray = [item.answer_chart];
+                } else {
+                  console.error(`No charts found at index ${index}`);
+                  return null;
+                }
+
+                console.log(`Charts to process for index ${index}:`, chartsArray);
+
+                const chartCount = chartsArray.length;
+                const gridColumnsClass = `grid ${
+                  chartCount === 1
+                    ? "grid-cols-1"
+                    : chartCount === 2
+                    ? "grid-cols-2 gap-4"
+                    : "grid-cols-2 gap-4"
+                }`;
+
+                return (
+                  <div
+                    key={index}
+                    className="chart-group-container mt-4 bg-gray-100 p-4 rounded-md"
+                  >
+                    <div className={gridColumnsClass}>
+                      {chartsArray.map((data: ChartData, chartIndex: number) => {
+                        if (!data || !data.series || data.series.length === 0) {
+                          console.error(
+                            `Missing series data at index ${index}, chartIndex ${chartIndex}`
+                          );
+                          return null;
+                        }
+
+                        const xAxis: Highcharts.XAxisOptions = {
+                          title: { text: data.xAxisTitle },
+                          categories: data.series[0].data.map((d) => d.label),
+                        };
+
+                        const options: Highcharts.Options = {
+                          title: { text: data.chartTitle },
+                          xAxis,
+                          yAxis: {
+                            title: { text: data.yAxisTitle },
+                          },
+                        };
+
+                        switch (data.chartType) {
+                          case "bar":
+                          case "column":
+                            options.series = data.series.map((serie) => ({
+                              type: data.chartType as any,
+                              name: serie.seriesName,
+                              data: serie.data.map((d) => [d.x, d.y]),
+                            }));
+                            break;
+
+                          case "line":
+                            options.series = data.series.map((serie) => ({
+                              type: "line",
+                              name: serie.seriesName,
+                              data: serie.data.map((d) => [d.x, d.y]),
+                            }));
+                            break;
+
+                          case "pie":
+                          case "doughnut":
+                            options.series = data.series.map((serie) => ({
+                              type: "pie",
+                              name: serie.seriesName,
+                              data: serie.data.map((d) => ({
+                                name: d.label,
+                                y: d.y,
+                              })),
+                            }));
+                            delete options.xAxis;
+                            break;
+
+                          case "scatter":
+                            options.series = data.series.map((serie) => ({
+                              type: "scatter",
+                              name: serie.seriesName,
+                              data: serie.data.map((d) => [d.x, d.y]),
+                            }));
+                            break;
+
+                          case "pyramid":
+                            options.chart = { type: "pyramid" };
+                            options.series = data.series.map((serie) => ({
+                              type: "pyramid",
+                              name: serie.seriesName,
+                              data: serie.data.map((d) => [d.label, d.y]),
+                            }));
+                            delete options.xAxis;
+                            break;
+
+                          case "gauge":
+                            options.chart = { type: "gauge" };
+                            options.series = data.series.map((serie) => ({
+                              type: "gauge",
+                              name: serie.seriesName,
+                              data: [serie.data[0].y],
+                            }));
+                            delete options.xAxis;
+                            break;
+
+                          case "bubble":
+                            options.series = data.series.map((serie) => ({
+                              type: "bubble",
+                              name: serie.seriesName,
+                              data: serie.data.map((d) => ({
+                                x: d.x,
+                                y: d.y,
+                                z: d.z || 0,
+                              })),
+                            }));
+                            break;
+
+                          case "treemap":
+                            options.series = data.series.map((serie) => ({
+                              type: "treemap",
+                              name: serie.seriesName,
+                              data: serie.data.map((d) => ({
+                                name: d.label,
+                                value: d.y,
+                              })),
+                            }));
+                            delete options.xAxis;
+                            break;
+
+                          case "waterfall":
+                            options.series = data.series.map((serie) => ({
+                              type: "waterfall",
+                              name: serie.seriesName,
+                              data: serie.data.map((d) => ({
+                                name: d.label,
+                                y: d.y,
+                              })),
+                            }));
+                            break;
+
+                          default:
+                            console.error(`Unsupported chart type: ${data.chartType}`);
+                            return null;
+                        }
+
+                        console.log("Configured chart options:", options);
+
+                        return (
+                          <div
+                            key={chartIndex}
+                            className="chart-container w-full p-4 bg-white border border-gray-200 rounded-md shadow"
+                          >
+                            <HighchartsReact highcharts={Highcharts} options={options} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Buttons to Track Data and Create Report */}
+              <div className={`mt-4 flex gap-2 ${!isSmallScreen ? "ml-8" : ""}`}>
+                <button
+                  onClick={handleTrackDataClick}
+                  className="flex items-center max-w-350 text-ellipsis text-sm border border-border py-1 px-2 rounded cursor-pointer hover:bg-hover"
+                  style={{ color: theme.palette.text.primary }}
+                >
+                  Track this data on my dashboard
+                </button>
+                {/* Affiche la pop-up si isTrackPopupOpen est vrai */}
+                {isTrackPopupOpen && (
+                  <TrackPopup
+                    chartData={chartData}
+                    selectedCharts={selectedCharts}
+                    onClose={() => setIsTrackPopupOpen(false)}
+                    onConfirm={handleConfirmTrack}
+                    onChartSelection={handleChartSelection}
+                  />
+                )}
+                <button
+                  onClick={handleReportClick}
+                  className="flex items-center max-w-350 text-ellipsis text-sm border border-border py-1 px-2 rounded cursor-pointer hover:bg-hover"
+                  style={{ color: theme.palette.text.primary }}
+                >
+                  Create a complete report
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+          {/* Gestion des feedbacks */}
+          {handleFeedback && (
+            <div
+              className={`flex flex-row gap-x-0.5 ${
+                !isSmallScreen ? "ml-8" : ""
+              } mt-1`}
+            >
+              <Hoverable onClick={handleCopyClick}>
+                {copyClicked ? (
+                  <FiCheck style={{ color: theme.palette.text.primary }} />
+                ) : (
+                  <FiCopy style={{ color: theme.palette.text.primary }} />
+                )}
+              </Hoverable>
+              <Hoverable onClick={handleThumbUpClick} isActive={thumbsUpClicked}>
+                <FiThumbsUp
+                  className={thumbsUpClicked ? "text-green-400 fill-current" : ""}
+                  style={{ color: theme.palette.text.primary }}
+                />
+              </Hoverable>
+              <Hoverable onClick={handleWrongAnswer}>
+                <FiThumbsDown
+                  className={feedbackClicked ? "text-green-400 fill-current" : ""}
+                  style={{ color: theme.palette.text.primary }}
+                />
+              </Hoverable>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AIMessage;
+
+
+
+
+
+// src/components/AIMessage.tsx
+/*
+import React, { useState, useEffect } from "react";
+import {
+  FiCheck,
+  FiCopy,
+  FiThumbsDown,
+  FiThumbsUp,
+  FiSend,
+} from "react-icons/fi";
+import { AiOutlineStop } from "react-icons/ai";
+import ReactMarkdown from "react-markdown";
+import { Button, TextField } from "@mui/material";
+import Avatar from "@mui/material/Avatar";
+import {
+  AnswerCourse,
+  AnswerDocument,
+  AnswerImage,
+  AnswerTAK,
+  AnswerWaiting,
+} from "../interfaces/interfaces";
+import { FeedbackType } from "./types";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { SourceIcon } from "./icons/SourceIcon";
+import { ValidSources } from "./sources";
+import lucy_face_logo from "../lucy_new_face_contour2.png";
+import certifiate_icon from "../certifiate.png";
+import remarkGfm from "remark-gfm";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import ChartRenderer from "../components/ChartRenderer"; // Import du composant ChartRenderer
+
+export const Hoverable: React.FC<{
+  children: JSX.Element;
+  onClick?: () => void;
+  isActive?: boolean;
+}> = ({ children, onClick, isActive = false }) => {
+  return (
+    <div
+      className={`hover:bg-neutral-300 p-2 rounded h-fit cursor-pointer ${
+        isActive ? "bg-neutral-300" : ""
+      }`}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
+};
+
+
+interface AIMessageProps {
+  messageId: number | null;
+  content: string;
+  query?: string;
+  personaName?: string;
+  citedDocuments?: AnswerDocument[] | null;
+  isComplete?: boolean;
+  hasDocs?: boolean;
+  images?: AnswerImage[] | null;
+  takData?: AnswerTAK[] | null;
+  CourseData?: AnswerCourse[] | null;
+  waitingMessages?: AnswerWaiting[] | null;
+  handleFeedback?: (feedbackType: FeedbackType) => void;
+  isCurrentlyShowingRetrieved?: boolean;
+  handleShowRetrieved?: (messageNumber: number | null) => void;
+  handleSearchQueryEdit?: (query: string) => void;
+  handleForceSearch?: () => void;
+  retrievalDisabled?: boolean;
+  handleWrongAnswerClick: (aiMessageContent: string) => void;
+  handleSourceClick: (link: string) => void;
+  handleSendTAKMessage: (TAK_message: string) => void;
+  handleSendCOURSEMessage: (COURSE_message: string) => void;
+  drawerOpen: boolean;
+  chartData?: ChartData[] | null; // Nouvelle prop pour les graphiques
+}
+
+export const AIMessage: React.FC<AIMessageProps> = ({
+  messageId,
+  content,
+  query,
+  personaName,
+  citedDocuments,
+  isComplete,
+  hasDocs,
+  images,
+  takData,
+  CourseData,
+  waitingMessages,
+  handleFeedback,
+  isCurrentlyShowingRetrieved,
+  handleShowRetrieved,
+  handleSearchQueryEdit,
+  handleForceSearch,
+  retrievalDisabled,
+  handleWrongAnswerClick,
+  handleSourceClick,
+  handleSendTAKMessage,
+  handleSendCOURSEMessage,
+  drawerOpen,
+  chartData, // Déstructuration de chartData
+}) => {
+  // États pour la gestion des interactions utilisateur
+  const [copyClicked, setCopyClicked] = useState(false);
+  const [feedbackClicked, setFeedbackClicked] = useState(false);
+  const [thumbsUpClicked, setThumbsUpClicked] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+  const [otherInput, setOtherInput] = useState<string>("");
+
+  // États pour la gestion des messages
+  const [messages, setMessages] = useState<string[]>([]);
+  const [isWaiting, setIsWaiting] = useState<boolean>(false);
+
+  // Thème et responsive
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Ajustement de la taille de la police en fonction de la taille de l'écran
+  const messageFontSize = isSmallScreen ? "text-base" : "text-lg";
+
+  // Initialisation des messages avec le contenu initial
+  useEffect(() => {
+    if (content) {
+      setMessages([content]);
+    }
+  }, [content]);
+
+  // Gestion de l'affichage unique de la waitingSentence
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (waitingMessages && waitingMessages.length > 0) {
+      const waitingSentence = waitingMessages[0].Sentence1;
+
+      if (!isWaiting) {
+        setMessages((prevMessages) => {
+          // Insérer la waitingSentence après le premier message si elle n'est pas déjà présente
+          if (prevMessages.length >= 1 && prevMessages[1] !== waitingSentence) {
+            const newMessages = [...prevMessages];
+            newMessages.splice(1, 0, waitingSentence);
+            return newMessages;
+          }
+          return prevMessages;
+        });
+
+        setIsWaiting(true);
+
+        // Définir un timer pour supprimer la waitingSentence après 2 secondes
+        timer = setTimeout(() => {
+          setMessages((prevMessages) =>
+            prevMessages.filter((msg, idx) => !(idx === 1 && msg === waitingSentence))
+          );
+          setIsWaiting(false);
+        }, 2000); // 2000 millisecondes = 2 secondes
+      }
+    }
+
+    // Nettoyage du timer lorsque le composant est démonté ou que waitingMessages change
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [waitingMessages, isWaiting]);
+
+  // Gestion des mises à jour du contenu supplémentaire
+  useEffect(() => {
+    if (content) {
+      setMessages((prevMessages) => {
+        // Éviter de dupliquer le contenu initial
+        if (prevMessages[0] !== content) {
+          // Vérifier si une waitingSentence est présente
+          if (isWaiting && prevMessages.length > 1) {
+            // Ajouter le contenu après la waitingSentence
+            return [...prevMessages.slice(0, 2), content, ...prevMessages.slice(2)];
+          } else {
+            // Pas de waitingSentence, ajouter à la fin
+            return [...prevMessages, content];
+          }
+        }
+        return prevMessages;
+      });
+    }
+  }, [content, isWaiting]);
+
+  // Fonction pour copier le contenu dans le presse-papiers
+  const handleCopyClick = () => {
+    navigator.clipboard.writeText(content);
+    setCopyClicked(true);
+    setTimeout(() => setCopyClicked(false), 3000);
+  };
+
+  // Fonction pour gérer les retours d'information "mauvaise réponse"
+  const handleWrongAnswer = () => {
+    setFeedbackClicked(true);
+    handleWrongAnswerClick(content);
+    setTimeout(() => setFeedbackClicked(false), 500); // Augmenté à 500ms pour une meilleure UX
+  };
+
+  // Fonction pour gérer les clics sur le pouce en l'air
+  const handleThumbUpClick = () => {
+    setThumbsUpClicked(true);
+    handleFeedback && handleFeedback("like");
+    setTimeout(() => setThumbsUpClicked(false), 2000);
+  };
+
+  // Fonction pour gérer le clic sur une image
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+  };
+
+  // Fonction pour fermer l'image agrandie
+  const handleCloseImage = () => {
+    setSelectedImage(null);
+  };
+
+  // Fonction pour gérer les changements de checkbox
+  const handleCheckboxChange = (option: string) => {
+    setSelectedAnswers((prev) =>
+      prev.includes(option)
+        ? prev.filter((answer) => answer !== option)
+        : [...prev, option]
+    );
+  };
+
+  // Fonction pour gérer les changements de l'input "Autre"
+  const handleOtherInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setOtherInput(e.target.value);
+  };
+
+  // Fonction pour envoyer les réponses TAK
+  const handleSendClick = () => {
+    const message = otherInput ? otherInput : selectedAnswers.join(", ");
+    handleSendTAKMessage(message);
+    // Réinitialiser les réponses après envoi
+    setSelectedAnswers([]);
+    setOtherInput("");
+  };
+
+  // Désactiver le bouton "Envoyer" si aucune réponse n'est sélectionnée ou si l'input "Autre" est vide
+  const isSendDisabled =
+    selectedAnswers.length === 0 && otherInput.trim() === "";
+
+  return (
+    <div className="py-5 px-5 flex -mr-6 w-full relative">
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          onClick={handleCloseImage}
+        >
+          <img
+            src={selectedImage}
+            alt="Vue agrandie"
+            className="shadow-lg"
+            style={{
+              margin: "2rem",
+              maxWidth: "90%",
+              maxHeight: "80%",
+              objectFit: "contain",
+              borderRadius: "16px",
+            }}
+          />
+        </div>
+      )}
+      <div className="w-searchbar-xs 2xl:w-searchbar-sm 3xl:w-searchbar relative">
+        <div className="ml-0 w-full">
+          <div className="flex">
+            <div className="p-1 pr-0 bg-ai rounded-lg h-fit my-auto">
+              <div className="text-inverted">
+                <Avatar
+                  alt="Avatar Lucy"
+                  src={lucy_face_logo}
+                  sx={{ width: 25, height: 25 }}
+                />
+              </div>
+            </div>
+            <div
+              className="font-bold ml-2 my-auto flex items-center"
+              style={{ color: theme.palette.text.primary }}
+            >
+              {personaName || "Lucy"}
+              <img
+                src={certifiate_icon}
+                alt="Icône de certificat"
+                className="ml-1 w-4 h-4"
+              />
+            </div>
+          </div>
+
+          {/* Affichage des messages accumulés *
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-1 ${
+                !isSmallScreen ? "ml-8" : ""
+              } text-justify ${messageFontSize}`}
+              style={{ color: theme.palette.text.primary }}
+            >
+              <ReactMarkdown
+                className="prose max-w-full"
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({ node, ...props }) => <p {...props} />,
+                  strong: ({ node, ...props }) => <strong {...props} />,
+                  a: ({ node, ...props }) => (
+                    <a
+                      {...props}
+                      className="text-blue-500 hover:text-blue-700"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  ),
+                  ul: ({ node, ...props }) => (
+                    <ul className="list-disc ml-6" {...props} />
+                  ),
+                  ol: ({ node, ...props }) => (
+                    <ol className="list-decimal ml-6" {...props} />
+                  ),
+                  code: ({ node, className, children, ...props }) => {
+                    const match = /language-(\w+)/.exec(className || "");
+                    return match ? (
+                      <SyntaxHighlighter
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {children}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
+                  br: () => <br />,
+                }}
+              >
+                {msg.replace(/\n/g, "  \n")}
+              </ReactMarkdown>
+            </div>
+          ))}
+
+          {/* Gestion des images *
+          {images && images.length > 0 && (
+            <div
+              className={`mt-4 flex justify-start ${
+                !isSmallScreen ? "ml-8" : ""
+              } gap-4`}
+            >
+              {images.map((image, ind) => (
+                <div
+                  key={image.image_id}
+                  className="my-1 flex flex-col items-start cursor-pointer"
+                  onClick={() => handleImageClick(image.image_url)}
+                >
+                  <img
+                    src={image.image_url}
+                    alt={image.image_description || `Image ${ind + 1}`}
+                    className="w-120 h-64 object-cover rounded-lg shadow-lg"
+                  />
+                  {image.image_description && (
+                    <p
+                      className="text-sm mt-2 text-left"
+                      style={{ color: theme.palette.text.secondary }}
+                    >
+                      {image.image_description}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gestion des données TAK *
+          {takData && takData.length > 0 && (
+            <div
+              className={`mt-4 bg-gray-100 p-4 rounded-lg ${
+                !isSmallScreen ? "ml-8" : ""
+              }`}
+            >
+              {takData.map((tak, idx) => (
+                <div key={idx} className="mb-4">
+                  <p
+                    className="text-left"
+                    style={{ color: theme.palette.text.primary }}
+                  >
+                    {tak.question}
+                  </p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
+                    {tak.answer_options.map((option, i) => (
+                      <div key={i} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`option-${idx}-${i}`}
+                          value={option}
+                          checked={selectedAnswers.includes(option)}
+                          onChange={() => handleCheckboxChange(option)}
+                          className="mr-2"
+                        />
+                        <label
+                          htmlFor={`option-${idx}-${i}`}
+                          style={{ color: theme.palette.text.primary }}
+                        >
+                          {option}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  {tak.other_specification && (
+                    <div className="mt-4">
+                      <label
+                        htmlFor={`other-${idx}`}
+                        className="block mb-1"
+                        style={{ color: theme.palette.text.primary }}
+                      >
+                        If other, please specify
+                      </label>
+                      <TextField
+                        fullWidth
+                        id={`other-${idx}`}
+                        placeholder="e.g., None"
+                        value={otherInput}
+                        onChange={handleOtherInputChange}
+                        variant="outlined"
+                        style={{
+                          backgroundColor: "white",
+                          fontWeight: "500",
+                          fontSize: "0.875rem",
+                        }}
+                        InputProps={{
+                          style: {
+                            fontWeight: "500",
+                            fontSize: "0.875rem",
+                            color: "gray",
+                          },
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div className="flex justify-end mt-4 gap-x-4">
+                    <Button
+                      variant="outlined"
+                      onClick={() => console.log("Ignoré")}
+                      style={{
+                        color: theme.palette.text.primary,
+                      }}
+                    >
+                      <AiOutlineStop className="mr-2" />
+                      Ignore
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={handleSendClick}
+                      style={{
+                        color: theme.palette.text.primary,
+                        backgroundColor: theme.palette.button.background,
+                      }}
+                      disabled={isSendDisabled}
+                    >
+                      <FiSend className="mr-2" />
+                      Send
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gestion des données Course *
+          {CourseData && CourseData.length > 0 && (
+            <div style={{ width: "100%" }}>
+              {/* Marge entre le texte et le premier bloc de cours *
+              <div style={{ marginBottom: "24px" }}></div>
+
+              {CourseData.map((course, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: "#FCFCFC",
+                    border: "1px solid #BCBCBC",
+                    padding: "16px",
+                    marginBottom:
+                      idx === CourseData.length - 1 ? "16px" : "8px",
+                    borderRadius: "8px",
+                    width: "95%",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <div style={{ maxWidth: "100%" }}>
+                    {/* Titre *
+                    <p
+                      style={{
+                        color: "#011F5B",
+                        fontWeight: "bold",
+                        fontSize: "1.2rem",
+                        wordWrap: "break-word",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      {course.title}
+                    </p>
+
+                    {/* Semestre, Crédit, Prérequis *
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "12px",
+                        alignItems: "center",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      {/* Semestre *
+                      <span
+                        style={{
+                          backgroundColor: "#FFD9BF",
+                          color: "#F97315",
+                          padding: "4px 8px",
+                          borderRadius: "8px",
+                          fontSize: "0.875rem",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {course.Semester}
+                      </span>
+
+                      {/* Crédit *
+                      <span
+                        style={{
+                          backgroundColor: "#D6EAF7",
+                          color: "#011F5B",
+                          padding: "4px 8px",
+                          borderRadius: "8px",
+                          fontSize: "0.875rem",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {course.Credit}
+                      </span>
+
+                      {/* Prérequis *
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            backgroundColor: "#FEEAEA",
+                            color: "#EF4361",
+                            padding: "4px 8px",
+                            borderRadius: "8px",
+                            fontSize: "0.875rem",
+                            wordWrap: "break-word",
+                          }}
+                        >
+                          {course.Prerequisites}
+                        </span>
+
+                        {/* Icône de coche verte *
+                        <div
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            backgroundColor: "#25C35E",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <FiCheck style={{ color: "white" }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Description *
+                    <p
+                      style={{
+                        color: "#011F5B",
+                        fontSize: "1rem",
+                        wordWrap: "break-word",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      {course.Description}
+                    </p>
+
+                    {/* Liens Prospectus et Syllabus *
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: "12px",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <a
+                        href={course.Prospectus_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#1A71FF",
+                          fontSize: "1rem",
+                          textDecoration: "none",
+                          flexShrink: 1,
+                        }}
+                      >
+                        Prospectus
+                      </a>
+                      <a
+                        href={course.Syllabus_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#1A71FF",
+                          fontSize: "1rem",
+                          textDecoration: "none",
+                          flexShrink: 1,
+                        }}
+                      >
+                        Syllabus
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gestion des documents cités *
+          {citedDocuments && citedDocuments.length > 0 && (
+            <div
+              className={`mt-2 ${!isSmallScreen ? "ml-8" : ""}`}
+            >
+              <b className="text-sm" style={{ color: theme.palette.text.primary }}>
+                Sources:
+              </b>
+              <div className="flex flex-wrap gap-2">
+                {citedDocuments.map((document, ind) => {
+                  const display = (
+                    <div
+                      className="max-w-350 text-ellipsis flex text-sm border border-border py-1 px-2 rounded flex"
+                      style={{ color: theme.palette.text.primary }}
+                    >
+                      <div className="mr-1 my-auto">
+                        <SourceIcon
+                          sourceType={document.source_type as ValidSources}
+                          iconSize={16}
+                        />
+                      </div>
+                      {document.document_name}
+                    </div>
+                  );
+                  if (document.link) {
+                    return (
+                      <a
+                        key={document.document_id}
+                        href={document.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cursor-pointer hover:bg-hover"
+                      >
+                        {display}
+                      </a>
+                    );
+                  } else {
+                    return (
+                      <div key={document.document_id} className="cursor-default">
+                        {display}
+                      </div>
+                    );
+                  }
+                })}
+              </div>
+            </div>
+          )}
+           {/*       if (document.link) {
+                  return (
+                    <div
+                      key={document.document_id}
+                      className="cursor-pointer hover:bg-hover"
+                      onClick={() => handleSourceClick(document.link)}
+                    >
+                      {display}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={document.document_id} className="cursor-default">
+                      {display}
+                    </div>
+                  );
+                }
+              })}
+            </div>
+          </div>
+        )}
+          *
+
+          {/* Affichage des graphiques si chartData est un tableau de graphiques *
+          {message.CHART && message.CHART.length > 0 && (
+            <div className="mt-4 ml-8">
+              <ChartRenderer chartData={message.CHART} />
+            </div>
+          )}
+
+          {/* Gestion des feedbacks *
+          {handleFeedback && (
+            <div
+              className={`flex flex-row gap-x-0.5 ${
+                !isSmallScreen ? "ml-8" : ""
+              } mt-1`}
+            >
+              <Hoverable onClick={handleCopyClick}>
+                {copyClicked ? (
+                  <FiCheck style={{ color: theme.palette.text.primary }} />
+                ) : (
+                  <FiCopy style={{ color: theme.palette.text.primary }} />
+                )}
+              </Hoverable>
+              <Hoverable onClick={handleThumbUpClick} isActive={thumbsUpClicked}>
+                <FiThumbsUp
+                  className={thumbsUpClicked ? "text-green-400 fill-current" : ""}
+                  style={{ color: theme.palette.text.primary }}
+                />
+              </Hoverable>
+              <Hoverable onClick={handleWrongAnswer}>
+                <FiThumbsDown
+                  className={feedbackClicked ? "text-green-400 fill-current" : ""}
+                  style={{ color: theme.palette.text.primary }}
+                />
+              </Hoverable>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+*
+
+export default AIMessage;
+
+/* DERNIER CODE A JOUR QUI FONCTIONNE MAIS MANQUE LA PARTIE DES GRAPHES
+import React, { useState, useEffect } from "react";
+import {
+  FiCheck,
+  FiCopy,
+  FiThumbsDown,
+  FiThumbsUp,
+  FiSend,
+} from "react-icons/fi";
+import { AiOutlineStop } from "react-icons/ai";
+import ReactMarkdown from "react-markdown";
+import { Button, TextField } from "@mui/material";
+import Avatar from "@mui/material/Avatar";
+import {
+  AnswerCourse,
+  AnswerDocument,
+  AnswerImage,
+  AnswerTAK,
+  AnswerWaiting,
+} from "../interfaces/interfaces";
+import { FeedbackType } from "./types";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { SourceIcon } from "./icons/SourceIcon";
+import { ValidSources } from "./sources";
+import lucy_face_logo from "../lucy_new_face_contour2.png";
+import certifiate_icon from "../certifiate.png";
+import remarkGfm from "remark-gfm";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+
+export const Hoverable: React.FC<{
+  children: JSX.Element;
+  onClick?: () => void;
+  isActive?: boolean;
+}> = ({ children, onClick, isActive = false }) => {
+  return (
+    <div
+      className={`hover:bg-neutral-300 p-2 rounded h-fit cursor-pointer ${
+        isActive ? "bg-neutral-300" : ""
+      }`}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
+};
+
+interface AIMessageProps {
+  messageId: number | null;
+  content: string;
+  query?: string;
+  personaName?: string;
+  citedDocuments?: AnswerDocument[] | null;
+  isComplete?: boolean;
+  hasDocs?: boolean;
+  images?: AnswerImage[] | null;
+  takData?: AnswerTAK[] | null;
+  CourseData?: AnswerCourse[] | null;
+  waitingMessages?: AnswerWaiting[] | null;
+  handleFeedback?: (feedbackType: FeedbackType) => void;
+  isCurrentlyShowingRetrieved?: boolean;
+  handleShowRetrieved?: (messageNumber: number | null) => void;
+  handleSearchQueryEdit?: (query: string) => void;
+  handleForceSearch?: () => void;
+  retrievalDisabled?: boolean;
+  handleWrongAnswerClick: (aiMessageContent: string) => void;
+  handleSourceClick: (link: string) => void;
+  handleSendTAKMessage: (TAK_message: string) => void;
+  handleSendCOURSEMessage: (COURSE_message: string) => void;
+  drawerOpen: boolean;
+}
+
+export const AIMessage: React.FC<AIMessageProps> = ({
+  messageId,
+  content,
+  query,
+  personaName,
+  citedDocuments,
+  isComplete,
+  hasDocs,
+  images,
+  takData,
+  CourseData,
+  waitingMessages,
+  handleFeedback,
+  isCurrentlyShowingRetrieved,
+  handleShowRetrieved,
+  handleSearchQueryEdit,
+  handleForceSearch,
+  retrievalDisabled,
+  handleWrongAnswerClick,
+  handleSourceClick,
+  handleSendTAKMessage,
+  handleSendCOURSEMessage,
+  drawerOpen,
+}) => {
+  // États pour la gestion des interactions utilisateur
+  const [copyClicked, setCopyClicked] = useState(false);
+  const [feedbackClicked, setFeedbackClicked] = useState(false);
+  const [thumbsUpClicked, setThumbsUpClicked] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+  const [otherInput, setOtherInput] = useState<string>("");
+
+  // États pour la gestion des messages
+  const [messages, setMessages] = useState<string[]>([]);
+  const [isWaiting, setIsWaiting] = useState<boolean>(false);
+
+  // Thème et responsive
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Ajustement de la taille de la police en fonction de la taille de l'écran
+  const messageFontSize = isSmallScreen ? "text-base" : "text-lg";
+
+  // Initialisation des messages avec le contenu initial
+  useEffect(() => {
+    if (content) {
+      setMessages([content]);
+    }
+  }, [content]);
+
+  // Gestion de l'affichage unique de la waitingSentence
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (waitingMessages && waitingMessages.length > 0) {
+      const waitingSentence = waitingMessages[0].Sentence1;
+
+      if (!isWaiting) {
+        setMessages((prevMessages) => {
+          // Insérer la waitingSentence après le premier message si elle n'est pas déjà présente
+          if (prevMessages.length >= 1 && prevMessages[1] !== waitingSentence) {
+            const newMessages = [...prevMessages];
+            newMessages.splice(1, 0, waitingSentence);
+            return newMessages;
+          }
+          return prevMessages;
+        });
+
+        setIsWaiting(true);
+
+        // Définir un timer pour supprimer la waitingSentence après 2 secondes
+        timer = setTimeout(() => {
+          setMessages((prevMessages) =>
+            prevMessages.filter((msg, idx) => !(idx === 1 && msg === waitingSentence))
+          );
+          setIsWaiting(false);
+        }, 2000); // 2000 millisecondes = 2 secondes
+      }
+    }
+
+    // Nettoyage du timer lorsque le composant est démonté ou que waitingMessages change
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [waitingMessages, isWaiting]);
+
+  // Gestion des mises à jour du contenu supplémentaire
+  useEffect(() => {
+    if (content) {
+      setMessages((prevMessages) => {
+        // Éviter de dupliquer le contenu initial
+        if (prevMessages[0] !== content) {
+          // Vérifier si une waitingSentence est présente
+          if (isWaiting && prevMessages.length > 1) {
+            // Ajouter le contenu après la waitingSentence
+            return [...prevMessages.slice(0, 2), content, ...prevMessages.slice(2)];
+          } else {
+            // Pas de waitingSentence, ajouter à la fin
+            return [...prevMessages, content];
+          }
+        }
+        return prevMessages;
+      });
+    }
+  }, [content, isWaiting]);
+
+  // Fonction pour copier le contenu dans le presse-papiers
+  const handleCopyClick = () => {
+    navigator.clipboard.writeText(content);
+    setCopyClicked(true);
+    setTimeout(() => setCopyClicked(false), 3000);
+  };
+
+  // Fonction pour gérer les retours d'information "mauvaise réponse"
+  const handleWrongAnswer = () => {
+    setFeedbackClicked(true);
+    handleWrongAnswerClick(content);
+    setTimeout(() => setFeedbackClicked(false), 500); // Augmenté à 500ms pour une meilleure UX
+  };
+
+  // Fonction pour gérer les clics sur le pouce en l'air
+  const handleThumbUpClick = () => {
+    setThumbsUpClicked(true);
+    handleFeedback && handleFeedback("like");
+    setTimeout(() => setThumbsUpClicked(false), 2000);
+  };
+
+  // Fonction pour gérer le clic sur une image
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+  };
+
+  // Fonction pour fermer l'image agrandie
+  const handleCloseImage = () => {
+    setSelectedImage(null);
+  };
+
+  // Fonction pour gérer les changements de checkbox
+  const handleCheckboxChange = (option: string) => {
+    setSelectedAnswers((prev) =>
+      prev.includes(option)
+        ? prev.filter((answer) => answer !== option)
+        : [...prev, option]
+    );
+  };
+
+  // Fonction pour gérer les changements de l'input "Autre"
+  const handleOtherInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setOtherInput(e.target.value);
+  };
+
+  // Fonction pour envoyer les réponses TAK
+  const handleSendClick = () => {
+    const message = otherInput ? otherInput : selectedAnswers.join(", ");
+    handleSendTAKMessage(message);
+    // Réinitialiser les réponses après envoi
+    setSelectedAnswers([]);
+    setOtherInput("");
+  };
+
+  // Désactiver le bouton "Envoyer" si aucune réponse n'est sélectionnée ou si l'input "Autre" est vide
+  const isSendDisabled =
+    selectedAnswers.length === 0 && otherInput.trim() === "";
+
+  return (
+    <div className="py-5 px-5 flex -mr-6 w-full relative">
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          onClick={handleCloseImage}
+        >
+          <img
+            src={selectedImage}
+            alt="Vue agrandie"
+            className="shadow-lg"
+            style={{
+              margin: "2rem",
+              maxWidth: "90%",
+              maxHeight: "80%",
+              objectFit: "contain",
+              borderRadius: "16px",
+            }}
+          />
+        </div>
+      )}
+      <div className="w-searchbar-xs 2xl:w-searchbar-sm 3xl:w-searchbar relative">
+        <div className="ml-0 w-full">
+          <div className="flex">
+            <div className="p-1 pr-0 bg-ai rounded-lg h-fit my-auto">
+              <div className="text-inverted">
+                <Avatar
+                  alt="Avatar Lucy"
+                  src={lucy_face_logo}
+                  sx={{ width: 25, height: 25 }}
+                />
+              </div>
+            </div>
+            <div
+              className="font-bold ml-2 my-auto flex items-center"
+              style={{ color: theme.palette.text.primary }}
+            >
+              {personaName || "Lucy"}
+              <img
+                src={certifiate_icon}
+                alt="Icône de certificat"
+                className="ml-1 w-4 h-4"
+              />
+            </div>
+          </div>
+
+          {/* Affichage des messages accumulés *
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-1 ${
+                !isSmallScreen ? "ml-8" : ""
+              } text-justify ${messageFontSize}`}
+              style={{ color: theme.palette.text.primary }}
+            >
+              <ReactMarkdown
+                className="prose max-w-full"
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({ node, ...props }) => <p {...props} />,
+                  strong: ({ node, ...props }) => <strong {...props} />,
+                  a: ({ node, ...props }) => (
+                    <a
+                      {...props}
+                      className="text-blue-500 hover:text-blue-700"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  ),
+                  ul: ({ node, ...props }) => (
+                    <ul className="list-disc ml-6" {...props} />
+                  ),
+                  ol: ({ node, ...props }) => (
+                    <ol className="list-decimal ml-6" {...props} />
+                  ),
+                  code: ({ node, className, children, ...props }) => {
+                    const match = /language-(\w+)/.exec(className || "");
+                    return match ? (
+                      <SyntaxHighlighter
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {children}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
+                  br: () => <br />,
+                }}
+              >
+                {msg.replace(/\n/g, "  \n")}
+              </ReactMarkdown>
+            </div>
+          ))}
+
+          {/* Gestion des images *
+          {images && images.length > 0 && (
+            <div
+              className={`mt-4 flex justify-start ${
+                !isSmallScreen ? "ml-8" : ""
+              } gap-4`}
+            >
+              {images.map((image, ind) => (
+                <div
+                  key={image.image_id}
+                  className="my-1 flex flex-col items-start cursor-pointer"
+                  onClick={() => handleImageClick(image.image_url)}
+                >
+                  <img
+                    src={image.image_url}
+                    alt={image.image_description || `Image ${ind + 1}`}
+                    className="w-120 h-64 object-cover rounded-lg shadow-lg"
+                  />
+                  {image.image_description && (
+                    <p
+                      className="text-sm mt-2 text-left"
+                      style={{ color: theme.palette.text.secondary }}
+                    >
+                      {image.image_description}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gestion des données TAK *
+          {takData && takData.length > 0 && (
+            <div
+              className={`mt-4 bg-gray-100 p-4 rounded-lg ${
+                !isSmallScreen ? "ml-8" : ""
+              }`}
+            >
+              {takData.map((tak, idx) => (
+                <div key={idx} className="mb-4">
+                  <p
+                    className="text-left"
+                    style={{ color: theme.palette.text.primary }}
+                  >
+                    {tak.question}
+                  </p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
+                    {tak.answer_options.map((option, i) => (
+                      <div key={i} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`option-${idx}-${i}`}
+                          value={option}
+                          checked={selectedAnswers.includes(option)}
+                          onChange={() => handleCheckboxChange(option)}
+                          className="mr-2"
+                        />
+                        <label
+                          htmlFor={`option-${idx}-${i}`}
+                          style={{ color: theme.palette.text.primary }}
+                        >
+                          {option}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  {tak.other_specification && (
+                    <div className="mt-4">
+                      <label
+                        htmlFor={`other-${idx}`}
+                        className="block mb-1"
+                        style={{ color: theme.palette.text.primary }}
+                      >
+                        If other, please specify
+                      </label>
+                      <TextField
+                        fullWidth
+                        id={`other-${idx}`}
+                        placeholder="e.g., None"
+                        value={otherInput}
+                        onChange={handleOtherInputChange}
+                        variant="outlined"
+                        style={{
+                          backgroundColor: "white",
+                          fontWeight: "500",
+                          fontSize: "0.875rem",
+                        }}
+                        InputProps={{
+                          style: {
+                            fontWeight: "500",
+                            fontSize: "0.875rem",
+                            color: "gray",
+                          },
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div className="flex justify-end mt-4 gap-x-4">
+                    <Button
+                      variant="outlined"
+                      onClick={() => console.log("Ignoré")}
+                      style={{
+                        color: theme.palette.text.primary,
+                      }}
+                    >
+                      <AiOutlineStop className="mr-2" />
+                      Ignore
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={handleSendClick}
+                      style={{
+                        color: theme.palette.text.primary,
+                        backgroundColor: theme.palette.button.background,
+                      }}
+                      disabled={isSendDisabled}
+                    >
+                      <FiSend className="mr-2" />
+                      Send
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gestion des données Course *
+          {CourseData && CourseData.length > 0 && (
+            <div style={{ width: "100%" }}>
+              {/* Marge entre le texte et le premier bloc de cours *
+              <div style={{ marginBottom: "24px" }}></div>
+
+              {CourseData.map((course, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: "#FCFCFC",
+                    border: "1px solid #BCBCBC",
+                    padding: "16px",
+                    marginBottom:
+                      idx === CourseData.length - 1 ? "16px" : "8px",
+                    borderRadius: "8px",
+                    width: "95%",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <div style={{ maxWidth: "100%" }}>
+                    {/* Titre *
+                    <p
+                      style={{
+                        color: "#011F5B",
+                        fontWeight: "bold",
+                        fontSize: "1.2rem",
+                        wordWrap: "break-word",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      {course.title}
+                    </p>
+
+                    {/* Semestre, Crédit, Prérequis *
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "12px",
+                        alignItems: "center",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      {/* Semestre *
+                      <span
+                        style={{
+                          backgroundColor: "#FFD9BF",
+                          color: "#F97315",
+                          padding: "4px 8px",
+                          borderRadius: "8px",
+                          fontSize: "0.875rem",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {course.Semester}
+                      </span>
+
+                      {/* Crédit *
+                      <span
+                        style={{
+                          backgroundColor: "#D6EAF7",
+                          color: "#011F5B",
+                          padding: "4px 8px",
+                          borderRadius: "8px",
+                          fontSize: "0.875rem",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {course.Credit}
+                      </span>
+
+                      {/* Prérequis *
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            backgroundColor: "#FEEAEA",
+                            color: "#EF4361",
+                            padding: "4px 8px",
+                            borderRadius: "8px",
+                            fontSize: "0.875rem",
+                            wordWrap: "break-word",
+                          }}
+                        >
+                          {course.Prerequisites}
+                        </span>
+
+                        {/* Icône de coche verte *
+                        <div
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            backgroundColor: "#25C35E",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <FiCheck style={{ color: "white" }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Description *
+                    <p
+                      style={{
+                        color: "#011F5B",
+                        fontSize: "1rem",
+                        wordWrap: "break-word",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      {course.Description}
+                    </p>
+
+                    {/* Liens Prospectus et Syllabus *
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: "12px",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <a
+                        href={course.Prospectus_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#1A71FF",
+                          fontSize: "1rem",
+                          textDecoration: "none",
+                          flexShrink: 1,
+                        }}
+                      >
+                        Prospectus
+                      </a>
+                      <a
+                        href={course.Syllabus_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#1A71FF",
+                          fontSize: "1rem",
+                          textDecoration: "none",
+                          flexShrink: 1,
+                        }}
+                      >
+                        Syllabus
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gestion des documents cités *
+          {citedDocuments && citedDocuments.length > 0 && (
             <div
               className={`mt-2 ${!isSmallScreen ? "ml-8" : ""}`}
             >
@@ -694,9 +2481,9 @@ export const AIMessage: React.FC<AIMessageProps> = ({
               </div>
             </div>
           )}
-            */}
+            *
 
-          {/* Gestion des feedbacks */}
+          {/* Gestion des feedbacks *
           {handleFeedback && (
             <div
               className={`flex flex-row gap-x-0.5 ${
@@ -729,6 +2516,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
     </div>
   );
 };
+*/
 
 
 // ancienne version pas adequoite pour le telephone 3/10/2024

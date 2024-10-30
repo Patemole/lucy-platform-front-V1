@@ -495,6 +495,10 @@ const DataSelectionPage: React.FC = () => {
     });
   };
 
+  const handleModifyDashboard = () => {
+    // Logique ou fonction à exécuter lors de la modification du tableau de bord
+};
+
   // Render checkboxes for each data category
   const renderCheckboxes = (categoryName: string, variables: Variable[]) => {
     return (
@@ -529,7 +533,8 @@ const DataSelectionPage: React.FC = () => {
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <Header />
+      {/* Passez la fonction onModifyDashboard */}
+      <Header onModifyDashboard={handleModifyDashboard} />
 
       {/* Main Content */}
       <div className="data-selection-page" style={{ padding: '20px', overflowY: 'auto' }}>
