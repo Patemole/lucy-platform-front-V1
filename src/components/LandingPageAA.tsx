@@ -396,7 +396,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       'How do I enroll in a course?',
       'What are the enrollment deadlines?',
       'How does faculty feedback vary by department?',
-      'Where can I find information about course prerequisites?',
+      'Most common types of questions asked to Lucy across different categories?',
     ],
     'Executive': [
       "What is the company's strategic plan?",
