@@ -180,4 +180,10 @@ export interface AnswerCHART {
   yAxisTitle: string; // Titre de l'axe Y
   data: { label: string; x: number; y: number }[]; // Données pour les axes X et Y
     }
+
+    // Interface pour représenter une seule étape de raisonnement
+export interface ReasoningStep {
+  step: number;                  // Numéro de l'étape
+  description: string;           // Description de l'étape
+}
   

@@ -11,18 +11,18 @@ const processSingleChunk = <T extends NonEmptyObject>(
     // On concatène les morceaux précédents et le morceau actuel
     const completeChunk = (currPartialChunk || "") + chunk;
 
-    console.log("Traitement du chunk:", completeChunk);
+    //console.log("Traitement du chunk:", completeChunk);
 
     // On essaye de convertir le morceau complet en JSON
     try {
         const chunkJson = JSON.parse(completeChunk) as T;
 
         // Si on a réussi à convertir en JSON, on retourne le morceau complet et null pour le morceau précédent
-        console.log("Le chunk a été converti en JSON avec succès:", chunkJson);
+        //console.log("Le chunk a été converti en JSON avec succès:", chunkJson);
         return [chunkJson, null];
     } catch (err) {
         // Si la conversion échoue, on retourne null pour le JSON complet et conserve le morceau actuel en tant que partiel
-        console.log("Échec de la conversion du chunk en JSON, morceau partiel conservé:", completeChunk);
+        //console.log("Échec de la conversion du chunk en JSON, morceau partiel conservé:", completeChunk);
         return [null, completeChunk];
     }
 };
@@ -57,6 +57,11 @@ export async function* handleStream<T extends NonEmptyObject>(
 
     let isInWaiting = false;
     let waitingBuffer = "";
+
+    let isReasoningSteps = false;
+    let ReasoningStepsBuffer = "";
+
+    
 
     let previousPartialChunk: string | null = null;
 
@@ -165,6 +170,19 @@ export async function* handleStream<T extends NonEmptyObject>(
                 }
                 waitingBuffer = "";
                 isInWaiting = false;
+            }
+
+            if (isReasoningSteps && ReasoningStepsBuffer) {
+                try {
+                    console.log("Tentative de parsing du reasoning JSON final:", ReasoningStepsBuffer);
+                    const reasoningJson = JSON.parse(ReasoningStepsBuffer); // Convertir le waiting final en JSON
+                    console.log("reasoning JSON émis à la fin du flux:", reasoningJson);
+                    yield reasoningJson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du reasoning JSON à la fin du flux:", err);
+                }
+                ReasoningStepsBuffer = "";
+                isReasoningSteps = false;
             }
 
             break;
@@ -405,6 +423,28 @@ export async function* handleStream<T extends NonEmptyObject>(
                 waitingBuffer = "";
             } else {
                 waitingBuffer += decodedValue;
+            }
+            continue;
+        }
+
+         // Detection and processing of <REASONING_STEPS> and <REASONING_STEPS_END>
+         if (decodedValue.includes("<REASONING_STEPS>")) {
+            console.log("Détection de <REASONING_STEPS> dans le chunk:", decodedValue);
+            isReasoningSteps = true;
+            ReasoningStepsBuffer = decodedValue.split("<REASONING_STEPS>")[1].split("<REASONING_STEPS_END>")[0]; // Extract content between tags
+            console.log("Début d'accumulation de reasoning JSON, buffer actuel:", ReasoningStepsBuffer);
+
+            if (decodedValue.includes("<REASONING_STEPS_END>")) {
+                try {
+                    console.log("Détection de <REASONING_STEPS_END> dans le même chunk.");
+                    const reasoningJson = JSON.parse(ReasoningStepsBuffer);
+                    console.log("reasoning JSON reçue et convertie:", reasoningJson);
+                    yield reasoningJson;
+                    isReasoningSteps = false;
+                    ReasoningStepsBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de reasoning JSON:", err);
+                }
             }
             continue;
         }

@@ -403,8 +403,8 @@ const Dashboard_eleve_template: React.FC = () => {
 
       const lastMessageIndex = messageHistory.length - 1;
 
-      //for await (const packetBunch of sendMessageSocraticLangGraph({
-      for await (const packetBunch of sendMessageFakeDemo({
+      for await (const packetBunch of sendMessageSocraticLangGraph({
+      //for await (const packetBunch of sendMessageFakeDemo({
         message: inputValue,
         chatSessionId: chatSessionId,
         courseId: courseId,
