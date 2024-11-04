@@ -85,25 +85,25 @@ export default DocumentBlock;
 import React, { useState } from 'react';
 import { Box, Typography, List, ListItem, ListItemIcon } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-// import DocumentDownloadModal from './PopupTrustDownloadRessource'; // Import du nouveau composant
+ import DocumentDownloadModal from './PopupTrustDownloadRessource'; // Import du nouveau composant
 
 interface DocumentBlockProps {
   documents: string[];
 }
 
 const DocumentBlock: React.FC<DocumentBlockProps> = ({ documents }) => {
-  // const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
-  // const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  // const handleOpenModal = (document: string) => {
-  //   setSelectedDocument(document);
-  //   setModalOpen(true);
-  // };
+  const handleOpenModal = (document: string) => {
+     setSelectedDocument(document);
+     setModalOpen(true);
+   };
 
-  // const handleCloseModal = () => {
-  //   setModalOpen(false);
-  //   setSelectedDocument(null);
-  // };
+   const handleCloseModal = () => {
+     setModalOpen(false);
+     setSelectedDocument(null);
+   };
 
   const handleDownload = (documentName: string) => {
     // Appel au backend pour télécharger le document à partir du bucket S3
@@ -127,7 +127,7 @@ const DocumentBlock: React.FC<DocumentBlockProps> = ({ documents }) => {
                 cursor: 'pointer', // Ajout du curseur sur tout l'élément
                 '&:hover': { backgroundColor: '#f5f5f5' },
               }}
-              // onClick={() => handleOpenModal(document)} // Ouvre la popup au clic (commentée)
+               onClick={() => handleOpenModal(document)} // Ouvre la popup au clic (commentée)
             >
               <Typography
                 variant="body1"
@@ -147,7 +147,6 @@ const DocumentBlock: React.FC<DocumentBlockProps> = ({ documents }) => {
       </Box>
 
       {/* Modal pour demander le téléchargement */}
-      {/* 
       {selectedDocument && (
         <DocumentDownloadModal
           open={modalOpen}
@@ -155,7 +154,6 @@ const DocumentBlock: React.FC<DocumentBlockProps> = ({ documents }) => {
           documentName={selectedDocument}
         />
       )}
-      */}
     </Box>
   );
 };

@@ -25,6 +25,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { SourceIcon } from "./icons/SourceIcon";
 import { ValidSources } from "./sources";
 import lucy_face_logo from "../lucy_new_face_contour2.png";
+import lucy_face_logotest from "../testlucy3.png";
 import certifiate_icon from "../certifiate.png";
 import remarkGfm from "remark-gfm";
 import { useTheme } from "@mui/material/styles";
@@ -382,10 +383,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
           <div className="flex">
             <div className="p-1 pr-0 bg-ai rounded-lg h-fit my-auto">
               <div className="text-inverted">
+                
                 <Avatar
                   alt="Avatar Lucy"
-                  src={lucy_face_logo}
-                  sx={{ width: 25, height: 25 }}
+                  src={lucy_face_logotest}
+                  sx={{ width: 28, height: 28 }}
                 />
               </div>
             </div>
@@ -393,7 +395,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
               className="font-bold ml-2 my-auto flex items-center"
               style={{ color: theme.palette.text.primary }}
             >
-              {personaName || "Lucy"}
+              {personaName || "lucy"}
               <img
                 src={certifiate_icon}
                 alt="Icône de certificat"
