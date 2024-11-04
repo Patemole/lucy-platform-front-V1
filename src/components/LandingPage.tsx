@@ -346,6 +346,7 @@ export default LandingPage;
 */
 
 
+// components/LandingPage.tsx
 
 import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
 import {
@@ -360,6 +361,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import SendIcon from '@mui/icons-material/Send';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import {
   FaGraduationCap,
   FaRegCalendarAlt,
@@ -379,39 +381,41 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const [isTyping, setIsTyping] = useState(true);
   const [placeholderText, setPlaceholderText] = useState('');
   const [activeButton, setActiveButton] = useState<string | null>(null);
-  const [isHoveringQuestions, setIsHoveringQuestions] = useState(false); // New state to track hovering over the questions container
+  const [isHoveringQuestions, setIsHoveringQuestions] = useState(false); // Suivi du survol des questions
+  const [isHoveredInput, setIsHoveredInput] = useState(false);
+  const [isHoveredButtons, setIsHoveredButtons] = useState(false);
+  const [showCursor, setShowCursor] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Initial text to type
+  // Texte initial à taper
   const initialText = 'Ask Lucy...';
 
-  // Questions mapped to each button
-  // Questions mapped to each button
+  // Questions mappées à chaque bouton
   const questionsMap: { [key: string]: string[] } = {
-    'Academic Info': [
+    'Academic Advisor': [
       'How can I improve my study habits?',
       'What courses should I take next semester?',
       'How do I prepare for graduate school applications?',
       'Can you help me plan my academic schedule?',
     ],
-    'Events & Tours': [
-      'What events are happening this semester?',
-      'How can I sign up for campus tours?',
-      'Are there virtual tours available?',
-      'How do I get involved in campus activities?',
+    Enrollment: [
+      'How do I enroll in a course?',
+      'What are the enrollment deadlines?',
+      'How does faculty feedback vary by department?',
+      'Most common types of questions asked to Lucy across different categories?',
     ],
-    'Admission': [
-      'How do I apply for admission?',
-      'What are the admission requirements?',
-      'What is the deadline for applications?',
-      'How do I check my application status?',
+    Executive: [
+      "What is the company's strategic plan?",
+      'How can we improve team performance?',
+      'What are our main objectives this quarter?',
+      'How do we address the recent market changes?',
     ],
-    'Facilities': [
-      'What are the library hours?',
-      'How do I reserve study rooms?',
-      'Where can I find sports facilities?',
-      'What dining options are available on campus?',
+    'Mental Health': [
+      'What resources are available for stress management?',
+      'How can I improve my work-life balance?',
+      'Who can I talk to about anxiety?',
+      'Are there counseling services available?',
     ],
     'Financial Aid': [
       'How do I apply for scholarships?',
@@ -421,7 +425,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     ],
   };
 
-  // Function to send the message
+  // Fonction pour envoyer le message
   const handleSend = () => {
     if (inputValue.trim() !== '') {
       onSend(inputValue.trim());
@@ -431,7 +435,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     }
   };
 
-  // Handle Enter key press
+  // Gestion de la touche Entrée
   const handleKeyPress = (event: KeyboardEvent) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       handleSend();
@@ -439,18 +443,33 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     }
   };
 
-  // When hovering over a button
+  //gestion du faux curseur
+  useEffect(() => {
+    const cursorInterval = setInterval(() => {
+      setShowCursor((prevShowCursor) => !prevShowCursor);
+    }, 500); // Ajustez la vitesse de clignotement ici (500ms)
+  
+    return () => clearInterval(cursorInterval);
+  }, []);
+
+  // Lors du survol d'un bouton
   const handleButtonMouseEnter = (buttonText: string) => {
     setActiveButton(buttonText);
     setPlaceholderText('Ask Lucy...');
   };
 
-  // When hovering over a question
+  // Lors du clic sur un bouton (pour maintenir l'état actif)
+  const handleButtonClick = (buttonText: string) => {
+    setActiveButton(buttonText);
+    setPlaceholderText('Ask Lucy...');
+  };
+
+  // Lors du survol d'une question
   const handleQuestionHover = (question: string) => {
     setInputValue(question);
   };
 
-  // When clicking a question
+  // Lors du clic sur une question
   const handleQuestionClick = (question: string) => {
     onSend(question);
     setInputValue('');
@@ -458,23 +477,23 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     setPlaceholderText('Ask Lucy...');
   };
 
-  // Handle input change
+  // Gestion du changement dans le champ de saisie
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
 
-    // If the input is cleared, reset states
+    // Si le champ est vide, réinitialiser les états
     if (value.trim() === '') {
       setActiveButton(null);
       setPlaceholderText('Ask Lucy...');
     }
   };
 
-  // Typing animation for initial text
+  // Animation de saisie pour le texte initial
   useEffect(() => {
     let index = 0;
     let currentText = '';
-    const typingSpeed = 100; // Typing speed in milliseconds
+    const typingSpeed = 100; // Vitesse de saisie en millisecondes
 
     const typingInterval = setInterval(() => {
       if (index < initialText.length) {
@@ -484,8 +503,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       } else {
         clearInterval(typingInterval);
         setIsTyping(false);
-        setInputValue(''); // Clear input after typing
-        setPlaceholderText('Ask Lucy...'); // Set placeholder after typing
+        setInputValue(''); // Effacer l'input après la saisie
+        setPlaceholderText('Ask Lucy...'); // Définir le placeholder après la saisie
       }
     }, typingSpeed);
 
@@ -494,7 +513,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     };
   }, []);
 
-  // Reset state when input is empty
+  // Réinitialiser l'état lorsque le champ est vide
   useEffect(() => {
     if (!isTyping && inputValue.trim() === '') {
       setActiveButton(null);
@@ -502,14 +521,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     }
   }, [inputValue, isTyping]);
 
-  // Add event listener to detect clicks outside of buttons and questions
+  // Ajouter un écouteur d'événements pour détecter les clics en dehors des boutons et des questions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       if (
         containerRef.current &&
         !containerRef.current.contains(target) &&
-        !isHoveringQuestions // Only hide if not hovering over the questions container
+        !isHoveringQuestions // Ne masquer que si on ne survole pas les questions
       ) {
         setActiveButton(null);
         setInputValue('');
@@ -522,39 +541,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isHoveringQuestions]); // Rerun effect if `isHoveringQuestions` changes
+  }, [isHoveringQuestions]); // Relancer l'effet si `isHoveringQuestions` change
 
-  // Original buttons
+  // Définition des boutons
   const buttons = [
     {
-      label: 'Academic Info',
-      value: 'Academic Information',
+      label: 'Academic Advisor',
+      value: 'Academic Advisor',
       icon: <FaGraduationCap style={{ color: '#3DD957' }} size={20} />,
-      visible: true,
     },
     {
-      label: 'Events & Tours',
-      value: 'Events & Tours',
+      label: 'Enrollment',
+      value: 'Enrollment',
       icon: <FaRegCalendarAlt style={{ color: '#F97315' }} size={20} />,
-      visible: true,
     },
     {
-      label: 'Admission',
-      value: 'Admission Processes',
+      label: 'Executive',
+      value: 'Executive',
       icon: <FaBalanceScale style={{ color: '#1565D8' }} size={20} />,
-      visible: true,
     },
     {
-      label: 'Facilities',
-      value: 'Facilities',
+      label: 'Mental Health',
+      value: 'Mental Health',
       icon: <FaBuilding style={{ color: '#7C3BEC' }} size={20} />,
-      visible: true,
     },
     {
       label: 'Financial Aid',
       value: 'Financial Aid',
       icon: <FaHandHoldingUsd style={{ color: '#EF4361' }} size={20} />,
-      visible: true,
     },
   ];
 
@@ -564,12 +578,35 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       flexDirection="column"
       alignItems="center"
       height="100vh"
-      bgcolor={theme.palette.background.default}
+      bgcolor="#FFFFFF"
       p={isSmallScreen ? 2 : 4}
       position="relative"
       overflow="hidden"
     >
-      <Box width="100%" maxWidth="800px" mt={isSmallScreen ? 6 : 30}>
+      {/* Arrière-plan Spline */}
+      <iframe
+        src="https://my.spline.design/aiassistanthoverandclickinteraction-afdf94418f2cc3f7f17a6aad54796013/"
+        style={{
+          position: 'absolute', // En arrière-plan
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          //zIndex: -1, // Derrière tout
+          border: 'none',
+        }}
+        title="Spline Scene"
+        allowFullScreen
+      />
+
+      {/* Contenu principal de la landing page */}
+      <Box
+        width="100%"
+        maxWidth="800px"
+        mt={isSmallScreen ? 6 : 30}
+        position="relative"
+        zIndex={1}
+      >
         <Typography
           variant="h4"
           fontWeight="bold"
@@ -577,44 +614,57 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           gutterBottom
           sx={{ color: '#011F5B', maxWidth: '100%', wordBreak: 'break-word' }}
         >
-          How can I help you today?
+          What are you looking for?
         </Typography>
 
-        {/* Search field */}
-        <Box width="100%" maxWidth="800px" mt={2}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
-            placeholder={isTyping ? '' : placeholderText}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={handleSend}>
-                    <SendIcon style={{ color: '#011F5B', fontSize: '1.5rem' }} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-              style: {
-                backgroundColor: '#F4F4F4',
-                border: '1px solid #BCBCBC',
-                fontSize: '1rem',
-                padding: '4px 8px',
-                borderRadius: '35px',
-                color: isTyping ? '#A9A9A9' : '#000000',
+        <TextField
+          fullWidth
+          variant="outlined"
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyPress={handleKeyPress}
+          //placeholder={isTyping ? '' : placeholderText}
+          placeholder={isTyping ? '' : `${placeholderText}${showCursor ? '|' : ''}`} // Curseur clignotant
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={handleSend}>
+                  <ArrowForwardIcon style={{ color: '#011F5B', fontSize: '1.5rem' }} />
+                </IconButton>
+              </InputAdornment>
+            ),
+            style: {
+              backgroundColor: '#F4F4F4',
+              fontSize: '1rem',
+              padding: '2px 8px',
+              borderRadius: '20px',
+              color: isTyping ? '#6F6F6F' : '#000000',
+              border: 'none', // Retire le contour
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Ombre constante autour du champ
+            },
+          }}
+          inputProps={{
+            style: { color: isTyping ? '#6F6F6F' : '#000000' },
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                border: 'none',
               },
-            }}
-            inputProps={{
-              style: { color: isTyping ? '#A9A9A9' : '#000000' },
-            }}
-          />
-        </Box>
+              '&:hover fieldset': {
+                boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+              },
+            },
+            '& .MuiInputBase-input::placeholder': {
+              color: '#6F6F6F', // Placeholder plus sombre
+              opacity: 1,
+            },
+          }}
+        />
 
-        {/* Container for buttons and questions */}
+        {/* Conteneur pour les boutons et les questions */}
         <Box ref={containerRef}>
-          {/* Buttons */}
+          {/* Boutons */}
           <Box
             mt={3}
             display="flex"
@@ -628,15 +678,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
             {buttons.map((button, index) => (
               <Button
                 key={index}
-                variant="outlined"
+                variant="contained"
                 size="large"
                 onMouseEnter={() => handleButtonMouseEnter(button.label)}
+                onClick={() => handleButtonClick(button.label)}
                 sx={{
-                  borderColor: '#011F5B',
+                  //borderColor: '#011F5B',
                   color: '#011F5B',
                   borderRadius: '15px',
                   padding: '6px 16px',
                   textTransform: 'none',
+                  backgroundColor: '#F4F4F4',
                   fontSize: '1rem',
                   cursor: 'pointer',
                   display: 'flex',
@@ -656,7 +708,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
             ))}
           </Box>
 
-          {/* Questions suggestions */}
+          {/* Suggestions de questions */}
           {activeButton && questionsMap[activeButton] && (
             <Box
               mt={2}

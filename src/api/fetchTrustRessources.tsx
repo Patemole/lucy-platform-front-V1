@@ -113,6 +113,35 @@ export const requestDocumentDownload = async ({
             downloadUrl = "https://trust-ressources.s3.amazonaws.com/Data+Retention+Policy+-+My+Lucy+Corp+-+2024.pdf";
         }
 
+        if (documentName === "Incidence Response Plan") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Incidence+Response+Plan+-+My+Lucy+Corp+-+2024.pdf";
+        }
+
+        if (documentName === "Data Protection Policy") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Data+Protection+Policy+-+My+Lucy+Corp+-+2024.pdf";
+        }
+
+        if (documentName === "Business Continuity Plan") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Business+Continuity+Plan+-+My+Lucy+Corp+-+2024.pdf";
+        }
+
+        if (documentName === "Vendor Management Policy") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Vendor+Management+Policy+-+My+Lucy+Corp+-+2024.pdf";
+        }
+
+        if (documentName === "Access Control Policy") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Access+Control+Policy+-+My+Lucy+Corp+-+2024.pdf";
+        }
+
+        if (documentName === "Encryption Policy") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Encryption+Policy+-+My+Lucy+Corp+-+2024.pdf";
+        }
+
+        if (documentName === "Privacy Policy") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Privacy+Policies+-+My+Lucy+Corp+-+2024.pdf";
+        }
+
+
         // Ajouter d'autres conditions pour d'autres documents si nécessaire
         // if (documentName === "Autre Nom") {
         //     downloadUrl = "https://trust-ressources.s3.amazonaws.com/Autre+Nom.pdf";

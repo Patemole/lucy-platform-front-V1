@@ -225,9 +225,10 @@ const SecurityDashboard: React.FC = () => {
     'Data Retention Policy',
     'Business Continuity Plan',
     'Vendor Management Policy',
-    'Security Awareness and Training Policy',
+    //'Security Awareness and Training Policy',
     'Access Control Policy',
     'Encryption Policy',
+    'Privacy Policy',
   ];
 
   const controls = [
@@ -336,7 +337,7 @@ const SecurityDashboard: React.FC = () => {
           {/* Titre "Resources" et lien */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Resources</Typography>
-            <Link href="#" variant="body2" sx={{ color: '#7C3BEC' }}>View all 9 resources</Link>
+            <Link href="#" variant="body2" sx={{ color: '#7C3BEC' }}>View all 8 resources</Link>
           </Box>
           <DocumentBlock documents={documents} /> {/* Utilisation du composant DocumentBlock */}
         </Grid>
@@ -351,7 +352,7 @@ const SecurityDashboard: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <CircleIcon sx={{ fontSize: '8px', color: '#25C35E', marginRight: '8px' }} />
               <Typography variant="body2" sx={{ color: '#888', marginRight: '20px' }}>
-                Updated 3 days ago
+                Updated 8 days ago
               </Typography>
               <Link href="#" variant="body2" sx={{ color: '#7C3BEC' }}>View all 80 controls</Link>
             </Box>
