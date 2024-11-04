@@ -1,6 +1,6 @@
 // src/components/AIMessage.tsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   FiCheck,
   FiCopy,
@@ -19,6 +19,8 @@ import {
   AnswerImage,
   AnswerTAK,
   AnswerWaiting,
+  ReasoningStep,
+  
 } from "../interfaces/interfaces";
 import { FeedbackType } from "./types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -34,6 +36,7 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import HighchartsMore from 'highcharts/highcharts-more';
 import TrackPopup from '../components/TrackPopup';
+
 
 HighchartsMore(Highcharts);
 
@@ -95,6 +98,7 @@ interface AIMessageProps {
   takData?: AnswerTAK[] | null;
   CourseData?: AnswerCourse[] | null;
   waitingMessages?: AnswerWaiting[] | null;
+  ReasoningSteps?: ReasoningStep[] | null;
   handleFeedback?: (feedbackType: FeedbackType) => void;
   isCurrentlyShowingRetrieved?: boolean;
   handleShowRetrieved?: (messageNumber: number | null) => void;
@@ -121,6 +125,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   takData,
   CourseData,
   waitingMessages,
+  ReasoningSteps,
   handleFeedback,
   isCurrentlyShowingRetrieved,
   handleShowRetrieved,
@@ -1032,7 +1037,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   );
 };
 
-export default AIMessage;
+export default React.memo(AIMessage);
 
 
 

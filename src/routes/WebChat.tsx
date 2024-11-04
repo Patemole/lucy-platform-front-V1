@@ -41,7 +41,7 @@ import logo_lucy_face from '../lucy_new_face_contour2.png';
 
 import '../index.css';
 import { AIMessage } from '../components/Messages';
-import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting } from '../interfaces/interfaces_eleve';
+import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep } from '../interfaces/interfaces_eleve';
 import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
@@ -388,6 +388,7 @@ const Dashboard_eleve_template: React.FC = () => {
     let answerCHART: AnswerCHART[] = [];
     let answerCourse: AnswerCourse[] = [];
     let answerWaiting: AnswerWaiting[] = [];
+    let answerReasoning: ReasoningStep[] = [];
     let error: string | null = null;
 
     try {
@@ -429,6 +430,23 @@ const Dashboard_eleve_template: React.FC = () => {
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_document')) {
               answerDocuments.push((packet as AnswerDocumentPacket).answer_document);
 
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_document')) {
+                const newDocument = (packet as AnswerDocumentPacket).answer_document;
+                answerDocuments.push(newDocument);
+              
+                // Mettre à jour immédiatement citedDocuments dans le message actuel
+                setMessages((prevMessages) => {
+                  const updatedMessages = [...prevMessages];
+                  updatedMessages[lastMessageIndex] = {
+                    ...prevMessages[lastMessageIndex],
+                    citedDocuments: [
+                      ...(prevMessages[lastMessageIndex].citedDocuments || []),
+                      newDocument,
+                    ],
+                  };
+                  return updatedMessages;
+                });
+            
             } else if (Object.prototype.hasOwnProperty.call(packet, 'image_data')) {
               answerImages.push((packet as any).image_data);
 
@@ -447,18 +465,26 @@ const Dashboard_eleve_template: React.FC = () => {
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
               answerWaiting = (packet as any).answer_waiting;
 
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'structured_reasoning')) {
+              answerReasoning = (packet as any).structured_reasoning;
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
               error = (packet as StreamingError).error;
             }
           }
         } else if (typeof packetBunch === 'object' && packetBunch !== null) {
+
           if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_document')) {
             answerDocuments.push((packetBunch as AnswerDocumentPacket).answer_document);
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'image_data')) {
             answerImages.push((packetBunch as any).image_data);
 
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_TAK_data')) {
             answerTAK.push((packetBunch as any).answer_TAK_data);
+
+        } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'structured_reasoning')) {
+            answerReasoning.push((packetBunch as any).structured_reasoning);
 
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
             answerCHART.push((packetBunch as any).answer_CHART_data);
@@ -478,6 +504,7 @@ const Dashboard_eleve_template: React.FC = () => {
 
         const flattenedImages = answerImages.flat();
         const flattenedTAK = answerTAK.flat();
+        const flattenedReasoning = answerReasoning.flat();
         const flattenedCHART = answerCHART.flat();
         const flattenedCourse = answerCourse.flat();
         const flattenedwaitingdata = answerWaiting.flat();
@@ -502,6 +529,7 @@ const Dashboard_eleve_template: React.FC = () => {
             CHART: flattenedCHART,
             COURSE: flattenedCourse,
             waitingMessages: flattenedwaitingdata,
+            ReasoningSteps: flattenedReasoning,
           };
 
           return updatedMessages;
@@ -801,7 +829,7 @@ const Dashboard_eleve_template: React.FC = () => {
           </Box>
           <div style={{ flexGrow: 1, overflowY: 'auto' }}>
             <List style={{ padding: '0 15px' }}>
-              {/* Liste des éléments */}
+              {/* Liste des éléments *
               <ListItem
                 button
                 onClick={() => navigate(`/dashboard/student/${uid}`)}
@@ -817,6 +845,7 @@ const Dashboard_eleve_template: React.FC = () => {
                   }}
                 />
               </ListItem>
+              */}
   
               <ListItem
                 button
@@ -1053,6 +1082,7 @@ const Dashboard_eleve_template: React.FC = () => {
                             takData={message.TAK}
                             CourseData={message.COURSE}
                             waitingMessages={message.waitingMessages}
+                            ReasoningSteps={message.ReasoningSteps}
                             chartData={message.CHART}
                             drawerOpen={drawerOpen}
                             handleSendTAKMessage={handleSendTAKMessage}

@@ -96,6 +96,7 @@ export interface Message {
     COURSE?: AnswerCourse[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
     waitingMessages?: AnswerWaiting[]| null;
     CHART?: AnswerCHART[] | null; // Ajout de AnswerChart pour gérer les graphiques
+    ReasoningSteps?: ReasoningStep[] | null; // Utiliser un tableau de ReasoningStep pour plus de clarté
   };
 
 
@@ -148,4 +149,11 @@ export interface AnswerCHART {
 export interface AnswerCHART {
   answer_chart?: ChartData;
   answer_charts?: ChartData[];
+}
+
+
+// Interface pour représenter une seule étape de raisonnement
+export interface ReasoningStep {
+  step: number;                  // Numéro de l'étape
+  description: string;           // Description de l'étape
 }
