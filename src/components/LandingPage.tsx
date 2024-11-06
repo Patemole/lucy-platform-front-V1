@@ -392,6 +392,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const initialText = 'Ask Lucy...';
 
   // Questions mappées à chaque bouton
+  /*
   const questionsMap: { [key: string]: string[] } = {
     'Academic Advisor': [
       'How can I improve my study habits?',
@@ -424,6 +425,42 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       'What is the deadline to apply for financial aid?',
     ],
   };
+
+  */
+
+  const questionsMap: { [key: string]: string[] } = {
+    'Academic Info': [
+      'What are the most popular majors or programs?',
+      'Are there honors programs or special academic tracks?',
+      'Are there research opportunities available for undergraduate students?',
+      'What options are there for studying abroad in Europe?',
+    ],
+    'Event & Tours': [
+      'How can i book an in-person campus tour?',
+      'Are there virtual tours available?',
+      'What major campus events take place each semester?',
+      'What student clubs or organizations are active on campus, and how can I join?',
+    ],
+    'Admission': [
+      "What are the average GPA and test scores for admitted students?",
+      'Do international students need to take additional tests or submit specific documents?',
+      'Can I connect with current students or alumni to learn about their experiences?',
+      'How can I track the status of my application after submitting it?',
+    ],
+    'Facilities': [
+      'What types of housing options are available for  freshmen students?',
+      'Are the gym and fitness facilities open to all students?',
+      'What dining options are available for first year students?',
+      'Are laundry facilities available in the dorms?',
+    ],
+    'Financial Aid': [
+      'How do I apply for financial aid, and what types of aid are offered?',
+      'Will, applying to financial aid impact my application?',
+      'What is the work-study program, and how can I participate?',
+      'How does the financial aid package compare year-to-year?',
+    ],
+  };
+
 
   // Fonction pour envoyer le message
   const handleSend = () => {
@@ -544,6 +581,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   }, [isHoveringQuestions]); // Relancer l'effet si `isHoveringQuestions` change
 
   // Définition des boutons
+  /*
   const buttons = [
     {
       label: 'Academic Advisor',
@@ -571,6 +609,37 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       icon: <FaHandHoldingUsd style={{ color: '#EF4361' }} size={20} />,
     },
   ];
+  */
+
+  // Définition des boutons
+  const buttons = [
+    {
+      label: 'Academic Info',
+      value: 'Academic Info',
+      icon: <FaGraduationCap style={{ color: '#3DD957' }} size={20} />,
+    },
+    {
+      label: 'Event & Tours',
+      value: 'Event & Tours',
+      icon: <FaRegCalendarAlt style={{ color: '#F97315' }} size={20} />,
+    },
+    {
+      label: 'Admission',
+      value: 'Admission',
+      icon: <FaBalanceScale style={{ color: '#1565D8' }} size={20} />,
+    },
+    {
+      label: 'Facilities',
+      value: 'Facilities',
+      icon: <FaBuilding style={{ color: '#7C3BEC' }} size={20} />,
+    },
+    {
+      label: 'Financial Aid',
+      value: 'Financial Aid',
+      icon: <FaHandHoldingUsd style={{ color: '#EF4361' }} size={20} />,
+    },
+  ];
+
 
   return (
     <Box
@@ -628,7 +697,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={handleSend}>
+                <IconButton 
+                onClick={handleSend}>
+                  
                   <ArrowForwardIcon style={{ color: '#011F5B', fontSize: '1.5rem' }} />
                 </IconButton>
               </InputAdornment>

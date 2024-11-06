@@ -36,7 +36,8 @@ import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firest
 
 import logo from '../logo_lucy.png';
 import logo_greg from '../student_face.png';
-import logo_lucy_face from '../lucy_new_face_contour2.png';
+import logo_lucy_face from '../testlucy3.png';
+
 
 import '../index.css';
 import { AIMessage } from '../components/Messages';

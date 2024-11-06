@@ -1,5 +1,3 @@
-// src/components/AIMessage.tsx
-
 import React, { useState, useEffect, useMemo } from "react";
 import {
   FiCheck,
@@ -19,8 +17,7 @@ import {
   AnswerImage,
   AnswerTAK,
   AnswerWaiting,
-  ReasoningStep,
-  
+  ReasoningStep, // Import ReasoningStep
 } from "../interfaces/interfaces";
 import { FeedbackType } from "./types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -36,7 +33,7 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import HighchartsMore from 'highcharts/highcharts-more';
 import TrackPopup from '../components/TrackPopup';
-
+import { ThreeDots } from 'react-loader-spinner'; // Assuming you're using this library for the loading indicator
 
 HighchartsMore(Highcharts);
 
@@ -56,7 +53,6 @@ export const Hoverable: React.FC<{
     </div>
   );
 };
-
 
 interface ChartData {
   chartType:
@@ -84,7 +80,6 @@ interface AnswerCHART {
   answer_chart?: ChartData;
   answer_charts?: ChartData[];
 }
-  
 
 interface AIMessageProps {
   messageId: number | null;
@@ -98,7 +93,7 @@ interface AIMessageProps {
   takData?: AnswerTAK[] | null;
   CourseData?: AnswerCourse[] | null;
   waitingMessages?: AnswerWaiting[] | null;
-  ReasoningSteps?: ReasoningStep[] | null;
+  ReasoningSteps?: ReasoningStep[] | null; // Utiliser un tableau de ReasoningStep pour plus de clarté
   handleFeedback?: (feedbackType: FeedbackType) => void;
   isCurrentlyShowingRetrieved?: boolean;
   handleShowRetrieved?: (messageNumber: number | null) => void;
@@ -125,7 +120,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   takData,
   CourseData,
   waitingMessages,
-  ReasoningSteps,
+  ReasoningSteps, // Destructure ReasoningSteps from props
   handleFeedback,
   isCurrentlyShowingRetrieved,
   handleShowRetrieved,
@@ -154,6 +149,10 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [messages, setMessages] = useState<string[]>([]);
   const [isWaiting, setIsWaiting] = useState<boolean>(false);
 
+  // État pour les étapes de raisonnement
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0); // Nouvel état pour suivre l'étape actuelle
+  const [displayedReasoningSteps, setDisplayedReasoningSteps] = useState<ReasoningStep[]>([]); // Étapes à afficher
+
   // Thème et responsive
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -161,9 +160,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   // Ajustement de la taille de la police en fonction de la taille de l'écran
   const messageFontSize = isSmallScreen ? "text-base" : "text-lg";
 
-
   const navigate = useNavigate(); // Initialise le hook navigate
-
 
   // Initialisation des messages avec le contenu initial
   useEffect(() => {
@@ -171,6 +168,26 @@ export const AIMessage: React.FC<AIMessageProps> = ({
       setMessages([content]);
     }
   }, [content]);
+
+  // Gestion de l'affichage des étapes de raisonnement à intervalles réguliers
+  useEffect(() => {
+    console.log("Received ReasoningSteps:", ReasoningSteps);
+    if (ReasoningSteps && ReasoningSteps.length > 0) {
+      const interval = setInterval(() => {
+        setDisplayedReasoningSteps((prev) => {
+          if (prev.length < ReasoningSteps.length) {
+            console.log("Adding new reasoning step:", ReasoningSteps[prev.length]);
+            return [...prev, ReasoningSteps[prev.length]];
+          } else {
+            clearInterval(interval);
+            console.log("All reasoning steps displayed.");
+            return prev;
+          }
+        });
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [ReasoningSteps]);
 
   // Gestion de l'affichage unique de la waitingSentence
   useEffect(() => {
@@ -388,7 +405,6 @@ export const AIMessage: React.FC<AIMessageProps> = ({
           <div className="flex">
             <div className="p-1 pr-0 bg-ai rounded-lg h-fit my-auto">
               <div className="text-inverted">
-                
                 <Avatar
                   alt="Avatar Lucy"
                   src={lucy_face_logotest}
@@ -461,6 +477,25 @@ export const AIMessage: React.FC<AIMessageProps> = ({
               </ReactMarkdown>
             </div>
           ))}
+
+          {/* Affichage des étapes de raisonnement */}
+          {displayedReasoningSteps && displayedReasoningSteps.length > 0 && (
+            <div
+              className={`mt-4 ${
+                !isSmallScreen ? "ml-8" : ""
+              } text-justify ${messageFontSize}`}
+              style={{ color: theme.palette.text.primary }}
+            >
+              <h4 className="font-bold mb-2">Étapes de raisonnement :</h4>
+              <ol className="list-decimal ml-6">
+                {displayedReasoningSteps.map((step) => (
+                  <li key={step.step} className="mb-1">
+                    {step.description}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
 
           {/* Gestion des images */}
           {images && images.length > 0 && (

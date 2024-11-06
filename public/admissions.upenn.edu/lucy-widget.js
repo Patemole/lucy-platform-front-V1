@@ -1279,10 +1279,9 @@ window.addEventListener('DOMContentLoaded', function() {
 
 
 
-
 var LucyWidget = {
     init: function () {
-        // Création du conteneur principal
+        // Création du conteneur principal du widget
         var container = document.createElement('div');
         container.id = 'lucy-widget-container';
 
@@ -1292,7 +1291,6 @@ var LucyWidget = {
         container.style.left = '50%';
         container.style.transform = 'translateX(-50%)';
         container.style.width = '90%'; // Largeur du conteneur
-        // Initial max-width and animation are set via CSS
         container.style.zIndex = '1000';
         container.style.borderRadius = '25px';
         container.style.overflow = 'hidden';
@@ -1345,11 +1343,24 @@ var LucyWidget = {
             #lucy-widget-container.hovered .buttons-container {
                 display: flex;
             }
+            /* Style pour les boutons dans la modale */
+            #overlayModal button {
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 1rem;
+            }
         `;
         document.head.appendChild(style);
 
         // Initialisation de l'interface utilisateur
         this.createInterface(innerContainer, container);
+
+        // Création de la modale
+        this.createModal();
+
+        // Vérifie si la modale doit être ouverte lors du chargement
+        this.checkModalState();
     },
 
     createInterface: function (container, mainContainer) {
@@ -1440,7 +1451,7 @@ var LucyWidget = {
             },
             {
                 label: 'Admission',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width="20" height="20"><path fill="currentColor" d="M96 96H544V320H96V96zM0 96C0 60.7 28.7 32 64 32H576C611.3 32 640 60.7 640 96V320C640 355.3 611.3 384 576 384H64C28.7 384 0 355.3 0 320V96zM48 352C21.5 352 0 373.5 0 400C0 426.5 21.5 448 48 448H592C618.5 448 640 426.5 640 400C640 373.5 618.5 352 592 352H48z"></path></svg>',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" width="20" height="20"><path fill="currentColor" d="M572.6 292.3L318.3 43.3C309.9 35.2 299.1 32 288 32s-21.9 3.2-30.3 11.3L3.4 292.3c-7.8 7.4-8.3 20-1 28.3s20 8.3 28.3 1l22.3-21.2V480c0 17.7 14.3 32 32 32H200c8.8 0 16-7.2 16-16V368c0-8.8 7.2-16 16-16H344c8.8 0 16 7.2 16 16V496c0 8.8 7.2 16 16 16H490c17.7 0 32-14.3 32-32V299.4l22.3 21.2c7.4 7.8 20 8.3 28.3 1s8.3-20 1-28.3z"></path></svg>',
             },
             {
                 label: 'Facilities',
@@ -1590,13 +1601,103 @@ var LucyWidget = {
         });
     },
 
+    createModal: function () {
+        // Check if the modal already exists
+        if (document.getElementById('overlayModal')) {
+            return; // The modal is already in the DOM
+        }
+    
+        // Create the overlay modal
+        var overlayModal = document.createElement('div');
+        overlayModal.id = 'overlayModal';
+        overlayModal.style.display = 'none';
+        overlayModal.style.position = 'fixed';
+        overlayModal.style.top = '0';
+        overlayModal.style.left = '0';
+        overlayModal.style.width = '100%';
+        overlayModal.style.height = '100%';
+        overlayModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        overlayModal.style.zIndex = '1000';
+    
+        // Create the modal content
+        var modalContent = document.createElement('div');
+        modalContent.style.position = 'absolute';
+        modalContent.style.top = '50%';
+        modalContent.style.left = '50%';
+        modalContent.style.transform = 'translate(-50%, -50%)';
+        modalContent.style.width = '80%';
+        modalContent.style.height = '80%';
+        modalContent.style.backgroundColor = 'white';
+        modalContent.style.borderRadius = '8px';
+        modalContent.style.overflow = 'hidden';
+    
+        // Create the close button
+        var closeButton = document.createElement('button');
+        closeButton.id = 'closeModalButton';
+        closeButton.innerHTML = '&times;';
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '10px';
+        closeButton.style.right = '10px';
+        closeButton.style.zIndex = '10';
+        closeButton.style.background = 'none';
+        closeButton.style.border = 'none';
+        closeButton.style.cursor = 'pointer';
+        closeButton.style.fontSize = '1.2rem';
+        closeButton.style.color = 'red';
+    
+        // Create the iframe for the /chat page
+        var modalIframe = document.createElement('iframe');
+        modalIframe.id = 'modalIframe';
+        modalIframe.src = '';
+        modalIframe.style.width = '100%';
+        modalIframe.style.height = '100%';
+        modalIframe.style.border = 'none';
+    
+        // Append the close button and iframe to the modal content
+        modalContent.appendChild(closeButton);
+        modalContent.appendChild(modalIframe);
+    
+        // Append the modal content to the overlay
+        overlayModal.appendChild(modalContent);
+    
+        // Append the overlay modal to the body
+        document.body.appendChild(overlayModal);
+    
+        // Fix the 'this' context by using a reference to the current object
+        var self = this;
+        closeButton.addEventListener('click', function () {
+            self.closeModal();
+        });
+    },
+
     handleSend: function (inputField) {
         var message = inputField.value.trim();
         if (message === '') return;
 
-        // Traitement de l'envoi du message
-        console.log('Message sent:', message);
+        // Stocker le message dans le localStorage
+        localStorage.setItem('tempMessage', message);
+
+        // Ouvrir la modale avec l'URL /chat
+        this.openModalWithURL('http://upenn.localhost:3001/chat');
+
+        // Réinitialiser le champ de saisie et l'état du widget
         inputField.value = '';
+        this.activeButton = null;
+        this.questionsContainer.style.display = 'none';
+        inputField.placeholder = 'What are you looking for?';
+    },
+
+    handleSendQuestion: function (question) {
+        if (!question) return;
+
+        // Stocker la question dans le localStorage
+        localStorage.setItem('tempMessage', question);
+
+        // Ouvrir la modale avec l'URL /chat
+        this.openModalWithURL('http://upenn.localhost:3001/chat');
+
+        // Réinitialiser le champ de saisie et l'état du widget
+        this.inputField.value = '';
         this.activeButton = null;
         this.questionsContainer.style.display = 'none';
         this.inputField.placeholder = 'What are you looking for?';
@@ -1648,21 +1749,64 @@ var LucyWidget = {
         }
     },
 
-    handleSendQuestion: function (question) {
-        // Traitement de l'envoi de la question
-        console.log('Question sent:', question);
-        this.inputField.value = '';
-        this.activeButton = null;
-        this.questionsContainer.style.display = 'none';
-        this.inputField.placeholder = 'What are you looking for?';
+    openModalWithURL: function (url) {
+        // Display the modal and load the URL in the iframe
+        var overlayModal = document.getElementById('overlayModal');
+        var modalIframe = document.getElementById('modalIframe');
+    
+        if (overlayModal && modalIframe) {
+            overlayModal.style.display = 'block';
+            modalIframe.src = url;
+    
+            // Save the modal state and URL in sessionStorage
+            sessionStorage.setItem('isModalOpen', 'true');
+            sessionStorage.setItem('modalURL', url);
+    
+            // Hide the middle widget
+            var mainContainer = document.getElementById('lucy-widget-container');
+            if (mainContainer) {
+                mainContainer.style.display = 'none';
+            }
+        }
     },
+
+    closeModal: function () {
+        var overlayModal = document.getElementById('overlayModal');
+        var modalIframe = document.getElementById('modalIframe');
+    
+        if (overlayModal && modalIframe) {
+            overlayModal.style.display = 'none';
+            modalIframe.src = '';
+    
+            // Remove the modal state from sessionStorage
+            sessionStorage.removeItem('isModalOpen');
+            sessionStorage.removeItem('modalURL');
+    
+            // Show the middle widget
+            var mainContainer = document.getElementById('lucy-widget-container');
+            if (mainContainer) {
+                mainContainer.style.display = 'block';
+            }
+        }
+    },
+
+    checkModalState: function () {
+        // Vérifie si la modale était ouverte et recharge l'URL si nécessaire
+        var isModalOpen = sessionStorage.getItem('isModalOpen');
+        var modalURL = sessionStorage.getItem('modalURL');
+
+        if (isModalOpen === 'true' && modalURL) {
+            this.openModalWithURL(modalURL);
+        }
+    }
 };
 
-// Initialisation du widget au chargement de la page
-window.addEventListener('DOMContentLoaded', function () {
+// Ajout de l'écouteur pour fermer la modale en cliquant sur le bouton "Close"
+// Note: La modale est créée dynamiquement, donc s'assurer que les éléments existent
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialisation du widget
     LucyWidget.init();
 });
-
 
 
 
