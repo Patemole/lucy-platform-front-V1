@@ -902,8 +902,8 @@ const Dashboard_eleve_template: React.FC = () => {
           }`}
         >
           <div
-            className="relative p-4 flex items-center justify-between border-b"
-            style={{ backgroundColor: theme.palette.background.default, borderColor: theme.palette.divider }}
+            className="relative p-4 flex items-center justify-between "
+            style={{ backgroundColor: '#F0F4FC', borderColor: theme.palette.divider }}
           >
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {!drawerOpen && (
