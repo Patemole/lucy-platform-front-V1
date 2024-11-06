@@ -907,6 +907,27 @@
 </div>
   </div>
 
+
+  <div id="overlayModal" style="display: none; position: fixed; top: 25%; right: 0; width: 30%; height: 82%; background-color: transparent; pointer-events: none; z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 60%; transform: translate(-50%, -50%); width: 80%; height: 80%; background-color: white; border-radius: 10px; overflow: hidden; pointer-events: all;">
+        <button id="closeModalButton" style="
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            z-index: 10; 
+            background: none; 
+            border: none; 
+            font-size: 1.5rem; 
+            color: red; 
+            cursor: pointer;
+        ">
+            &times;
+        </button>
+        <iframe id="modalIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+    </div>
+</div>
+
+
     
     <script type="application/json" data-drupal-selector="drupal-settings-json">{"path":{"baseUrl":"\/","pathPrefix":"","currentPath":"node\/118","currentPathIsAdmin":false,"isFront":true,"currentLanguage":"en"},"pluralDelimiter":"\u0003","suppressDeprecationErrors":true,"google_analytics":{"account":"G-Y7WHCGSZFX","trackOutbound":true,"trackMailto":true,"trackTel":true,"trackDownload":true,"trackDownloadExtensions":"7z|aac|arc|arj|asf|asx|avi|bin|csv|doc(x|m)?|dot(x|m)?|exe|flv|gif|gz|gzip|hqx|jar|jpe?g|js|mp(2|3|4|e?g)|mov(ie)?|msi|msp|pdf|phps|png|ppt(x|m)?|pot(x|m)?|pps(x|m)?|ppam|sld(x|m)?|thmx|qtm?|ra(m|r)?|sea|sit|tar|tgz|torrent|txt|wav|wma|wmv|wpd|xls(x|m|b)?|xlt(x|m)|xlam|xml|z|zip"},"ajaxTrustedUrl":{"\/search\/node":true,"\/search":true},"sitewideAlert":{"refreshInterval":15000,"automaticRefresh":true},"user":{"uid":0,"permissionsHash":"5c382acde4ef8dff50e14eea91465256eb00be3730610ee8a788c9f1c896aff7"}}</script>
 <script src="sites/default/files/js/js_Rfog39PEG27PJX6cF7gASsYIPFYh0T5b2Y8rCyxUdrQ.js%3Fscope=footer&amp;delta=0&amp;language=en&amp;theme=penn_admissions&amp;include=eJxlzlEKxCAMBNALtfVIJdasDcQoTqR4-_VvYfv7ZgYm15qVTzLS6XIh5D_YMOFcQiTw1tjspFQEkGqrrDWS7vCpjFf6qeY7PYxa3lMo-VLqlDu1GyH10UiPnxz"></script>
@@ -934,6 +955,8 @@
 
     console.log("Appel de LucyWidget.init terminé.");
 </script>
+
+
 
   </body>
   

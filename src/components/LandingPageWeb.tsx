@@ -76,7 +76,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   };
 
   // Fonction pour envoyer le message
-  const handleSend = () => {
+   // Function to send the message
+   const handleSend = () => {
     if (inputValue.trim() !== '') {
       onSend(inputValue.trim());
       setInputValue('');

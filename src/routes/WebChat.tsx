@@ -1,5 +1,5 @@
 import React, { useState, useEffect, KeyboardEvent, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams} from 'react-router-dom';
 import {
   ThemeProvider,
   TextField,
@@ -110,6 +110,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const chunkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const phraseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const wordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Ajoutez cette ligne pour utiliser useSearchParams
 
   const courseId = localStorage.getItem('course_id');
   const universityDomain = localStorage.getItem('university') || 'example.edu';
@@ -300,6 +301,23 @@ const Dashboard_eleve_template: React.FC = () => {
     loadMessagesFromLocalStorageChatId();
   }, []);
 
+  useEffect(() => {
+    // Vérifier si un message est stocké dans localStorage
+    const tempMessage = localStorage.getItem('tempMessage');
+    
+    if (tempMessage) {
+      // Envoyer le message automatiquement
+      console.log('Message question envoyé depuis le widget');
+      console.log(tempMessage);
+  
+      handleSendMessageSocraticLangGraph(tempMessage);
+  
+      // Supprimer le message de localStorage après l’envoi pour éviter un envoi multiple
+      localStorage.removeItem('tempMessage');
+    }
+  }, []);
+
+
   const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setProfileMenuAnchorEl(event.currentTarget);
   };
@@ -467,6 +485,22 @@ const Dashboard_eleve_template: React.FC = () => {
 
             } else if (Object.prototype.hasOwnProperty.call(packet, 'structured_reasoning')) {
               answerReasoning = (packet as any).structured_reasoning;
+
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'structured_reasoning')) {
+                const newReasoningStep = (packet as any).structured_reasoning;
+                
+                // Ajouter la nouvelle étape à ReasoningSteps immédiatement
+                setMessages((prevMessages) => {
+                  const updatedMessages = [...prevMessages];
+                  updatedMessages[lastMessageIndex] = {
+                    ...prevMessages[lastMessageIndex],
+                    ReasoningSteps: [
+                      ...(prevMessages[lastMessageIndex].ReasoningSteps || []),
+                      ...newReasoningStep, // Ajoutez la nouvelle étape reçue
+                    ],
+                  };
+                  return updatedMessages;
+                });
 
             } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
               error = (packet as StreamingError).error;
@@ -1053,42 +1087,26 @@ const Dashboard_eleve_template: React.FC = () => {
                   ) : (
                     <div key={message.id} className={`flex justify-start ${messageMarginX}`}>
                       <div className="max-w-3/4 w-full flex items-center">
-                        {message.content === '' ? (
-                          <div className="flex items-center">
-                            <Avatar
-                              alt="Lucy Avatar"
-                              src={logo_lucy_face}
-                              sx={{ width: 25, height: 25 }}
-                            />
-                            <div className="ml-2 flex flex-col">
-                              <Typography variant="body2" sx={{ color: theme.palette.primary.main, marginBottom: '8px' }}>
-                                {displayedText}
-                              </Typography>
-                              <ThreeDots height="30" width="50" color={theme.palette.primary.main} />
-                            </div>
-                          </div>
-                        ) : (
-                          <AIMessage
-                            messageId={message.id}
-                            content={message.content}
-                            personaName={message.personaName}
-                            citedDocuments={message.citedDocuments}
-                            isComplete={isComplete}
-                            hasDocs={!!message.citedDocuments?.length}
-                            handleFeedback={(feedbackType) => handleFeedbackClick(index)}
-                            handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
-                            handleSourceClick={handleSourceClick}
-                            images={message.images}
-                            takData={message.TAK}
-                            CourseData={message.COURSE}
-                            waitingMessages={message.waitingMessages}
-                            ReasoningSteps={message.ReasoningSteps}
-                            chartData={message.CHART}
-                            drawerOpen={drawerOpen}
-                            handleSendTAKMessage={handleSendTAKMessage}
-                            handleSendCOURSEMessage={handleSendCOURSEMessage}
-                          />
-                        )}
+                      <AIMessage
+                        messageId={message.id}
+                        content={message.content || displayedText}  // Utilisez displayedText si le content est vide
+                        personaName={message.personaName}
+                        citedDocuments={message.citedDocuments}
+                        isComplete={isComplete}
+                        hasDocs={!!message.citedDocuments?.length}
+                        handleFeedback={(feedbackType) => handleFeedbackClick(index)}
+                        handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
+                        handleSourceClick={handleSourceClick}
+                        images={message.images}
+                        takData={message.TAK}
+                        CourseData={message.COURSE}
+                        waitingMessages={message.waitingMessages}
+                        ReasoningSteps={message.ReasoningSteps}
+                        chartData={message.CHART}
+                        drawerOpen={drawerOpen}
+                        handleSendTAKMessage={handleSendTAKMessage}
+                        handleSendCOURSEMessage={handleSendCOURSEMessage}
+                        />
                       </div>
                     </div>
                   )
