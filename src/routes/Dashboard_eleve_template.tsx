@@ -19,10 +19,12 @@ import {
   Divider,
   IconButton,
   Snackbar,
+  InputAdornment,
   Alert,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import MenuIcon from '@mui/icons-material/Menu';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MapsUgcRoundedIcon from '@mui/icons-material/MapsUgcRounded';
 import HomeIcon from '@mui/icons-material/Home';
 import InfoIcon from '@mui/icons-material/Info';
@@ -912,7 +914,8 @@ const Dashboard_eleve_template: React.FC = () => {
                     <MenuIcon />
                   </IconButton>
                   
-                  {!isSmallScreen && (
+
+                  {!isSmallScreen && !isLandingPageVisible && (
                     <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
                       <MapsUgcRoundedIcon />
                     </IconButton>
@@ -1030,7 +1033,7 @@ const Dashboard_eleve_template: React.FC = () => {
           ) : (
             <div
               className="flex-grow overflow-y-auto"
-              style={{ backgroundColor: theme.palette.background.default, paddingBottom: '100px' }}
+              style={{ backgroundColor: '#F0F4FC', paddingBottom: '100px' }}
             >
               <div className="flex flex-col space-y-2 p-4" ref={scrollableDivRef}>
                 {messages.map((message, index) =>
@@ -1196,57 +1199,77 @@ const Dashboard_eleve_template: React.FC = () => {
           <div
             className="flex justify-center p-4"
             style={{
-              backgroundColor: theme.palette.background.default,
-              position: 'fixed',
-              bottom: 0,
-              width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
-              transition: 'width 0.3s',
-              display: isLandingPageVisible ? 'none' : 'flex', // Masquer quand la LandingPage est visible
+                backgroundColor: '#F0F4FC',
+                position: 'fixed',
+                bottom: 0,
+                width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%', // Use the same value as drawerWidth
+                transition: 'width 0.3s',
+                display: isLandingPageVisible ? 'none' : 'flex',
             }}
-          >
+            >
             <div style={{ maxWidth: '800px', width: '100%', position: 'relative' }}>
-              <TextField
+                <TextField
                 fullWidth
                 variant="outlined"
                 multiline
+                minRows={1} // Adjust `minRows` to change the minimum height of the TextField
                 maxRows={6}
-                placeholder="Message"
+                placeholder="Message..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleInputKeyPressSocraticLangGraph}
                 InputProps={{
-                  endAdornment: (
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
-                      style={{
-                        position: 'absolute',
-                        right: '10px',
-                        bottom: '25px',
-                        transform: 'translateY(50%)',
-                      }}
-                    >
-                      <SendIcon style={{ color: theme.palette.button_sign_in }} />
-                    </IconButton>
-                  ),
-                  style: {
-                    fontWeight: '500',
+                    endAdornment: (
+                    <InputAdornment position="end">
+                        <IconButton
+                        color="primary"
+                        onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
+                        aria-label="send message"
+                        edge="end"
+                        >
+                        <ArrowForwardIcon style={{ color: theme.palette.button_sign_in }} />
+                        </IconButton>
+                    </InputAdornment>
+                    ),
+                    style: {
+                    backgroundColor: '#F4F4F4',
                     fontSize: '1rem',
-                    color: theme.palette.text.primary,
-                    borderRadius: '12px',
-                    paddingRight: '48px',
-                    backgroundColor: theme.palette.background.paper,
-                  },
+                    padding: '17px 8px', // Adjust `padding` to change the height of the TextField
+                    borderRadius: '20px',
+                    fontWeight: '500',
+                    color: theme.palette.text.primary, // Directly use the text color from the theme
+                    paddingRight: '20px', // Ensure space for the icon
+                    paddingLeft: '20px', // Ensure space for the icon
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Constant shadow around the field
+                    border: 'none', // Remove the border
+                    },
                 }}
-              />
+                inputProps={{
+                    style: { color: theme.palette.text.primary },
+                }}
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                        border: 'none',
+                    },
+                    '&:hover fieldset': {
+                        boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+                    },
+                    },
+                    '& .MuiInputBase-input::placeholder': {
+                    color: '#6F6F6F', // Darker color for the placeholder
+                    opacity: 1,
+                    },
+                }}
+                />
             </div>
-          </div>
+            </div>
         </div>
 
         {iframeSrc && (
           <div
             className="fixed top-0 right-0 h-full w-[33vw] shadow-lg border-l"
-            style={{ backgroundColor: theme.palette.background.paper, borderColor: theme.palette.divider }}
+            style={{ backgroundColor: '#F0F4FC', borderColor: theme.palette.divider }}
           >
             <div className="flex items-center justify-between p-2 bg-gray-200">
               <Typography variant="body1" style={{ color: theme.palette.text.primary }}>
