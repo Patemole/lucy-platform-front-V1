@@ -557,62 +557,101 @@ const Dashboard_eleve_template: React.FC = () => {
     const newChatId = uuidv4();
     const oldChatId = localStorage.getItem('chat_id');
 
-    setMessages([]); // Efface les messages
-    setRelatedQuestions([]);
-    setIsLandingPageVisible(true); // Affiche la LandingPage
+    console.log("Nouveau chat ID:", newChatId);
+    console.log("Ancien chat ID:", oldChatId);
 
+    // Réinitialiser l'état de la conversation
+    setMessages([]);
+    setRelatedQuestions([]);
+    setIsLandingPageVisible(true);
+
+    // Enregistrer le nouvel ID de conversation dans le stockage local
     localStorage.setItem('chat_id', newChatId);
     setActiveChatId(newChatId);
 
     if (uid) {
-      const userRef = doc(db, 'users', uid);
-      const userSnap = await getDoc(userRef);
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
 
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const chatsessions = userData.chatsessions || [];
+        if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const chatsessions = userData.chatsessions || [];
 
-        if (oldChatId) {
-          await updateDoc(doc(db, 'chatsessions', oldChatId), { name: 'Conversation history' });
-        }
+            // Si un ancien ID de conversation existe, renommer cette conversation avec le premier message
+            if (oldChatId) {
+                const oldChatRef = doc(db, 'chatsessions', oldChatId);
+                const oldChatSnap = await getDoc(oldChatRef);
 
-        chatsessions.push(newChatId);
-        await updateDoc(userRef, { chatsessions });
+                if (oldChatSnap.exists()) {
+                    const updateOldChatName = () => {
+                        console.log("Vérification du tableau messages pour renommer l'ancienne conversation...");
 
-        await setDoc(doc(db, 'chatsessions', newChatId), {
-          chat_id: newChatId,
-          name: 'New chat',
-          created_at: serverTimestamp(),
-          modified_at: serverTimestamp(),
-        });
+                        // Vérifier si le tableau `messages` contient au moins un élément
+                        if (messages.length > 0) {
+                            const firstMessage = messages[0].content || 'Conversation history';
+                            console.log("Premier message détecté pour l'ancienne conversation:", firstMessage);
 
-        const refreshedUserSnap = await getDoc(userRef);
-        if (refreshedUserSnap.exists()) {
-          const refreshedUserData = refreshedUserSnap.data();
-          const chatSessionIds = refreshedUserData.chatsessions || [];
+                            // Mettre à jour le nom de l'ancienne conversation avec le premier message
+                            updateDoc(oldChatRef, { name: firstMessage });
+                        } else {
+                            // Réessayer si le premier message n'est pas encore présent
+                            console.log("Premier message non trouvé, vérification dans 100ms pour l'ancienne conversation...");
+                            setTimeout(updateOldChatName, 100);
+                        }
+                    };
 
-          const chatPromises = chatSessionIds.map(async (chatId: string) => {
-            if (typeof chatId === 'string') {
-              const chatRef = doc(db, 'chatsessions', chatId);
-              const chatSnap = await getDoc(chatRef);
-              if (chatSnap.exists() && chatSnap.data().name) {
-                return { chat_id: chatId, name: chatSnap.data().name };
-              }
+                    updateOldChatName(); // Lancer l'observation pour détecter le premier message de l'ancienne conversation
+                } else {
+                    console.log("Ancienne conversation non trouvée, pas de mise à jour.");
+                }
             }
-            return null;
-          });
 
-          const fetchedConversations = await Promise.all(chatPromises);
-          const validConversations = fetchedConversations.filter(
-            (conversation): conversation is { chat_id: string; name: string } => conversation !== null
-          );
-          setConversations(validConversations.reverse());
+            // Ajouter le nouvel ID de chat à l'historique des sessions
+            chatsessions.push(newChatId);
+            await updateDoc(userRef, { chatsessions });
+
+            // Créer la nouvelle session de chat avec le nom "New Chat"
+            await setDoc(doc(db, 'chatsessions', newChatId), {
+                chat_id: newChatId,
+                name: 'New Chat',
+                created_at: serverTimestamp(),
+                modified_at: serverTimestamp(),
+            });
+
+            // Récupérer et actualiser les conversations
+            const refreshedUserSnap = await getDoc(userRef);
+            if (refreshedUserSnap.exists()) {
+                const refreshedUserData = refreshedUserSnap.data();
+                const chatSessionIds = refreshedUserData.chatsessions || [];
+
+                const chatPromises = chatSessionIds.map(async (chatId: string) => {
+                    if (typeof chatId === 'string') {
+                        const chatRef = doc(db, 'chatsessions', chatId);
+                        const chatSnap = await getDoc(chatRef);
+                        if (chatSnap.exists() && chatSnap.data().name) {
+                            return { chat_id: chatId, name: chatSnap.data().name };
+                        }
+                    }
+                    return null;
+                });
+
+                const fetchedConversations = await Promise.all(chatPromises);
+                const validConversations = fetchedConversations.filter(
+                    (conversation) => conversation !== null
+                );
+                setConversations(validConversations.reverse());
+
+                console.log("Conversations actualisées:", validConversations);
+            }
+        } else {
+            console.log("Utilisateur non trouvé dans Firestore.");
         }
-      }
     } else {
-      console.error('UID is undefined. Cannot create new conversation.');
+        console.error('UID is undefined. Cannot create new conversation.');
     }
-  };
+};
+
+
 
   const handleConversationClick = async (chat_id: string) => {
     localStorage.setItem('chat_id', chat_id);
@@ -846,8 +885,18 @@ const Dashboard_eleve_template: React.FC = () => {
                     }}
                   >
                     <ListItemText
-                      primary={conversation.name}
-                      primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }}
+                        primary={conversation.name}
+                        primaryTypographyProps={{
+                            style: {
+                                fontWeight: '500',
+                                fontSize: '0.875rem',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                position: 'relative', // Nécessaire pour le pseudo-élément de flou
+                                maxWidth: '100%' // Ajustez en fonction de la largeur souhaitée
+                            }
+                        }}
                     />
                   </ListItem>
                 ))
