@@ -997,7 +997,7 @@ const Dashboard_eleve_template: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
               {/* Login Button */}
               <Button
-                onClick={handleLogin} // Define handleLogin function for navigation or modal display
+                onClick={() => navigate('/auth/sign-in')} 
                 sx={{
                   fontWeight: '500',
                   fontSize: '0.875rem',
@@ -1011,7 +1011,7 @@ const Dashboard_eleve_template: React.FC = () => {
   
               {/* Sign-up Button */}
               <Button
-                onClick={handleSignUp} // Define handleSignUp function for navigation or modal display
+                onClick={() => navigate('/auth/sign-up')}
                 variant="contained"
                 sx={{
                   fontWeight: '500',
