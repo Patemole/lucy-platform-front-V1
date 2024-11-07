@@ -34,7 +34,7 @@ const NotFound: React.FC = () => {
             <Button 
                 variant="contained" 
                 color="primary" 
-                onClick={goHome}
+                onClick={() => navigate('/auth/sign-up')}
                 sx={{ marginTop: 2 }}
             >
                 Go back to Home
