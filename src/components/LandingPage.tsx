@@ -360,7 +360,6 @@ import {
   Divider,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import SendIcon from '@mui/icons-material/Send';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import {
   FaGraduationCap,
@@ -381,9 +380,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const [isTyping, setIsTyping] = useState(true);
   const [placeholderText, setPlaceholderText] = useState('');
   const [activeButton, setActiveButton] = useState<string | null>(null);
-  const [isHoveringQuestions, setIsHoveringQuestions] = useState(false); // Suivi du survol des questions
-  const [isHoveredInput, setIsHoveredInput] = useState(false);
-  const [isHoveredButtons, setIsHoveredButtons] = useState(false);
+  const [isHoveringQuestions, setIsHoveringQuestions] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -391,84 +388,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   // Texte initial à taper
   const initialText = 'Ask Lucy...';
 
-  // Questions mappées à chaque bouton
-  /*
-  const questionsMap: { [key: string]: string[] } = {
-    'Academic Advisor': [
-      'How can I improve my study habits?',
-      'What courses should I take next semester?',
-      'How do I prepare for graduate school applications?',
-      'Can you help me plan my academic schedule?',
-    ],
-    Enrollment: [
-      'How do I enroll in a course?',
-      'What are the enrollment deadlines?',
-      'How does faculty feedback vary by department?',
-      'Most common types of questions asked to Lucy across different categories?',
-    ],
-    Executive: [
-      "What is the company's strategic plan?",
-      'How can we improve team performance?',
-      'What are our main objectives this quarter?',
-      'How do we address the recent market changes?',
-    ],
-    'Mental Health': [
-      'What resources are available for stress management?',
-      'How can I improve my work-life balance?',
-      'Who can I talk to about anxiety?',
-      'Are there counseling services available?',
-    ],
-    'Financial Aid': [
-      'How do I apply for scholarships?',
-      'What loans are available to students?',
-      'Can you explain the financial aid process?',
-      'What is the deadline to apply for financial aid?',
-    ],
-  };
-
-  */
-
-  const questionsMap: { [key: string]: string[] } = {
-    'Academic Info': [
-      'What are the most popular majors or programs?',
-      'Are there honors programs or special academic tracks?',
-      'Are there research opportunities available for undergraduate students?',
-      'What options are there for studying abroad in Europe?',
-    ],
-    'Event & Tours': [
-      'How can i book an in-person campus tour?',
-      'Are there virtual tours available?',
-      'What major campus events take place each semester?',
-      'What student clubs or organizations are active on campus, and how can I join?',
-    ],
-    'Admission': [
-      "What are the average GPA and test scores for admitted students?",
-      'Do international students need to take additional tests or submit specific documents?',
-      'Can I connect with current students or alumni to learn about their experiences?',
-      'How can I track the status of my application after submitting it?',
-    ],
-    'Facilities': [
-      'What types of housing options are available for  freshmen students?',
-      'Are the gym and fitness facilities open to all students?',
-      'What dining options are available for first year students?',
-      'Are laundry facilities available in the dorms?',
-    ],
-    'Financial Aid': [
-      'How do I apply for financial aid, and what types of aid are offered?',
-      'Will, applying to financial aid impact my application?',
-      'What is the work-study program, and how can I participate?',
-      'How does the financial aid package compare year-to-year?',
-    ],
-  };
-
-
   // Fonction pour envoyer le message
   const handleSend = () => {
-    if (inputValue.trim() !== '') {
-      onSend(inputValue.trim());
+    const message = inputValue.trim();
+    console.log("Button clicked");
+    console.log("Message to send:", message);
+
+    if (message !== '') {
+      console.log('Debut d envoie du message');
+      onSend(message);
+      console.log('Apres la fonction OnSend');
       setInputValue('');
       setActiveButton(null);
       setPlaceholderText('Ask Lucy...');
+    } else {
+      console.log("Message is empty");
     }
   };
 
@@ -480,33 +414,33 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     }
   };
 
-  //gestion du faux curseur
+  // Gestion du faux curseur clignotant
   useEffect(() => {
     const cursorInterval = setInterval(() => {
       setShowCursor((prevShowCursor) => !prevShowCursor);
-    }, 500); // Ajustez la vitesse de clignotement ici (500ms)
-  
+    }, 500);
+
     return () => clearInterval(cursorInterval);
   }, []);
 
-  // Lors du survol d'un bouton
+  // Gestion du survol des boutons
   const handleButtonMouseEnter = (buttonText: string) => {
     setActiveButton(buttonText);
     setPlaceholderText('Ask Lucy...');
   };
 
-  // Lors du clic sur un bouton (pour maintenir l'état actif)
+  // Gestion du clic sur un bouton
   const handleButtonClick = (buttonText: string) => {
     setActiveButton(buttonText);
     setPlaceholderText('Ask Lucy...');
   };
 
-  // Lors du survol d'une question
+  // Gestion du survol d'une question
   const handleQuestionHover = (question: string) => {
     setInputValue(question);
   };
 
-  // Lors du clic sur une question
+  // Gestion du clic sur une question
   const handleQuestionClick = (question: string) => {
     onSend(question);
     setInputValue('');
@@ -517,20 +451,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   // Gestion du changement dans le champ de saisie
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    console.log("Current input value in handleInputChange:", value);
     setInputValue(value);
-
-    // Si le champ est vide, réinitialiser les états
-    if (value.trim() === '') {
-      setActiveButton(null);
-      setPlaceholderText('Ask Lucy...');
-    }
   };
 
   // Animation de saisie pour le texte initial
   useEffect(() => {
     let index = 0;
     let currentText = '';
-    const typingSpeed = 100; // Vitesse de saisie en millisecondes
+    const typingSpeed = 100;
 
     const typingInterval = setInterval(() => {
       if (index < initialText.length) {
@@ -540,8 +469,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       } else {
         clearInterval(typingInterval);
         setIsTyping(false);
-        setInputValue(''); // Effacer l'input après la saisie
-        setPlaceholderText('Ask Lucy...'); // Définir le placeholder après la saisie
+        setInputValue('');
+        setPlaceholderText('Ask Lucy...');
       }
     }, typingSpeed);
 
@@ -558,14 +487,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     }
   }, [inputValue, isTyping]);
 
-  // Ajouter un écouteur d'événements pour détecter les clics en dehors des boutons et des questions
+  // Gestion du clic à l'extérieur pour réinitialiser les états
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       if (
         containerRef.current &&
         !containerRef.current.contains(target) &&
-        !isHoveringQuestions // Ne masquer que si on ne survole pas les questions
+        !isHoveringQuestions
       ) {
         setActiveButton(null);
         setInputValue('');
@@ -578,38 +507,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isHoveringQuestions]); // Relancer l'effet si `isHoveringQuestions` change
-
-  // Définition des boutons
-  /*
-  const buttons = [
-    {
-      label: 'Academic Advisor',
-      value: 'Academic Advisor',
-      icon: <FaGraduationCap style={{ color: '#3DD957' }} size={20} />,
-    },
-    {
-      label: 'Enrollment',
-      value: 'Enrollment',
-      icon: <FaRegCalendarAlt style={{ color: '#F97315' }} size={20} />,
-    },
-    {
-      label: 'Executive',
-      value: 'Executive',
-      icon: <FaBalanceScale style={{ color: '#1565D8' }} size={20} />,
-    },
-    {
-      label: 'Mental Health',
-      value: 'Mental Health',
-      icon: <FaBuilding style={{ color: '#7C3BEC' }} size={20} />,
-    },
-    {
-      label: 'Financial Aid',
-      value: 'Financial Aid',
-      icon: <FaHandHoldingUsd style={{ color: '#EF4361' }} size={20} />,
-    },
-  ];
-  */
+  }, [isHoveringQuestions]);
 
   // Définition des boutons
   const buttons = [
@@ -640,6 +538,39 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     },
   ];
 
+  // Questions mappées à chaque bouton
+  const questionsMap: { [key: string]: string[] } = {
+    'Academic Info': [
+      'What are the most popular majors or programs?',
+      'Are there honors programs or special academic tracks?',
+      'Are there research opportunities available for undergraduate students?',
+      'What options are there for studying abroad in Europe?',
+    ],
+    'Event & Tours': [
+      'How can I book an in-person campus tour?',
+      'Are there virtual tours available?',
+      'What major campus events take place each semester?',
+      'What student clubs or organizations are active on campus, and how can I join?',
+    ],
+    'Admission': [
+      "What are the average GPA and test scores for admitted students?",
+      'Do international students need to take additional tests or submit specific documents?',
+      'Can I connect with current students or alumni to learn about their experiences?',
+      'How can I track the status of my application after submitting it?',
+    ],
+    'Facilities': [
+      'What types of housing options are available for freshmen students?',
+      'Are the gym and fitness facilities open to all students?',
+      'What dining options are available for first year students?',
+      'Are laundry facilities available in the dorms?',
+    ],
+    'Financial Aid': [
+      'How do I apply for financial aid, and what types of aid are offered?',
+      'Will applying to financial aid impact my application?',
+      'What is the work-study program, and how can I participate?',
+      'How does the financial aid package compare year-to-year?',
+    ],
+  };
 
   return (
     <Box
@@ -656,12 +587,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       <iframe
         src="https://my.spline.design/aiassistanthoverandclickinteraction-afdf94418f2cc3f7f17a6aad54796013/"
         style={{
-          position: 'absolute', // En arrière-plan
+          position: 'absolute',
           top: 0,
           left: 0,
           width: '100%',
           height: '100%',
-          //zIndex: -1, // Derrière tout
           border: 'none',
         }}
         title="Spline Scene"
@@ -670,6 +600,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
 
       {/* Contenu principal de la landing page */}
       <Box
+        ref={containerRef} // Ajout du ref ici pour englober le TextField et les autres éléments
         width="100%"
         maxWidth="800px"
         mt={isSmallScreen ? 6 : 30}
@@ -692,14 +623,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           value={inputValue}
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
-          //placeholder={isTyping ? '' : placeholderText}
-          placeholder={isTyping ? '' : `${placeholderText}${showCursor ? '|' : ''}`} // Curseur clignotant
+          placeholder={isTyping ? '' : `${placeholderText}${showCursor ? '|' : ''}`}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton 
-                onClick={handleSend}>
-                  
+                <IconButton onClick={handleSend}>
                   <ArrowForwardIcon style={{ color: '#011F5B', fontSize: '1.5rem' }} />
                 </IconButton>
               </InputAdornment>
@@ -710,8 +638,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               padding: '2px 8px',
               borderRadius: '20px',
               color: isTyping ? '#6F6F6F' : '#000000',
-              border: 'none', // Retire le contour
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Ombre constante autour du champ
+              border: 'none',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
             },
           }}
           inputProps={{
@@ -727,14 +655,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               },
             },
             '& .MuiInputBase-input::placeholder': {
-              color: '#6F6F6F', // Placeholder plus sombre
+              color: '#6F6F6F',
               opacity: 1,
             },
           }}
         />
 
         {/* Conteneur pour les boutons et les questions */}
-        <Box ref={containerRef}>
+        <Box>
           {/* Boutons */}
           <Box
             mt={3}
@@ -754,7 +682,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                 onMouseEnter={() => handleButtonMouseEnter(button.label)}
                 onClick={() => handleButtonClick(button.label)}
                 sx={{
-                  //borderColor: '#011F5B',
                   color: '#011F5B',
                   borderRadius: '15px',
                   padding: '6px 16px',

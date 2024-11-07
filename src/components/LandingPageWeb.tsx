@@ -10,7 +10,6 @@ import {
   Divider,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import SendIcon from '@mui/icons-material/Send';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import {
   FaGraduationCap,
@@ -31,9 +30,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const [isTyping, setIsTyping] = useState(true);
   const [placeholderText, setPlaceholderText] = useState('');
   const [activeButton, setActiveButton] = useState<string | null>(null);
-  const [isHoveringQuestions, setIsHoveringQuestions] = useState(false); // Suivi du survol des questions
-  const [isHoveredInput, setIsHoveredInput] = useState(false);
-  const [isHoveredButtons, setIsHoveredButtons] = useState(false);
+  const [isHoveringQuestions, setIsHoveringQuestions] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,34 +47,33 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       'What options are there for studying abroad in Europe?',
     ],
     'Event & Tours': [
-      'How can i book an in-person campus tour?',
+      'How can I book an in-person campus tour?',
       'Are there virtual tours available?',
       'What major campus events take place each semester?',
       'What student clubs or organizations are active on campus, and how can I join?',
     ],
-    'Admission': [
-      "What are the average GPA and test scores for admitted students?",
+    Admission: [
+      'What are the average GPA and test scores for admitted students?',
       'Do international students need to take additional tests or submit specific documents?',
       'Can I connect with current students or alumni to learn about their experiences?',
       'How can I track the status of my application after submitting it?',
     ],
-    'Facilities': [
-      'What types of housing options are available for  freshmen students?',
+    Facilities: [
+      'What types of housing options are available for freshmen students?',
       'Are the gym and fitness facilities open to all students?',
       'What dining options are available for first year students?',
       'Are laundry facilities available in the dorms?',
     ],
     'Financial Aid': [
       'How do I apply for financial aid, and what types of aid are offered?',
-      'Will, applying to financial aid impact my application?',
+      'Will applying to financial aid impact my application?',
       'What is the work-study program, and how can I participate?',
       'How does the financial aid package compare year-to-year?',
     ],
   };
 
   // Fonction pour envoyer le message
-   // Function to send the message
-   const handleSend = () => {
+  const handleSend = () => {
     if (inputValue.trim() !== '') {
       onSend(inputValue.trim());
       setInputValue('');
@@ -94,12 +90,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     }
   };
 
-  //gestion du faux curseur
+  // Gestion du faux curseur clignotant
   useEffect(() => {
     const cursorInterval = setInterval(() => {
       setShowCursor((prevShowCursor) => !prevShowCursor);
-    }, 500); // Ajustez la vitesse de clignotement ici (500ms)
-  
+    }, 500); // Vitesse de clignotement du curseur
+
     return () => clearInterval(cursorInterval);
   }, []);
 
@@ -243,7 +239,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           left: 0,
           width: '100%',
           height: '100%',
-          //zIndex: -1, // Derrière tout
           border: 'none',
         }}
         title="Spline Scene"
@@ -252,6 +247,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
 
       {/* Contenu principal de la landing page */}
       <Box
+        ref={containerRef} // Ajout du ref ici pour englober le TextField et les autres éléments
         width="100%"
         maxWidth="800px"
         mt={isSmallScreen ? 6 : 30}
@@ -274,7 +270,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           value={inputValue}
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
-          //placeholder={isTyping ? '' : placeholderText}
           placeholder={isTyping ? '' : `${placeholderText}${showCursor ? '|' : ''}`} // Curseur clignotant
           InputProps={{
             endAdornment: (
@@ -314,7 +309,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         />
 
         {/* Conteneur pour les boutons et les questions */}
-        <Box ref={containerRef}>
+        <Box>
           {/* Boutons */}
           <Box
             mt={3}
@@ -334,7 +329,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                 onMouseEnter={() => handleButtonMouseEnter(button.label)}
                 onClick={() => handleButtonClick(button.label)}
                 sx={{
-                  //borderColor: '#011F5B',
                   color: '#011F5B',
                   borderRadius: '15px',
                   padding: '6px 16px',
