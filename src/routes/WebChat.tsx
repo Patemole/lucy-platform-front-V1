@@ -936,7 +936,7 @@ const Dashboard_eleve_template: React.FC = () => {
                     marginTop: '30px',
                   }}
                 >
-                  You have no conversations yet
+                  Sign in to see your last conversation
                 </Typography>
               )}
             </List>
