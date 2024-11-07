@@ -85,7 +85,8 @@ export default DocumentBlock;
 import React, { useState } from 'react';
 import { Box, Typography, List, ListItem, ListItemIcon } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
- import DocumentDownloadModal from './PopupTrustDownloadRessource'; // Import du nouveau composant
+import DocumentDownloadModal from './PopupTrustDownloadRessource'; // Import du nouveau composant
+import { requestDocumentDownload } from '../api/fetchTrustRessources'; // Assuming this is your download function
 
 interface DocumentBlockProps {
   documents: string[];
@@ -105,10 +106,15 @@ const DocumentBlock: React.FC<DocumentBlockProps> = ({ documents }) => {
      setSelectedDocument(null);
    };
 
-  const handleDownload = (documentName: string) => {
-    // Appel au backend pour télécharger le document à partir du bucket S3
-    console.log(`Téléchargement du document: ${documentName}`);
-    // Vous pouvez ici utiliser fetch ou axios pour faire un appel API
+   const handleDownload = (documentName: string) => {
+    // Directly trigger the download without opening a modal
+    requestDocumentDownload({
+      fullName: "User Full Name", // Replace or dynamically retrieve user info as needed
+      email: "user@example.com",   // Replace or dynamically retrieve user info as needed
+      companyName: "User Company", // Replace or dynamically retrieve user info as needed
+      reason: "Download Reason",   // Replace or dynamically retrieve user info as needed
+      documentName,
+    });
   };
 
   return (
@@ -127,7 +133,8 @@ const DocumentBlock: React.FC<DocumentBlockProps> = ({ documents }) => {
                 cursor: 'pointer', // Ajout du curseur sur tout l'élément
                 '&:hover': { backgroundColor: '#f5f5f5' },
               }}
-               onClick={() => handleOpenModal(document)} // Ouvre la popup au clic (commentée)
+               //onClick={() => handleOpenModal(document)} // Ouvre la popup au clic (commentée)
+               onClick={() => handleDownload(document)} // Directly triggers the download
             >
               <Typography
                 variant="body1"
