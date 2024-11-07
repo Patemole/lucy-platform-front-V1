@@ -84,7 +84,7 @@ export default DocumentBlock;
 // components/DocumentBlock.tsx
 import React, { useState } from 'react';
 import { Box, Typography, List, ListItem, ListItemIcon } from '@mui/material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined';
 import DocumentDownloadModal from './PopupTrustDownloadRessource'; // Import du nouveau composant
 import { requestDocumentDownload } from '../api/fetchTrustRessources'; // Assuming this is your download function
 
@@ -146,7 +146,7 @@ const DocumentBlock: React.FC<DocumentBlockProps> = ({ documents }) => {
                 {document}
               </Typography>
               <ListItemIcon sx={{ minWidth: 'auto' }}>
-                <LockOutlinedIcon sx={{ color: '#9e9e9e' }} /> {/* Icône de cadenas plus fine */}
+                <LockOpenOutlinedIcon sx={{ color: '#9e9e9e' }} /> {/* Icône de cadenas plus fine */}
               </ListItemIcon>
             </ListItem>
           ))}

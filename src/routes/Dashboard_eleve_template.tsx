@@ -27,6 +27,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MapsUgcRoundedIcon from '@mui/icons-material/MapsUgcRounded';
 import HomeIcon from '@mui/icons-material/Home';
+import ProfileEdit from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
 import LogoutIcon from '@mui/icons-material/Logout';
 import CloseIcon from '@mui/icons-material/Close';
@@ -835,10 +836,10 @@ const Dashboard_eleve_template: React.FC = () => {
                 sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
               >
                 <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                  <HomeIcon />
+                  <ProfileEdit />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Home"
+                  primary="Your Profile"
                   primaryTypographyProps={{
                     style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
                   }}
