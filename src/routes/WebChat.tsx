@@ -1,4 +1,4 @@
-import React, { useState, useEffect, KeyboardEvent, useRef } from 'react';
+import React, { useState, useEffect, KeyboardEvent, useRef, useMemo} from 'react';
 import { useNavigate, useParams} from 'react-router-dom';
 import {
   ThemeProvider,
@@ -40,7 +40,8 @@ import logo_greg from '../student_face.png';
 import logo_lucy_face from '../lucy_new_face_contour2.png';
 
 import '../index.css';
-import { AIMessage } from '../components/Messages';
+//import { AIMessage } from '../components/Messages';
+import { AIMessage } from '../components/MessagesWEB';
 import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep } from '../interfaces/interfaces_eleve';
 import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
@@ -110,6 +111,8 @@ const Dashboard_eleve_template: React.FC = () => {
   const chunkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const phraseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const wordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasNewContent, setHasNewContent] = useState(false); // Nouvel état pour détecter du contenu
+  const [currentMessageId, setCurrentMessageId] = useState<number | null>(null);
   // Ajoutez cette ligne pour utiliser useSearchParams
 
   const courseId = localStorage.getItem('course_id');
@@ -121,6 +124,13 @@ const Dashboard_eleve_template: React.FC = () => {
 
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
+
+
+  
+  const lastAiMessageId = useMemo(() => {
+    const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
+    return lastAiMessage ? lastAiMessage.id : null;
+  }, [messages]);
 
 
   //For display sentence above three dots for waiting
@@ -391,6 +401,9 @@ const Dashboard_eleve_template: React.FC = () => {
     const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
     setMessages((prevMessages) => [...prevMessages, loadingMessage]);
 
+    // Définissez currentMessageId pour le message en cours de chargement
+    setCurrentMessageId(loadingMessage.id);
+
     onSubmit([...messages, newMessage, loadingMessage], message);
     setInputValue(''); // Clear the input field after sending
   };
@@ -398,6 +411,7 @@ const Dashboard_eleve_template: React.FC = () => {
   // Fonction pour envoyer le message à l'AI ou à l'API
   const onSubmit = async (messageHistory: Message[], inputValue: string) => {
     setIsStreaming(true);
+    setHasNewContent(false); // Réinitialise au début de chaque message
     let answer = '';
     let answerDocuments: AnswerDocument[] = [];
     let answerImages: { image_id: string; image_url: string; image_description?: string }[] = [];
@@ -441,29 +455,11 @@ const Dashboard_eleve_template: React.FC = () => {
         if (Array.isArray(packetBunch)) {
           for (const packet of packetBunch) {
             if (typeof packet === 'string') {
+              setHasNewContent(true); // Détecte un nouveau contenu
               answer = packet.replace(/\|/g, '');
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
               answer = (packet as AnswerPiecePacket).answer_piece;
 
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_document')) {
-              answerDocuments.push((packet as AnswerDocumentPacket).answer_document);
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_document')) {
-                const newDocument = (packet as AnswerDocumentPacket).answer_document;
-                answerDocuments.push(newDocument);
-              
-                // Mettre à jour immédiatement citedDocuments dans le message actuel
-                setMessages((prevMessages) => {
-                  const updatedMessages = [...prevMessages];
-                  updatedMessages[lastMessageIndex] = {
-                    ...prevMessages[lastMessageIndex],
-                    citedDocuments: [
-                      ...(prevMessages[lastMessageIndex].citedDocuments || []),
-                      newDocument,
-                    ],
-                  };
-                  return updatedMessages;
-                });
             
             } else if (Object.prototype.hasOwnProperty.call(packet, 'image_data')) {
               answerImages.push((packet as any).image_data);
@@ -477,30 +473,13 @@ const Dashboard_eleve_template: React.FC = () => {
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_COURSE_data')) {
               answerCourse.push((packet as any).answer_COURSE_data);
 
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'related_questions')) {
-              relatedQuestionsList = (packet as any).related_questions;
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'reasoning_steps')) {
+                answerReasoning.push((packet as any).reasoning_steps);
+                console.log("Étapes de raisonnement ajoutées");
 
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
               answerWaiting = (packet as any).answer_waiting;
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'structured_reasoning')) {
-              answerReasoning = (packet as any).structured_reasoning;
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'structured_reasoning')) {
-                const newReasoningStep = (packet as any).structured_reasoning;
-                
-                // Ajouter la nouvelle étape à ReasoningSteps immédiatement
-                setMessages((prevMessages) => {
-                  const updatedMessages = [...prevMessages];
-                  updatedMessages[lastMessageIndex] = {
-                    ...prevMessages[lastMessageIndex],
-                    ReasoningSteps: [
-                      ...(prevMessages[lastMessageIndex].ReasoningSteps || []),
-                      ...newReasoningStep, // Ajoutez la nouvelle étape reçue
-                    ],
-                  };
-                  return updatedMessages;
-                });
+            
 
             } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
               error = (packet as StreamingError).error;
@@ -510,6 +489,7 @@ const Dashboard_eleve_template: React.FC = () => {
 
           if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_document')) {
             answerDocuments.push((packetBunch as AnswerDocumentPacket).answer_document);
+            console.log('This is a test')
 
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'image_data')) {
             answerImages.push((packetBunch as any).image_data);
@@ -517,8 +497,8 @@ const Dashboard_eleve_template: React.FC = () => {
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_TAK_data')) {
             answerTAK.push((packetBunch as any).answer_TAK_data);
 
-        } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'structured_reasoning')) {
-            answerReasoning.push((packetBunch as any).structured_reasoning);
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reasoning_steps')) {
+            answerReasoning.push((packetBunch as any).reasoning_steps);
 
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
             answerCHART.push((packetBunch as any).answer_CHART_data);
@@ -542,6 +522,9 @@ const Dashboard_eleve_template: React.FC = () => {
         const flattenedCHART = answerCHART.flat();
         const flattenedCourse = answerCourse.flat();
         const flattenedwaitingdata = answerWaiting.flat();
+
+        // Check if `flattenedReasoning` contains data before updating messages
+        console.log("Final flattenedReasoning array before setting messages:", flattenedReasoning);
 
         // Détection de TAK
         if (flattenedTAK.length > 0) {
@@ -834,6 +817,8 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   }, [messages]);
 
+
+
   return (
     <ThemeProvider theme={theme}>
       <div className="flex h-screen" style={{ backgroundColor: theme.palette.background.default }}>
@@ -1089,7 +1074,8 @@ const Dashboard_eleve_template: React.FC = () => {
                       <div className="max-w-3/4 w-full flex items-center">
                       <AIMessage
                         messageId={message.id}
-                        content={message.content || displayedText}  // Utilisez displayedText si le content est vide
+                        //content={message.content || displayedText}  // Utilisez displayedText si le content est vide
+                        content={message.content}  // Utilisez displayedText si le content est vide
                         personaName={message.personaName}
                         citedDocuments={message.citedDocuments}
                         isComplete={isComplete}
@@ -1101,11 +1087,15 @@ const Dashboard_eleve_template: React.FC = () => {
                         takData={message.TAK}
                         CourseData={message.COURSE}
                         waitingMessages={message.waitingMessages}
-                        ReasoningSteps={message.ReasoningSteps}
+                        //ReasoningSteps={message.ReasoningSteps && message.id === lastAiMessageId} 
+                        ReasoningSteps={message.id === lastAiMessageId ? message.ReasoningSteps : undefined} 
                         chartData={message.CHART}
                         drawerOpen={drawerOpen}
                         handleSendTAKMessage={handleSendTAKMessage}
                         handleSendCOURSEMessage={handleSendCOURSEMessage}
+                        //isLoading={isStreaming} // Nouveau prop
+                        isLoading={isStreaming && message.id === lastAiMessageId} // Utilise lastAiMessageId
+                        hasNewContent={hasNewContent}
                         />
                       </div>
                     </div>

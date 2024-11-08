@@ -71,8 +71,8 @@ export async function* handleStream<T extends NonEmptyObject>(
         const { done, value } = await reader?.read() || {};
 
         // Ajout du log pour voir les valeurs de done et value
-        console.log("Valeur de done:", done);
-        console.log("Valeur de value (chunk brut):", value ? new TextDecoder("utf-8").decode(value) : value);
+        //console.log("Valeur de done:", done);
+        //console.log("Valeur de value (chunk brut):", value ? new TextDecoder("utf-8").decode(value) : value);
 
 
         if (done) {
@@ -94,7 +94,7 @@ export async function* handleStream<T extends NonEmptyObject>(
 
             if (isInImage && imageBuffer) {
                 try {
-                    console.log("Tentative de parsing de l'image JSON finale:", imageBuffer);
+                    //console.log("Tentative de parsing de l'image JSON finale:", imageBuffer);
                     const imageJson = JSON.parse(imageBuffer); // Convertir l'image finale en JSON
                     console.log("Image JSON émise à la fin du flux:", imageJson);
                     yield imageJson;
@@ -429,16 +429,16 @@ export async function* handleStream<T extends NonEmptyObject>(
 
          // Detection and processing of <REASONING_STEPS> and <REASONING_STEPS_END>
          if (decodedValue.includes("<REASONING_STEPS>")) {
-            console.log("Détection de <REASONING_STEPS> dans le chunk:", decodedValue);
+            console.log("1) Détection de <REASONING_STEPS> dans le chunk:", decodedValue);
             isReasoningSteps = true;
             ReasoningStepsBuffer = decodedValue.split("<REASONING_STEPS>")[1].split("<REASONING_STEPS_END>")[0]; // Extract content between tags
-            console.log("Début d'accumulation de reasoning JSON, buffer actuel:", ReasoningStepsBuffer);
+            console.log("2) Début d'accumulation de reasoning JSON, buffer actuel:", ReasoningStepsBuffer);
 
             if (decodedValue.includes("<REASONING_STEPS_END>")) {
                 try {
-                    console.log("Détection de <REASONING_STEPS_END> dans le même chunk.");
+                    console.log("3) Détection de <REASONING_STEPS_END> dans le même chunk.");
                     const reasoningJson = JSON.parse(ReasoningStepsBuffer);
-                    console.log("reasoning JSON reçue et convertie:", reasoningJson);
+                    console.log("4) reasoning JSON reçue et convertie:", reasoningJson);
                     yield reasoningJson;
                     isReasoningSteps = false;
                     ReasoningStepsBuffer = "";
