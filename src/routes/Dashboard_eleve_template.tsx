@@ -1,6 +1,6 @@
 // src/components/Dashboard_eleve_template.tsx
 
-import React, { useState, useEffect, KeyboardEvent, useRef } from 'react';
+import React, { useState, useEffect, KeyboardEvent, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ThemeProvider,
@@ -43,8 +43,8 @@ import logo_lucy_face from '../testlucy3.png';
 
 
 import '../index.css';
-import { AIMessage } from '../components/Messages';
-import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting } from '../interfaces/interfaces_eleve';
+import { AIMessage } from '../components/MessagesWEB';
+import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep } from '../interfaces/interfaces_eleve';
 import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
@@ -112,6 +112,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const chunkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const phraseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const wordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasNewContent, setHasNewContent] = useState(false); // Nouvel état pour détecter du contenu
 
   const courseId = localStorage.getItem('course_id');
   const universityDomain = localStorage.getItem('university') || 'example.edu';
@@ -122,6 +123,12 @@ const Dashboard_eleve_template: React.FC = () => {
 
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
+
+
+  const lastAiMessageId = useMemo(() => {
+    const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
+    return lastAiMessage ? lastAiMessage.id : null;
+  }, [messages]);
 
 
   //For display sentence above three dots for waiting
@@ -382,6 +389,7 @@ const Dashboard_eleve_template: React.FC = () => {
   // Fonction pour envoyer le message à l'AI ou à l'API
   const onSubmit = async (messageHistory: Message[], inputValue: string) => {
     setIsStreaming(true);
+    setHasNewContent(false); // Réinitialise au début de chaque message
     let answer = '';
     let answerDocuments: AnswerDocument[] = [];
     let answerImages: { image_id: string; image_url: string; image_description?: string }[] = [];
@@ -390,6 +398,7 @@ const Dashboard_eleve_template: React.FC = () => {
     let answerCHART: AnswerCHART[] = [];
     let answerCourse: AnswerCourse[] = [];
     let answerWaiting: AnswerWaiting[] = [];
+    let answerReasoning: ReasoningStep[] = [];
     let error: string | null = null;
 
     try {
@@ -424,13 +433,12 @@ const Dashboard_eleve_template: React.FC = () => {
         if (Array.isArray(packetBunch)) {
           for (const packet of packetBunch) {
             if (typeof packet === 'string') {
+              setHasNewContent(true); // Détecte un nouveau contenu
               answer = packet.replace(/\|/g, '');
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
               answer = (packet as AnswerPiecePacket).answer_piece;
 
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_document')) {
-              answerDocuments.push((packet as AnswerDocumentPacket).answer_document);
-
+            
             } else if (Object.prototype.hasOwnProperty.call(packet, 'image_data')) {
               answerImages.push((packet as any).image_data);
 
@@ -443,24 +451,32 @@ const Dashboard_eleve_template: React.FC = () => {
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_COURSE_data')) {
               answerCourse.push((packet as any).answer_COURSE_data);
 
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'related_questions')) {
-              relatedQuestionsList = (packet as any).related_questions;
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'reasoning_steps')) {
+                answerReasoning.push((packet as any).reasoning_steps);
+                console.log("Étapes de raisonnement ajoutées");
 
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
               answerWaiting = (packet as any).answer_waiting;
+            
 
             } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
               error = (packet as StreamingError).error;
             }
           }
         } else if (typeof packetBunch === 'object' && packetBunch !== null) {
+
           if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_document')) {
             answerDocuments.push((packetBunch as AnswerDocumentPacket).answer_document);
+            console.log('This is a test')
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'image_data')) {
             answerImages.push((packetBunch as any).image_data);
 
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_TAK_data')) {
             answerTAK.push((packetBunch as any).answer_TAK_data);
+
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reasoning_steps')) {
+            answerReasoning.push((packetBunch as any).reasoning_steps);
 
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
             answerCHART.push((packetBunch as any).answer_CHART_data);
@@ -480,9 +496,13 @@ const Dashboard_eleve_template: React.FC = () => {
 
         const flattenedImages = answerImages.flat();
         const flattenedTAK = answerTAK.flat();
+        const flattenedReasoning = answerReasoning.flat();
         const flattenedCHART = answerCHART.flat();
         const flattenedCourse = answerCourse.flat();
         const flattenedwaitingdata = answerWaiting.flat();
+
+        // Check if `flattenedReasoning` contains data before updating messages
+        console.log("Final flattenedReasoning array before setting messages:", flattenedReasoning);
 
         // Détection de TAK
         if (flattenedTAK.length > 0) {
@@ -504,6 +524,7 @@ const Dashboard_eleve_template: React.FC = () => {
             CHART: flattenedCHART,
             COURSE: flattenedCourse,
             waitingMessages: flattenedwaitingdata,
+            ReasoningSteps: flattenedReasoning,
           };
 
           return updatedMessages;
@@ -1077,9 +1098,13 @@ const Dashboard_eleve_template: React.FC = () => {
             </div>
           </div>
 
-          {/* Affichage de la LandingPage ou des messages */}
+
+          {/* Content Area */}
           {isLandingPageVisible ? (
-            <LandingPage onSend={handleSendMessageFromLandingPage} />
+            // Utilisez un fragment React pour envelopper Spline et LandingPage
+            <>
+              <LandingPage onSend={handleSendMessageFromLandingPage} />
+            </>
           ) : (
             <div
               className="flex-grow overflow-y-auto"
@@ -1094,10 +1119,10 @@ const Dashboard_eleve_template: React.FC = () => {
                     >
                       <div className="max-w-3/4 w-full text-right">
                         <div className="flex items-center justify-end mb-1">
-                          <span className="font-bold mr-2" style={{ color: theme.palette.text.primary }}>
+                          {/*<span className="font-bold mr-2" style={{ color: theme.palette.text.primary }}>
                             You
                           </span>
-                          <Avatar alt="User Avatar" src={logo_greg} sx={{ width: 25, height: 25 }} />
+                          {/*<Avatar alt="User Avatar" src={logo_greg} sx={{ width: 25, height: 25 }} />*/}
                         </div>
                         <div className="flex justify-end">
                           <div
@@ -1132,85 +1157,31 @@ const Dashboard_eleve_template: React.FC = () => {
                   ) : (
                     <div key={message.id} className={`flex justify-start ${messageMarginX}`}>
                       <div className="max-w-3/4 w-full flex items-center">
-
-
-                      {message.content === '' ? (
-                        <div className="flex items-center">
-                          <Avatar
-                            alt="Lucy Avatar"
-                            src={logo_lucy_face}
-                            sx={{ width: 25, height: 25 }}
-                          />
-                          <div className="ml-2 flex flex-col">
-                            {/* Affichage des phrases dynamiques */}
-                            <Typography variant="body2" sx={{ color: theme.palette.primary.main, marginBottom: '8px' }}>
-                              {displayedText}
-                            </Typography>
-                            {/* Spinner des trois points */}
-                            <ThreeDots height="30" width="50" color={theme.palette.primary.main} />
-                          </div>
-                        </div>
-                      ) : (
-                        <AIMessage
-                          messageId={message.id}
-                          content={message.content}
-                          personaName={message.personaName}
-                          citedDocuments={message.citedDocuments}
-                          isComplete={isComplete}
-                          hasDocs={!!message.citedDocuments?.length}
-                          handleFeedback={(feedbackType: FeedbackType) => handleFeedbackClick(index)}
-                          handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
-                          handleSourceClick={handleSourceClick}
-                          images={message.images}
-                          takData={message.TAK}
-                          CourseData={message.COURSE}
-                          waitingMessages={message.waitingMessages}
-                          chartData={message.CHART}  // Ajoutez cette ligne pour passer les données du graphique
-                          drawerOpen={drawerOpen}
-                          handleSendTAKMessage={handleSendTAKMessage}
-                          handleSendCOURSEMessage={handleSendCOURSEMessage}
+                      <AIMessage
+                        messageId={message.id}
+                        //content={message.content || displayedText}  // Utilisez displayedText si le content est vide
+                        content={message.content}  // Utilisez displayedText si le content est vide
+                        personaName={message.personaName}
+                        citedDocuments={message.citedDocuments}
+                        isComplete={isComplete}
+                        hasDocs={!!message.citedDocuments?.length}
+                        handleFeedback={(feedbackType) => handleFeedbackClick(index)}
+                        handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
+                        handleSourceClick={handleSourceClick}
+                        images={message.images}
+                        takData={message.TAK}
+                        CourseData={message.COURSE}
+                        waitingMessages={message.waitingMessages}
+                        //ReasoningSteps={message.ReasoningSteps && message.id === lastAiMessageId} 
+                        ReasoningSteps={message.id === lastAiMessageId ? message.ReasoningSteps : undefined} 
+                        chartData={message.CHART}
+                        drawerOpen={drawerOpen}
+                        handleSendTAKMessage={handleSendTAKMessage}
+                        handleSendCOURSEMessage={handleSendCOURSEMessage}
+                        //isLoading={isStreaming} // Nouveau prop
+                        isLoading={isStreaming && message.id === lastAiMessageId} // Utilise lastAiMessageId
+                        hasNewContent={hasNewContent}
                         />
-                      )}
-
-
-                        {/*
-                        {message.content === '' ? (
-                          <div className="flex items-center">
-                            <Avatar
-                              alt="Lucy Avatar"
-                              src={logo_lucy_face}
-                              sx={{ width: 25, height: 25 }}
-                            />
-                            <div className="ml-2">
-                              <ThreeDots height="30" width="50" color={theme.palette.primary.main} />
-                            </div>
-                          </div>
-                        ) : (
-                          <AIMessage
-                            messageId={message.id}
-                            content={message.content}
-                            personaName={message.personaName}
-                            citedDocuments={message.citedDocuments}
-                            isComplete={isComplete}
-                            hasDocs={!!message.citedDocuments?.length}
-                            handleFeedback={(feedbackType: FeedbackType) => handleFeedbackClick(index)}
-                            handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
-                            handleSourceClick={handleSourceClick}
-                            images={message.images}
-                            takData={message.TAK}
-                            CourseData={message.COURSE}
-                            waitingMessages={message.waitingMessages}
-                            drawerOpen={drawerOpen}
-                            handleSendTAKMessage={handleSendTAKMessage}
-                            handleSendCOURSEMessage={handleSendCOURSEMessage}
-                          />
-                        )}
-                        */}
-
-
-
-
-
                       </div>
                     </div>
                   )
@@ -1220,6 +1191,7 @@ const Dashboard_eleve_template: React.FC = () => {
             </div>
           )}
 
+          
           {relatedQuestions.length > 0 && (
             <div className="mt-4 px-8 flex justify-center">
               <div className="flex flex-wrap gap-2 justify-center">
