@@ -97,6 +97,12 @@ export interface Message {
     waitingMessages?: AnswerWaiting[]| null;
     CHART?: AnswerCHART[] | null; // Ajout de AnswerChart pour gérer les graphiques
     ReasoningSteps?: ReasoningStep[] | null; // Utiliser un tableau de ReasoningStep pour plus de clarté
+    REDDIT?: AnswerREDDIT[] | null;
+    INSTA?: AnswerINSTA[] | null;
+    YOUTUBE?: AnswerYOUTUBE[] | null;
+    QUORA?: AnswerQUORA[] | null;
+    INSTA_CLUB?: AnswerINSTA_CLUB[] | null;
+    LINKEDIN?: AnswerLINKEDIN[] | null;
   };
 
 
@@ -126,6 +132,48 @@ export interface ChartData {
   data: { label: string; x: number; y: number }[];
 }
 */
+
+export interface AnswerREDDIT{
+  comment: string;
+  score: string;
+}
+
+export interface AnswerINSTA{
+  title: string;
+  nbr_view: string;
+  link: string;
+  picture: string;
+}
+
+export interface AnswerINSTA_CLUB{
+  username: string;
+  title: string;
+  followers: string;
+  posts: string;
+  link: string;
+  picture: string;
+}
+
+export interface AnswerLINKEDIN{
+  name: string;
+  picture: string;
+  headline: string;
+  sentence: string;
+  link: string;
+}
+
+export interface AnswerYOUTUBE{
+  title: string;
+  link: string;
+  miniature: string;
+  nbr_view: string;
+
+}
+
+export interface AnswerQUORA{
+  comment: string;
+  score: string;
+}
 
 
 export interface ChartData {

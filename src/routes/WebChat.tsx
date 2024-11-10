@@ -42,7 +42,7 @@ import logo_lucy_face from '../lucy_new_face_contour2.png';
 import '../index.css';
 //import { AIMessage } from '../components/Messages';
 import { AIMessage } from '../components/MessagesWEB';
-import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep } from '../interfaces/interfaces_eleve';
+import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN } from '../interfaces/interfaces_eleve';
 import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
@@ -421,6 +421,12 @@ const Dashboard_eleve_template: React.FC = () => {
     let answerCourse: AnswerCourse[] = [];
     let answerWaiting: AnswerWaiting[] = [];
     let answerReasoning: ReasoningStep[] = [];
+    let answerREDDIT: AnswerREDDIT[] = [];
+    let answerINSTA: AnswerINSTA[] = [];
+    let answerYOUTUBE: AnswerYOUTUBE[] = [];
+    let answerQUORA: AnswerQUORA[] = [];
+    let answerINSTA_CLUB: AnswerINSTA_CLUB[] = [];
+    let answerLINKEDIN: AnswerLINKEDIN[] = [];
     let error: string | null = null;
 
     try {
@@ -477,6 +483,30 @@ const Dashboard_eleve_template: React.FC = () => {
                 answerReasoning.push((packet as any).reasoning_steps);
                 console.log("Étapes de raisonnement ajoutées");
 
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'reddit')) {
+                answerREDDIT.push((packet as any).reddit);
+                console.log("Reddit ajoutées");
+
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'insta')) {
+                answerINSTA.push((packet as any).insta);
+                console.log("Insta ajoutées");
+
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'insta_club')) {
+                answerINSTA_CLUB.push((packet as any).insta_club);
+                console.log("Insta club ajoutées");
+
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'linkedin')) {
+                answerLINKEDIN.push((packet as any).linkedin);
+                console.log("Linkedin ajoutées");
+
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'youtube')) {
+                answerYOUTUBE.push((packet as any).youtube);
+                console.log("Youtube ajoutées");
+
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'quora')) {
+                answerQUORA.push((packet as any).quora);
+                console.log("Quora ajoutées");
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
               answerWaiting = (packet as any).answer_waiting;
             
@@ -500,6 +530,24 @@ const Dashboard_eleve_template: React.FC = () => {
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reasoning_steps')) {
             answerReasoning.push((packetBunch as any).reasoning_steps);
 
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reddit')) {
+            answerREDDIT.push((packetBunch as any).reddit);
+
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta')) {
+            answerINSTA.push((packetBunch as any).insta);
+
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta_club')) {
+            answerINSTA_CLUB.push((packetBunch as any).insta_club);
+
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'linkedin')) {
+            answerLINKEDIN.push((packetBunch as any).linkedin);
+
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'youtube')) {
+            answerYOUTUBE.push((packetBunch as any).youtube);
+
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'quora')) {
+            answerQUORA.push((packetBunch as any).quora);
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
             answerCHART.push((packetBunch as any).answer_CHART_data);
 
@@ -519,12 +567,36 @@ const Dashboard_eleve_template: React.FC = () => {
         const flattenedImages = answerImages.flat();
         const flattenedTAK = answerTAK.flat();
         const flattenedReasoning = answerReasoning.flat();
+        const flattenedREDDIT = answerREDDIT.flat();
+        const flattenedINSTA = answerINSTA.flat();
+        const flattenedINSTA_CLUB = answerINSTA_CLUB.flat();
+        const flattenedLINKEDIN = answerLINKEDIN.flat();
+        const flattenedYOUTUBE = answerYOUTUBE.flat();
+        const flattenedQUORA = answerQUORA.flat();
         const flattenedCHART = answerCHART.flat();
         const flattenedCourse = answerCourse.flat();
         const flattenedwaitingdata = answerWaiting.flat();
 
         // Check if `flattenedReasoning` contains data before updating messages
         console.log("Final flattenedReasoning array before setting messages:", flattenedReasoning);
+
+        // Check if `flattenedReasoning` contains data before updating messages
+        console.log("Final flattenedREDDIT array before setting messages:", flattenedREDDIT);
+
+        // Check if `flattenedReasoning` contains data before updating messages
+        console.log("Final flattenedINSTA array before setting messages:", flattenedINSTA);
+
+        // Check if `flattenedReasoning` contains data before updating messages
+        console.log("Final flattenedYOUTUBE array before setting messages:", flattenedYOUTUBE);
+
+        // Check if `flattenedReasoning` contains data before updating messages
+        console.log("Final flattenedQUORA array before setting messages:", flattenedQUORA);
+
+        // Check if `flattenedReasoning` contains data before updating messages
+        console.log("Final flattenedINSTA_CLUB array before setting messages:", flattenedINSTA_CLUB);
+
+        // Check if `flattenedReasoning` contains data before updating messages
+        console.log("Final flattenedLINKEDIN array before setting messages:", flattenedLINKEDIN);
 
         // Détection de TAK
         if (flattenedTAK.length > 0) {
@@ -547,6 +619,12 @@ const Dashboard_eleve_template: React.FC = () => {
             COURSE: flattenedCourse,
             waitingMessages: flattenedwaitingdata,
             ReasoningSteps: flattenedReasoning,
+            REDDIT: flattenedREDDIT,
+            INSTA: flattenedINSTA,
+            YOUTUBE: flattenedYOUTUBE,
+            QUORA: flattenedQUORA,
+            INSTA_CLUB: flattenedINSTA_CLUB,
+            LINKEDIN: flattenedLINKEDIN,
           };
 
           return updatedMessages;
@@ -1096,6 +1174,12 @@ const Dashboard_eleve_template: React.FC = () => {
                         //isLoading={isStreaming} // Nouveau prop
                         isLoading={isStreaming && message.id === lastAiMessageId} // Utilise lastAiMessageId
                         hasNewContent={hasNewContent}
+                        redditData= {message.REDDIT}
+                        instaData = {message.INSTA}
+                        youtubeData= {message.YOUTUBE}
+                        quoraData = {message.QUORA}
+                        instaclubData = {message.INSTA_CLUB}
+                        linkedinData = {message.LINKEDIN}
                         />
                       </div>
                     </div>
