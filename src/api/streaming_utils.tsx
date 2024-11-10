@@ -61,6 +61,27 @@ export async function* handleStream<T extends NonEmptyObject>(
     let isReasoningSteps = false;
     let ReasoningStepsBuffer = "";
 
+    let isReddit = false;
+    let RedditBuffer = "";
+
+    let isInsta = false;
+    let InstaBuffer = "";
+
+    let isInsta2 = false;
+    let Insta2Buffer = "";
+
+    let isInstaClub = false;
+    let InstaClubBuffer = "";
+
+    let isYoutube = false;
+    let YoutubeBuffer = "";
+
+    let isQuora = false;
+    let QuoraBuffer = "";
+
+    let isLinkedin = false;
+    let LinkedinBuffer = "";
+
     
 
     let previousPartialChunk: string | null = null;
@@ -183,6 +204,98 @@ export async function* handleStream<T extends NonEmptyObject>(
                 }
                 ReasoningStepsBuffer = "";
                 isReasoningSteps = false;
+            }
+
+            if (isReddit && RedditBuffer) {
+                try {
+                    console.log("Tentative de parsing du reddit JSON final:", RedditBuffer);
+                    const redditJson = JSON.parse(RedditBuffer); // Convertir le waiting final en JSON
+                    console.log("reddit JSON émis à la fin du flux:", redditJson);
+                    yield redditJson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du reddit JSON à la fin du flux:", err);
+                }
+                RedditBuffer = "";
+                isReddit = false;
+            }
+
+            if (isInsta2 && Insta2Buffer) {
+                try {
+                    console.log("Tentative de parsing du insta JSON final:", Insta2Buffer);
+                    const insta2Json = JSON.parse(Insta2Buffer); // Convertir le waiting final en JSON
+                    console.log("inst2 JSON émis à la fin du flux:", insta2Json);
+                    yield insta2Json;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du insta2 JSON à la fin du flux:", err);
+                }
+                Insta2Buffer = "";
+                isInsta2 = false;
+            }
+
+
+            if (isInsta && InstaBuffer) {
+                try {
+                    console.log("Tentative de parsing du insta JSON final:", InstaBuffer);
+                    const instaJson = JSON.parse(InstaBuffer); // Convertir le waiting final en JSON
+                    console.log("insta JSON émis à la fin du flux:", instaJson);
+                    yield instaJson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du insta JSON à la fin du flux:", err);
+                }
+                InstaBuffer = "";
+                isInsta = false;
+            }
+
+            if (isInstaClub && InstaClubBuffer) {
+                try {
+                    console.log("Tentative de parsing du insta club JSON final:", InstaClubBuffer);
+                    const instaClubJson = JSON.parse(InstaClubBuffer); // Convertir le waiting final en JSON
+                    console.log("insta club JSON émis à la fin du flux:", instaClubJson);
+                    yield instaClubJson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du insta club JSON à la fin du flux:", err);
+                }
+                InstaClubBuffer = "";
+                isInstaClub = false;
+            }
+
+            if (isYoutube && YoutubeBuffer) {
+                try {
+                    console.log("Tentative de parsing du youtube JSON final:", YoutubeBuffer);
+                    const youtubeJson = JSON.parse(YoutubeBuffer); // Convertir le waiting final en JSON
+                    console.log("youtube JSON émis à la fin du flux:", youtubeJson);
+                    yield youtubeJson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du youtube JSON à la fin du flux:", err);
+                }
+                YoutubeBuffer = "";
+                isYoutube = false;
+            }
+
+            if (isQuora && QuoraBuffer) {
+                try {
+                    console.log("Tentative de parsing du quora JSON final:", QuoraBuffer);
+                    const quoraJson = JSON.parse(QuoraBuffer); // Convertir le waiting final en JSON
+                    console.log("quora JSON émis à la fin du flux:", quoraJson);
+                    yield quoraJson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du quora JSON à la fin du flux:", err);
+                }
+                QuoraBuffer = "";
+                isQuora = false;
+            }
+
+            if (isLinkedin && LinkedinBuffer) {
+                try {
+                    console.log("Tentative de parsing du linkedin JSON final:", LinkedinBuffer);
+                    const linkedinJson = JSON.parse(LinkedinBuffer); // Convertir le waiting final en JSON
+                    console.log("linkedin JSON émis à la fin du flux:", linkedinJson);
+                    yield linkedinJson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du linkedin JSON à la fin du flux:", err);
+                }
+                LinkedinBuffer = "";
+                isLinkedin = false;
             }
 
             break;
@@ -444,6 +557,158 @@ export async function* handleStream<T extends NonEmptyObject>(
                     ReasoningStepsBuffer = "";
                 } catch (err) {
                     console.error("Erreur lors du parsing de reasoning JSON:", err);
+                }
+            }
+            continue;
+        }
+
+
+        // Detection and processing of <REASONING_STEPS> and <REASONING_STEPS_END>
+        if (decodedValue.includes("<REDDIT>")) {
+            console.log("1) Détection de <REDDIT> dans le chunk:", decodedValue);
+            isReddit = true;
+            RedditBuffer = decodedValue.split("<REDDIT>")[1].split("<REDDIT_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de reddit JSON, buffer actuel:", RedditBuffer);
+
+            if (decodedValue.includes("<REDDIT_END>")) {
+                try {
+                    console.log("3) Détection de <REDDIT_END> dans le même chunk.");
+                    const redditJson = JSON.parse(RedditBuffer);
+                    console.log("4) reddit JSON reçue et convertie:", redditJson);
+                    yield redditJson;
+                    isReddit = false;
+                    RedditBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de reddit JSON:", err);
+                }
+            }
+            continue;
+        }
+
+
+        if (decodedValue.includes("<INSTA2>")) {
+            console.log("1) Détection de <INSTA2> dans le chunk:", decodedValue);
+            isInsta2 = true;
+            Insta2Buffer = decodedValue.split("<INSTA2>")[1].split("<INSTA2_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de INSTA2 JSON, buffer actuel:", Insta2Buffer);
+
+            if (decodedValue.includes("<INSTA2_END>")) {
+                try {
+                    console.log("3) Détection de <INSTA2_END> dans le même chunk.");
+                    const insta2Json = JSON.parse(Insta2Buffer);
+                    console.log("4) insta2 JSON reçue et convertie:", insta2Json);
+                    yield insta2Json;
+                    isInsta2 = false;
+                    Insta2Buffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de insta2 JSON:", err);
+                }
+            }
+            continue;
+        }
+
+
+        if (decodedValue.includes("<INSTA>")) {
+            console.log("1) Détection de <INSTA> dans le chunk:", decodedValue);
+            isInsta = true;
+            InstaBuffer = decodedValue.split("<INSTA>")[1].split("<INSTA_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de insta JSON, buffer actuel:", InstaBuffer);
+
+            if (decodedValue.includes("<INSTA_END>")) {
+                try {
+                    console.log("3) Détection de <INSTA_END> dans le même chunk.");
+                    const instaJson = JSON.parse(InstaBuffer);
+                    console.log("4) insta JSON reçue et convertie:", instaJson);
+                    yield instaJson;
+                    isInsta = false;
+                    InstaBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de insta JSON:", err);
+                }
+            }
+            continue;
+        }
+
+        if (decodedValue.includes("<INSTA_CLUB>")) {
+            console.log("1) Détection de <INSTA_CLUB> dans le chunk:", decodedValue);
+            isInstaClub = true;
+            InstaClubBuffer = decodedValue.split("<INSTA_CLUB>")[1].split("<INSTA_CLUB_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de insta_club JSON, buffer actuel:", InstaClubBuffer);
+
+            if (decodedValue.includes("<INSTA_CLUB_END>")) {
+                try {
+                    console.log("3) Détection de <INSTA_CLUB_END> dans le même chunk.");
+                    const instaJson = JSON.parse(InstaBuffer);
+                    console.log("4) insta JSON reçue et convertie:", instaJson);
+                    yield instaJson;
+                    isInstaClub = false;
+                    InstaClubBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de insta Club JSON:", err);
+                }
+            }
+            continue;
+        }
+
+        if (decodedValue.includes("<LINKEDIN>")) {
+            console.log("1) Détection de <LINKEDIN> dans le chunk:", decodedValue);
+            isLinkedin = true;
+            LinkedinBuffer = decodedValue.split("<LINKEDIN>")[1].split("<LINKEDIN_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de Linkedin JSON, buffer actuel:", LinkedinBuffer);
+
+            if (decodedValue.includes("<LINKEDIN_END>")) {
+                try {
+                    console.log("3) Détection de <LINKEDIN_END> dans le même chunk.");
+                    const linkedinJson = JSON.parse(LinkedinBuffer);
+                    console.log("4) Linkedin JSON reçue et convertie:", linkedinJson);
+                    yield linkedinJson;
+                    isLinkedin = false;
+                    LinkedinBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de linkedin JSON:", err);
+                }
+            }
+            continue;
+        }
+
+        if (decodedValue.includes("<YOUTUBE>")) {
+            console.log("1) Détection de <YOUTUBE> dans le chunk:", decodedValue);
+            isYoutube = true;
+            YoutubeBuffer = decodedValue.split("<YOUTUBE>")[1].split("<YOUTUBE_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de youtube JSON, buffer actuel:", YoutubeBuffer);
+
+            if (decodedValue.includes("<YOUTUBE_END>")) {
+                try {
+                    console.log("3) Détection de <YOUTUBE_END> dans le même chunk.");
+                    const youtubeJson = JSON.parse(YoutubeBuffer);
+                    console.log("4) insta JSON reçue et convertie:", youtubeJson);
+                    yield youtubeJson;
+                    isYoutube = false;
+                    YoutubeBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de youtube JSON:", err);
+                }
+            }
+            continue;
+        }
+
+
+        if (decodedValue.includes("<QUORA>")) {
+            console.log("1) Détection de <QUORA> dans le chunk:", decodedValue);
+            isQuora = true;
+            QuoraBuffer = decodedValue.split("<QUORA>")[1].split("<QUORA_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de quora JSON, buffer actuel:", QuoraBuffer);
+
+            if (decodedValue.includes("<QUORA_END>")) {
+                try {
+                    console.log("3) Détection de <QUORA_END> dans le même chunk.");
+                    const quoraJson = JSON.parse(QuoraBuffer);
+                    console.log("4) quora JSON reçue et convertie:", quoraJson);
+                    yield quoraJson;
+                    isQuora = false;
+                    QuoraBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de quora JSON:", err);
                 }
             }
             continue;
