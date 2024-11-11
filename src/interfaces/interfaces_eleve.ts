@@ -103,6 +103,7 @@ export interface Message {
     QUORA?: AnswerQUORA[] | null;
     INSTA_CLUB?: AnswerINSTA_CLUB[] | null;
     LINKEDIN?: AnswerLINKEDIN[] | null;
+    INSTA2?: AnswerINSTA2[] | null;
   };
 
 
@@ -141,6 +142,15 @@ export interface AnswerREDDIT{
 export interface AnswerINSTA{
   title: string;
   nbr_view: string;
+  link: string;
+  picture: string;
+}
+
+export interface AnswerINSTA2{
+  username: string;
+  title: string;
+  followers: string;
+  posts: string;
   link: string;
   picture: string;
 }
