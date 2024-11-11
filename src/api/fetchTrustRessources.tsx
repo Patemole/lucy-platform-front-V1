@@ -138,7 +138,11 @@ export const requestDocumentDownload = async ({
         }
 
         if (documentName === "Privacy Policy") {
-            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Privacy+Policies+-+My+Lucy+Corp+-+2024.pdf";
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Privacy+Policy+-+My+Lucy+Corp+-+2024+-+11%3A11%3A24.pdf";
+        }
+
+        if (documentName === "Online Subscription Agreement") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Online+Subscription+Agreement++-+My+Lucy+Corp+-+2024.pdf";
         }
 
 
