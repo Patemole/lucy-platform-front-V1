@@ -44,7 +44,7 @@ import logo_lucy_face from '../testlucy3.png';
 
 import '../index.css';
 import { AIMessage } from '../components/MessagesWEB';
-import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN } from '../interfaces/interfaces_eleve';
+import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2} from '../interfaces/interfaces_eleve';
 import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
@@ -401,6 +401,7 @@ const Dashboard_eleve_template: React.FC = () => {
     let answerReasoning: ReasoningStep[] = [];
     let answerREDDIT: AnswerREDDIT[] = [];
     let answerINSTA: AnswerINSTA[] = [];
+    let answerINSTA2: AnswerINSTA2[] = [];
     let answerYOUTUBE: AnswerYOUTUBE[] = [];
     let answerQUORA: AnswerQUORA[] = [];
     let answerINSTA_CLUB: AnswerINSTA_CLUB[] = [];
@@ -422,8 +423,8 @@ const Dashboard_eleve_template: React.FC = () => {
 
       const lastMessageIndex = messageHistory.length - 1;
 
-      //for await (const packetBunch of sendMessageSocraticLangGraph({
-      for await (const packetBunch of sendMessageFakeDemo({
+      for await (const packetBunch of sendMessageSocraticLangGraph({
+      //for await (const packetBunch of sendMessageFakeDemo({
         message: inputValue,
         chatSessionId: chatSessionId,
         courseId: courseId,
@@ -468,6 +469,10 @@ const Dashboard_eleve_template: React.FC = () => {
             } else if (Object.prototype.hasOwnProperty.call(packet, 'insta')) {
                 answerINSTA.push((packet as any).insta);
                 console.log("Insta ajoutées");
+
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'insta2')) {
+                answerINSTA2.push((packet as any).insta2);
+                console.log("Insta2 ajoutées");
 
             } else if (Object.prototype.hasOwnProperty.call(packet, 'insta_club')) {
                 answerINSTA_CLUB.push((packet as any).insta_club);
@@ -514,6 +519,9 @@ const Dashboard_eleve_template: React.FC = () => {
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta')) {
             answerINSTA.push((packetBunch as any).insta);
 
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta2')) {
+            answerINSTA2.push((packetBunch as any).insta2);
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta_club')) {
             answerINSTA_CLUB.push((packetBunch as any).insta_club);
 
@@ -547,6 +555,7 @@ const Dashboard_eleve_template: React.FC = () => {
         const flattenedReasoning = answerReasoning.flat();
         const flattenedREDDIT = answerREDDIT.flat();
         const flattenedINSTA = answerINSTA.flat();
+        const flattenedINSTA2 = answerINSTA2.flat();
         const flattenedINSTA_CLUB = answerINSTA_CLUB.flat();
         const flattenedLINKEDIN = answerLINKEDIN.flat();
         const flattenedYOUTUBE = answerYOUTUBE.flat();
@@ -576,6 +585,9 @@ const Dashboard_eleve_template: React.FC = () => {
         // Check if `flattenedReasoning` contains data before updating messages
         console.log("Final flattenedLINKEDIN array before setting messages:", flattenedLINKEDIN);
 
+        // Check if `flattenedReasoning` contains data before updating messages
+        console.log("Final flattenedINSTA2 array before setting messages:", flattenedINSTA2);
+
         // Détection de TAK
         if (flattenedTAK.length > 0) {
           const randomMessages = ['Give me some clarification 🤓'];
@@ -601,10 +613,9 @@ const Dashboard_eleve_template: React.FC = () => {
             INSTA: flattenedINSTA,
             YOUTUBE: flattenedYOUTUBE,
             QUORA: flattenedQUORA,
-            INSTA_CLUB: [
-              ...(prevMessages[lastMessageIndex].INSTA_CLUB || []),
-              ...flattenedINSTA_CLUB],
+            INSTA_CLUB: flattenedINSTA_CLUB,
             LINKEDIN: flattenedLINKEDIN,
+            INSTA2: flattenedINSTA2,
           };
 
           return updatedMessages;
@@ -1267,6 +1278,8 @@ const Dashboard_eleve_template: React.FC = () => {
                         quoraData = {message.QUORA}
                         instaclubData = {message.INSTA_CLUB}
                         linkedinData = {message.LINKEDIN}
+                        insta2Data = {message.INSTA2}
+
                         />
                       </div>
                     </div>

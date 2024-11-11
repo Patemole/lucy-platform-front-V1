@@ -171,6 +171,15 @@ export interface AnswerINSTA{
   picture: string;
 }
 
+export interface AnswerINSTA2{
+  username: string;
+  title: string;
+  followers: string;
+  posts: string;
+  link: string;
+  picture: string;
+}
+
 export interface AnswerINSTA_CLUB{
   username: string;
   title: string;

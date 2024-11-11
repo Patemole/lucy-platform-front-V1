@@ -24,6 +24,8 @@ import {
   AnswerQUORA,
   AnswerINSTA_CLUB,
   AnswerLINKEDIN,
+  AnswerINSTA2,
+
 } from "../interfaces/interfaces";
 import { IconButton } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -122,6 +124,7 @@ interface AIMessageProps {
   quoraData?: AnswerQUORA[] | null;
   instaclubData?: AnswerINSTA_CLUB[] | null;
   linkedinData?: AnswerLINKEDIN[]| null;
+  insta2Data?: AnswerINSTA2[] | null;
 }
 
 export const AIMessage: React.FC<AIMessageProps> = ({
@@ -156,7 +159,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   youtubeData,
   quoraData,
   instaclubData,
-  linkedinData
+  linkedinData,
+  insta2Data
 }) => {
   // États pour la gestion des interactions utilisateur
   const [copyClicked, setCopyClicked] = useState(false);
@@ -416,6 +420,15 @@ export const AIMessage: React.FC<AIMessageProps> = ({
     console.log("ChartData reçu:", chartData);
   }, [chartData]);
 
+  const hasSocialThread =
+  (redditData && redditData.length > 0) ||
+  (instaData && instaData.length > 0) ||
+  (youtubeData && youtubeData.length > 0) ||
+  (quoraData && quoraData.length > 0) ||
+  (instaclubData && instaclubData.length > 0) ||
+  (linkedinData && linkedinData.length > 0) ||
+  (insta2Data && insta2Data.length > 0);
+
   return (
     <div className="py-5 px-5 flex -mr-6 w-full relative">
       {selectedImage && (
@@ -464,7 +477,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
           {displayedReasoningSteps && displayedReasoningSteps.length > 0 && (
             <div
-                className={`mt-2 ${!isSmallScreen ? "ml-8" : ""} text-justify ${messageFontSize}`}
+                className={`mt-2 mb-4 ${!isSmallScreen ? "ml-8" : ""} text-justify ${messageFontSize}`}
                 style={{ color: theme.palette.text.primary }}
             >
                 <div className="flex items-center justify-between">
@@ -553,63 +566,10 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
           {/* Affichez l'indicateur de chargement tant que isLoading est vrai */}
           {showLoadingIndicator && (
-            <div className="flex justify-start mt-2 pl-10">
+            <div className="flex justify-start mt-2 pl-10 mb-2">
               <ThreeDots height="30" width="50" color={theme.palette.primary.main} />
             </div>
           )}
-
-          {/* Gestion des documents cités */}
-        {citedDocuments && citedDocuments.length > 0 && (
-        <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""}`}>
-            {/* Title for Sources Section */}
-            <div 
-            className="font-bold mb-2" 
-            style={{ 
-                color: theme.palette.text.primary, 
-                fontSize: '15px' // Ajustez la taille de texte si nécessaire
-            }}
-            >
-            University Sources
-            </div>
-            <div className="flex flex-wrap gap-2">
-            {citedDocuments.map((document, ind) => {
-                const display = (
-                <div
-                    className="max-w-350 text-ellipsis flex text-sm border border-border py-1 px-2 rounded flex mb-2" // Ajoutez mb-2 ici pour le padding en dessous de chaque rectangle
-                    style={{ color: theme.palette.text.primary }}
-                >
-                    <div className="mr-1 my-auto">
-                    <SourceIcon
-                        sourceType={document.source_type as ValidSources}
-                        iconSize={16}
-                    />
-                    </div>
-                    {document.document_name}
-                </div>
-                );
-                if (document.link) {
-                return (
-                    <a
-                    key={document.document_id}
-                    href={document.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="cursor-pointer hover:bg-hover"
-                    >
-                    {display}
-                    </a>
-                );
-                } else {
-                return (
-                    <div key={document.document_id} className="cursor-default">
-                    {display}
-                    </div>
-                );
-                }
-            })}
-            </div>
-        </div>
-        )}
 
 
             {/* Social Thread Section */}
@@ -624,7 +584,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                 (instaclubData && instaclubData.length > 0) ||
                 (linkedinData && linkedinData.length > 0) ? (
                 <>
-                    <hr className="my-4 border-gray-300 ml-8 animate-fadeIn" /> {/* Animation ajoutée */}
+                    {/*<hr className="my-4 border-gray-300 ml-8 animate-fadeIn" /> {/* Animation ajoutée */}
                     <div
                     className="font-bold mb-3 ml-8 animate-fadeIn"
                     style={{
@@ -978,6 +938,63 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                 )}
             </>
             )}
+
+            {/* Gestion des documents cités */}
+        {citedDocuments && citedDocuments.length > 0 && (
+        <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""}`}>
+            {/* Divider above University Sources, visible only if Social Thread has elements */}
+            {hasSocialThread && (
+            <>
+                <hr className="my-4 border-gray-300 animate-fadeIn" /> {/* Animation ajoutée */}
+            </>
+            )}
+
+            {/* Title for Sources Section */}
+            <div 
+            className="font-bold mb-2" 
+            style={{ 
+                color: theme.palette.text.primary, 
+                fontSize: '15px' // Ajustez la taille de texte si nécessaire
+            }}
+            >
+            University Sources
+            </div>
+            <div className="flex flex-wrap gap-2">
+            {citedDocuments.map((document, ind) => {
+                const display = (
+                <div
+                    className="max-w-350 text-ellipsis flex text-sm border border-border py-1 px-2 rounded mb-2" // Correction : Suppression du double "flex" et maintien de mb-2
+                    style={{ color: theme.palette.text.primary }}
+                >
+                    <div className="mr-1 my-auto">
+                    <SourceIcon
+                        sourceType={document.source_type as ValidSources}
+                        iconSize={16}
+                    />
+                    </div>
+                    {document.document_name}
+                </div>
+                );
+
+                return document.link ? (
+                <a
+                    key={document.document_id}
+                    href={document.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cursor-pointer hover:bg-hover"
+                >
+                    {display}
+                </a>
+                ) : (
+                <div key={document.document_id} className="cursor-default">
+                    {display}
+                </div>
+                );
+            })}
+            </div>
+        </div>
+        )}
 
 
             {/* Affichage des messages accumulés */}
