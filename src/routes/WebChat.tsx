@@ -899,7 +899,15 @@ const Dashboard_eleve_template: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="flex h-screen" style={{ backgroundColor: theme.palette.background.default }}>
+      {/*<div className="flex h-screen" style={{ backgroundColor: 'transparent' }}>*/}
+      <div
+        className="flex h-screen"
+        style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.7)', // Couleur de fond avec transparence
+            backdropFilter: 'blur(20px)', // Ajoute un effet de flou de 10px
+            WebkitBackdropFilter: 'blur(20px)', // Pour les navigateurs Webkit comme Safari
+        }}
+        >
         {/* Drawer */}
         <Drawer
           variant="persistent"
@@ -1015,7 +1023,7 @@ const Dashboard_eleve_template: React.FC = () => {
           {/* Header with Login and Sign-up buttons */}
           <div
             className="relative p-4 flex items-center justify-between"
-            style={{ backgroundColor: '#F0F4FC', borderColor: theme.palette.divider }}
+            style={{ backgroundColor: 'transparent', borderColor: theme.palette.divider }}
           >
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {!drawerOpen && (
@@ -1101,7 +1109,7 @@ const Dashboard_eleve_template: React.FC = () => {
           ) : (
             <div
               className="flex-grow overflow-y-auto"
-              style={{ backgroundColor: '#F0F4FC', paddingBottom: '100px' }}
+              style={{ backgroundColor: 'transparent', paddingBottom: '100px' }}
             >
               <div className="flex flex-col space-y-2 p-4" ref={scrollableDivRef}>
                 {messages.map((message, index) =>
@@ -1217,15 +1225,20 @@ const Dashboard_eleve_template: React.FC = () => {
           )}
   
           {/* Input Field at the Bottom */}
+            {/* Input Field at the Bottom */}
+            {/* Input Field at the Bottom */}
             <div
             className="flex justify-center p-4"
             style={{
-                backgroundColor: '#F0F4FC',
+                backgroundColor: 'rgba(240, 240, 240, 0.95)', // Couleur blanche avec une légère transparence
                 position: 'fixed',
                 bottom: 0,
-                width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%', // Use the same value as drawerWidth
+                width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%', // Utilise la même valeur que drawerWidth
                 transition: 'width 0.3s',
                 display: isLandingPageVisible ? 'none' : 'flex',
+                boxShadow: '0 -4px 10px rgba(0, 0, 0, 0.2)', // Ajoute un ombrage pour un effet de séparation
+                borderTopLeftRadius: '10px', // Border radius pour les coins
+                borderTopRightRadius: '10px',
             }}
             >
             <div style={{ maxWidth: '800px', width: '100%', position: 'relative' }}>

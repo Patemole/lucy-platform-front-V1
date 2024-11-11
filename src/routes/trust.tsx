@@ -229,6 +229,7 @@ const SecurityDashboard: React.FC = () => {
     'Access Control Policy',
     'Encryption Policy',
     'Privacy Policy',
+    'Online Subscription Agreement',
   ];
 
   const controls = [
