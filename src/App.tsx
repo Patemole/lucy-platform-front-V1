@@ -5,6 +5,7 @@ import getTheme from './themes';
 import Dashboard_teacher_template from './routes/Dashboard_teacher_template';
 import Dashboard_eleve_template from './routes/Dashboard_eleve_template';
 import WebChat from './routes/WebChat';
+import WebChatWIDGET from './routes/WebWIDGETChat';
 import Course_selection_eleve_template from './routes/Course_selection_eleve_template';
 import Schedule_eleve_template from './routes/Schedule_eleve_template';
 import Dashboard_academic_advisor from './routes/Dashboard_academic_advisor';
@@ -177,6 +178,7 @@ const App: React.FC = () => {
                             <Route path="/auth/sign-up" element={<SignUp />} />
                             <Route path="/auth/sign-up/academic_advisor" element={<SignUp_academic_advisor />} />
                             <Route path="/chat" element={<WebChat />} />
+                            <Route path="/chatWidget" element={<WebChatWIDGET />} />
                             <Route path="/auth/sign-up/enrollment" element={<SignUp_enrollment />} />
                             <Route path="/overview" element={<TrustPage />} />
                             <Route path="/controls" element={<TrustControlPage />} />
