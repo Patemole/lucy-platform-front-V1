@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Page avec Widget Lucy</title>
+</head>
+<body>
+
+    <!-- Le conteneur pour le widget Lucy -->
+    <div id="lucy-widget-container"></div>
+
+    <!-- Inclusion du script qui définit LucyWidget -->
+    <script src="lucy-widget.js"></script>
+
+    <!-- Script pour initialiser le widget Lucy -->
+    <script>
+        console.log("Initialisation du widget Lucy...");
+
+        // Appel de la méthode init avec les options
+        LucyWidget.init({
+            container: '#lucy-widget-container',  // Utilise le bon ID ici
+            university: 'University of Pennsylvania',
+            theme: 'light',
+            language: 'fr'
+        });
+
+        console.log("Appel de LucyWidget.init terminé.");
+    </script>
+
+</body>
+</html>

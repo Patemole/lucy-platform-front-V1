@@ -53,7 +53,7 @@ import { useAuth } from '../auth/hooks/useAuth';
 import PopupWrongAnswer from '../components/PopupWrongAnswer';
 import PopupFeedback from '../components/PopupFeedback';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
-import LandingPage from '../components/LandingPageWeb'; // Import du composant LandingPage
+//import LandingPage from '../components/LandingPageWeb'; // Import du composant LandingPage
 
 const drawerWidth = 240;
 const ALLOWED_COURSE_IDS = ['Connf4P2TpKXXGooaQD5', 'tyPR1RAulPfqLLfNgIqF', 'Q1SjXBe30FyX6GxvJVIG', 'moRgToBTOAJZdMQPs7Ci'];
@@ -125,12 +125,41 @@ const Dashboard_eleve_template: React.FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
 
+  const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
+
 
   
   const lastAiMessageId = useMemo(() => {
     const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
     return lastAiMessage ? lastAiMessage.id : null;
   }, [messages]);
+
+
+  const hasSentTempMessage = useRef(false);
+
+  useEffect(() => {
+    const sendTempMessage = async () => {
+      if (hasSentTempMessage.current) return; // Empêche la deuxième exécution
+      hasSentTempMessage.current = true;
+      const tempMessage = localStorage.getItem('tempMessage');
+      if (tempMessage) {
+        try {
+          console.log('sendTempMessage - tempMessage:', tempMessage);
+          await handleNewConversation(); // Crée une nouvelle conversation
+          await handleSendMessageSocraticLangGraph(tempMessage); // Envoie le message dans la nouvelle conversation
+          localStorage.removeItem('tempMessage'); // Supprime le message temporaire
+          console.log('Message envoyé dans une nouvelle conversation.');
+        } catch (error) {
+          console.error('Erreur lors de l\'envoi du message dans une nouvelle conversation:', error);
+          setPopup({
+            type: 'error',
+            message: 'Échec de l\'envoi du message. Veuillez réessayer.',
+          });
+        }
+      }
+    };
+    sendTempMessage();
+  }, []);
 
 
   //For display sentence above three dots for waiting
@@ -211,6 +240,19 @@ const Dashboard_eleve_template: React.FC = () => {
       setDisplayedText('');
     }
   }, [isStreaming]);
+
+
+
+  const getOrCreateUID = () => {
+    // Vérifie si un uid existe déjà dans localStorage
+    let uid = localStorage.getItem('uid');
+    if (!uid) {
+        // Génère un uid aléatoire si aucun uid n'est disponible
+        uid = uuidv4();
+        localStorage.setItem('uid', uid); // Stocke le uid temporaire
+    }
+    return uid;
+};
 
 
   const splitPhraseIntoChunks = (phrase: string, chunkSize: number): string[] => {
@@ -311,21 +353,6 @@ const Dashboard_eleve_template: React.FC = () => {
     loadMessagesFromLocalStorageChatId();
   }, []);
 
-  useEffect(() => {
-    // Vérifier si un message est stocké dans localStorage
-    const tempMessage = localStorage.getItem('tempMessage');
-    
-    if (tempMessage) {
-      // Envoyer le message automatiquement
-      console.log('Message question envoyé depuis le widget');
-      console.log(tempMessage);
-  
-      handleSendMessageSocraticLangGraph(tempMessage);
-  
-      // Supprimer le message de localStorage après l’envoi pour éviter un envoi multiple
-      localStorage.removeItem('tempMessage');
-    }
-  }, []);
 
 
   const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -385,27 +412,21 @@ const Dashboard_eleve_template: React.FC = () => {
 
   const handleSendMessageSocraticLangGraph = (message: string) => {
     if (message.trim() === '') return;
-
-    // Masquer la LandingPage après l'envoi du premier message
+  
     setIsLandingPageVisible(false);
-
     setRelatedQuestions([]);
-
     setShowChat(true);
     setIsComplete(false);
     setIsStreaming(true);
-
-    const newMessage: Message = { id: Date.now(), type: 'human', content: message };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-    // Définissez currentMessageId pour le message en cours de chargement
-    setCurrentMessageId(loadingMessage.id);
-
+  
+    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: message };
+    const loadingMessage: Message = { id: generateUniqueId(), type: 'ai', content: '', personaName: 'Lucy' };
+  
+    // Regrouper les messages pour éviter des appels multiples
+    setMessages((prevMessages) => [...prevMessages, newMessage, loadingMessage]);
+  
     onSubmit([...messages, newMessage, loadingMessage], message);
-    setInputValue(''); // Clear the input field after sending
+    setInputValue('');
   };
 
   // Fonction pour envoyer le message à l'AI ou à l'API
@@ -676,12 +697,19 @@ const Dashboard_eleve_template: React.FC = () => {
   };
 
   const handleNewConversation = async () => {
+
+    const uid = getOrCreateUID(); // Utilise getOrCreateUID pour obtenir le UID
+
+    if (!uid) {
+        console.error('UID is undefined. Cannot create new conversation.');
+        return;
+    }
     const newChatId = uuidv4();
     const oldChatId = localStorage.getItem('chat_id');
 
     setMessages([]); // Efface les messages
     setRelatedQuestions([]);
-    setIsLandingPageVisible(true); // Affiche la LandingPage
+    //setIsLandingPageVisible(true); // Affiche la LandingPage
 
     localStorage.setItem('chat_id', newChatId);
     setActiveChatId(newChatId);
@@ -887,6 +915,7 @@ const Dashboard_eleve_template: React.FC = () => {
   // État pour contrôler l'affichage de la LandingPage
   const [isLandingPageVisible, setIsLandingPageVisible] = useState(messages.length === 0);
 
+
   useEffect(() => {
     if (messages.length > 0) {
       setIsLandingPageVisible(false);
@@ -899,15 +928,14 @@ const Dashboard_eleve_template: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      {/*<div className="flex h-screen" style={{ backgroundColor: 'transparent' }}>*/}
       <div
         className="flex h-screen"
         style={{
             backgroundColor: 'rgba(255, 255, 255, 0.7)', // Couleur de fond avec transparence
-            backdropFilter: 'blur(20px)', // Ajoute un effet de flou de 10px
+            backdropFilter: 'blur(20px)', // Ajoute un effet de flou de 20px
             WebkitBackdropFilter: 'blur(20px)', // Pour les navigateurs Webkit comme Safari
         }}
-        >
+      >
         {/* Drawer */}
         <Drawer
           variant="persistent"
@@ -934,7 +962,8 @@ const Dashboard_eleve_template: React.FC = () => {
           </Box>
           <div style={{ flexGrow: 1, overflowY: 'auto' }}>
             <List style={{ padding: '0 15px' }}>
-              {/* Liste des éléments *
+              {/* Exemple de ListItem commenté */}
+              {/* 
               <ListItem
                 button
                 onClick={() => navigate(`/dashboard/student/${uid}`)}
@@ -951,7 +980,7 @@ const Dashboard_eleve_template: React.FC = () => {
                 />
               </ListItem>
               */}
-  
+
               <ListItem
                 button
                 onClick={() => navigate('/about')}
@@ -1013,103 +1042,24 @@ const Dashboard_eleve_template: React.FC = () => {
             </List>
           </div>
         </Drawer>
-  
+
         {/* Main Content Area */}
         <div
           className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : ''} ${
             iframeSrc ? 'mr-[33vw]' : ''
           }`}
         >
-          {/* Header with Login and Sign-up buttons */}
-          <div
-            className="relative p-4 flex items-center justify-between"
-            style={{ backgroundColor: 'transparent', borderColor: theme.palette.divider }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {!drawerOpen && (
-                <>
-                  <IconButton
-                    onClick={toggleDrawer}
-                    sx={{
-                      backgroundColor: theme.palette.background.paper, // Square background color
-                      width: '36px', // Square size
-                      height: '36px', // Square size
-                      borderRadius: '8px', // Rounded corners
-                      color: '#011F5B', // Icon color, adjust if needed
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      '&:hover': {
-                        backgroundColor: theme.palette.action.hover, // Hover background color
-                      },
-                    }}
-                  >
-                    <SidebarSimple size={20} weight="bold" /> {/* Phosphor icon for Sidebar */}
-                  </IconButton>
-  
-                  {/* Bouton "New Conversation" masqué lorsque LandingPage est visible */}
-                  {!isSmallScreen && !isLandingPageVisible && (
-                    <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
-                      <MapsUgcRoundedIcon />
-                    </IconButton>
-                  )}
-                </>
-              )}
-            </div>
-  
-            {/* University Logo */}
-            <img
-              src={theme.logo}
-              alt="University Logo"
-              style={{ height: '40px', marginRight: '10px' }}
-            />
-  
-            {/* Login and Sign-up Buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
-              {/* Login Button */}
-              <Button
-                onClick={() => navigate('/auth/sign-in')} 
-                sx={{
-                  fontWeight: '500',
-                  fontSize: '0.875rem',
-                  color: theme.palette.text.primary,
-                  textTransform: 'none',
-                  marginRight: '15px',
-                }}
-              >
-                Login
-              </Button>
-  
-              {/* Sign-up Button */}
-              <Button
-                onClick={() => navigate('/auth/sign-up')}
-                variant="contained"
-                sx={{
-                  fontWeight: '500',
-                  fontSize: '0.875rem',
-                  backgroundColor: '#011F5B', // Green color for Sign-up button
-                  color: '#FFFFFF',
-                  textTransform: 'none',
-                  '&:hover': {
-                    backgroundColor: '#011F5B', // Darker green on hover
-                  },
-                }}
-              >
-                Sign-up
-              </Button>
-            </div>
-          </div>
-  
+          {/* Header Supprimé */}
+
           {/* Content Area */}
           {isLandingPageVisible ? (
-            // Utilisez un fragment React pour envelopper Spline et LandingPage
             <>
-              <LandingPage onSend={handleSendMessageFromLandingPage} />
+              {/*<LandingPage onSend={handleSendMessageFromLandingPage} />*/}
             </>
           ) : (
             <div
               className="flex-grow overflow-y-auto"
-              style={{ backgroundColor: 'transparent', paddingBottom: '100px' }}
+              style={{ backgroundColor: 'transparent', paddingBottom: '60px' }} // Réduction du paddingBottom
             >
               <div className="flex flex-col space-y-2 p-4" ref={scrollableDivRef}>
                 {messages.map((message, index) =>
@@ -1120,10 +1070,7 @@ const Dashboard_eleve_template: React.FC = () => {
                     >
                       <div className="max-w-3/4 w-full text-right">
                         <div className="flex items-center justify-end mb-1">
-                          {/*<span className="font-bold mr-2" style={{ color: theme.palette.text.primary }}>
-                            You
-                          </span>
-                          {/*<Avatar alt="User Avatar" src={logo_greg} sx={{ width: 25, height: 25 }} />*/}
+                          {/* Contenu Commenté */}
                         </div>
                         <div className="flex justify-end">
                           <div
@@ -1135,7 +1082,7 @@ const Dashboard_eleve_template: React.FC = () => {
                               textAlign: 'left',
                               maxWidth: '75%',
                               marginRight: '30px',
-                              fontSize: '1.05rem',
+                              fontSize: '1.05rem', // Taille de la police maintenue
                               color: theme.palette.text_human_message_historic,
                             }}
                           >
@@ -1158,36 +1105,33 @@ const Dashboard_eleve_template: React.FC = () => {
                   ) : (
                     <div key={message.id} className={`flex justify-start ${messageMarginX}`}>
                       <div className="max-w-3/4 w-full flex items-center">
-                      <AIMessage
-                        messageId={message.id}
-                        //content={message.content || displayedText}  // Utilisez displayedText si le content est vide
-                        content={message.content}  // Utilisez displayedText si le content est vide
-                        personaName={message.personaName}
-                        citedDocuments={message.citedDocuments}
-                        isComplete={isComplete}
-                        hasDocs={!!message.citedDocuments?.length}
-                        handleFeedback={(feedbackType) => handleFeedbackClick(index)}
-                        handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
-                        handleSourceClick={handleSourceClick}
-                        images={message.images}
-                        takData={message.TAK}
-                        CourseData={message.COURSE}
-                        waitingMessages={message.waitingMessages}
-                        //ReasoningSteps={message.ReasoningSteps && message.id === lastAiMessageId} 
-                        ReasoningSteps={message.id === lastAiMessageId ? message.ReasoningSteps : undefined} 
-                        chartData={message.CHART}
-                        drawerOpen={drawerOpen}
-                        handleSendTAKMessage={handleSendTAKMessage}
-                        handleSendCOURSEMessage={handleSendCOURSEMessage}
-                        //isLoading={isStreaming} // Nouveau prop
-                        isLoading={isStreaming && message.id === lastAiMessageId} // Utilise lastAiMessageId
-                        hasNewContent={hasNewContent}
-                        redditData= {message.REDDIT}
-                        instaData = {message.INSTA}
-                        youtubeData= {message.YOUTUBE}
-                        quoraData = {message.QUORA}
-                        instaclubData = {message.INSTA_CLUB}
-                        linkedinData = {message.LINKEDIN}
+                        <AIMessage
+                          messageId={message.id}
+                          content={message.content}
+                          personaName={message.personaName}
+                          citedDocuments={message.citedDocuments}
+                          isComplete={isComplete}
+                          hasDocs={!!message.citedDocuments?.length}
+                          handleFeedback={(feedbackType) => handleFeedbackClick(index)}
+                          handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
+                          handleSourceClick={handleSourceClick}
+                          images={message.images}
+                          takData={message.TAK}
+                          CourseData={message.COURSE}
+                          waitingMessages={message.waitingMessages}
+                          ReasoningSteps={message.id === lastAiMessageId ? message.ReasoningSteps : undefined}
+                          chartData={message.CHART}
+                          drawerOpen={drawerOpen}
+                          handleSendTAKMessage={handleSendTAKMessage}
+                          handleSendCOURSEMessage={handleSendCOURSEMessage}
+                          isLoading={isStreaming && message.id === lastAiMessageId}
+                          hasNewContent={hasNewContent}
+                          redditData={message.REDDIT}
+                          instaData={message.INSTA}
+                          youtubeData={message.YOUTUBE}
+                          quoraData={message.QUORA}
+                          instaclubData={message.INSTA_CLUB}
+                          linkedinData={message.LINKEDIN}
                         />
                       </div>
                     </div>
@@ -1197,7 +1141,7 @@ const Dashboard_eleve_template: React.FC = () => {
               </div>
             </div>
           )}
-  
+
           {/* Related Questions */}
           {relatedQuestions.length > 0 && (
             <div className="mt-4 px-8 flex justify-center">
@@ -1223,12 +1167,10 @@ const Dashboard_eleve_template: React.FC = () => {
               </div>
             </div>
           )}
-  
+
           {/* Input Field at the Bottom */}
-            {/* Input Field at the Bottom */}
-            {/* Input Field at the Bottom */}
-            <div
-            className="flex justify-center p-4"
+          <div
+            className="flex justify-center p-2" // Réduction du padding de 4 à 2
             style={{
                 backgroundColor: 'rgba(240, 240, 240, 0.95)', // Couleur blanche avec une légère transparence
                 position: 'fixed',
@@ -1236,18 +1178,18 @@ const Dashboard_eleve_template: React.FC = () => {
                 width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%', // Utilise la même valeur que drawerWidth
                 transition: 'width 0.3s',
                 display: isLandingPageVisible ? 'none' : 'flex',
-                boxShadow: '0 -4px 10px rgba(0, 0, 0, 0.2)', // Ajoute un ombrage pour un effet de séparation
+                boxShadow: '0 -2px 5px rgba(0, 0, 0, 0.1)', // Réduction de l'ombre pour un effet moins prononcé
                 borderTopLeftRadius: '10px', // Border radius pour les coins
                 borderTopRightRadius: '10px',
             }}
-            >
+          >
             <div style={{ maxWidth: '800px', width: '100%', position: 'relative' }}>
                 <TextField
                 fullWidth
                 variant="outlined"
                 multiline
-                minRows={1} // Adjust `minRows` to change the minimum height of the TextField
-                maxRows={6}
+                minRows={1} // Maintien d'une hauteur minimale
+                maxRows={4} // Réduction du maxRows de 6 à 4 pour limiter la hauteur
                 placeholder="Message..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -1268,14 +1210,14 @@ const Dashboard_eleve_template: React.FC = () => {
                     style: {
                     backgroundColor: '#F4F4F4',
                     fontSize: '1rem',
-                    padding: '17px 8px', // Adjust `padding` to change the height of the TextField
+                    padding: '10px 8px', // Réduction du padding de 17px à 10px
                     borderRadius: '20px',
                     fontWeight: '500',
-                    color: theme.palette.text.primary, // Directly use the text color from the theme
-                    paddingRight: '20px', // Ensure space for the icon
-                    paddingLeft: '20px', // Ensure space for the icon
-                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Constant shadow around the field
-                    border: 'none', // Remove the border
+                    color: theme.palette.text.primary, // Directement utiliser la couleur du texte du thème
+                    paddingRight: '20px', // Assurer l'espace pour l'icône
+                    paddingLeft: '20px', // Assurer l'espace pour l'icône
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', // Réduction de l'ombre
+                    border: 'none', // Supprimer la bordure
                     },
                 }}
                 inputProps={{
@@ -1287,23 +1229,23 @@ const Dashboard_eleve_template: React.FC = () => {
                         border: 'none',
                     },
                     '&:hover fieldset': {
-                        boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+                        boxShadow: '0 0 5px rgba(0,0,0,0.3)',
                     },
                     },
                     '& .MuiInputBase-input::placeholder': {
-                    color: '#6F6F6F', // Darker color for the placeholder
+                    color: '#6F6F6F', // Couleur plus foncée pour le placeholder
                     opacity: 1,
                     },
                 }}
                 />
             </div>
-            </div>
+          </div>
         </div>
-  
+
         {/* Right-Side Iframe for Sources */}
         {iframeSrc && (
           <div
-            className="fixed top-0 right-0 h-full w-[33vw] shadow-lg border-l"
+            className="fixed bottom-0 right-0 h-[45%] w-[30%] shadow-lg border-t"
             style={{ backgroundColor: theme.palette.background.paper, borderColor: theme.palette.divider }}
           >
             <div className="flex items-center justify-between p-2 bg-gray-200">
@@ -1317,7 +1259,7 @@ const Dashboard_eleve_template: React.FC = () => {
             <iframe src={iframeSrc} title="Document Viewer" className="w-full h-full" frameBorder="0" />
           </div>
         )}
-  
+
         {/* Modals and Snackbars */}
         <PopupWrongAnswer
           open={modalOpen}
@@ -1327,14 +1269,14 @@ const Dashboard_eleve_template: React.FC = () => {
           aiMessageContent={selectedAiMessage}
           humanMessageContent={selectedHumanMessage}
         />
-  
+
         <PopupFeedback
           open={feedbackModalOpen}
           onClose={handleFeedbackModalClose}
           selectedFilter={selectedFilter}
           onSubmit={handleSubmitFeedback}
         />
-  
+
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={2000}
@@ -1350,7 +1292,7 @@ const Dashboard_eleve_template: React.FC = () => {
         </Snackbar>
       </div>
     </ThemeProvider>
-  );
+);
 }
 
 export default Dashboard_eleve_template;
