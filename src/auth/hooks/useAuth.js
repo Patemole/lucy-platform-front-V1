@@ -31,6 +31,9 @@ export const useAuth = () => {
       localStorage.removeItem('minor');
       localStorage.removeItem('student_profile');
       localStorage.removeItem('year');
+      localStorage.removeItem('username');
+      localStorage.removeItem('uid');
+      localStorage.removeItem('userID');
       // Redirige vers la page de connexion
       navigate('/auth/sign-in');
     } catch (error) {

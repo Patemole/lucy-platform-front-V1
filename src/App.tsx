@@ -9,6 +9,7 @@ import WebChatWIDGET from './routes/WebWIDGETChat';
 import Course_selection_eleve_template from './routes/Course_selection_eleve_template';
 import Schedule_eleve_template from './routes/Schedule_eleve_template';
 import Dashboard_academic_advisor from './routes/Dashboard_academic_advisor';
+import StudentProfile from './routes/StudentProfile';
 
 import FlagingDashboard from './routes/FlagingDashboard';
 import EnrollmentDashboard from './routes/EnrollmentDashboard';
@@ -185,6 +186,7 @@ const App: React.FC = () => {
 
                             <Route path="/" element={<PrivateRoute />}>
                                 <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
+                                <Route path="/profile/student/:userId" element={<StudentProfile />} />
                                 <Route path="/dashboard/academic-advisor/chat/:uid" element={<DashboardAAchat />} />
                                 <Route path="/onboarding/learningStyleSurvey" element={<LearningStyleSurvey />} />
                                 <Route path="/onboarding/learningStyleSurvey/:course_id" element={<LearningStyleSurvey />} />
