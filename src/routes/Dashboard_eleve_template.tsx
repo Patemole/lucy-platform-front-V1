@@ -56,6 +56,7 @@ import PopupWrongAnswer from '../components/PopupWrongAnswer';
 import PopupFeedback from '../components/PopupFeedback';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
 import LandingPage from '../components/LandingPage'; // Import du composant LandingPage
+import StudentProfileDialog from '../components/StudentProfileDialog'; // Import the dialog component
 
 const drawerWidth = 240;
 const ALLOWED_COURSE_IDS = ['Connf4P2TpKXXGooaQD5', 'tyPR1RAulPfqLLfNgIqF', 'Q1SjXBe30FyX6GxvJVIG', 'moRgToBTOAJZdMQPs7Ci'];
@@ -75,7 +76,7 @@ const waitingPhrases = [
 
 const Dashboard_eleve_template: React.FC = () => {
   const theme = useTheme();
-  const { uid } = useParams<{ uid: string }>();
+  const { uid } = useParams<{ uid: string }>(); // PERMET D ALLER RECUPERER LA VALEUR DU UID EN COURS DIRECTEMENT DANS L URL 
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { popup, setPopup } = usePopup();
@@ -113,6 +114,14 @@ const Dashboard_eleve_template: React.FC = () => {
   const phraseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const wordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hasNewContent, setHasNewContent] = useState(false); // Nouvel état pour détecter du contenu
+  const [cancelConversation, setCancelConversation] = useState(false);
+  // À l'intérieur de votre composant
+  const cancelConversationRef = useRef(false);
+  const [dialogOpen, setDialogOpen] = useState(false); // State to control dialog visibility
+
+  const handleDialogOpen = () => setDialogOpen(true);
+  const handleDialogClose = () => setDialogOpen(false);
+
 
   const courseId = localStorage.getItem('course_id');
   const universityDomain = localStorage.getItem('university') || 'example.edu';
@@ -129,6 +138,9 @@ const Dashboard_eleve_template: React.FC = () => {
     const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
     return lastAiMessage ? lastAiMessage.id : null;
   }, [messages]);
+
+
+  const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
 
 
   //For display sentence above three dots for waiting
@@ -376,10 +388,10 @@ const Dashboard_eleve_template: React.FC = () => {
     setIsComplete(false);
     setIsStreaming(true);
 
-    const newMessage: Message = { id: Date.now(), type: 'human', content: message };
+    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: message };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
 
-    const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
+    const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy' };
     setMessages((prevMessages) => [...prevMessages, loadingMessage]);
 
     onSubmit([...messages, newMessage, loadingMessage], message);
@@ -388,8 +400,8 @@ const Dashboard_eleve_template: React.FC = () => {
 
   // Fonction pour envoyer le message à l'AI ou à l'API
   const onSubmit = async (messageHistory: Message[], inputValue: string) => {
-    setIsStreaming(true);
-    setHasNewContent(false); // Réinitialise au début de chaque message
+    setIsStreaming(true); // Start streaming for the current message
+    setHasNewContent(false); // Reset new content detection at the start of each message
     let answer = '';
     let answerDocuments: AnswerDocument[] = [];
     let answerImages: { image_id: string; image_url: string; image_description?: string }[] = [];
@@ -409,255 +421,235 @@ const Dashboard_eleve_template: React.FC = () => {
     let error: string | null = null;
 
     try {
-      const chatSessionId = localStorage.getItem('chat_id') || 'default_chat_id';
-      const courseId = localStorage.getItem('course_id') || 'default_course_id';
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const username = user.name || 'default_user';
-      const uid = user.id || 'default_uid';
-      const university = localStorage.getItem('university') || 'default_university';
-      const major = localStorage.getItem('major') || 'default_major';
-      const minor = localStorage.getItem('minor') || 'default_minor';
-      const year = localStorage.getItem('year') || 'default_year';
-      const faculty = localStorage.getItem('faculty') || 'default_faculty';
-      const student_profile = localStorage.getItem('student_profile') || '';
+        const chatSessionId = localStorage.getItem('chat_id') || 'default_chat_id';
+        const courseId = localStorage.getItem('course_id') || 'default_course_id';
+        const user = JSON.parse(localStorage.getItem('user') || '{}'); //And because we cant find the user in the localstorage
+        //const username = user.name || 'default_user'; // Default user because we can't find the username in the localstorage
+        //const uid = user.id || 'default_uid';
+        const username = localStorage.getItem('username') || 'default_username';
+        //const uid = uid || 'default_uid'; //Pas besoin d aller recuperer la valeur de uid on l a deja du coup
+        const university = localStorage.getItem('university') || 'default_university';
+        const major = localStorage.getItem('major') || 'default_major';
+        const minor = localStorage.getItem('minor') || 'default_minor';
+        const year = localStorage.getItem('year') || 'default_year';
+        const faculty = localStorage.getItem('faculty') || 'default_faculty';
+        const student_profile = localStorage.getItem('student_profile') || '';
 
-      const lastMessageIndex = messageHistory.length - 1;
+        const lastMessageIndex = messageHistory.length - 1;
 
-      for await (const packetBunch of sendMessageSocraticLangGraph({
-      //for await (const packetBunch of sendMessageFakeDemo({
-        message: inputValue,
-        chatSessionId: chatSessionId,
-        courseId: courseId,
-        username: username,
-        university: university,
-        student_profile: student_profile,
-        major: [major],
-        minor: [minor],
-        year: year,
-        faculty: [faculty],
+        for await (const packetBunch of sendMessageSocraticLangGraph({
+            message: inputValue,
+            chatSessionId: chatSessionId,
+            courseId: courseId,
+            username: username,
+            university: university,
+            student_profile: student_profile,
+            major: [major],
+            minor: [minor],
+            year: year,
+            faculty: [faculty],
+        })) {
 
-      })) {
-        if (Array.isArray(packetBunch)) {
-          for (const packet of packetBunch) {
-            if (typeof packet === 'string') {
-              setHasNewContent(true); // Détecte un nouveau contenu
-              answer = packet.replace(/\|/g, '');
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
-              answer = (packet as AnswerPiecePacket).answer_piece;
-
-            
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'image_data')) {
-              answerImages.push((packet as any).image_data);
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_TAK_data')) {
-              answerTAK.push((packet as any).answer_TAK_data);
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_CHART_data')) {
-              answerCHART.push((packet as any).answer_CHART_data);
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_COURSE_data')) {
-              answerCourse.push((packet as any).answer_COURSE_data);
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'reasoning_steps')) {
-                answerReasoning.push((packet as any).reasoning_steps);
-                console.log("Étapes de raisonnement ajoutées");
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'reddit')) {
-                answerREDDIT.push((packet as any).reddit);
-                console.log("Reddit ajoutées");
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'insta')) {
-                answerINSTA.push((packet as any).insta);
-                console.log("Insta ajoutées");
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'insta2')) {
-                answerINSTA2.push((packet as any).insta2);
-                console.log("Insta2 ajoutées");
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'insta_club')) {
-                answerINSTA_CLUB.push((packet as any).insta_club);
-                console.log("Insta club ajoutées");
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'linkedin')) {
-                answerLINKEDIN.push((packet as any).linkedin);
-                console.log("Linkedin ajoutées");
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'youtube')) {
-                answerYOUTUBE.push((packet as any).youtube);
-                console.log("Youtube ajoutées");
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'quora')) {
-                answerQUORA.push((packet as any).quora);
-                console.log("Quora ajoutées");
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
-              answerWaiting = (packet as any).answer_waiting;
-            
-
-            } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
-              error = (packet as StreamingError).error;
+            /*
+            console.log("Est ce que la conversation a ete cancel?")
+            console.log(cancelConversation)
+            // Check if the conversation was cancelled
+            if (cancelConversation) {
+                console.log("Conversation was cancelled.");
+                break; // Exit the loop to stop processing packets
             }
+            */
+
+            // Vérifier si la conversation a été annulée
+            if (cancelConversationRef.current) {
+              console.log("Conversation a été annulée.");
+              break; // Sortir de la boucle pour arrêter le traitement des paquets
           }
-        } else if (typeof packetBunch === 'object' && packetBunch !== null) {
 
-          if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_document')) {
-            answerDocuments.push((packetBunch as AnswerDocumentPacket).answer_document);
-            console.log('This is a test')
+            // Process each packet in the packet bunch
+            if (Array.isArray(packetBunch)) {
+                for (const packet of packetBunch) {
+                    if (typeof packet === 'string') {
+                        setHasNewContent(true); // Detects new content
+                        answer = packet.replace(/\|/g, '');
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
+                        answer = (packet as AnswerPiecePacket).answer_piece;
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'image_data')) {
+                        answerImages.push((packet as any).image_data);
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_TAK_data')) {
+                        answerTAK.push((packet as any).answer_TAK_data);
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_CHART_data')) {
+                        answerCHART.push((packet as any).answer_CHART_data);
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_COURSE_data')) {
+                        answerCourse.push((packet as any).answer_COURSE_data);
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'reasoning_steps')) {
+                        answerReasoning.push((packet as any).reasoning_steps);
+                        console.log("Étapes de raisonnement ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'reddit')) {
+                        answerREDDIT.push((packet as any).reddit);
+                        console.log("Reddit ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'insta')) {
+                        answerINSTA.push((packet as any).insta);
+                        console.log("Insta ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'insta2')) {
+                        answerINSTA2.push((packet as any).insta2);
+                        console.log("Insta2 ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'insta_club')) {
+                        answerINSTA_CLUB.push((packet as any).insta_club);
+                        console.log("Insta club ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'linkedin')) {
+                        answerLINKEDIN.push((packet as any).linkedin);
+                        console.log("Linkedin ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'youtube')) {
+                        answerYOUTUBE.push((packet as any).youtube);
+                        console.log("Youtube ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'quora')) {
+                        answerQUORA.push((packet as any).quora);
+                        console.log("Quora ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
+                        answerWaiting = (packet as any).answer_waiting;
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
+                        error = (packet as StreamingError).error;
+                    }
+                }
+            } else if (typeof packetBunch === 'object' && packetBunch !== null) {
+                if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_document')) {
+                    answerDocuments.push((packetBunch as AnswerDocumentPacket).answer_document);
+                    console.log('This is a test');
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'image_data')) {
+                    answerImages.push((packetBunch as any).image_data);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_TAK_data')) {
+                    answerTAK.push((packetBunch as any).answer_TAK_data);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reasoning_steps')) {
+                    answerReasoning.push((packetBunch as any).reasoning_steps);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reddit')) {
+                    answerREDDIT.push((packetBunch as any).reddit);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta')) {
+                    answerINSTA.push((packetBunch as any).insta);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta2')) {
+                    answerINSTA2.push((packetBunch as any).insta2);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta_club')) {
+                    answerINSTA_CLUB.push((packetBunch as any).insta_club);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'linkedin')) {
+                    answerLINKEDIN.push((packetBunch as any).linkedin);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'youtube')) {
+                    answerYOUTUBE.push((packetBunch as any).youtube);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'quora')) {
+                    answerQUORA.push((packetBunch as any).quora);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
+                    answerCHART.push((packetBunch as any).answer_CHART_data);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_COURSE_data')) {
+                    answerCourse.push((packetBunch as any).answer_COURSE_data);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'related_questions')) {
+                    relatedQuestionsList = (packetBunch as any).related_questions;
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_waiting')) {
+                    answerWaiting = (packetBunch as any).answer_waiting;
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'error')) {
+                    error = (packetBunch as StreamingError).error;
+                }
+            }
 
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'image_data')) {
-            answerImages.push((packetBunch as any).image_data);
+            const flattenedImages = answerImages.flat();
+            const flattenedTAK = answerTAK.flat();
+            const flattenedReasoning = answerReasoning.flat();
+            const flattenedREDDIT = answerREDDIT.flat();
+            const flattenedINSTA = answerINSTA.flat();
+            const flattenedINSTA2 = answerINSTA2.flat();
+            const flattenedINSTA_CLUB = answerINSTA_CLUB.flat();
+            const flattenedLINKEDIN = answerLINKEDIN.flat();
+            const flattenedYOUTUBE = answerYOUTUBE.flat();
+            const flattenedQUORA = answerQUORA.flat();
+            const flattenedCHART = answerCHART.flat();
+            const flattenedCourse = answerCourse.flat();
+            const flattenedwaitingdata = answerWaiting.flat();
 
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_TAK_data')) {
-            answerTAK.push((packetBunch as any).answer_TAK_data);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reasoning_steps')) {
-            answerReasoning.push((packetBunch as any).reasoning_steps);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reddit')) {
-            answerREDDIT.push((packetBunch as any).reddit);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta')) {
-            answerINSTA.push((packetBunch as any).insta);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta2')) {
-            answerINSTA2.push((packetBunch as any).insta2);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta_club')) {
-            answerINSTA_CLUB.push((packetBunch as any).insta_club);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'linkedin')) {
-            answerLINKEDIN.push((packetBunch as any).linkedin);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'youtube')) {
-            answerYOUTUBE.push((packetBunch as any).youtube);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'quora')) {
-            answerQUORA.push((packetBunch as any).quora);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
-            answerCHART.push((packetBunch as any).answer_CHART_data);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_COURSE_data')) {
-            answerCourse.push((packetBunch as any).answer_COURSE_data);
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'related_questions')) {
-            relatedQuestionsList = (packetBunch as any).related_questions;
-
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_waiting')) {
-            answerWaiting = (packetBunch as any).answer_waiting;
-          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'error')) {
-            error = (packetBunch as StreamingError).error;
-          }
+            // Update the messages if conversation was not cancelled
+            if (!cancelConversationRef.current) {
+                setMessages((prevMessages) => {
+                    const updatedMessages = [...prevMessages];
+                    updatedMessages[lastMessageIndex] = {
+                        ...prevMessages[lastMessageIndex],
+                        type: 'ai',
+                        content: answer,
+                        personaName: 'Lucy',
+                        citedDocuments: answerDocuments,
+                        images: flattenedImages,
+                        TAK: flattenedTAK,
+                        CHART: flattenedCHART,
+                        COURSE: flattenedCourse,
+                        waitingMessages: flattenedwaitingdata,
+                        ReasoningSteps: flattenedReasoning,
+                        REDDIT: flattenedREDDIT,
+                        INSTA: flattenedINSTA,
+                        YOUTUBE: flattenedYOUTUBE,
+                        QUORA: flattenedQUORA,
+                        INSTA_CLUB: flattenedINSTA_CLUB,
+                        LINKEDIN: flattenedLINKEDIN,
+                        INSTA2: flattenedINSTA2,
+                    };
+                    return updatedMessages;
+                });
+            }
         }
 
-        const flattenedImages = answerImages.flat();
-        const flattenedTAK = answerTAK.flat();
-        const flattenedReasoning = answerReasoning.flat();
-        const flattenedREDDIT = answerREDDIT.flat();
-        const flattenedINSTA = answerINSTA.flat();
-        const flattenedINSTA2 = answerINSTA2.flat();
-        const flattenedINSTA_CLUB = answerINSTA_CLUB.flat();
-        const flattenedLINKEDIN = answerLINKEDIN.flat();
-        const flattenedYOUTUBE = answerYOUTUBE.flat();
-        const flattenedQUORA = answerQUORA.flat();
-        const flattenedCHART = answerCHART.flat();
-        const flattenedCourse = answerCourse.flat();
-        const flattenedwaitingdata = answerWaiting.flat();
-
-        // Check if `flattenedReasoning` contains data before updating messages
-        console.log("Final flattenedReasoning array before setting messages:", flattenedReasoning);
-
-        // Check if `flattenedReasoning` contains data before updating messages
-        console.log("Final flattenedREDDIT array before setting messages:", flattenedREDDIT);
-
-        // Check if `flattenedReasoning` contains data before updating messages
-        console.log("Final flattenedINSTA array before setting messages:", flattenedINSTA);
-
-        // Check if `flattenedReasoning` contains data before updating messages
-        console.log("Final flattenedYOUTUBE array before setting messages:", flattenedYOUTUBE);
-
-        // Check if `flattenedReasoning` contains data before updating messages
-        console.log("Final flattenedQUORA array before setting messages:", flattenedQUORA);
-
-        // Check if `flattenedReasoning` contains data before updating messages
-        console.log("Final flattenedINSTA_CLUB array before setting messages:", flattenedINSTA_CLUB);
-
-        // Check if `flattenedReasoning` contains data before updating messages
-        console.log("Final flattenedLINKEDIN array before setting messages:", flattenedLINKEDIN);
-
-        // Check if `flattenedReasoning` contains data before updating messages
-        console.log("Final flattenedINSTA2 array before setting messages:", flattenedINSTA2);
-
-        // Détection de TAK
-        if (flattenedTAK.length > 0) {
-          const randomMessages = ['Give me some clarification 🤓'];
-          answer = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+        /*
+        // Update related questions and stop streaming if not cancelled
+        if (!cancelConversation) {
+            setRelatedQuestions(relatedQuestionsList);
+            setIsStreaming(false);
         }
+        */
 
-        setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages];
-
-          updatedMessages[lastMessageIndex] = {
-            ...prevMessages[lastMessageIndex],
-            type: 'ai',
-            content: answer,
-            personaName: 'Lucy',
-            citedDocuments: answerDocuments,
-            images: flattenedImages,
-            TAK: flattenedTAK,
-            CHART: flattenedCHART,
-            COURSE: flattenedCourse,
-            waitingMessages: flattenedwaitingdata,
-            ReasoningSteps: flattenedReasoning,
-            REDDIT: flattenedREDDIT,
-            INSTA: flattenedINSTA,
-            YOUTUBE: flattenedYOUTUBE,
-            QUORA: flattenedQUORA,
-            INSTA_CLUB: flattenedINSTA_CLUB,
-            LINKEDIN: flattenedLINKEDIN,
-            INSTA2: flattenedINSTA2,
-          };
-
-          return updatedMessages;
-        });
-
-        if (isCancelled) {
-          setIsCancelled(false);
-          break;
-        }
+        /*
+        // Une fois la boucle terminée, on réinitialise `cancelConversation`
+        if (cancelConversation) {
+          setCancelConversation(false); // Réinitialise pour les futurs messages
+          console.log("cancelConversation réinitialisé à false après annulation.");
       }
+        */
 
-      setRelatedQuestions(relatedQuestionsList);
-      setIsStreaming(false);
+        // Mettre à jour les questions liées et arrêter le streaming si non annulé
+        if (!cancelConversationRef.current) {
+          setRelatedQuestions(relatedQuestionsList);
+          setIsStreaming(false);
+        }
 
-      const Message_AI_to_save = {
-        message: answer,
-        chatSessionId: chatSessionId,
-        courseId: courseId,
-        username: 'Lucy',
-        type: 'ai',
-        uid: uid,
-        input_message: inputValue,
-        university: university,
-      };
+        if (!uid) {
+          throw new Error("L'ID utilisateur (uid) est manquant dans l'URL.");
+        }
 
-      await saveMessageAIToBackend(Message_AI_to_save);
+        // Save AI message to backend if conversation is still active
+        if (!cancelConversationRef.current) {
+            await saveMessageAIToBackend({
+                message: answer,
+                chatSessionId: chatSessionId,
+                courseId: courseId,
+                username: 'Lucy',
+                type: 'ai',
+                uid: uid,
+                input_message: inputValue,
+                university: university,
+            });
+        }
     } catch (e: any) {
-      const errorMsg = e.message;
-      console.error('Error during message processing:', errorMsg);
-
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: Date.now(),
-          type: 'error',
-          content: 'An error occurred. Try to send the message again or open a new chat.',
-        },
-      ]);
-
-      setIsStreaming(false);
+        console.error('Error during message processing:', e.message);
+        setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+                id: Date.now(),
+                type: 'error',
+                content: 'An error occurred. Try to send the message again or open a new chat.',
+            },
+        ]);
+    } finally {
+        setIsStreaming(false); // Ensure streaming is set to false after completion or error
+        if (cancelConversationRef.current) {
+          cancelConversationRef.current = false;
+          setCancelConversation(false);
+          console.log("cancelConversation réinitialisé à false après annulation.");
+      }
     }
-  };
+};
 
   const handleInputKeyPressSocraticLangGraph = (event: KeyboardEvent) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -667,16 +659,28 @@ const Dashboard_eleve_template: React.FC = () => {
   };
 
   const handleNewConversation = async () => {
-    const newChatId = uuidv4();
-    const oldChatId = localStorage.getItem('chat_id');
+    console.log('NEW CONVERSATION')
+    if (isStreaming) {
+        // Signaler l'intention d'annuler la conversation en cours
+        setCancelConversation(true); // Pour les mises à jour UI si nécessaire
+        cancelConversationRef.current = true;
+        console.log("Annulation de la conversation en cours.");
 
-    console.log("Nouveau chat ID:", newChatId);
-    console.log("Ancien chat ID:", oldChatId);
+        // Attendre le prochain cycle de rendu pour s'assurer que l'annulation est prise en compte
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        console.log("Après le timeout:", cancelConversationRef.current);
+    }
 
-    // Réinitialiser l'état de la conversation
-    setMessages([]);
+    console.log("Initialisation de la nouvelle conversation sans streaming");
+    setIsStreaming(false); // Arrêter le streaming
+    setMessages([]); // Réinitialiser les messages
     setRelatedQuestions([]);
     setIsLandingPageVisible(true);
+
+    const newChatId = uuidv4();
+    const oldChatId = localStorage.getItem('chat_id');
+    console.log("Nouveau chat ID:", newChatId);
+    console.log("Ancien chat ID:", oldChatId);
 
     // Enregistrer le nouvel ID de conversation dans le stockage local
     localStorage.setItem('chat_id', newChatId);
@@ -690,36 +694,26 @@ const Dashboard_eleve_template: React.FC = () => {
             const userData = userSnap.data();
             const chatsessions = userData.chatsessions || [];
 
-            // Si un ancien ID de conversation existe, renommer cette conversation avec le premier message
+            // Renommer l'ancienne conversation si un `chat_id` précédent existe
             if (oldChatId) {
                 const oldChatRef = doc(db, 'chatsessions', oldChatId);
                 const oldChatSnap = await getDoc(oldChatRef);
 
                 if (oldChatSnap.exists()) {
                     const updateOldChatName = () => {
-                        console.log("Vérification du tableau messages pour renommer l'ancienne conversation...");
-
-                        // Vérifier si le tableau `messages` contient au moins un élément
                         if (messages.length > 0) {
                             const firstMessage = messages[0].content || 'Conversation history';
-                            console.log("Premier message détecté pour l'ancienne conversation:", firstMessage);
-
-                            // Mettre à jour le nom de l'ancienne conversation avec le premier message
                             updateDoc(oldChatRef, { name: firstMessage });
                         } else {
-                            // Réessayer si le premier message n'est pas encore présent
-                            console.log("Premier message non trouvé, vérification dans 100ms pour l'ancienne conversation...");
+                            // Réessayer après un délai si les messages ne sont pas encore disponibles
                             setTimeout(updateOldChatName, 100);
                         }
                     };
-
-                    updateOldChatName(); // Lancer l'observation pour détecter le premier message de l'ancienne conversation
-                } else {
-                    console.log("Ancienne conversation non trouvée, pas de mise à jour.");
+                    updateOldChatName();
                 }
             }
 
-            // Ajouter le nouvel ID de chat à l'historique des sessions
+            // Ajouter le nouvel ID de chat aux sessions de l'utilisateur
             chatsessions.push(newChatId);
             await updateDoc(userRef, { chatsessions });
 
@@ -731,12 +725,11 @@ const Dashboard_eleve_template: React.FC = () => {
                 modified_at: serverTimestamp(),
             });
 
-            // Récupérer et actualiser les conversations
+            // Actualiser la liste des conversations
             const refreshedUserSnap = await getDoc(userRef);
             if (refreshedUserSnap.exists()) {
                 const refreshedUserData = refreshedUserSnap.data();
                 const chatSessionIds = refreshedUserData.chatsessions || [];
-
                 const chatPromises = chatSessionIds.map(async (chatId: string) => {
                     if (typeof chatId === 'string') {
                         const chatRef = doc(db, 'chatsessions', chatId);
@@ -749,21 +742,17 @@ const Dashboard_eleve_template: React.FC = () => {
                 });
 
                 const fetchedConversations = await Promise.all(chatPromises);
-                const validConversations = fetchedConversations.filter(
-                    (conversation) => conversation !== null
-                );
+                const validConversations = fetchedConversations.filter(Boolean);
                 setConversations(validConversations.reverse());
-
                 console.log("Conversations actualisées:", validConversations);
             }
-        } else {
-            console.log("Utilisateur non trouvé dans Firestore.");
         }
     } else {
-        console.error('UID is undefined. Cannot create new conversation.');
+        console.error('UID est undefined. Impossible de créer une nouvelle conversation.');
     }
-};
 
+    // Ne pas réinitialiser `cancelConversation` ici
+};
 
 
   const handleConversationClick = async (chat_id: string) => {
@@ -942,9 +931,10 @@ const Dashboard_eleve_template: React.FC = () => {
           </Box>
           <div style={{ flexGrow: 1, overflowY: 'auto' }}>
             <List style={{ padding: '0 15px' }}>
+
               <ListItem
                 button
-                onClick={() => navigate(`/dashboard/student/${uid}`)}
+                onClick={handleDialogOpen} // Open the dialog instead of navigating
                 sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
               >
                 <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
@@ -958,6 +948,7 @@ const Dashboard_eleve_template: React.FC = () => {
                 />
               </ListItem>
 
+              {/*
               <ListItem
                 button
                 onClick={() => navigate('/about')}
@@ -973,6 +964,8 @@ const Dashboard_eleve_template: React.FC = () => {
                   }}
                 />
               </ListItem>
+              */}
+
               <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
               {conversations.length > 0 ? (
                 conversations.map((conversation) => (
@@ -1121,6 +1114,7 @@ const Dashboard_eleve_template: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {isSmallScreen ? (
                 <>
+                  {/*
                   <div
                     style={{
                       backgroundColor: '#FEEAEA',
@@ -1136,12 +1130,14 @@ const Dashboard_eleve_template: React.FC = () => {
                   >
                     Beta V2.3
                   </div>
+                  */}
                   <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
                     <MapsUgcRoundedIcon />
                   </IconButton>
                 </>
               ) : (
                 <>
+                  {/*
                   <div
                     style={{
                       backgroundColor: '#FEEAEA',
@@ -1158,6 +1154,7 @@ const Dashboard_eleve_template: React.FC = () => {
                   >
                     Beta V2.3
                   </div>
+                  */}
                   <img
                     src={logo_greg}
                     alt="Logo face"
@@ -1413,6 +1410,9 @@ const Dashboard_eleve_template: React.FC = () => {
         aiMessageContent={selectedAiMessage}
         humanMessageContent={selectedHumanMessage}
       />
+
+      {/* Render the StudentProfileDialog component */}
+      <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} />
 
       <PopupFeedback
         open={feedbackModalOpen}

@@ -1,3 +1,304 @@
+/*
+import * as React from 'react'; // with clerk librairie 
+import {
+  Button,
+  CssBaseline,
+  TextField,
+  Link,
+  Grid,
+  Box,
+  Typography,
+  Container,
+  Avatar,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
+} from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../auth/firebase';
+import lucyLogo from '../logo_lucy.png';
+import config from '../config';
+import { useSignUp } from '@clerk/clerk-react';
+
+const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
+
+const allowedDomains = {
+  upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
+  // ... (other allowed domains)
+  admin: [/^.+@my-lucy\.com$/i]
+};
+
+const getAllowedDomains = (subdomain) => allowedDomains[subdomain] || [];
+
+const isAllowedEmail = (email, subdomain) => {
+  const domains = getAllowedDomains(subdomain);
+  return domains.some((regex) => regex.test(email));
+};
+
+const getErrorMessage = (subdomain) => {
+  const universityNames = {
+    upenn: 'Upenn',
+    // ... (other university names)
+    admin: 'Admin'
+  };
+  return `Only ${universityNames[subdomain] || 'allowed domains'} email addresses can register`;
+};
+
+export default function SignUp() {
+  const theme = useTheme();
+  const { isLoaded, signUp, setSession } = useSignUp(); // Clerk sign-up hook
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [errors, setErrors] = React.useState({});
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+
+  const courseId = location.pathname.split('/sign-up/')[1] || '';
+  const subdomain = config.subdomain;
+
+  React.useEffect(() => {
+    if (courseId) {
+      setOpen(true);
+    }
+  }, [courseId]);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSignIn = () => {
+    navigate(`/auth/sign-in/${courseId}`);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrors({});
+    setIsLoading(true);
+
+    const data = new FormData(event.currentTarget);
+    const firstName = data.get('firstName');
+    const lastName = data.get('lastName');
+    const email = data.get('email');
+    const password = data.get('password');
+    const newErrors = {};
+
+    if (!firstName) {
+      newErrors.firstName = 'First name is required';
+    }
+    if (!lastName) {
+      newErrors.lastName = 'Last name is required';
+    }
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!isEmail(email)) {
+      newErrors.email = 'Please provide a valid email';
+    } else if (!isAllowedEmail(email, subdomain)) {
+      newErrors.email = getErrorMessage(subdomain);
+    }
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setIsLoading(false);
+      return;
+    }
+
+    if (isLoaded) {
+      try {
+        // Create a Clerk user
+        const newUser = await signUp.create({
+          emailAddress: email,
+          password,
+          firstName,
+          lastName
+        });
+
+        // Attempt to complete sign-up
+        await signUp.attemptFirstFactor({ strategy: 'email_link' });
+        
+        // Wait for session if required for navigation
+        const { createdSessionId } = newUser;
+        if (createdSessionId) {
+          setSession(createdSessionId);
+        }
+
+        // Save user data to Firestore
+        const timestamp = Timestamp.now();
+        await setDoc(doc(db, "users", newUser.id), {
+          uid: newUser.id,
+          name: `${firstName} ${lastName}`,
+          email: email,
+          university: theme.university,
+          role: subdomain === 'admin' ? "admin" : "student",
+          createdAt: timestamp,
+        });
+
+        localStorage.setItem('university', subdomain);
+
+        if (subdomain === 'admin') {
+          navigate('/dashboard/admin');
+        } else {
+          const onboardingUrl = `/onboarding/learningStyleSurvey/${courseId ? courseId : ''}`;
+          navigate(onboardingUrl, { state: { uid: newUser.id, firstName: firstName } });
+        }
+      } catch (error) {
+        if (error.errors && error.errors[0].code === 'identifier_already_exists') {
+          newErrors.email = 'Email address already in use!';
+        }
+        setErrors(newErrors);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  return (
+    <Container component="main" maxWidth="sm">
+      <CssBaseline />
+      <Box
+        sx={{
+          width: '100%',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          padding: theme.spacing(2),
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <img src={theme.logo} alt="University Logo" style={{ height: 50, width: 'auto' }} />
+      </Box>
+
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3, padding: 4, outline: 0, borderRadius: 3, boxShadow: `2px 2px 12px ${theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'}`, backgroundColor: theme.palette.background.paper }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Typography sx={{ fontWeight: 'bold', fontSize: '2rem', color: theme.palette.text.primary }}>
+                Create an Account
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                autoComplete="given-name"
+                name="firstName"
+                required
+                fullWidth
+                id="firstName"
+                label="First Name"
+                error={!!errors.firstName}
+                helperText={errors.firstName}
+                autoFocus
+                InputProps={{ sx: { borderRadius: 6 } }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                required
+                fullWidth
+                id="lastName"
+                label="Last Name"
+                name="lastName"
+                error={!!errors.lastName}
+                helperText={errors.lastName}
+                autoComplete="family-name"
+                InputProps={{ sx: { borderRadius: 6 } }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                label="Email Address"
+                name="email"
+                error={!!errors.email}
+                helperText={errors.email}
+                autoComplete="email"
+                InputProps={{ sx: { borderRadius: 6 } }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                error={!!errors.password}
+                helperText={errors.password}
+                autoComplete="new-password"
+                InputProps={{ sx: { borderRadius: 6 } }}
+              />
+            </Grid>
+          </Grid>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                mt: 3,
+                mb: 2,
+                padding: 1.5,
+                borderRadius: 5,
+                width: '50%',
+                backgroundColor: theme.palette.button_sign_in,
+                color: theme.palette.button_text_sign_in,
+                '&:hover': {
+                  backgroundColor: theme.palette.hover_button,
+                }
+              }}
+              disabled={isLoading}
+            >
+              Get Started
+            </Button>
+            {isLoading && (
+              <CircularProgress
+                size={24}
+                sx={{
+                  color: theme.palette.primary.contrastText,
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  marginTop: '-12px',
+                  marginLeft: '-12px',
+                }}
+              />
+            )}
+          </Box>
+          <Grid container justifyContent="center">
+            <Grid item>
+              <Link href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} variant="body2" sx={{ color: theme.palette.sign_up_link }}>
+                Already have an account? Sign in
+              </Link>
+            </Grid>
+          </Grid>
+        </Box>
+      </Box>
+    </Container>
+  );
+}
+*/ 
+
+
+
+
+// CODE QUI FONCTIONNE TRES BIEN MAIS SANS L UTILISATION DE CLERK POUR LE LOGIN - LOGOUT 
 import * as React from 'react';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -395,6 +696,7 @@ export default function SignUp() {
     </Container>
   );
 }
+
 
 
 
