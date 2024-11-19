@@ -1,173 +1,455 @@
 import React, { useState, useEffect } from 'react';
-import Avatar from '@mui/material/Avatar';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import { useTheme } from '@mui/material/styles';
-import { auth, db } from '../auth/firebase';
-import {
-  signInWithEmailAndPassword,
-  setPersistence,
-  browserLocalPersistence,
-} from 'firebase/auth';
 import { useNavigate, useParams } from 'react-router-dom';
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { auth } from '../auth/firebase';
 import { useAuth } from '../auth/hooks/useAuth';
-import { doc, getDoc } from 'firebase/firestore';
+import { useTheme } from '@mui/material/styles';
+import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress';
 import lucyLogo from '../logo_lucy.png';
-import LightModeIcon from '@mui/icons-material/WbSunny';
-import DarkModeIcon from '@mui/icons-material/Brightness3';
-import config from '../config';
-
-const allowedDomains = {
-  upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
-  harvard: [/^.+@([a-zA-Z0-9._-]+\.)*harvard\.edu$/i, /^.+@my-lucy\.com$/i],
-  mit: [/^.+@([a-zA-Z0-9._-]+\.)*mit\.edu$/i, /^.+@my-lucy\.com$/i],
-  lasell: [/^.+@([a-zA-Z0-9._-]+\.)*lasell\.edu$/i, /^.+@my-lucy\.com$/i],
-  oakland: [/^.+@([a-zA-Z0-9._-]+\.)*oakland\.edu$/i, /^.+@my-lucy\.com$/i],
-  arizona: [/^.+@([a-zA-Z0-9._-]+\.)*arizona\.edu$/i, /^.+@my-lucy\.com$/i],
-  uci: [/^.+@([a-zA-Z0-9._-]+\.)*uci\.edu$/i, /^.+@my-lucy\.com$/i],
-  ucidavis: [/^.+@([a-zA-Z0-9._-]+\.)*ucidavis\.edu$/i, /^.+@my-lucy\.com$/i],
-  cornell: [/^.+@([a-zA-Z0-9._-]+\.)*cornell\.edu$/i, /^.+@my-lucy\.com$/i],
-  berkeleycollege: [
-    /^.+@([a-zA-Z0-9._-]+\.)*berkeleycollege\.edu$/i,
-    /^.+@my-lucy\.com$/i,
-  ],
-  brown: [/^.+@([a-zA-Z0-9._-]+\.)*brown\.edu$/i, /^.+@my-lucy\.com$/i],
-  stanford: [/^.+@([a-zA-Z0-9._-]+\.)*stanford\.edu$/i, /^.+@my-lucy\.com$/i],
-  berkeley: [/^.+@([a-zA-Z0-9._-]+\.)*berkeley\.edu$/i, /^.+@my-lucy\.com$/i],
-  miami: [/^.+@([a-zA-Z0-9._-]+\.)*miami\.edu$/i, /^.+@my-lucy\.com$/i],
-  drexel: [/^.+@([a-zA-Z0-9._-]+\.)*drexel\.edu$/i, /^.+@my-lucy\.com$/i],
-  temple: [/^.+@([a-zA-Z0-9._-]+\.)*temple\.edu$/i, /^.+@my-lucy\.com$/i],
-  psu: [/^.+@([a-zA-Z0-9._-]+\.)*psu\.edu$/i, /^.+@my-lucy\.com$/i],
-  ccp: [/^.+@([a-zA-Z0-9._-]+\.)*ccp\.edu$/i, /^.+@my-lucy\.com$/i],
-  admin: [/^.+@my-lucy\.com$/i],
-};
+import { motion } from 'framer-motion'; // Framer Motion for animations
 
 const isEmail = (email) =>
   /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
 
-const getAllowedDomains = (subdomain) => allowedDomains[subdomain] || [];
-
-const isAllowedEmail = (email, subdomain) => {
-  const domains = getAllowedDomains(subdomain);
-  return domains.some((regex) => regex.test(email));
-};
-
-const getErrorMessage = (subdomain) => {
-  const universityNames = {
-    upenn: 'Upenn',
-    harvard: 'Harvard',
-    mit: 'MIT',
-    lasell: 'Lasell',
-    oakland: 'Oakland',
-    arizona: 'Arizona',
-    uci: 'UCI',
-    ucdavis: 'UC Davis',
-    cornell: 'Cornell',
-    berkeleycollege: 'Berkeley College',
-    brown: 'Brown',
-    stanford: 'Stanford',
-    berkeley: 'Berkeley',
-    miami: 'Miami',
-    drexel: 'Drexel',
-    temple: 'Temple',
-    psu: 'PennState',
-    ccp: 'Ccp',
-    admin: 'Admin',
-  };
-
-  return `Only ${
-    universityNames[subdomain] || 'email addresses from allowed domains'
-  } can register`;
-};
-
-export default function SignIn({ handleToggleThemeMode }) {
-  const { login, isAuth, loading } = useAuth();
+const SignIn = ({ handleToggleThemeMode }) => {
+  const { isAuth, loading, user } = useAuth();
+  const theme = useTheme();
   const navigate = useNavigate();
   const { course_id } = useParams();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false); // Tracks spinner in button
+
+  
+  // Redirect if user is already authenticated
+  useEffect(() => {
+    if (!loading && isAuth && user) {
+      console.log("User authenticated, redirecting...");
+      navigate(`/dashboard/${user?.role || 'defaultRole'}/${user?.id || 'defaultId'}`, { replace: true });
+    }
+  }, [loading, isAuth, user, navigate]);
+  
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrors({});
+    setIsLoading(true);
+
+    const newErrors = {};
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!isEmail(email)) {
+      newErrors.email = 'Please provide a valid email';
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      const result = await signInWithEmailAndPassword(auth, email, password);
+
+      // Optional: Fetch additional user data or validation here
+      console.log("Sign-in successful, redirecting...");
+      
+      // Navigate immediately after successful sign-in
+      //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
+    } catch (error) {
+      const newErrors = {};
+      if (error.code === 'auth/user-not-found') {
+        newErrors.email = 'No user found with this email';
+      } else if (error.code === 'auth/wrong-password') {
+        newErrors.password = 'Incorrect password';
+      } else if (error.code === 'auth/too-many-requests') {
+        newErrors.email = 'Account access blocked! Try again later';
+      } else {
+        newErrors.email = 'Login failed';
+      }
+      setErrors(newErrors);
+
+
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Animation variants for Framer Motion
+  const variants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+  };
+
+  return (
+    <motion.div
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={variants}
+      transition={{ duration: 0.5 }}
+      className="flex items-center justify-center min-h-screen bg-gray-100"
+    >
+      <div className="absolute top-4 left-4">
+        <img src={theme.logo} alt="University Logo" className="h-12" />
+      </div>
+
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4">
+        <h2 className="text-xl font-semibold text-center mb-4">Sign in to your account</h2>
+        <p className="text-gray-500 text-center mb-8 text-sm">
+          Access your personalized dashboard by signing in below.
+        </p>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+            <input
+              type="email"
+              name="email"
+              value={email} // Bind to state
+              onChange={(e) => setEmail(e.target.value)} // Update state
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+              placeholder="Email address"
+            />
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={password} // Bind to state
+              onChange={(e) => setPassword(e.target.value)} // Update state
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+              placeholder="Password"
+            />
+            {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 ${
+              isLoading ? 'cursor-not-allowed' : ''
+            }`}
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <CircularProgress size={20} color="inherit" />
+              </div>
+            ) : (
+              'Sign In'
+            )}
+          </button>
+
+          <p className="mt-8 text-xs text-center text-gray-600">
+            Don't have an account?{' '}
+            <a href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} className="text-blue-600 hover:underline">
+              Sign up now!
+            </a>
+          </p>
+
+          <div className="mt-8 flex items-center justify-center">
+            <p className="text-xs text-gray-400 mr-2">Powered by Lucy</p>
+            <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
+          </div>
+        </form>
+      </div>
+    </motion.div>
+  );
+};
+
+export default SignIn;
+
+/*
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../auth/firebase';
+import { useAuth } from '../auth/hooks/useAuth';
+import { useTheme } from '@mui/material/styles';
+import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress';
+import lucyLogo from '../logo_lucy.png';
+
+
+
+const isEmail = (email) =>
+  /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
+
+const SignIn = ({ handleToggleThemeMode }) => {
+  const { login, isAuth, loading, user, setPrimaryChatId, setUser, setIsAuth } = useAuth();
   const theme = useTheme();
+  const navigate = useNavigate();
+  const { course_id } = useParams();
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const currentUser = auth.currentUser;
+
+
+  //permet de automatiquement navigate vers la bonne page si on est deja connecte pour eviter de se reconnecter
+  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      console.log('--- useEffect Triggered ---');
+      console.log('loading:', loading);
+      console.log('isAuth:', isAuth);
+      console.log('user:', user);
+      console.log('setUser:', typeof setUser);
+
+      if (!loading && isAuth && user) {
+        console.log("Before redirection");
+        console.log("isAuth:", isAuth);
+        console.log("user:", user);
+
+        try {
+          const docRef = doc(db, 'users', user.id); // Utilisez user.id directement
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            console.log("User data fetched from Firestore:", userData);
+
+            // Mettre à jour les informations de l'utilisateur si nécessaire
+            setUser({
+              ...user, // Conserver les propriétés existantes
+              name: userData.name || '',
+              university: userData.university || '',
+              faculty: userData.faculty || [],
+              year: userData.year || '',
+              academic_advisor: userData.academic_advisor || '',
+              major: userData.major || [],
+              minor: userData.minor || [],
+              role: userData.role || '',
+            });
+            // Redirection basée sur le rôle de l'utilisateur
+            
+              navigate(`/dashboard/student/${user.id}`);
+          } 
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      } else {
+        console.log("Conditions not met for fetching user data");
+      }
+    };
+
+    fetchUserData();
+  }, [isAuth]); // Utiliser uniquement isAuth comme dépendance
+  
+
+
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrors({});
+    setIsLoading(true);
+  
+    const data = new FormData(event.currentTarget);
+    const email = data.get('email');
+    const password = data.get('password');
+    const newErrors = {};
+  
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!isEmail(email)) {
+      newErrors.email = 'Please provide a valid email';
+    }
+  
+    if (!password) {
+      newErrors.password = 'Password is required';
+    }
+  
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setIsLoading(false);
+      return;
+    }
+  
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
+  
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        login({
+          id: user.uid,
+          name: userData.name || '',
+          email: user.email || '',
+          university: userData.university || '',
+          faculty: userData.faculty || '',
+          year: userData.year || '',
+          academic_advisor: userData.academic_advisor || '',
+          major: userData.major || [],
+          minor: userData.minor || [],
+          role: userData.role || '',
+        });
+
+        // Vérifier les sessions de chat
+        const chatSessions = userData.chatsessions || [];
+        console.log("Recuperation du chatSessions de firestore")
+        console.log(chatSessions)
+        const lastChatId = chatSessions.length > 0 ? chatSessions[chatSessions.length - 1] : 'default_chat_id';
+
+        console.log("Voici le chatId que l on a recupere de firestore")
+        console.log(lastChatId)
+
+        setPrimaryChatId(lastChatId);
+  
+        /*
+        if (userData.role === 'student') {
+          navigate(`/dashboard/student/${user.uid}`);
+        } else if (userData.role === 'academic_advisor') {
+          navigate(`/dashboard/academic-advisor/${user.uid}`);
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        setErrors({ email: 'No user data found' }); *
+      }
+       
+    } catch (error) {
+      const newErrors = {};
+      if (error.code === 'auth/user-not-found') {
+        newErrors.email = 'No user found with this email';
+      } else if (error.code === 'auth/wrong-password') {
+        newErrors.password = 'Incorrect password';
+      } else if (error.code === 'auth/too-many-requests') {
+        newErrors.email = 'Account access blocked! Try again later';
+      } else {
+        newErrors.email = 'Login failed';
+      }
+      setErrors(newErrors);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="absolute top-4 left-4">
+        <img src={theme.logo} alt="University Logo" className="h-12" />
+      </div>
+
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4">
+        <h2 className="text-xl font-semibold text-center mb-4">Sign in to your account</h2>
+        <p className="text-gray-500 text-center mb-8 text-sm">Access your personalized dashboard by signing in below.</p>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+            <input
+              type="email"
+              name="email"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+              placeholder="Email address"
+            />
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              name="password"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+              placeholder="Password"
+            />
+            {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300"
+          >
+            {isLoading ? 'Loading...' : 'Sign In'}
+          </button>
+
+          <p className="mt-8 text-xs text-center text-gray-600">
+            Don't have an account?{' '}
+            <a href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} className="text-blue-600 hover:underline">
+              Sign up now!
+            </a>
+          </p>
+
+          <div className="mt-8 flex items-center justify-center">
+            <p className="text-xs text-gray-400 mr-2">Powered by Lucy</p>
+            <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default SignIn;
+
+*/
+
+/*
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../auth/firebase';
+import { useAuth } from '../auth/hooks/useAuth';
+import { useTheme } from '@mui/material/styles';
+import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress';
+import lucyLogo from '../logo_lucy.png';
+
+const isEmail = (email) =>
+  /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
+
+const SignIn = ({ handleToggleThemeMode }) => {
+  const { login, isAuth, loading } = useAuth();
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const { course_id } = useParams();
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirection automatique si l'utilisateur est déjà authentifié
   useEffect(() => {
     if (!loading && isAuth) {
-      console.log('SignIn: Utilisateur déjà authentifié, redirection...');
-      // Récupérer les informations utilisateur depuis localStorage
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       const userRole = storedUser.role;
       const uid = storedUser.id;
-      const userName = storedUser.name;
 
-      if (config.subdomain === 'admin') {
-        navigate(`/dashboard/admin`, { state: { userName } });
-      } else if (userRole === 'student') {
-        navigate(`/dashboard/student/${uid}`, { state: { userName } });
+      if (userRole === 'student') {
+        navigate(`/dashboard/student/${uid}`);
       } else if (userRole === 'academic_advisor') {
-        navigate(`/dashboard/academic-advisor/${uid}`, { state: { userName } });
+        navigate(`/dashboard/academic-advisor/${uid}`);
       } else {
-        // Redirection par défaut si le rôle n'est pas reconnu
         navigate('/dashboard');
       }
     }
   }, [isAuth, loading, navigate]);
-
-  const checkLocalStorage = (
-    user,
-    role,
-    name,
-    firstCourseId,
-    lastChatId,
-    studentProfile,
-    major,
-    minor,
-    year,
-    faculty
-  ) => {
-    const subdomain = config.subdomain;
-    console.log("SignIn: Stockage des données dans localStorage.");
-    localStorage.setItem('isAuth', 'true');
-    localStorage.setItem(
-      'user',
-      JSON.stringify({ id: user.uid, name, email: user.email, role })
-    );
-    localStorage.setItem('course_id', firstCourseId || '');
-    localStorage.setItem('chat_id', lastChatId || '');
-    localStorage.setItem('university', subdomain);
-    localStorage.setItem('student_profile', JSON.stringify(studentProfile));
-    localStorage.setItem('major', JSON.stringify(major) || 'default_major');
-    localStorage.setItem('minor', JSON.stringify(minor) || 'default_minor');
-    localStorage.setItem('year', year || 'default_year');
-    localStorage.setItem(
-      'faculty',
-      JSON.stringify(faculty) || 'default_faculty'
-    );
-  };
-
-  const redirectBasedOnRole = (role, userName, uid) => {
-    const subdomain = config.subdomain;
-    console.log(`SignIn: Redirection basée sur le rôle ${role}.`);
-    if (subdomain === 'admin') {
-      navigate(`/dashboard/admin`, { state: { userName } });
-      return;
-    }
-
-    if (role === 'student') {
-      navigate(`/dashboard/student/${uid}`, { state: { userName } });
-    } else if (role === 'academic_advisor') {
-      navigate(`/dashboard/academic-advisor/${uid}`, { state: { userName } });
-    } else {
-      // Redirection par défaut si le rôle n'est pas reconnu
-      navigate('/dashboard');
-    }
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -183,8 +465,6 @@ export default function SignIn({ handleToggleThemeMode }) {
       newErrors.email = 'Email is required';
     } else if (!isEmail(email)) {
       newErrors.email = 'Please provide a valid email';
-    } else if (!isAllowedEmail(email, config.subdomain)) {
-      newErrors.email = getErrorMessage(config.subdomain);
     }
 
     if (!password) {
@@ -192,76 +472,39 @@ export default function SignIn({ handleToggleThemeMode }) {
     }
 
     if (Object.keys(newErrors).length > 0) {
-      console.log("SignIn: Erreurs de validation détectées:", newErrors);
       setErrors(newErrors);
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log("SignIn: Définition de la persistance de la session.");
-      // Définir la persistance de la session avec Firebase
       await setPersistence(auth, browserLocalPersistence);
-
-      console.log("SignIn: Tentative de connexion avec Firebase.");
-      // Connexion avec email et mot de passe
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log("SignIn: Connexion réussie:", user);
 
-      // Récupérer les informations supplémentaires de l'utilisateur depuis Firestore
       const docRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        console.log("SignIn: Données utilisateur trouvées dans Firestore.");
         const userData = docSnap.data();
-        const userRole = userData.role;
-        const userName = userData.name;
-        const firstCourseId = userData.courses ? userData.courses[0] : null;
-        const lastChatId = userData.chatsessions ? userData.chatsessions.slice(-1)[0] : null;
-        const studentProfile = userData.student_profile;
-        const major = userData.major || ['default_major'];
-        const minor = userData.minor || ['default_minor'];
-        const year = userData.year || 'default_year';
-        const faculty = userData.faculty || 'default_faculty';
-
-        // Stocker les données additionnelles dans le localStorage
-        checkLocalStorage(
-          user,
-          userRole,
-          userName,
-          firstCourseId,
-          lastChatId,
-          studentProfile,
-          major,
-          minor,
-          year,
-          faculty
-        );
-
-        // Mettre à jour le contexte d'authentification
-        console.log("SignIn: Mise à jour du contexte d'authentification.");
         login({
           id: user.uid,
-          name: userName,
-          email: email,
-          role: userRole,
+          name: userData.name,
+          email,
+          role: userData.role,
         });
 
-        // Rediriger l'utilisateur selon son rôle
-        redirectBasedOnRole(userRole, userName, user.uid);
+        if (userData.role === 'student') {
+          navigate(`/dashboard/student/${user.uid}`);
+        } else if (userData.role === 'academic_advisor') {
+          navigate(`/dashboard/academic-advisor/${user.uid}`);
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        console.log("SignIn: Aucune donnée utilisateur trouvée dans Firestore.");
         setErrors({ email: 'No user data found' });
-        setIsLoading(false);
       }
     } catch (error) {
-      console.error("SignIn: Erreur lors de la connexion:", error);
       const newErrors = {};
       if (error.code === 'auth/user-not-found') {
         newErrors.email = 'No user found with this email';
@@ -273,229 +516,79 @@ export default function SignIn({ handleToggleThemeMode }) {
         newErrors.email = 'Login failed';
       }
       setErrors(newErrors);
+    } finally {
       setIsLoading(false);
     }
   };
 
   if (loading) {
-    // Afficher un loader pendant que l'état d'authentification est vérifié
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-        }}
-      >
+      <div className="flex items-center justify-center min-h-screen">
         <CircularProgress />
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Container component="main" maxWidth="sm">
-      <CssBaseline />
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="absolute top-4 left-4">
+        <img src={theme.logo} alt="University Logo" className="h-12" />
+      </div>
 
-      <Box
-        sx={{
-          width: '100%',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          padding: theme.spacing(2),
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <img
-          src={theme.logo}
-          alt="University Logo"
-          style={{ height: 50, width: 'auto' }}
-        />
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4">
+        <h2 className="text-xl font-semibold text-center mb-4">Sign in to your account</h2>
+        <p className="text-gray-500 text-center mb-8 text-sm">Access your personalized dashboard by signing in below.</p>
 
-        <IconButton
-          onClick={handleToggleThemeMode}
-          sx={{ color: theme.palette.sidebar }}
-        >
-          {theme.palette.mode === 'dark' ? (
-            <LightModeIcon />
-          ) : (
-            <DarkModeIcon />
-          )}
-        </IconButton>
-      </Box>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+            <input
+              type="email"
+              name="email"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+              placeholder="Email address"
+            />
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+          </div>
 
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Box
-          component="form"
-          noValidate
-          onSubmit={handleSubmit}
-          sx={{
-            mt: 3,
-            padding: 4,
-            outline: 0,
-            borderRadius: 3,
-            boxShadow: `2px 2px 12px ${
-              theme.palette.mode === 'light'
-                ? 'rgba(0, 0, 0, 0.2)'
-                : 'rgba(255, 255, 255, 0.2)'
-            }`,
-            backgroundColor: theme.palette.background.paper,
-          }}
-        >
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Typography
-                sx={{
-                  fontWeight: 'bold',
-                  fontSize: '2rem',
-                  color: theme.palette.text.primary,
-                }}
-              >
-                Sign In
-              </Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography
-                sx={{
-                  fontWeight: '800',
-                  fontSize: '1rem',
-                  color: theme.palette.text.primary,
-                }}
-              >
-                For the purpose of industry regulation, your details are required.
-              </Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                required
-                fullWidth
-                label="Email Address"
-                name="email"
-                error={!!errors.email}
-                helperText={errors.email}
-                autoComplete="email"
-                InputProps={{
-                  sx: {
-                    borderRadius: 6,
-                    color: theme.palette.text.primary,
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                id="password"
-                error={!!errors.password}
-                helperText={errors.password}
-                autoComplete="new-password"
-                InputProps={{
-                  sx: {
-                    borderRadius: 6,
-                    color: theme.palette.text.primary,
-                  },
-                }}
-              />
-            </Grid>
-          </Grid>
-          {errors.university && (
-            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
-              {errors.university}
-            </Typography>
-          )}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              position: 'relative',
-            }}
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              name="password"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+              placeholder="Password"
+            />
+            {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300"
           >
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{
-                mt: 3,
-                mb: 2,
-                padding: 1.5,
-                borderRadius: 5,
-                width: '50%',
-                backgroundColor: theme.palette.button_sign_in,
-                color: theme.palette.button_text_sign_in,
-                '&:hover': {
-                  backgroundColor: theme.palette.hover_button,
-                },
-              }}
-              disabled={isLoading}
-            >
-              Sign In
-            </Button>
-            {isLoading && (
-              <CircularProgress
-                size={24}
-                sx={{
-                  color: theme.palette.primary.contrastText,
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  marginTop: '-12px',
-                  marginLeft: '-12px',
-                }}
-              />
-            )}
-          </Box>
-          <Grid container justifyContent="center">
-            <Grid item>
-              <Link
-                href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`}
-                variant="body2"
-                sx={{ color: theme.palette.sign_up_link }}
-              >
-                Don't have an account yet? Create one now!
-              </Link>
-            </Grid>
-          </Grid>
-        </Box>
-      </Box>
+            {isLoading ? 'Loading...' : 'Sign In'}
+          </button>
 
-      <Box
-        sx={{
-          width: '100%',
-          position: 'absolute',
-          bottom: 0,
-          right: 0,
-          padding: theme.spacing(2),
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-        }}
-      >
-        <Typography
-          variant="body2"
-          sx={{ mr: 1, color: theme.palette.text.primary }}
-        >
-          powered by Lucy
-        </Typography>
-        <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
-      </Box>
-    </Container>
+          <p className="mt-8 text-xs text-center text-gray-600">
+            Don't have an account?{' '}
+            <a href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} className="text-blue-600 hover:underline">
+              Sign up now!
+            </a>
+          </p>
+
+          <div className="mt-8 flex items-center justify-center">
+            <p className="text-xs text-gray-400 mr-2">Powered by Lucy</p>
+            <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
+          </div>
+        </form>
+      </div>
+    </div>
   );
-}
+};
 
+export default SignIn;
+*/
 
 
 /*

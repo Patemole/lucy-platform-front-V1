@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Typography,
-  TextField,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../auth/firebase';
+import { useAuth } from '../auth/hooks/useAuth';
 import { useParams } from 'react-router-dom';
+import { useTheme, Theme } from '@mui/material/styles';
+
+// Extend the MUI theme to include `facultyOptions`
+declare module '@mui/material/styles' {
+  interface Theme {
+    facultyOptions: string[];
+  }
+  interface ThemeOptions {
+    facultyOptions?: string[];
+  }
+}
 
 interface StudentProfileDialogProps {
   open: boolean;
@@ -21,23 +21,20 @@ interface StudentProfileDialogProps {
 }
 
 const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClose }) => {
-  const { uid } = useParams<{ uid: string }>(); // Get userId from URL
+  const { uid } = useParams<{ uid: string }>();
+  const { setUser } = useAuth(); // Import `setUser` from AuthContext
+  const theme: Theme = useTheme();
 
-  // Form states for user data
-  const [firstName, setFirstName] = useState('');
-  const [email, setEmail] = useState('');
-  const [school, setSchool] = useState('');
-  const [faculty, setFaculty] = useState('');
-  const [year, setYear] = useState('');
-  const [academicAdvisor, setAcademicAdvisor] = useState('');
-  const [major, setMajor] = useState<string[]>([]);
-  const [minor, setMinor] = useState<string[]>([]);
+  const [firstName, setFirstName] = useState<string>('');
+  const [year, setYear] = useState<string>('');
+  const [academicAdvisor, setAcademicAdvisor] = useState<string>('');
+  const [faculty, setFaculty] = useState<string[]>(['']);
+  const [major, setMajor] = useState<string[]>(['']);
+  const [minor, setMinor] = useState<string[]>(['']);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isModified, setIsModified] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Fetch user data from Firestore on component mount
   useEffect(() => {
     const fetchUserData = async () => {
       if (!uid) {
@@ -46,26 +43,18 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
         return;
       }
 
-      console.log(`Fetching data for userId: ${uid}`);
       setIsLoading(true);
-
       const userRef = doc(db, 'users', uid);
       try {
         const userSnap = await getDoc(userRef);
-
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          console.log('User data retrieved from Firestore:', userData);
-
-          // Populate state with Firestore data
           setFirstName(userData.name || '');
-          setEmail(userData.email || '');
-          setSchool(userData.university || '');
-          setFaculty(userData.faculty || '');
           setYear(userData.year || '');
           setAcademicAdvisor(userData.academic_advisor || '');
-          setMajor(userData.major || []);
-          setMinor(userData.minor || []);
+          setFaculty(userData.faculty || ['']);
+          setMajor(userData.major || ['']);
+          setMinor(userData.minor || ['']);
         } else {
           console.error('No data found for this user.');
         }
@@ -81,252 +70,306 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
     }
   }, [uid, open]);
 
-  // Update localStorage for specified fields
-  const updateLocalStorage = () => {
-    localStorage.setItem('username', firstName);
-    localStorage.setItem('year', year);
-    localStorage.setItem('university', school);
-    localStorage.setItem('faculty', faculty);
-    localStorage.setItem('major', JSON.stringify(major));
-    localStorage.setItem('minor', JSON.stringify(minor));
-  };
-
-  // Form validation
-  const validate = () => {
-    const newErrors: { [key: string]: string } = {};
-    if (!firstName.trim()) newErrors.firstName = 'Le prénom est requis.';
-    if (!email.trim()) newErrors.email = 'L\'adresse mail est requise.';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Track if the form has been modified
-  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<any>>, value: any) => {
-    setter(value);
-    setIsModified(true);
-  };
-
-  // Form submission handler to update Firestore data and localStorage
   const handleSubmit = async () => {
     setErrors({});
-    if (!validate()) return;
-
     setIsSubmitting(true);
     try {
       if (!uid) {
         console.error('User ID not found in URL.');
         return;
       }
-      const userRef = doc(db, 'users', uid);
-      await updateDoc(userRef, {
+
+      // Basic validation (can be extended)
+      if (firstName.trim() === '') {
+        setErrors((prev) => ({ ...prev, firstName: 'Name is required.' }));
+        return;
+      }
+      if (year === '') {
+        setErrors((prev) => ({ ...prev, year: 'Please select your current year.' }));
+        return;
+      }
+
+      // Prepare the updated profile data
+      const updatedProfile: any = {
         name: firstName,
-        email,
-        university: school,
+        academic_advisor: academicAdvisor,
         faculty,
         year,
-        academic_advisor: academicAdvisor,
         major,
         minor,
         updatedAt: serverTimestamp(),
-      });
-      alert('Profil mis à jour avec succès.');
-      updateLocalStorage(); // Update localStorage on successful update
+      };
+
+      // Update Firebase
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, updatedProfile);
+
+      // Update the context with the new data (excluding `serverTimestamp`)
+      setUser((prevUser: any) => ({
+        ...(prevUser || {}), // Avoid errors if prevUser is null
+        name: firstName,
+        year,
+        academic_advisor: academicAdvisor,
+        faculty,
+        major,
+        minor,
+      }));
+
       onClose(); // Close the dialog on success
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du profil:', error);
-      alert('Une erreur est survenue lors de la mise à jour du profil.');
+      console.error('Error updating profile:', error);
+      alert('An error occurred while updating the profile.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handlers for dynamically managing majors and minors
-  const handleMajorChange = (index: number, value: string) => {
-    const newMajors = [...major];
-    newMajors[index] = value;
-    setMajor(newMajors);
-    setIsModified(true);
+  // Handle click outside to close modal
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
   };
 
-  const handleMinorChange = (index: number, value: string) => {
-    const newMinors = [...minor];
-    newMinors[index] = value;
-    setMinor(newMinors);
-    setIsModified(true);
+  const handleFacultyChange = (index: number, value: string) => {
+    const updatedFaculties = [...faculty];
+    updatedFaculties[index] = value;
+    setFaculty(updatedFaculties);
   };
 
-  const addMajorField = () => {
-    setMajor([...major, '']);
-    setIsModified(true);
-  };
-  
-  const removeMajorField = (index: number) => {
-    setMajor(major.filter((_, i) => i !== index));
-    setIsModified(true);
+  const removeFacultyField = (index: number) => {
+    if (faculty.length > 1) {
+      setFaculty(faculty.filter((_, i) => i !== index));
+    }
   };
 
-  const addMinorField = () => {
-    setMinor([...minor, '']);
-    setIsModified(true);
+  const addFacultyField = () => {
+    if (faculty.length < 3) {
+      setFaculty([...faculty, '']);
+    }
   };
 
-  const removeMinorField = (index: number) => {
-    setMinor(minor.filter((_, i) => i !== index));
-    setIsModified(true);
+  // Add or remove major and minor fields
+  const addMajorField = () => setMajor([...major, '']);
+  const removeMajorField = (index: number) => setMajor(major.filter((_, i) => i !== index));
+  const handleMajorChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const updatedMajors = [...major];
+    updatedMajors[index] = event.target.value;
+    setMajor(updatedMajors);
   };
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 4 } }}>
-      <DialogTitle>Student Profile</DialogTitle>
-      <DialogContent>
+  const addMinorField = () => setMinor([...minor, '']);
+  const removeMinorField = (index: number) => setMinor(minor.filter((_, i) => i !== index));
+  const handleMinorChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const updatedMinors = [...minor];
+    updatedMinors[index] = event.target.value;
+    setMinor(updatedMinors);
+  };
+
+  return open ? (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      onClick={handleOverlayClick}
+    >
+      <div className="bg-white w-full max-w-2xl mx-4 p-8 rounded-lg shadow-lg relative">
+        <h2 className="text-2xl font-semibold text-center mb-6">Student Profile</h2>
         {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-            <CircularProgress />
-          </Box>
+          <div className="flex justify-center items-center h-64">
+            <div className="spinner-border animate-spin w-8 h-8 border-4 rounded-full"></div>
+          </div>
         ) : (
-          <Box component="form" noValidate sx={{ mt: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  id="firstName"
-                  label="Name"
-                  value={firstName}
-                  onChange={(e) => handleInputChange(setFirstName, e.target.value)}
-                  error={!!errors.firstName}
-                  helperText={errors.firstName}
-                  sx={{ my: 2 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  id="email"
-                  label="Email Address"
-                  type="email"
-                  value={email}
-                  onChange={(e) => handleInputChange(setEmail, e.target.value)}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                  sx={{ my: 2 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  id="school"
-                  label="University"
-                  value={school}
-                  onChange={(e) => handleInputChange(setSchool, e.target.value)}
-                  sx={{ my: 2 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  id="faculty"
-                  label="Faculty"
-                  value={faculty}
-                  onChange={(e) => handleInputChange(setFaculty, e.target.value)}
-                  sx={{ my: 2 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  id="year"
-                  label="Year"
-                  value={year}
-                  onChange={(e) => handleInputChange(setYear, e.target.value)}
-                  sx={{ my: 2 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  id="academicAdvisor"
-                  label="Academic Advisor"
+          <form>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                {/* Name */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Name</label>
+                    <input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                    />
+                </div>
+
+                {/* Current Year */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">What is your current year?*</label>
+                    <select
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
+                    className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500 appearance-none"
+                    style={{
+                        backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCI2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
+                    }}
+                    >
+                    <option value="" disabled>Select your year</option>
+                    <option value="Freshman">Freshman (1st Year)</option>
+                    <option value="Sophomore">Sophomore (2nd Year)</option>
+                    <option value="Junior">Junior (3rd Year)</option>
+                    <option value="Senior">Senior (4th Year)</option>
+                    <option value="Grad 1">Grad 1 (5th Year)</option>
+                    <option value="Grad 2">Grad 2 (6th Year)</option>
+                    </select>
+                </div>
+
+              {/* Academic Advisor */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Academic Advisor</label>
+                <input
+                  type="text"
                   value={academicAdvisor}
-                  onChange={(e) => handleInputChange(setAcademicAdvisor, e.target.value)}
-                  sx={{ my: 2 }}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAcademicAdvisor(e.target.value)}
+                  className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
                 />
-              </Grid>
-            </Grid>
+              </div>
 
-            <Grid container spacing={2} sx={{ mt: 3 }}>
-              {/* Majors Section */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="h6">Majors</Typography>
-                {major.map((maj, index) => (
-                  <Box key={index} sx={{ my: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button
+              {/* Faculty */}
+              <div className="sm:col-span-2">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Faculty</label>
+                  {faculty.length < 3 && (
+                    <button
+                      type="button"
+                      onClick={addFacultyField}
+                      className="text-green-500 text-2xl hover:text-green-700"
+                      aria-label="Add a faculty"
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
+                {faculty.map((facultyValue, index) => (
+                  <div key={index} className="relative mb-2">
+                    <select
+                      value={facultyValue}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFacultyChange(index, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500 appearance-none"
+                    >
+                      <option value="" disabled>
+                        Select your faculty
+                      </option>
+                      {theme.facultyOptions.map((option: string, optionIndex: number) => (
+                        <option key={optionIndex} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => removeFacultyField(index)}
+                        className="absolute top-1/2 right-2 transform -translate-y-1/2 text-red-500 text-2xl hover:text-red-700"
+                        aria-label="Remove this faculty"
+                      >
+                        -
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Major and Minor Section */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-4">
+              {/* Major */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Major (if declared)</label>
+                  {major.length < 10 && (
+                    <button
+                      type="button"
+                      onClick={addMajorField}
+                      className="text-green-500 text-2xl hover:text-green-700"
+                      aria-label="Add a major"
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
+                {major.map((majorValue, index) => (
+                  <div key={index} className="relative mb-2">
+                    <input
+                      type="text"
+                      value={majorValue}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleMajorChange(index, e)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                      placeholder="Enter your major"
+                    />
+                    {index > 0 && (
+                      <button
+                        type="button"
                         onClick={() => removeMajorField(index)}
-                        color="error"
-                        size="small"
-                        sx={{ textTransform: 'none' }}
+                        className="absolute top-1/2 right-2 transform -translate-y-1/2 text-red-500 text-2xl hover:text-red-700"
+                        aria-label="Remove this major"
                       >
-                        remove
-                      </Button>
-                    </Box>
-                    <TextField
-                      fullWidth
-                      label={`Major ${index + 1}`}
-                      value={maj}
-                      onChange={(e) => handleMajorChange(index, e.target.value)}
-                    />
-                  </Box>
+                        -
+                      </button>
+                    )}
+                  </div>
                 ))}
-                <Button onClick={addMajorField} sx={{ mt: 1, textTransform: 'none' }}>
-                  Add Major
-                </Button>
-              </Grid>
+              </div>
 
-              {/* Minors Section */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="h6">Minors</Typography>
-                {minor.map((min, index) => (
-                  <Box key={index} sx={{ my: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button
-                        onClick={() => removeMinorField(index)}
-                        color="error"
-                        size="small"
-                        sx={{ textTransform: 'none' }}
-                      >
-                        remove
-                      </Button>
-                    </Box>
-                    <TextField
-                      fullWidth
-                      label={`Minor ${index + 1}`}
-                      value={min}
-                      onChange={(e) => handleMinorChange(index, e.target.value)}
+              {/* Minor */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Minor (optional)</label>
+                  {minor.length < 10 && (
+                    <button
+                      type="button"
+                      onClick={addMinorField}
+                      className="text-green-500 text-2xl hover:text-green-700"
+                      aria-label="Add a minor"
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
+                {minor.map((minorValue, index) => (
+                  <div key={index} className="relative mb-2">
+                    <input
+                      type="text"
+                      value={minorValue}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleMinorChange(index, e)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                      placeholder="Enter your minor"
                     />
-                  </Box>
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMinorField(index)}
+                        className="absolute top-1/2 right-2 transform -translate-y-1/2 text-red-500 text-2xl hover:text-red-700"
+                        aria-label="Remove this minor"
+                      >
+                        -
+                      </button>
+                    )}
+                  </div>
                 ))}
-                <Button onClick={addMinorField} sx={{ mt: 1, textTransform: 'none' }}>
-                  Add Minor
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6 space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Updating...' : 'Update Profile'}
+              </button>
+            </div>
+          </form>
         )}
-      </DialogContent>
-      <DialogActions>
-        {isModified && !isLoading && (
-          <Button onClick={onClose} color="secondary" sx={{ textTransform: 'none' }}>
-            Cancel
-          </Button>
-        )}
-        <Button onClick={handleSubmit} color="primary" disabled={isSubmitting || isLoading} sx={{ textTransform: 'none' }}>
-          {isSubmitting ? <CircularProgress size={24} /> : "Update Profile"}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
+      </div>
+    </div>
+  ) : null;
 };
 
 export default StudentProfileDialog;

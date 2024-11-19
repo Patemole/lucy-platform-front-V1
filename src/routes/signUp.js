@@ -1,35 +1,18 @@
-/*
-import * as React from 'react'; // with clerk librairie 
-import {
-  Button,
-  CssBaseline,
-  TextField,
-  Link,
-  Grid,
-  Box,
-  Typography,
-  Container,
-  Avatar,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../auth/firebase';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../auth/firebase';
+import { useAuth } from '../auth/hooks/useAuth';
+import { useTheme } from '@mui/material/styles';
+import Avatar from '@mui/material/Avatar';
 import lucyLogo from '../logo_lucy.png';
 import config from '../config';
-import { useSignUp } from '@clerk/clerk-react';
 
 const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
 
 const allowedDomains = {
   upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
-  // ... (other allowed domains)
   admin: [/^.+@my-lucy\.com$/i]
 };
 
@@ -43,37 +26,210 @@ const isAllowedEmail = (email, subdomain) => {
 const getErrorMessage = (subdomain) => {
   const universityNames = {
     upenn: 'Upenn',
-    // ... (other university names)
-    admin: 'Admin'
+    admin: 'Admin',
   };
-  return `Only ${universityNames[subdomain] || 'allowed domains'} email addresses can register`;
+  return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} can register.`;
 };
 
 export default function SignUp() {
   const theme = useTheme();
-  const { isLoaded, signUp, setSession } = useSignUp(); // Clerk sign-up hook
+  const { login } = useAuth(); // Utiliser la fonction `login` du contexte
   const navigate = useNavigate();
   const location = useLocation();
   const [errors, setErrors] = React.useState({});
   const [isLoading, setIsLoading] = React.useState(false);
-  const [open, setOpen] = React.useState(false);
-
-  const courseId = location.pathname.split('/sign-up/')[1] || '';
+  const [emailError, setEmailError] = React.useState('');
   const subdomain = config.subdomain;
+  const courseId = location.pathname.split('/sign-up/')[1] || '';
 
-  React.useEffect(() => {
-    if (courseId) {
-      setOpen(true);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    console.log("[Step 1] Form submission triggered");
+    setErrors({});
+    setIsLoading(true);
+
+    const data = new FormData(event.currentTarget);
+    const firstName = data.get('firstName');
+    const lastName = data.get('lastName');
+    const email = data.get('email');
+    const password = data.get('password');
+    const newErrors = {};
+
+    // Validation des champs
+    if (!firstName) newErrors.firstName = 'First name is required';
+    if (!lastName) newErrors.lastName = 'Last name is required';
+    if (!email) newErrors.email = 'Email is required';
+    else if (!isAllowedEmail(email, subdomain)) newErrors.email = getErrorMessage(subdomain);
+    if (!password) newErrors.password = 'Password is required';
+    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+
+    if (Object.keys(newErrors).length > 0) {
+      console.log("[Step 2] Validation errors:", newErrors);
+      setErrors(newErrors);
+      setIsLoading(false);
+      return;
     }
-  }, [courseId]);
 
-  const handleClose = () => {
-    setOpen(false);
+    try {
+      console.log("[Step 3] Creating user with Firebase Authentication");
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const timestamp = Timestamp.now();
+
+      console.log("[Step 4] Storing user data in Firestore");
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name: `${firstName} ${lastName}`,
+        email,
+        university: subdomain,
+        role: subdomain === 'admin' ? "admin" : "student",
+        createdAt: timestamp,
+      });
+
+      console.log("[Step 5] Updating context with user data");
+      login({
+        id: user.uid,
+        name: `${firstName} ${lastName}`,
+        email,
+        university: subdomain,
+        role: subdomain === 'admin' ? "admin" : "student",
+        createdAt: timestamp,
+      });
+
+      console.log("[Step 6] Redirecting user to appropriate dashboard");
+      const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding/learningStyleSurvey/${courseId || ''}`;
+      navigate(redirectUrl);
+    } catch (error) {
+      console.error("[Error] An error occurred:", error);
+      const newErrors = {};
+      if (error.code === 'auth/email-already-in-use') {
+        newErrors.email = 'Email address already in use!';
+      }
+      setErrors(newErrors);
+      setIsLoading(false);
+    }
   };
 
-  const handleSignIn = () => {
-    navigate(`/auth/sign-in/${courseId}`);
+  const handleEmailBlur = (event) => {
+    const email = event.target.value;
+    if (!email) {
+      setEmailError('');
+    } else if (!isEmail(email)) {
+      setEmailError('Please provide a valid email');
+    } else if (!isAllowedEmail(email, subdomain)) {
+      setEmailError(getErrorMessage(subdomain));
+    } else {
+      setEmailError('');
+    }
   };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="absolute top-4 left-4 flex items-center">
+        <img src={theme.logo} alt="University Logo" className="h-12" />
+      </div>
+
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4">
+        <h2 className="text-xl font-semibold text-center mb-4">Create your account</h2>
+        <p className="text-gray-500 text-center mb-8 text-sm">Welcome! Please fill in the details to get started.</p>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
+              <input type="text" name="firstName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="First Name" />
+              {errors.firstName && <p className="text-xs text-red-600 mt-1">{errors.firstName}</p>}
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Last Name</label>
+              <input type="text" name="lastName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Last Name" />
+              {errors.lastName && <p className="text-xs text-red-600 mt-1">{errors.lastName}</p>}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+            <input type="email" name="email" onBlur={handleEmailBlur} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Email address" />
+            {emailError && <p className="text-xs text-red-600 mt-1">{emailError}</p>}
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" name="password" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Password" />
+            {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+          </div>
+
+          <button type="submit" disabled={isLoading} className="w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300">
+            {isLoading ? <span>Loading...</span> : <span>Continue &rarr;</span>}
+          </button>
+
+          <p className="mt-8 text-xs text-center text-gray-600">Already have an account? <a href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} className="text-blue-600 hover:underline">Sign in</a></p>
+
+          <div className="mt-8 flex items-center justify-center">
+            <p className="text-xs text-gray-400 mr-2">Powered by Lucy</p>
+            <Avatar
+              src={lucyLogo}
+              alt="Lucy Logo"
+              sx={{ width: 20, height: 20 }}
+            />
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+/* ANCIENNE VERSION AVEC LE DESIGN DE GOOGLE A RECUPERER QUAND ON EN AURA BESOIN 
+import * as React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../auth/firebase';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { useAuth } from '../auth/hooks/useAuth';
+import { useTheme } from '@mui/material/styles';
+import Avatar from '@mui/material/Avatar';
+import lucyLogo from '../logo_lucy.png';
+import config from '../config';
+
+const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
+
+const allowedDomains = {
+  upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
+  // autres domaines ici...
+  admin: [/^.+@my-lucy\.com$/i]
+};
+
+const getAllowedDomains = (subdomain) => allowedDomains[subdomain] || [];
+
+const isAllowedEmail = (email, subdomain) => {
+  const domains = getAllowedDomains(subdomain);
+  return domains.some((regex) => regex.test(email));
+};
+
+const getErrorMessage = (subdomain) => {
+  const universityNames = {
+    upenn: 'Upenn',
+    // autres universités ici...
+    admin: 'Admin'
+  };
+  return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} can register.`;
+};
+
+export default function SignUp() {
+  const theme = useTheme();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [errors, setErrors] = React.useState({});
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [emailError, setEmailError] = React.useState('');
+  const subdomain = config.subdomain;
+  const courseId = location.pathname.split('/sign-up/')[1] || '';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -87,217 +243,139 @@ export default function SignUp() {
     const password = data.get('password');
     const newErrors = {};
 
-    if (!firstName) {
-      newErrors.firstName = 'First name is required';
-    }
-    if (!lastName) {
-      newErrors.lastName = 'Last name is required';
-    }
-    if (!email) {
-      newErrors.email = 'Email is required';
-    } else if (!isEmail(email)) {
-      newErrors.email = 'Please provide a valid email';
-    } else if (!isAllowedEmail(email, subdomain)) {
-      newErrors.email = getErrorMessage(subdomain);
-    }
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
+    if (!firstName) newErrors.firstName = 'First name is required';
+    if (!lastName) newErrors.lastName = 'Last name is required';
+    if (!email) newErrors.email = 'Email is required';
+    else if (!isAllowedEmail(email, subdomain)) newErrors.email = getErrorMessage(subdomain);
+    if (!password) newErrors.password = 'Password is required';
+    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsLoading(false);
-      return;
-    }
-
-    if (isLoaded) {
+    } else {
       try {
-        // Create a Clerk user
-        const newUser = await signUp.create({
-          emailAddress: email,
-          password,
-          firstName,
-          lastName
-        });
-
-        // Attempt to complete sign-up
-        await signUp.attemptFirstFactor({ strategy: 'email_link' });
-        
-        // Wait for session if required for navigation
-        const { createdSessionId } = newUser;
-        if (createdSessionId) {
-          setSession(createdSessionId);
-        }
-
-        // Save user data to Firestore
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
         const timestamp = Timestamp.now();
-        await setDoc(doc(db, "users", newUser.id), {
-          uid: newUser.id,
+
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
           name: `${firstName} ${lastName}`,
-          email: email,
-          university: theme.university,
+          email,
+          university: subdomain,
           role: subdomain === 'admin' ? "admin" : "student",
           createdAt: timestamp,
         });
 
+        await signInWithEmailAndPassword(auth, email, password);
+
+        login({
+          id: user.uid,
+          name: `${firstName} ${lastName}`,
+          email,
+          role: subdomain === 'admin' ? "admin" : "student"
+        });
+
         localStorage.setItem('university', subdomain);
 
-        if (subdomain === 'admin') {
-          navigate('/dashboard/admin');
-        } else {
-          const onboardingUrl = `/onboarding/learningStyleSurvey/${courseId ? courseId : ''}`;
-          navigate(onboardingUrl, { state: { uid: newUser.id, firstName: firstName } });
-        }
+        const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding/learningStyleSurvey/${courseId || ''}`;
+        navigate(redirectUrl);
       } catch (error) {
-        if (error.errors && error.errors[0].code === 'identifier_already_exists') {
-          newErrors.email = 'Email address already in use!';
-        }
+        if (error.code === 'auth/email-already-in-use') newErrors.email = 'Email address already in use!';
         setErrors(newErrors);
-      } finally {
         setIsLoading(false);
       }
     }
   };
 
-  return (
-    <Container component="main" maxWidth="sm">
-      <CssBaseline />
-      <Box
-        sx={{
-          width: '100%',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          padding: theme.spacing(2),
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <img src={theme.logo} alt="University Logo" style={{ height: 50, width: 'auto' }} />
-      </Box>
+  const handleEmailBlur = (event) => {
+    const email = event.target.value;
+    if (!email) {
+      setEmailError('');
+    } else if (!isEmail(email)) {
+      setEmailError('Please provide a valid email');
+    } else if (!isAllowedEmail(email, subdomain)) {
+      setEmailError(getErrorMessage(subdomain));
+    } else {
+      setEmailError('');
+    }
+  };
 
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3, padding: 4, outline: 0, borderRadius: 3, boxShadow: `2px 2px 12px ${theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'}`, backgroundColor: theme.palette.background.paper }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Typography sx={{ fontWeight: 'bold', fontSize: '2rem', color: theme.palette.text.primary }}>
-                Create an Account
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                autoComplete="given-name"
-                name="firstName"
-                required
-                fullWidth
-                id="firstName"
-                label="First Name"
-                error={!!errors.firstName}
-                helperText={errors.firstName}
-                autoFocus
-                InputProps={{ sx: { borderRadius: 6 } }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                id="lastName"
-                label="Last Name"
-                name="lastName"
-                error={!!errors.lastName}
-                helperText={errors.lastName}
-                autoComplete="family-name"
-                InputProps={{ sx: { borderRadius: 6 } }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                required
-                fullWidth
-                label="Email Address"
-                name="email"
-                error={!!errors.email}
-                helperText={errors.email}
-                autoComplete="email"
-                InputProps={{ sx: { borderRadius: 6 } }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                id="password"
-                error={!!errors.password}
-                helperText={errors.password}
-                autoComplete="new-password"
-                InputProps={{ sx: { borderRadius: 6 } }}
-              />
-            </Grid>
-          </Grid>
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{
-                mt: 3,
-                mb: 2,
-                padding: 1.5,
-                borderRadius: 5,
-                width: '50%',
-                backgroundColor: theme.palette.button_sign_in,
-                color: theme.palette.button_text_sign_in,
-                '&:hover': {
-                  backgroundColor: theme.palette.hover_button,
-                }
-              }}
-              disabled={isLoading}
-            >
-              Get Started
-            </Button>
-            {isLoading && (
-              <CircularProgress
-                size={24}
-                sx={{
-                  color: theme.palette.primary.contrastText,
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  marginTop: '-12px',
-                  marginLeft: '-12px',
-                }}
-              />
-            )}
-          </Box>
-          <Grid container justifyContent="center">
-            <Grid item>
-              <Link href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} variant="body2" sx={{ color: theme.palette.sign_up_link }}>
-                Already have an account? Sign in
-              </Link>
-            </Grid>
-          </Grid>
-        </Box>
-      </Box>
-    </Container>
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="absolute top-4 left-4 flex items-center">
+        <img src={theme.logo} alt="University Logo" className="h-12" />
+      </div>
+
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4">
+        <h2 className="text-xl font-semibold text-center mb-4">Create your account</h2>
+        <p className="text-gray-500 text-center mb-8 text-sm">Welcome! Please fill in the details to get started.</p>
+
+        {/* Bouton d'inscription avec Google *
+        <button className="flex items-center justify-center w-full py-2 mb-6 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Icon" className="w-4 h-4 mr-2" />
+          <span className="text-sm">Continue with Google</span>
+        </button>
+
+        <div className="relative flex items-center my-6">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="px-3 text-gray-500 text-sm">or</span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
+              <input type="text" name="firstName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="First Name" />
+              {errors.firstName && <p className="text-xs text-red-600 mt-1">{errors.firstName}</p>}
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Last Name</label>
+              <input type="text" name="lastName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Last Name" />
+              {errors.lastName && <p className="text-xs text-red-600 mt-1">{errors.lastName}</p>}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+            <input type="email" name="email" onBlur={handleEmailBlur} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Email address" />
+            {emailError && <p className="text-xs text-red-600 mt-1">{emailError}</p>}
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" name="password" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Password" />
+            {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+          </div>
+
+          <button type="submit" disabled={isLoading} className="w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300">
+            {isLoading ? <span>Loading...</span> : <span>Continue &rarr;</span>}
+          </button>
+
+          <p className="mt-8 text-xs text-center text-gray-600">Already have an account? <a href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} className="text-blue-600 hover:underline">Sign in</a></p>
+
+          <div className="mt-8 flex items-center justify-center">
+            <p className="text-xs text-gray-400 mr-2">Powered by Lucy</p>
+            <Avatar
+              src={lucyLogo}
+              alt="Lucy Logo"
+              sx={{ width: 20, height: 20 }}
+            />
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
-*/ 
+  */
 
 
 
-
+/*
 // CODE QUI FONCTIONNE TRES BIEN MAIS SANS L UTILISATION DE CLERK POUR LE LOGIN - LOGOUT 
 import * as React from 'react';
 import Button from '@mui/material/Button';
@@ -696,6 +774,7 @@ export default function SignUp() {
     </Container>
   );
 }
+*/
 
 
 

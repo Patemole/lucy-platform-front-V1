@@ -66,7 +66,7 @@ export async function* sendMessageSocraticLangGraph({
     courseId,
     username,
     university,
-    student_profile,
+    student_profile, //We dont using it now 
     major,
     minor,
     year,
