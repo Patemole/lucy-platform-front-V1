@@ -990,6 +990,7 @@ const handleNewConversation = async () => {
                   },
                 }}
               >
+                {/*
                 <MenuItem
                   onClick={handleShare}
                   sx={{
@@ -1010,6 +1011,7 @@ const handleNewConversation = async () => {
                     Share
                   </Typography>
                 </MenuItem>
+                */}
 
                 <MenuItem
                   onClick={handleRename}
