@@ -11,7 +11,6 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MapsUgcRoundedIcon from '@mui/icons-material/MapsUgcRounded';
 import ProfileEdit from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
-import CloseIcon from '@mui/icons-material/Close';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,7 +19,6 @@ import logo_greg from '../student_face.png';
 import '../index.css';
 import { AIMessage } from '../components/MessagesWEB';
 import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2} from '../interfaces/interfaces_eleve';
-import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
@@ -28,7 +26,6 @@ import { handleAutoScroll } from '../components/utils';
 import { usePopup } from '../components/popup';
 import { useAuth } from '../auth/hooks/useAuth';
 import PopupWrongAnswer from '../components/PopupWrongAnswer';
-import PopupFeedback from '../components/PopupFeedback';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
 import LandingPage from '../components/LandingPage'; // Import du composant LandingPage
 import StudentProfileDialog from '../components/StudentProfileDialog'; // Import the dialog component
@@ -89,6 +86,13 @@ const Dashboard_eleve_template: React.FC = () => {
     animate: { opacity: 1, x: 0 },   // Complètement visible au centre
     exit: { opacity: 0, x: 50 },     // Glisse vers la droite
   };
+
+
+  // Compute if the latest AI message has a TAK
+  const hasTak = useMemo(() => {
+    const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
+    return lastAiMessage?.TAK && lastAiMessage.TAK.length > 0;
+  }, [messages]);
 
 
   //fonction qui permet d afficher les anciennes conversations dans la sidebar (a modifier pour enlever la logique de course_id)
@@ -638,124 +642,6 @@ const handleNewConversation = async () => {
   }
 };
 
-
-  /* ANCINENNE FONCTION QUI MARCHE BIEN MAIS SANS LA FLUIDITTE
-  //permet de creer une nouvelle conversation
-  const handleNewConversation = async () => {
-    console.log('NEW CONVERSATION');
-
-    if (isStreaming) {
-        // Signaler l'intention d'annuler la conversation en cours
-        setCancelConversation(true); // Pour les mises à jour UI si nécessaire
-        cancelConversationRef.current = true;
-        console.log("Annulation de la conversation en cours.");
-
-        // Attendre le prochain cycle de rendu pour s'assurer que l'annulation est prise en compte
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        console.log("Après le timeout:", cancelConversationRef.current);
-    }
-
-    // Capture du contenu du premier message avant de réinitialiser les messages
-    const firstMessageContent = messages.length > 0 ? messages[0].content : 'Conversation history';
-    console.log("Contenu du premier message capturé:", firstMessageContent);
-
-    console.log("Initialisation de la nouvelle conversation sans streaming");
-    setIsStreaming(false); // Arrêter le streaming
-    setMessages([]); // Réinitialiser les messages
-    setRelatedQuestions([]);
-    setIsLandingPageVisible(true);
-
-    const newChatId = uuidv4();
-    console.log("Actuel chatID: ", chatIds[0]);
-    const oldChatId = chatIds[0];
-    console.log("Nouveau chat ID:", newChatId);
-    console.log("Ancien chat ID:", oldChatId);
-
-    // Mettre à jour chatIds[0] avec le nouveau chat ID via le contexte
-    setPrimaryChatId(newChatId);
-    setActiveChatId(newChatId);
-
-    if (user.id) {
-        const userRef = doc(db, 'users', user.id);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-            const userData = userSnap.data();
-            const chatsessions = userData.chatsessions || [];
-
-            // Renommer l'ancienne conversation si un `chat_id` précédent existe
-            if (oldChatId) {
-                const oldChatRef = doc(db, 'chatsessions', oldChatId);
-                const oldChatSnap = await getDoc(oldChatRef);
-
-                if (oldChatSnap.exists()) {
-                    try {
-                        // Mettre à jour le nom de l'ancienne conversation avec le contenu du premier message
-                        await updateDoc(oldChatRef, { name: firstMessageContent });
-                        console.log(`Renommage de l'ancienne conversation (${oldChatId}) en "${firstMessageContent}"`);
-                    } catch (error) {
-                        console.error(`Erreur lors du renommage de l'ancienne conversation (${oldChatId}):`, error);
-                    }
-                } else {
-                    console.warn(`Aucune conversation trouvée avec chat_id: ${oldChatId}`);
-                }
-            }
-
-            // Ajouter le nouvel ID de chat aux sessions de l'utilisateur
-            chatsessions.push(newChatId);
-            try {
-                await updateDoc(userRef, { chatsessions });
-                console.log(`Ajout du nouvel chatId (${newChatId}) aux sessions de l'utilisateur`);
-            } catch (error) {
-                console.error(`Erreur lors de l'ajout du nouvel chatId (${newChatId}) aux sessions:`, error);
-            }
-
-            // Créer la nouvelle session de chat avec le nom "New Chat"
-            try {
-                await setDoc(doc(db, 'chatsessions', newChatId), {
-                    chat_id: newChatId,
-                    name: 'New Chat',
-                    created_at: serverTimestamp(),
-                    modified_at: serverTimestamp(),
-                });
-                console.log(`Nouvelle session de chat créée avec chat_id: ${newChatId}`);
-            } catch (error) {
-                console.error(`Erreur lors de la création de la nouvelle session de chat (${newChatId}):`, error);
-            }
-
-            // Actualiser la liste des conversations
-            try {
-                const refreshedUserSnap = await getDoc(userRef);
-                if (refreshedUserSnap.exists()) {
-                    const refreshedUserData = refreshedUserSnap.data();
-                    const chatSessionIds = refreshedUserData.chatsessions || [];
-                    const chatPromises = chatSessionIds.map(async (chatId: string) => {
-                        if (typeof chatId === 'string') {
-                            const chatRef = doc(db, 'chatsessions', chatId);
-                            const chatSnap = await getDoc(chatRef);
-                            if (chatSnap.exists() && chatSnap.data().name) {
-                                return { chat_id: chatId, name: chatSnap.data().name };
-                            }
-                        }
-                        return null;
-                    });
-
-                    const fetchedConversations = await Promise.all(chatPromises);
-                    const validConversations = fetchedConversations.filter(Boolean);
-                    setConversations(validConversations.reverse());
-                    console.log("Conversations actualisées:", validConversations);
-                }
-            } catch (error) {
-                console.error("Erreur lors de l'actualisation des conversations:", error);
-            }
-        }
-    } else {
-        console.error('UID est undefined. Impossible de créer une nouvelle conversation.');
-    }
-};
-*/
-
-
   //Permet de mettre a jour la conversation active quand on clique sur une une conversation deja presente dans l historique
   const handleConversationClick = async (chat_id: string) => {
     //localStorage.setItem('chat_id', chat_id);
@@ -1168,6 +1054,8 @@ const handleNewConversation = async () => {
             )}
 
             {/* Champ de saisie en bas */}
+            {/* Input Field */}
+            {(!hasTak || inputValue.trim() !== "") && ( 
             <div
               className="flex justify-center p-4"
               style={{
@@ -1187,6 +1075,13 @@ const handleNewConversation = async () => {
                   minRows={1} // Adjust `minRows` to change the minimum height of the TextField
                   maxRows={6}
                   placeholder={isStreaming ? "Please wait..." : "Message..."} // Message différent pendant le streaming
+                  //placeholder={
+                    //messages.some((msg) => msg.TAK && msg.TAK.length > 0)
+                      //? "" // Pas de placeholder si TAK est présent
+                      //: isStreaming
+                      //? "Please wait..."
+                      //: "Message..."
+                  //}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleInputKeyPressSocraticLangGraph}
@@ -1200,7 +1095,10 @@ const handleNewConversation = async () => {
                           edge="end"
                           disabled={isStreaming} // Désactive le bouton si isStreaming est true
                           >
-                          <ArrowForwardIcon style={{ color: isStreaming ? '#CCC' : theme.palette.button_sign_in }} />
+                          <ArrowForwardIcon style={{color: isStreaming
+                      ? "#CCC"
+                      : theme.palette.button_sign_in,
+                }} />
                           </IconButton>
                       </InputAdornment>
                       ),
@@ -1226,7 +1124,9 @@ const handleNewConversation = async () => {
                           border: 'none',
                       },
                       '&:hover fieldset': {
-                          boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+                        boxShadow: messages.some((msg) => msg.TAK && msg.TAK.length > 0)
+                        ? "none" // Supprime l'ombre au hover si TAK est présent
+                        : "0 4px 8px rgba(0, 0, 0, 0.2)", // Ombre normale sinon
                       },
                       },
                       '& .MuiInputBase-input::placeholder': {
@@ -1237,7 +1137,9 @@ const handleNewConversation = async () => {
                   />
               </div>
               </div>
+            )}
           </div>
+            
         </div>
 
         <PopupWrongAnswer
