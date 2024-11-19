@@ -1,3 +1,397 @@
+// src/components/LearningStyleSurvey.js
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { db } from '../auth/firebase';
+import { useAuth } from '../auth/hooks/useAuth';
+import { doc, updateDoc, getDoc, arrayUnion, setDoc, serverTimestamp } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
+import lucyLogo from '../logo_lucy.png';
+import Avatar from '@mui/material/Avatar';
+import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
+import { motion } from 'framer-motion'; // Import de Framer Motion
+
+
+
+export default function LearningStyleSurvey() {
+  const { user, login, setPrimaryChatId, chatIds, isAuth, loading } = useAuth();
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const { course_id } = useParams();
+
+  const [schools, setSchools] = useState(['']);
+  const [majors, setMajors] = useState(['']);
+  const [minors, setMinors] = useState(['']);
+  const [learnerType, setLearnerType] = useState('');
+  const [advisor, setAdvisor] = useState('');
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+
+
+  const variants = {
+    initial: { opacity: 0, y: 20 }, // Départ (invisible, en bas)
+    animate: { opacity: 1, y: 0 }, // Arrivée (visible, à sa position normale)
+    exit: { opacity: 0, y: -20 },  // Sortie (invisible, vers le haut)
+  };
+
+  // Handlers pour les écoles
+  const handleSchoolChange = (index, event) => {
+    const newSchools = [...schools];
+    newSchools[index] = event.target.value;
+    setSchools(newSchools);
+  };
+
+  //Pour ajouter jusqu a 5 faculty en meme temps
+  const addSchoolField = () => {
+    if (schools.length < 5) {
+      setSchools([...schools, '']);
+    }
+  };
+//Pour pouvoir enlever une ecole
+  const removeSchoolField = (index) => {
+    if (schools.length > 1) {
+      setSchools(schools.filter((_, i) => i !== index));
+    }
+  };
+
+  // Handlers pour les majors
+  const handleMajorChange = (index, event) => {
+    const newMajors = [...majors];
+    newMajors[index] = event.target.value;
+    setMajors(newMajors);
+  };
+
+  //Pour pouvoir ajouter une major
+  const addMajorField = () => {
+    if (majors.length < 5) {
+      setMajors([...majors, '']);
+    }
+  };
+
+  //Pour pouvoir enlever une major
+  const removeMajorField = (index) => {
+    if (majors.length > 1) {
+      setMajors(majors.filter((_, i) => i !== index));
+    }
+  };
+
+  // Handlers pour les minors
+  const handleMinorChange = (index, event) => {
+    const newMinors = [...minors];
+    newMinors[index] = event.target.value;
+    setMinors(newMinors);
+  };
+
+  //Pouvoir rajouter une minor
+  const addMinorField = () => {
+    if (minors.length < 10) {
+      setMinors([...minors, '']);
+    }
+  };
+
+  //pouvoir enlever une minor
+  const removeMinorField = (index) => {
+    if (minors.length > 1) {
+      setMinors(minors.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleLearnerTypeChange = (event) => setLearnerType(event.target.value);
+  const handleAdvisorChange = (event) => setAdvisor(event.target.value);
+
+
+  // useEffect pour observer les changements dans le contexte et loguer les valeurs mises à jour
+  useEffect(() => {
+    if (isAuth && !loading) {
+      console.log("Contexte Auth mis à jour:", {
+        user,
+        isAuth,
+        loading,
+        chatIds
+      });
+    }
+  }, [user, isAuth, loading, chatIds]);
+
+
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    console.log("[Étape 1] Soumission du formulaire déclenchée");
+    setErrors({});
+    setIsLoading(true);
+
+    const newErrors = {};
+
+    // Validation des champs
+    if (schools.some((s) => !s)) newErrors.schools = 'Au moins une école est requise';
+    if (!learnerType) newErrors.learnerType = 'Le type d\'apprenant est requis';
+
+    if (Object.keys(newErrors).length > 0) {
+      console.log("[Étape 2] Erreurs de validation:", newErrors);
+      setErrors(newErrors);
+      setIsLoading(false);
+    } else {
+      try {
+        console.log("[Étape 3] Mise à jour des informations de l'utilisateur dans Firestore");
+        const userRef = doc(db, "users", user.id);
+        await updateDoc(userRef, {
+          role: "student",
+          faculty: schools,
+          year: learnerType,
+          academic_advisor: advisor,
+          major: majors,
+          minor: minors,
+        });
+
+        console.log("[Étape 4] Récupération des données de l'utilisateur");
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.data();
+
+        console.log("[Étape 5] Création d'une nouvelle session de chat");
+        let chatId = uuidv4();
+    
+        await updateDoc(userRef, {
+          chatsessions: arrayUnion(chatId),
+        });
+
+        await setDoc(doc(db, "chatsessions", chatId), {
+          chat_id: chatId,
+          name: "New Chat",
+          created_at: serverTimestamp(),
+          modified_at: serverTimestamp(),
+        });
+
+        //addChatId(chatId); // Ajout du chat_id au contexte
+        setPrimaryChatId(chatId)
+
+        console.log("[Étape 6] Mise à jour du contexte avec les données de l'utilisateur");
+        login({
+          id: user.id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          university: userData.university,
+          year: learnerType,
+          faculty: schools,             // Ajout de 'faculty'
+          academic_advisor: advisor,    // Ajout de 'academic_advisor'
+          major: majors,                // Ajout de 'major'
+          minor: minors,                // Ajout de 'minor'
+        });
+
+
+        console.log("[Étape 7] Redirection vers le tableau de bord de l'étudiant");
+        navigate(`/dashboard/student/${user.id}`);
+      } catch (error) {
+        console.error("[Erreur] Une erreur est survenue:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  return (
+    <motion.div
+      initial="initial" // Animation au chargement
+      animate="animate" // Animation quand visible
+      exit="exit"       // Animation à la sortie
+      variants={variants}
+      transition={{ duration: 0.5 }} // Durée de la transition
+      className="flex items-center justify-center min-h-screen bg-gray-100"
+    >
+      <div className="absolute top-4 left-4">
+        <img src={theme.logo} alt="University Logo" className="h-12" />
+      </div>
+
+      <div className="w-full max-w-2xl bg-white rounded-xl shadow-md p-10 mx-4">
+        <h2 className="text-xl font-semibold text-center mb-4">Tell Us About Yourself</h2>
+        <p className="text-gray-500 text-center mb-8 text-sm">To start your journey, please fill in the details below.</p>
+
+        <form onSubmit={handleSubmit} noValidate>
+          {/* Section École */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <label className="block text-sm font-medium text-gray-700">Which school are you affiliated with? (You can add more)*</label>
+              {schools.length < 10 && (
+                <button
+                  type="button"
+                  onClick={addSchoolField}
+                  className="text-green-500 hover:text-green-700"
+                  aria-label="Add a school"
+                >
+                  <AddIcon />
+                </button>
+              )}
+            </div>
+            {schools.map((school, index) => (
+              <div key={index} className="relative mb-4">
+                <select
+                  value={school}
+                  onChange={(e) => handleSchoolChange(index, e)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm appearance-none bg-white bg-no-repeat bg-right pr-10 focus:ring focus:ring-blue-100 focus:border-blue-500"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCI2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
+                  }}
+                >
+                  <option value="" disabled>Select your school</option>
+                  {theme.facultyOptions && theme.facultyOptions.map((faculty) => (
+                    <option key={faculty} value={faculty}>{faculty}</option>
+                  ))}
+                </select>
+                {schools.length > 1 && index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => removeSchoolField(index)}
+                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                    aria-label="Remove this school"
+                  >
+                    <RemoveIcon />
+                  </button>
+                )}
+              </div>
+            ))}
+            {errors.schools && <p className="text-xs text-red-600 mt-1">{errors.schools}</p>}
+          </div>
+
+          {/* Section Année */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-700 mb-4">What is your current year?*</label>
+            <select
+              value={learnerType}
+              onChange={handleLearnerTypeChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm appearance-none bg-white bg-no-repeat bg-right pr-10 focus:ring focus:ring-blue-100 focus:border-blue-500"
+              style={{
+                backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCI2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
+              }}
+            >
+              <option value="" disabled>Select your year</option>
+              <option value="Freshman">Freshman (1st Year)</option>
+              <option value="Sophomore">Sophomore (2nd Year)</option>
+              <option value="Junior">Junior (3rd Year)</option>
+              <option value="Senior">Senior (4th Year)</option>
+              <option value="Grad 1">Grad 1 (5th Year)</option>
+              <option value="Grad 2">Grad 2 (6th Year)</option>
+            </select>
+            {errors.learnerType && <p className="text-xs text-red-600 mt-1">{errors.learnerType}</p>}
+          </div>
+
+          {/* Section Conseiller Académique */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-700 mb-4">Academic Advisor (optional)</label>
+            <input
+              type="text"
+              value={advisor}
+              onChange={handleAdvisorChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+              placeholder="Enter your academic advisor's name"
+            />
+          </div>
+
+          {/* Section Major et Minor */}
+          <div className="grid grid-cols-2 gap-8 mb-8">
+            {/* Section Major */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <label className="block text-sm font-medium text-gray-700">Major (if declared)</label>
+                {majors.length < 10 && (
+                  <button
+                    type="button"
+                    onClick={addMajorField}
+                    className="text-green-500 hover:text-green-700"
+                    aria-label="Add a major"
+                  >
+                    <AddIcon />
+                  </button>
+                )}
+              </div>
+              {majors.map((major, index) => (
+                <div key={index} className="relative mb-4">
+                  <input
+                    type="text"
+                    value={major}
+                    onChange={(e) => handleMajorChange(index, e)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                    placeholder="Enter your major"
+                  />
+                  {majors.length > 1 && index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removeMajorField(index)}
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                      aria-label="Remove this major"
+                    >
+                      <RemoveIcon />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Section Minor */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <label className="block text-sm font-medium text-gray-700">Minor (optional)</label>
+                {minors.length < 10 && (
+                  <button
+                    type="button"
+                    onClick={addMinorField}
+                    className="text-green-500 hover:text-green-700"
+                    aria-label="Add a minor"
+                  >
+                    <AddIcon />
+                  </button>
+                )}
+              </div>
+              {minors.map((minor, index) => (
+                <div key={index} className="relative mb-4">
+                  <input
+                    type="text"
+                    value={minor}
+                    onChange={(e) => handleMinorChange(index, e)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                    placeholder="Enter your minor"
+                  />
+                  {minors.length > 1 && index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removeMinorField(index)}
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                      aria-label="Remove this minor"
+                    >
+                      <RemoveIcon />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bouton de Soumission */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 disabled:opacity-50"
+          >
+            {isLoading ? "Loading..." : "Create Your Profile"}
+          </button>
+
+          {/* Pied de page */}
+          <div className="mt-8 flex items-center justify-center">
+            <p className="text-xs text-gray-400 mr-2">Powered by Lucy</p>
+            <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
+          </div>
+        </form>
+
+        {/* (Optionnel) Composant de débogage pour afficher le contexte dans l'UI */}
+        {/*<DebugContext />*/}
+      </div>
+    </motion.div>
+  );
+}
+
+
+
+/*
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -228,14 +622,14 @@ export default function LearningStyleSurvey() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Grid container sx={{ minHeight: '100vh' }}>
-        {/* Left section */}
+        {/* Left section *
         <Grid item xs={0} sm={4} sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', backgroundColor: theme.palette.background.paper }}>
           <Box sx={{ padding: 2 }}>
             <img src={theme.logo} alt="University Logo" style={{ height: 50, width: 'auto' }} />
           </Box>
         </Grid>
 
-        {/* Right section */}
+        {/* Right section *
         <Grid item xs={12} sm={8} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: theme.palette.background.default }}>
           <Box
             sx={{
@@ -251,12 +645,12 @@ export default function LearningStyleSurvey() {
               paddingRight: { xs: '16px', sm: '16px' }
             }}
           >
-            {/* Logo and Heading on mobile */}
+            {/* Logo and Heading on mobile *
             <Box sx={{ width: '100%', display: { xs: 'flex', sm: 'none' }, alignItems: 'center', marginBottom: '2vh' }}>
               <img src={theme.logo} alt="University Logo" style={{ height: 50, width: 'auto' }} />
             </Box>
 
-            {/* Headings */}
+            {/* Headings *
             <Box sx={{ width: '100%', marginBottom: '2vh', maxWidth: 600, marginLeft: { xs: 0, sm: 'auto' }, marginRight: { xs: 0, sm: 'auto' } }}>
               <Typography variant="h4" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
                 Tell me more about you
@@ -266,10 +660,10 @@ export default function LearningStyleSurvey() {
               </Typography>
             </Box>
 
-            {/* Form */}
+            {/* Form *
             <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 0, width: '100%', boxSizing: 'border-box' }}>
               <Box sx={{ maxWidth: 600, margin: '0 auto' }}>
-                {/* What is your school? */}
+                {/* What is your school? *
                 <Box sx={{ marginTop: '4vh', display: 'flex', alignItems: 'center' }}>
                   <Typography>What is your school? (you can add more)*</Typography>
                   <IconButton onClick={addYearField} sx={{ marginLeft: '10px', color: theme.palette.sign_up_link }}>
@@ -300,7 +694,7 @@ export default function LearningStyleSurvey() {
                   </FormControl>
                 ))}
 
-                {/* What year are you? */}
+                {/* What year are you? *
                 <Box sx={{ marginTop: '4vh' }}>
                   <Typography>What year are you?*</Typography>
                 </Box>
@@ -325,7 +719,7 @@ export default function LearningStyleSurvey() {
                   <FormHelperText sx={{ marginLeft: 0, color: theme.palette.error.main }}>{errors.learnerType}</FormHelperText>
                 </FormControl>
 
-                {/* Academic Advisor */}
+                {/* Academic Advisor *
                 <Box sx={{ marginTop: '4vh' }}>
                   <Typography>Give us the name of your Academic Advisor if you know</Typography>
                 </Box>
@@ -356,7 +750,7 @@ export default function LearningStyleSurvey() {
                   }}
                 />
 
-                {/* Major */}
+                {/* Major *
                 <Box sx={{ marginTop: '4vh', display: 'flex', alignItems: 'center' }}>
                   <Typography>What is your major? (if you declared it)</Typography>
                   <IconButton onClick={addMajorField} sx={{ marginLeft: '10px', color: theme.palette.sign_up_link }}>
@@ -397,7 +791,7 @@ export default function LearningStyleSurvey() {
                   />
                 ))}
 
-                {/* Minor */}
+                {/* Minor *
                 <Box sx={{ marginTop: '4vh', display: 'flex', alignItems: 'center' }}>
                   <Typography>What is your minor? (you can add more)</Typography>
                   <IconButton onClick={addMinorField} sx={{ marginLeft: '10px', color: theme.palette.sign_up_link }}>
@@ -438,7 +832,7 @@ export default function LearningStyleSurvey() {
                   />
                 ))}
 
-                {/* Submit button */}
+                {/* Submit button *
                 <Box sx={{ marginTop: '3vh', position: 'relative' }}>
                   <Button
                     type="submit"
@@ -477,7 +871,7 @@ export default function LearningStyleSurvey() {
             </Box>
           </Box>
 
-          {/* Footer */}
+          {/* Footer *
           <Box
             sx={{
               width: '100%',
@@ -506,6 +900,7 @@ export default function LearningStyleSurvey() {
     </ThemeProvider>
   );
 }
+*/
 
 
 

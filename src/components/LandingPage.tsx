@@ -585,7 +585,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     >
       {/* Arrière-plan Spline */}
       <iframe
-        src="https://my.spline.design/aiassistanthoverandclickinteraction-afdf94418f2cc3f7f17a6aad54796013/"
+        src="https://my.spline.design/aiassistanthoverandclickinteraction-afdf94418f2cc3f7f17a6aad54796013/" 
+        
+        //src="https://my.spline.design/radialpattern-c81361a0c548492781a6993db40c8c5c/"
         style={{
           position: 'absolute',
           top: 0,

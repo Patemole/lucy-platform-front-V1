@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from 'framer-motion';
 import {
   FiCheck,
   FiCopy,
@@ -565,9 +566,15 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             
 
           {/* Affichez l'indicateur de chargement tant que isLoading est vrai */}
-          {showLoadingIndicator && (
-            <div className="flex justify-start mt-2 pl-10 mb-2">
-              <ThreeDots height="30" width="50" color={theme.palette.primary.main} />
+          {(!takData || takData.length === 0) ? (
+            showLoadingIndicator && (
+              <div className="flex justify-start mt-2 pl-10 mb-2">
+                <ThreeDots height="30" width="50" color={theme.palette.primary.main} />
+              </div>
+            )
+          ) : (
+            <div>
+              {/* Ajoutez ici le contenu pour le cas où `takData` existe et contient des éléments */}
             </div>
           )}
 
@@ -998,57 +1005,60 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
 
             {/* Affichage des messages accumulés */}
-            {messages.map((msg, index) => (
-                        <div
-                        key={index}
-                        className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-3 ${
-                            !isSmallScreen ? "ml-8" : ""
-                        } text-justify ${messageFontSize}`}
-                        style={{ color: theme.palette.text.primary }}
-                        >
-                        <ReactMarkdown
-                            className="prose max-w-full"
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                            p: ({ node, ...props }) => <p {...props} />,
-                            strong: ({ node, ...props }) => <strong {...props} />,
-                            a: ({ node, ...props }) => (
-                                <a
-                                {...props}
-                                className="text-blue-500 hover:text-blue-700"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                />
-                            ),
-                            ul: ({ node, ...props }) => (
-                                <ul className="list-disc ml-6" {...props} />
-                            ),
-                            ol: ({ node, ...props }) => (
-                                <ol className="list-decimal ml-6" {...props} />
-                            ),
-                            code: ({ node, className, children, ...props }) => {
-                                const match = /language-(\w+)/.exec(className || "");
-                                return match ? (
-                                <SyntaxHighlighter
-                                    language={match[1]}
-                                    PreTag="div"
-                                    {...props}
-                                >
-                                    {String(children).replace(/\n$/, '')}
-                                </SyntaxHighlighter>
-                                ) : (
-                                <code className={className} {...props}>
-                                    {children}
-                                </code>
-                                );
-                            },
-                            br: () => <br />,
-                            }}
-                        >
-                            {msg.replace(/\n/g, "  \n")}
-                        </ReactMarkdown>
-                        </div>
-                    ))}
+            {!takData || takData.length === 0 ? (
+              messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-3 ${
+                    !isSmallScreen ? "ml-8" : ""
+                  } text-justify ${messageFontSize}`}
+                  style={{ color: theme.palette.text.primary }}
+                >
+                
+                  <ReactMarkdown
+                    className="prose max-w-full"
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({ node, ...props }) => <p {...props} />,
+                      strong: ({ node, ...props }) => <strong {...props} />,
+                      a: ({ node, ...props }) => (
+                        <a
+                          {...props}
+                          className="text-blue-500 hover:text-blue-700"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        />
+                      ),
+                      ul: ({ node, ...props }) => (
+                        <ul className="list-disc ml-6" {...props} />
+                      ),
+                      ol: ({ node, ...props }) => (
+                        <ol className="list-decimal ml-6" {...props} />
+                      ),
+                      code: ({ node, className, children, ...props }) => {
+                        const match = /language-(\w+)/.exec(className || "");
+                        return match ? (
+                          <SyntaxHighlighter
+                            language={match[1]}
+                            PreTag="div"
+                            {...props}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                      br: () => <br />,
+                    }}
+                  >
+                    {msg.replace(/\n/g, "  \n")}
+                  </ReactMarkdown>
+                </div>
+              ))
+            ) : null}
 
 
           {/* Gestion des images */}
@@ -1085,19 +1095,23 @@ export const AIMessage: React.FC<AIMessageProps> = ({
           {/* Gestion des données TAK */}
           {takData && takData.length > 0 && (
             <div
-              className={`mt-4 bg-gray-100 p-4 rounded-lg ${
+              className={`mt-4 p-4 rounded-lg shadow ${
                 !isSmallScreen ? "ml-8" : ""
-              }`}
+              } mb-6 `} // Ajout de "mb-6" pour plus de marge en dessous
+              style={{ 
+                maxWidth: "max-content",
+                backgroundColor: theme.palette.background.paper,
+                border: "0.5px solid #D1D5DB", // Bordure fine grise (#D1D5DB correspond à gray-300)
+
+               }} // Utilisation de la largeur dynamique
             >
               {takData.map((tak, idx) => (
                 <div key={idx} className="mb-4">
-                  <p
-                    className="text-left"
-                    style={{ color: theme.palette.text.primary }}
-                  >
-                    {tak.question}
-                  </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
+                  {/* Question */}
+                  <p className="text-left text-gray-800">{tak.question}</p>
+
+                  {/* Options */}
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 max-w-full">
                     {tak.answer_options.map((option, i) => (
                       <div key={i} className="flex items-center">
                         <input
@@ -1106,71 +1120,59 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                           value={option}
                           checked={selectedAnswers.includes(option)}
                           onChange={() => handleCheckboxChange(option)}
-                          className="mr-2"
+                          className="mr-2 h-4 w-4 border-gray-300 rounded checked:bg-gray-500 checked:border-gray-600 focus:ring-gray-500"
                         />
                         <label
                           htmlFor={`option-${idx}-${i}`}
-                          style={{ color: theme.palette.text.primary }}
+                          className="text-gray-800"
                         >
                           {option}
                         </label>
                       </div>
                     ))}
                   </div>
+
+                  {/* Other Specification */}
                   {tak.other_specification && (
                     <div className="mt-4">
                       <label
                         htmlFor={`other-${idx}`}
-                        className="block mb-1"
-                        style={{ color: theme.palette.text.primary }}
+                        className="block mb-1 text-gray-800"
                       >
                         If other, please specify
                       </label>
-                      <TextField
-                        fullWidth
+                      <input
+                        type="text"
                         id={`other-${idx}`}
                         placeholder="e.g., None"
                         value={otherInput}
                         onChange={handleOtherInputChange}
-                        variant="outlined"
-                        style={{
-                          backgroundColor: "white",
-                          fontWeight: "500",
-                          fontSize: "0.875rem",
-                        }}
-                        InputProps={{
-                          style: {
-                            fontWeight: "500",
-                            fontSize: "0.875rem",
-                            color: "gray",
-                          },
-                        }}
+                        className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   )}
+
+                  {/* Buttons */}
                   <div className="flex justify-end mt-4 gap-x-4">
-                    <Button
-                      variant="outlined"
+                    <button
                       onClick={() => console.log("Ignoré")}
-                      style={{
-                        color: theme.palette.text.primary,
-                      }}
+                      className="flex items-center px-4 py-2 text-gray-800 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
                     >
                       <AiOutlineStop className="mr-2" />
                       Ignore
-                    </Button>
-                    <Button
-                      variant="contained"
+                    </button>
+                    <button
                       onClick={handleSendClick}
-                      style={{
-                        color: theme.palette.text.primary,
-                        backgroundColor: theme.palette.button.background,
-                      }}
                       disabled={isSendDisabled}
+                      className={`flex items-center px-4 py-2 text-gray-700 rounded-lg ${
+                        isSendDisabled
+                          ? "bg-gray-300 cursor-not-allowed"
+                          : "text-white bg-gray-800 hover:bg-gray-900"
+                      } transition-colors`}
                     >
                       <FiSend className="mr-2" />
                       Send
-                    </Button>
+                    </button>
                   </div>
                 </div>
               ))}
