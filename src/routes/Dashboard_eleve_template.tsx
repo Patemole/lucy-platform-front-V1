@@ -14,7 +14,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { v4 as uuidv4 } from 'uuid';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import logo_greg from '../student_face.png';
 import '../index.css';
 import { AIMessage } from '../components/MessagesWEB';
@@ -121,23 +121,67 @@ const Dashboard_eleve_template: React.FC = () => {
   };
 
   // Action pour renommer une conversation
-  const handleRename = () => {
+  const handleRename = async () => {
     handleMenuClose();
+  
+    if (!selectedConversation) {
+      alert("No conversation selected.");
+      return;
+    }
+  
     const newName = prompt('Enter new name:', '');
-    if (newName && selectedConversation) {
+    if (!newName) {
+      alert("Conversation name cannot be empty.");
+      return;
+    }
+  
+    try {
+      // Référence au document Firestore pour la conversation sélectionnée
+      const conversationRef = doc(db, 'chatsessions', selectedConversation);
+  
+      // Mise à jour du champ `name` dans Firestore
+      await updateDoc(conversationRef, { name: newName });
+  
+      // Mise à jour de l'état local après le succès de Firestore
       setConversations((prev) =>
         prev.map((conv) =>
           conv.chat_id === selectedConversation ? { ...conv, name: newName } : conv
         )
       );
+  
+      alert("Conversation renamed successfully.");
+    } catch (error) {
+      console.error("Failed to rename the conversation:", error);
+      alert("Failed to rename the conversation. Please try again.");
     }
   };
 
   // Action pour supprimer une conversation
-  const handleDelete = () => {
+  const handleDelete = async () => {
     handleMenuClose();
-    if (selectedConversation) {
+  
+    if (!selectedConversation) {
+      alert("No conversation selected.");
+      return;
+    }
+  
+    const confirmDelete = window.confirm("Are you sure you want to delete this conversation?");
+    if (!confirmDelete) return;
+  
+    try {
+      // Référence au document Firestore pour la conversation sélectionnée
+      const conversationRef = doc(db, 'chatsessions', selectedConversation);
+  
+      // Suppression du document Firestore
+      await deleteDoc(conversationRef);
+  
+      // Mise à jour de l'état local après succès de la suppression
       setConversations((prev) => prev.filter((conv) => conv.chat_id !== selectedConversation));
+  
+      alert("Conversation deleted successfully.");
+    } catch (error) {
+      console.error("Failed to delete the conversation:", error);
+      alert("Failed to delete the conversation. Please try again.");
     }
   };
 
