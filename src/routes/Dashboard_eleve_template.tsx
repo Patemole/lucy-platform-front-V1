@@ -29,6 +29,13 @@ import PopupWrongAnswer from '../components/PopupWrongAnswer';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
 import LandingPage from '../components/LandingPage'; // Import du composant LandingPage
 import StudentProfileDialog from '../components/StudentProfileDialog'; // Import the dialog component
+import MoreVertIcon from '@mui/icons-material/MoreVert'; // Import de l'icône des trois petits points
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import ShareIcon from '@mui/icons-material/Share'; // Icône pour "Partager"
+import EditIcon from '@mui/icons-material/Edit'; // Icône pour "Renommer"
+import ArchiveIcon from '@mui/icons-material/Archive'; // Icône pour "Archiver"
+import DeleteIcon from '@mui/icons-material/Delete'; // Icône pour "Supprimer"
+
 
 const drawerWidth = 240;
 
@@ -73,6 +80,8 @@ const Dashboard_eleve_template: React.FC = () => {
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
   const [isLandingPageVisible, setIsLandingPageVisible] = useState(messages.length === 0);
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
 
 
   const lastAiMessageId = useMemo(() => {
@@ -87,6 +96,50 @@ const Dashboard_eleve_template: React.FC = () => {
     exit: { opacity: 0, x: 50 },     // Glisse vers la droite
   };
 
+
+  // Ouvrir le menu au clic gauche
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, chatId: string) => {
+    setMenuAnchorEl(event.currentTarget);
+    setSelectedConversation(chatId);
+  };
+
+  // Fermer le menu
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setSelectedConversation(null);
+  };
+
+
+  const handleShare = () => {
+    setMenuAnchorEl(null);
+    setSelectedConversation(null);
+  };
+
+  const handleArchive = () => {
+    setMenuAnchorEl(null);
+    setSelectedConversation(null);
+  };
+
+  // Action pour renommer une conversation
+  const handleRename = () => {
+    handleMenuClose();
+    const newName = prompt('Enter new name:', '');
+    if (newName && selectedConversation) {
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.chat_id === selectedConversation ? { ...conv, name: newName } : conv
+        )
+      );
+    }
+  };
+
+  // Action pour supprimer une conversation
+  const handleDelete = () => {
+    handleMenuClose();
+    if (selectedConversation) {
+      setConversations((prev) => prev.filter((conv) => conv.chat_id !== selectedConversation));
+    }
+  };
 
   // Compute if the latest AI message has a TAK
   const hasTak = useMemo(() => {
@@ -755,11 +808,18 @@ const handleNewConversation = async () => {
             </Box>
             <div style={{ flexGrow: 1, overflowY: 'auto' }}>
               <List style={{ padding: '0 15px' }}>
-
+                {/* Profil */}
                 <ListItem
                   button
-                  onClick={handleDialogOpen} // Open the dialog instead of navigating
-                  sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
+                  onClick={handleDialogOpen}
+                  sx={{
+                    borderRadius: '8px',
+                    backgroundColor: theme.palette.background.paper,
+                    mb: 2,
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                  }}
                 >
                   <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
                     <ProfileEdit />
@@ -773,20 +833,29 @@ const handleNewConversation = async () => {
                 </ListItem>
 
                 <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
+
+                {/* Conversations */}
                 {conversations.length > 0 ? (
                   conversations.map((conversation) => (
                     <ListItem
-                      button
                       key={conversation.chat_id}
-                      onClick={() => handleConversationClick(conversation.chat_id)}
+                      button
+                      onClick={() => handleConversationClick(conversation.chat_id)} // Redirection vers la conversation
                       sx={{
+                        position: 'relative', // Pour positionner l'IconButton
                         borderRadius: '8px',
                         margin: '5px 0',
+                        paddingRight: '40px', // Espace pour l'IconButton
                         backgroundColor:
                           activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
                         '&:hover': {
                           backgroundColor: theme.palette.button.background,
                           color: theme.palette.text_human_message_historic,
+                          // Afficher l'IconButton au survol
+                          '& .MuiIconButton-root': {
+                            opacity: 1,
+                            pointerEvents: 'auto',
+                          },
                         },
                         '& .MuiTypography-root': {
                           color:
@@ -797,19 +866,47 @@ const handleNewConversation = async () => {
                       }}
                     >
                       <ListItemText
-                          primary={conversation.name}
-                          primaryTypographyProps={{
-                              style: {
-                                  fontWeight: '500',
-                                  fontSize: '0.875rem',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  position: 'relative', // Nécessaire pour le pseudo-élément de flou
-                                  maxWidth: '100%' // Ajustez en fonction de la largeur souhaitée
-                              }
-                          }}
+                        primary={conversation.name}
+                        primaryTypographyProps={{
+                          style: {
+                            fontWeight: '500',
+                            fontSize: '0.875rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          },
+                        }}
                       />
+                      {/* Icône des trois points - visible uniquement au survol ou si actif */}
+                      <IconButton
+                        edge="end"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Empêche le déclenchement de onClick du ListItem
+                          handleMenuOpen(e, conversation.chat_id);
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          color: theme.palette.text.primary,
+                          opacity: activeChatId === conversation.chat_id ? 1 : 0, // Visible si actif
+                          //transition: 'opacity 0.3s',
+                          pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none', // Cliquable si actif
+                          '&:hover': {
+                            backgroundColor: 'transparent',
+                          },
+                          mr: '1px', // Ajoutez cette ligne pour ajouter une marge à droite des trois points
+                        }}
+                      >
+                        <MoreHorizIcon
+                          fontSize="small"
+                          sx={{
+                            color: 'gray',
+                            fontSize: '20px',
+                          }}
+                        />
+                      </IconButton>
                     </ListItem>
                   ))
                 ) : (
@@ -826,7 +923,95 @@ const handleNewConversation = async () => {
                   </Typography>
                 )}
               </List>
+
+              {/* Menu contextuel */}
+              <Menu
+                anchorEl={menuAnchorEl} // Position du menu contextuel
+                open={Boolean(menuAnchorEl)} // Afficher/masquer le menu
+                onClose={handleMenuClose} // Fermer le menu
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                PaperProps={{
+                  sx: {
+                    margin: '8px', // Ajoute de la marge autour du menu
+                    borderRadius: '16px', // Arrondit les coins du menu
+                    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)', // Ajoute une ombre pour un effet visuel
+                    padding: '4px', // Ajoute un espacement interne autour des `MenuItem`
+                  },
+                }}
+              >
+                <MenuItem
+                  onClick={handleShare}
+                  sx={{
+                    padding: '8px', // Espacement interne
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover, // Couleur de fond au survol
+                    },
+                  }}
+                >
+                  <ShareIcon fontSize="small" sx={{ marginRight: '8px' }} />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: '0.75rem',
+                      fontWeight: '400',
+                    }}
+                  >
+                    Share
+                  </Typography>
+                </MenuItem>
+
+                <MenuItem
+                  onClick={handleRename}
+                  sx={{
+                    padding: '8px',
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  <EditIcon fontSize="small" sx={{ marginRight: '8px' }} />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: '0.75rem',
+                      fontWeight: '400',
+                    }}
+                  >
+                    Rename
+                  </Typography>
+                </MenuItem>
+
+                <MenuItem
+                  onClick={handleDelete}
+                  sx={{
+                    padding: '8px',
+                    color: 'red',
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  <DeleteIcon fontSize="small" sx={{ marginRight: '8px' }} />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: '0.75rem',
+                      fontWeight: '400',
+                    }}
+                  >
+                    Delete
+                  </Typography>
+                </MenuItem>
+              </Menu>
             </div>
+
             {isSmallScreen && (
               <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
                 <img
@@ -1150,6 +1335,8 @@ const handleNewConversation = async () => {
           aiMessageContent={selectedAiMessage}
           humanMessageContent={selectedHumanMessage}
         />
+
+        
 
         {/* Render the StudentProfileDialog component */}
         <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} />
