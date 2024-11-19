@@ -13,6 +13,25 @@ const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(emai
 
 const allowedDomains = {
   upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
+  harvard: [/^.+@([a-zA-Z0-9._-]+\.)*harvard\.edu$/i, /^.+@my-lucy\.com$/i],
+  mit: [/^.+@([a-zA-Z0-9._-]+\.)*mit\.edu$/i, /^.+@my-lucy\.com$/i],
+  lasell: [/^.+@([a-zA-Z0-9._-]+\.)*lasell\.edu$/i, /^.+@my-lucy\.com$/i],
+  oakland: [/^.+@([a-zA-Z0-9._-]+\.)*oakland\.edu$/i, /^.+@my-lucy\.com$/i],
+  arizona: [/^.+@([a-zA-Z0-9._-]+\.)*arizona\.edu$/i, /^.+@my-lucy\.com$/i],
+  uci: [/^.+@([a-zA-Z0-9._-]+\.)*uci\.edu$/i, /^.+@my-lucy\.com$/i],
+  ucdavis: [/^.+@([a-zA-Z0-9._-]+\.)*ucidavis\.edu$/i, /^.+@my-lucy\.com$/i],
+  cornell: [/^.+@([a-zA-Z0-9._-]+\.)*cornell\.edu$/i, /^.+@my-lucy\.com$/i],
+  berkeleycollege: [/^.+@([a-zA-Z0-9._-]+\.)*berkeleycollege\.edu$/i, /^.+@my-lucy\.com$/i],
+  brown: [/^.+@([a-zA-Z0-9._-]+\.)*brown\.edu$/i, /^.+@my-lucy\.com$/i],
+  stanford: [/^.+@([a-zA-Z0-9._-]+\.)*stanford\.edu$/i, /^.+@my-lucy\.com$/i],
+  berkeley: [/^.+@([a-zA-Z0-9._-]+\.)*berkeley\.edu$/i, /^.+@my-lucy\.com$/i],
+  miami: [/^.+@([a-zA-Z0-9._-]+\.)*miami\.edu$/i, /^.+@my-lucy\.com$/i],
+  usyd: [/^.+@([a-zA-Z0-9._-]+\.)*usyd\.edu$/i, /^.+@my-lucy\.com$/i],
+  columbia: [/^.+@([a-zA-Z0-9._-]+\.)*columbia\.edu$/i, /^.+@my-lucy\.com$/i],
+  drexel: [/^.+@([a-zA-Z0-9._-]+\.)*drexel\.edu$/i, /^.+@my-lucy\.com$/i],
+  temple: [/^.+@([a-zA-Z0-9._-]+\.)*temple\.edu$/i, /^.+@my-lucy\.com$/i],
+  psu: [/^.+@([a-zA-Z0-9._-]+\.)*psu\.edu$/i, /^.+@my-lucy\.com$/i],
+  ccp: [/^.+@([a-zA-Z0-9._-]+\.)*ccp\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i]
 };
 
@@ -26,7 +45,26 @@ const isAllowedEmail = (email, subdomain) => {
 const getErrorMessage = (subdomain) => {
   const universityNames = {
     upenn: 'Upenn',
-    admin: 'Admin',
+    harvard: 'Harvard',
+    mit: 'MIT',
+    lasell: 'Lasell',
+    oakland: 'Oakland',
+    arizona: 'Arizona',
+    uci: 'Uci',
+    ucdavis: 'Ucdavis',
+    cornell: 'Cornell',
+    berkeleycollege: 'BerkeleyCollege',
+    brown: 'Brown',
+    stanford: 'Stanford',
+    berkeley: 'Berkeley',
+    miami: 'Miami',
+    usyd: 'Usyd',
+    columbia: 'Columbia',
+    drexel: 'Drexel',
+    temple: 'Temple',
+    psu: 'PennState',
+    ccp: 'Ccp',
+    admin: 'Admin'
   };
   return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} can register.`;
 };
