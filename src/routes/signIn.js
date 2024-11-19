@@ -8,9 +8,62 @@ import Avatar from '@mui/material/Avatar';
 import CircularProgress from '@mui/material/CircularProgress';
 import lucyLogo from '../logo_lucy.png';
 import { motion } from 'framer-motion'; // Framer Motion for animations
+import config from '../config';
+
+
+const allowedDomains = {
+  upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
+  harvard: [/^.+@([a-zA-Z0-9._-]+\.)*harvard\.edu$/i, /^.+@my-lucy\.com$/i],
+  mit: [/^.+@([a-zA-Z0-9._-]+\.)*mit\.edu$/i, /^.+@my-lucy\.com$/i],
+  lasell: [/^.+@([a-zA-Z0-9._-]+\.)*lasell\.edu$/i, /^.+@my-lucy\.com$/i],
+  oakland: [/^.+@([a-zA-Z0-9._-]+\.)*oakland\.edu$/i, /^.+@my-lucy\.com$/i],
+  arizona: [/^.+@([a-zA-Z0-9._-]+\.)*arizona\.edu$/i, /^.+@my-lucy\.com$/i],
+  uci: [/^.+@([a-zA-Z0-9._-]+\.)*uci\.edu$/i, /^.+@my-lucy\.com$/i],
+  ucidavis: [/^.+@([a-zA-Z0-9._-]+\.)*ucidavis\.edu$/i, /^.+@my-lucy\.com$/i],
+  cornell: [/^.+@([a-zA-Z0-9._-]+\.)*cornell\.edu$/i, /^.+@my-lucy\.com$/i],
+  berkeleycollege: [/^.+@([a-zA-Z0-9._-]+\.)*berkeleycollege\.edu$/i,/^.+@my-lucy\.com$/i,],
+  brown: [/^.+@([a-zA-Z0-9._-]+\.)*brown\.edu$/i, /^.+@my-lucy\.com$/i],
+  stanford: [/^.+@([a-zA-Z0-9._-]+\.)*stanford\.edu$/i, /^.+@my-lucy\.com$/i],
+  berkeley: [/^.+@([a-zA-Z0-9._-]+\.)*berkeley\.edu$/i, /^.+@my-lucy\.com$/i],
+  miami: [/^.+@([a-zA-Z0-9._-]+\.)*miami\.edu$/i, /^.+@my-lucy\.com$/i],
+  admin: [/^.+@my-lucy\.com$/i],
+  // other allowed domains...
+};
+
+const getErrorMessage = (subdomain) => {
+  const universityNames = {
+    upenn: 'Upenn',
+    harvard: 'Harvard',
+    mit: 'MIT',
+    lasell: 'Lasell',
+    oakland: 'Oakland',
+    arizona: 'Arizona',
+    uci: 'Uci',
+    ucdavis: 'Ucdavis',
+    cornell: 'Cornell',
+    berkeleycollege: 'BerkeleyCollege',
+    brown: 'Brown',
+    stanford: 'Stanford',
+    berkeley: 'Berkeley',
+    miami: 'Miami',
+    admin: 'Admin',
+    // other universities...
+  };
+
+  return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} can register`;
+};
+
 
 const isEmail = (email) =>
-  /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
+  /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
+
+const getAllowedDomains = (subdomain) => allowedDomains[subdomain] || [];
+
+const isAllowedEmail = (email, subdomain) => {
+  const domains = getAllowedDomains(subdomain);
+  return domains.some((regex) => regex.test(email));
+};
+
 
 const SignIn = ({ handleToggleThemeMode }) => {
   const { isAuth, loading, user } = useAuth();
@@ -43,6 +96,8 @@ const SignIn = ({ handleToggleThemeMode }) => {
       newErrors.email = 'Email is required';
     } else if (!isEmail(email)) {
       newErrors.email = 'Please provide a valid email';
+    } else if (!isAllowedEmail(email, config.subdomain)) {
+      newErrors.email = getErrorMessage(config.subdomain);
     }
 
     if (!password) {
