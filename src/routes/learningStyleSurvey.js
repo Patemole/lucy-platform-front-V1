@@ -291,7 +291,7 @@ export default function LearningStyleSurvey() {
           <div className="grid grid-cols-2 gap-8 mb-8">
             {/* Section Major */}
             <div>
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-700">Major (if declared)</label>
                 {majors.length < 10 && (
                   <button
@@ -329,7 +329,7 @@ export default function LearningStyleSurvey() {
 
             {/* Section Minor */}
             <div>
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-700">Minor (optional)</label>
                 {minors.length < 10 && (
                   <button
@@ -370,10 +370,15 @@ export default function LearningStyleSurvey() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 disabled:opacity-50"
+            className="w-full py-2 mt-1 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 disabled:opacity-50"
           >
             {isLoading ? "Loading..." : "Create Your Profile"}
           </button>
+
+          {/* Texte supplémentaire */}
+          <p className="mt-4 text-xs text-center text-gray-500">
+            By signing up, you agree to our <a href="#" className="underline text-blue-500 hover:text-blue-700">Terms of Service</a> and <a href="https://trust-ressources.s3.us-east-1.amazonaws.com/Privacy+Policy+-+My+Lucy+Corp+-+2024+-+11%3A11%3A24.pdf" target="_blank" rel="noopener noreferrer" className="underline text-blue-500 hover:text-blue-700">Privacy Policy</a>. You also admit that you are beautiful.
+          </p>
 
           {/* Pied de page */}
           <div className="mt-8 flex items-center justify-center">
