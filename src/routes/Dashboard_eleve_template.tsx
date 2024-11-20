@@ -1088,7 +1088,10 @@ const handleNewConversation = async () => {
           >
             <div
               className="relative p-4 flex items-center justify-between "
-              style={{ backgroundColor: 'transparent', borderColor: theme.palette.divider }}
+              style={{ 
+                //backgroundColor: 'transparent', 
+                backgroundColor: isLandingPageVisible ? '#F0F4FC' : 'transparent',
+                borderColor: theme.palette.divider }}
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 {!drawerOpen && (
