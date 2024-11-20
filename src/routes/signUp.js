@@ -8,6 +8,8 @@ import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
 import lucyLogo from '../logo_lucy.png';
 import config from '../config';
+import { createAvatar } from 'avatar-initials';
+import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
 
 const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
 

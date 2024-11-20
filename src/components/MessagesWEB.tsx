@@ -467,7 +467,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
               className="font-bold ml-2 my-auto flex items-center"
               style={{ color: theme.palette.text.primary }}
             >
-              {personaName || "lucy"}
+              {personaName || "Lucy"}
               <img
                 src={certifiate_icon}
                 alt="Icône de certificat"
@@ -1009,7 +1009,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
               messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-3 ${
+                  className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words ${
                     !isSmallScreen ? "ml-8" : ""
                   } text-justify ${messageFontSize}`}
                   style={{ color: theme.palette.text.primary }}
