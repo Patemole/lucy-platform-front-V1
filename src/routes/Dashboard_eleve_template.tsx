@@ -833,7 +833,18 @@ const handleNewConversation = async () => {
         transition={{ duration: 0.5 }}
         style={{ display: 'contents' }} // Ne crée pas de conteneur visuel
       >
-        <div className="main-content flex h-screen">
+        <div
+          className="main-content flex h-screen"
+          style={{
+            position: 'fixed', // Fixe le conteneur
+            top: 0,
+            left: 0,
+            width: '100vw', // Assure que le conteneur occupe toute la largeur
+            height: '100vh', // Assure que le conteneur occupe toute la hauteur
+            overflow: 'hidden', // Désactive le scroll interne
+          }}
+        >
+          
         <Drawer
           variant="persistent"
           anchor="left"
@@ -1371,7 +1382,13 @@ const handleNewConversation = async () => {
               display: isLandingPageVisible ? 'none' : 'flex',
             }}
           >
-              <div style={{ maxWidth: '800px', width: '100%', position: 'relative' }}>
+              <div style={{
+                  maxWidth: isSmallScreen ? '90%' : '800px', // Réduit à 90% pour petits écrans, max 800px pour grands écrans
+                  width: '100%',
+                  margin: '0 auto', // Centre horizontalement le champ
+                  padding: isSmallScreen ? '0 10px' : '0', // Ajoute une marge interne sur petits écrans
+                  position: 'relative',
+                }}>
                   <TextField
                   fullWidth
                   variant="outlined"
