@@ -27,6 +27,7 @@ export default function LearningStyleSurvey() {
   const [advisor, setAdvisor] = useState('');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const isMobile = window.innerWidth <= 768;
 
 
   const variants = {
@@ -205,13 +206,17 @@ export default function LearningStyleSurvey() {
 
       <div className="w-full max-w-2xl bg-white rounded-xl shadow-md p-10 mx-4">
         <h2 className="text-xl font-semibold text-center mb-4">Tell Us About Yourself</h2>
-        <p className="text-gray-500 text-center mb-8 text-sm">To start your journey, please fill in the details below.</p>
+        <p className="text-gray-500 text-center mb-8 text-sm">
+        {isMobile ? "Please fill in the details below." : "To start your journey, please fill in the details below."}
+      </p>
 
         <form onSubmit={handleSubmit} noValidate>
           {/* Section École */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <label className="block text-sm font-medium text-gray-700">Which school are you affiliated with? (You can add more)*</label>
+            <label className="block text-sm font-medium text-gray-700">
+              {isMobile ? "Your school (add more)" : "Which school are you affiliated with? (You can add more)*"}
+            </label>
               {schools.length < 10 && (
                 <button
                   type="button"
@@ -292,7 +297,10 @@ export default function LearningStyleSurvey() {
             {/* Section Major */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700">Major (if declared)</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  {isMobile ? "Major" : "Major (if declared)"}
+                </label>
+                
                 {majors.length < 10 && (
                   <button
                     type="button"
@@ -330,7 +338,9 @@ export default function LearningStyleSurvey() {
             {/* Section Minor */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700">Minor (optional)</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  {isMobile ? "Minor" : "Minor (optional)"}
+                </label>
                 {minors.length < 10 && (
                   <button
                     type="button"
