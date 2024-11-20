@@ -589,6 +589,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       p={isSmallScreen ? 2 : 4}
       position="relative"
       overflow="hidden"
+      sx={{
+        backgroundColor: isSmallScreen ? '#F0F4FA' : 'transparent', // Couleur pour les petits écrans
+      }}
     >
       {/* Arrière-plan Spline - affiché uniquement sur les grands écrans */}
       {isLargeScreen && (
