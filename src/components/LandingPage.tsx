@@ -376,6 +376,8 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
+
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(true);
   const [placeholderText, setPlaceholderText] = useState('');
@@ -391,18 +393,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   // Fonction pour envoyer le message
   const handleSend = () => {
     const message = inputValue.trim();
-    console.log("Button clicked");
-    console.log("Message to send:", message);
+    console.log('Button clicked');
+    console.log('Message to send:', message);
 
     if (message !== '') {
-      console.log('Debut d envoie du message');
+      console.log("Début d'envoi du message");
       onSend(message);
-      console.log('Apres la fonction OnSend');
+      console.log('Après la fonction onSend');
       setInputValue('');
       setActiveButton(null);
       setPlaceholderText('Ask Lucy...');
     } else {
-      console.log("Message is empty");
+      console.log('Message is empty');
     }
   };
 
@@ -451,7 +453,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   // Gestion du changement dans le champ de saisie
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    console.log("Current input value in handleInputChange:", value);
+    console.log('Current input value in handleInputChange:', value);
     setInputValue(value);
   };
 
@@ -510,7 +512,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   }, [isHoveringQuestions]);
 
   // Définition des boutons
-  const buttons = [
+  const allButtons = [
     {
       label: 'Academic Info',
       value: 'Academic Info',
@@ -538,6 +540,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     },
   ];
 
+  // Filtrer les boutons en fonction de la taille de l'écran
+  const buttons = isSmallScreen
+    ? allButtons.filter((button) => button.label !== 'Admission')
+    : allButtons;
+
   // Questions mappées à chaque bouton
   const questionsMap: { [key: string]: string[] } = {
     'Academic Info': [
@@ -552,13 +559,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       'What major campus events take place each semester?',
       'What student clubs or organizations are active on campus, and how can I join?',
     ],
-    'Admission': [
-      "What are the average GPA and test scores for admitted students?",
+    Admission: [
+      'What are the average GPA and test scores for admitted students?',
       'Do international students need to take additional tests or submit specific documents?',
       'Can I connect with current students or alumni to learn about their experiences?',
       'How can I track the status of my application after submitting it?',
     ],
-    'Facilities': [
+    Facilities: [
       'What types of housing options are available for freshmen students?',
       'Are the gym and fitness facilities open to all students?',
       'What dining options are available for first year students?',
@@ -583,29 +590,29 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       position="relative"
       overflow="hidden"
     >
-      {/* Arrière-plan Spline */}
-      <iframe
-        src="https://my.spline.design/aiassistanthoverandclickinteraction-afdf94418f2cc3f7f17a6aad54796013/" 
-        
-        //src="https://my.spline.design/radialpattern-c81361a0c548492781a6993db40c8c5c/"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          border: 'none',
-        }}
-        title="Spline Scene"
-        allowFullScreen
-      />
+      {/* Arrière-plan Spline - affiché uniquement sur les grands écrans */}
+      {isLargeScreen && (
+        <iframe
+          src="https://my.spline.design/aiassistanthoverandclickinteraction-afdf94418f2cc3f7f17a6aad54796013/"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            border: 'none',
+          }}
+          title="Spline Scene"
+          allowFullScreen
+        />
+      )}
 
       {/* Contenu principal de la landing page */}
       <Box
-        ref={containerRef} // Ajout du ref ici pour englober le TextField et les autres éléments
+        ref={containerRef}
         width="100%"
         maxWidth="800px"
-        mt={isSmallScreen ? 6 : 30}
+        mt={isSmallScreen ? 2 : 30}
         position="relative"
         zIndex={1}
       >
@@ -614,7 +621,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           fontWeight="bold"
           align="center"
           gutterBottom
-          sx={{ color: '#011F5B', maxWidth: '100%', wordBreak: 'break-word' }}
+          sx={{
+            color: '#011F5B',
+            maxWidth: '100%',
+            wordBreak: 'break-word',
+            ...(isSmallScreen && {
+              fontSize: '1.5rem', // Taille ajustée pour les petits écrans
+            }),
+          }}
         >
           What are you looking for?
         </Typography>
@@ -669,7 +683,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           <Box
             mt={3}
             display="flex"
-            flexDirection={isSmallScreen ? 'column' : 'row'}
+            flexDirection="row"
+            flexWrap={isSmallScreen ? 'wrap' : 'nowrap'}
             justifyContent="center"
             alignItems="center"
             width="100%"
@@ -700,6 +715,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                     backgroundColor: '#011F5B',
                     color: '#FFFFFF',
                   },
+                  ...(isSmallScreen && {
+                    flex: '1 1 calc(50% - 16px)', // Deux boutons par ligne sur petits écrans
+                    maxWidth: 'calc(50% - 16px)',
+                  }),
                 }}
                 startIcon={button.icon}
               >
@@ -724,6 +743,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
               boxShadow="0 2px 8px rgba(0, 0, 0, 0.1)"
               onMouseEnter={() => setIsHoveringQuestions(true)}
               onMouseLeave={() => setIsHoveringQuestions(false)}
+              sx={{
+                ...(isSmallScreen && {
+                  maxHeight: 'calc(100vh - 300px)', // Ajuste la hauteur pour éviter le scroll
+                  overflowY: 'auto',
+                }),
+              }}
             >
               {questionsMap[activeButton].map((question, index) => (
                 <React.Fragment key={index}>
@@ -759,7 +784,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
 };
 
 export default LandingPage;
-
 
 
 
