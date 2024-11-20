@@ -1375,8 +1375,8 @@ const handleNewConversation = async () => {
               //display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              paddingTop: '20px', // Ajoute de l'espace au-dessus du placeholder
-              paddingBottom: '20px', // Facultatif : ajoute de l'espace en bas si nécessaire
+              paddingTop: isSmallScreen ? '10px' : '20px', // Moins de marge au-dessus sur petits écrans
+              paddingBottom: isSmallScreen ? '10px' : '20px', // Moins de marge en dessous sur petits écrans
               zIndex: 2,
               transition: 'left 0.3s, width 0.3s',
               display: isLandingPageVisible ? 'none' : 'flex',
