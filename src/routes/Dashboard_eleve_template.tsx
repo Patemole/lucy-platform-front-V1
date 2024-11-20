@@ -35,6 +35,9 @@ import ShareIcon from '@mui/icons-material/Share'; // Icône pour "Partager"
 import EditIcon from '@mui/icons-material/Edit'; // Icône pour "Renommer"
 import ArchiveIcon from '@mui/icons-material/Archive'; // Icône pour "Archiver"
 import DeleteIcon from '@mui/icons-material/Delete'; // Icône pour "Supprimer"
+import SettingsIcon from '@mui/icons-material/Settings';
+import './styles.css'; // Import du fichier CSS pour le gradient
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 
 const drawerWidth = 240;
@@ -82,6 +85,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [parametersMenuAnchorEl, setParametersMenuAnchorEl] = useState<HTMLElement | null>(null);
 
 
   const lastAiMessageId = useMemo(() => {
@@ -109,17 +113,6 @@ const Dashboard_eleve_template: React.FC = () => {
     setSelectedConversation(null);
   };
 
-
-  const handleShare = () => {
-    setMenuAnchorEl(null);
-    setSelectedConversation(null);
-  };
-
-  const handleArchive = () => {
-    setMenuAnchorEl(null);
-    setSelectedConversation(null);
-  };
-
   // Action pour renommer une conversation
   const handleRename = async () => {
     handleMenuClose();
@@ -128,27 +121,22 @@ const Dashboard_eleve_template: React.FC = () => {
       alert("No conversation selected.");
       return;
     }
-  
     const newName = prompt('Enter new name:', '');
     if (!newName) {
       alert("Conversation name cannot be empty.");
       return;
     }
-  
     try {
       // Référence au document Firestore pour la conversation sélectionnée
       const conversationRef = doc(db, 'chatsessions', selectedConversation);
-  
       // Mise à jour du champ `name` dans Firestore
       await updateDoc(conversationRef, { name: newName });
-  
       // Mise à jour de l'état local après le succès de Firestore
       setConversations((prev) =>
         prev.map((conv) =>
           conv.chat_id === selectedConversation ? { ...conv, name: newName } : conv
         )
       );
-  
       alert("Conversation renamed successfully.");
     } catch (error) {
       console.error("Failed to rename the conversation:", error);
@@ -159,30 +147,38 @@ const Dashboard_eleve_template: React.FC = () => {
   // Action pour supprimer une conversation
   const handleDelete = async () => {
     handleMenuClose();
-  
     if (!selectedConversation) {
       alert("No conversation selected.");
       return;
     }
-  
     const confirmDelete = window.confirm("Are you sure you want to delete this conversation?");
     if (!confirmDelete) return;
-  
     try {
       // Référence au document Firestore pour la conversation sélectionnée
       const conversationRef = doc(db, 'chatsessions', selectedConversation);
-  
       // Suppression du document Firestore
       await deleteDoc(conversationRef);
-  
       // Mise à jour de l'état local après succès de la suppression
       setConversations((prev) => prev.filter((conv) => conv.chat_id !== selectedConversation));
-  
       alert("Conversation deleted successfully.");
     } catch (error) {
       console.error("Failed to delete the conversation:", error);
       alert("Failed to delete the conversation. Please try again.");
     }
+  };
+    
+  const handleParametersMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setParametersMenuAnchorEl(event.currentTarget);
+  };
+  
+  const handleParametersMenuClose = () => {
+    setParametersMenuAnchorEl(null);
+  };
+  
+
+  const handleDeleteAccount = () => {
+    console.log('Delete Account clicked');
+    handleParametersMenuClose();
   };
 
   // Compute if the latest AI message has a TAK
@@ -819,6 +815,16 @@ const handleNewConversation = async () => {
 
   return (
     <ThemeProvider theme={theme}>
+      {/* Éléments d'arrière-plan */}
+      <div className="background-container"> 
+        <div className="blob blob-1"></div>
+        <div className="blob blob-2"></div>
+        <div className="blob blob-3"></div>
+        <div className="blob blob-4"></div>
+        <div className="blob blob-5"></div>
+        <div className="frosted-glass"></div>
+      </div>
+
       <motion.div
         initial="initial"
         animate="animate"
@@ -827,268 +833,253 @@ const handleNewConversation = async () => {
         transition={{ duration: 0.5 }}
         style={{ display: 'contents' }} // Ne crée pas de conteneur visuel
       >
-        <div className="flex h-screen" style={{ backgroundColor: theme.palette.background.default }}>
-          <Drawer
-            variant="persistent"
-            anchor="left"
-            open={drawerOpen}
-            PaperProps={{
-              style: {
-                width: drawerWidth,
-                borderRadius: '0 0 0 0',
-                backgroundColor: theme.palette.background.paper,
-                display: 'flex',
-                flexDirection: 'column',
-              },
-            }}
-          >
-            <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
-              <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
-                <MenuIcon />
-              </IconButton>
-              <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
-                <MapsUgcRoundedIcon />
-              </IconButton>
-            </Box>
-            <div style={{ flexGrow: 1, overflowY: 'auto' }}>
-              <List style={{ padding: '0 15px' }}>
-                {/* Profil */}
-                <ListItem
-                  button
-                  onClick={handleDialogOpen}
-                  sx={{
-                    borderRadius: '8px',
-                    backgroundColor: theme.palette.background.paper,
-                    mb: 2,
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.hover,
-                    },
-                  }}
-                >
-                  <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                    <ProfileEdit />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Your Profile"
-                    primaryTypographyProps={{
-                      style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                    }}
-                  />
-                </ListItem>
-
-                <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
-
-                {/* Conversations */}
-                {conversations.length > 0 ? (
-                  conversations.map((conversation) => (
-                    <ListItem
-                      key={conversation.chat_id}
-                      button
-                      onClick={() => handleConversationClick(conversation.chat_id)} // Redirection vers la conversation
-                      sx={{
-                        position: 'relative', // Pour positionner l'IconButton
-                        borderRadius: '8px',
-                        margin: '5px 0',
-                        paddingRight: '40px', // Espace pour l'IconButton
-                        backgroundColor:
-                          activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
-                        '&:hover': {
-                          backgroundColor: theme.palette.button.background,
-                          color: theme.palette.text_human_message_historic,
-                          // Afficher l'IconButton au survol
-                          '& .MuiIconButton-root': {
-                            opacity: 1,
-                            pointerEvents: 'auto',
-                          },
-                        },
-                        '& .MuiTypography-root': {
-                          color:
-                            activeChatId === conversation.chat_id
-                              ? theme.palette.text_human_message_historic
-                              : theme.palette.text.primary,
-                        },
-                      }}
-                    >
-                      <ListItemText
-                        primary={conversation.name}
-                        primaryTypographyProps={{
-                          style: {
-                            fontWeight: '500',
-                            fontSize: '0.875rem',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          },
-                        }}
-                      />
-                      {/* Icône des trois points - visible uniquement au survol ou si actif */}
-                      <IconButton
-                        edge="end"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Empêche le déclenchement de onClick du ListItem
-                          handleMenuOpen(e, conversation.chat_id);
-                        }}
-                        sx={{
-                          position: 'absolute',
-                          right: '8px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: theme.palette.text.primary,
-                          opacity: activeChatId === conversation.chat_id ? 1 : 0, // Visible si actif
-                          //transition: 'opacity 0.3s',
-                          pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none', // Cliquable si actif
-                          '&:hover': {
-                            backgroundColor: 'transparent',
-                          },
-                          mr: '1px', // Ajoutez cette ligne pour ajouter une marge à droite des trois points
-                        }}
-                      >
-                        <MoreHorizIcon
-                          fontSize="small"
-                          sx={{
-                            color: 'gray',
-                            fontSize: '20px',
-                          }}
-                        />
-                      </IconButton>
-                    </ListItem>
-                  ))
-                ) : (
-                  <Typography
-                    align="center"
-                    sx={{
-                      fontWeight: '500',
-                      fontSize: '0.875rem',
-                      color: theme.palette.text.secondary,
-                      marginTop: '30px',
-                    }}
-                  >
-                    You have no conversations yet
-                  </Typography>
-                )}
-              </List>
-
-              {/* Menu contextuel */}
-              <Menu
-                anchorEl={menuAnchorEl} // Position du menu contextuel
-                open={Boolean(menuAnchorEl)} // Afficher/masquer le menu
-                onClose={handleMenuClose} // Fermer le menu
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                PaperProps={{
-                  sx: {
-                    margin: '8px', // Ajoute de la marge autour du menu
-                    borderRadius: '16px', // Arrondit les coins du menu
-                    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)', // Ajoute une ombre pour un effet visuel
-                    padding: '4px', // Ajoute un espacement interne autour des `MenuItem`
+        <div className="main-content flex h-screen">
+        <Drawer
+          variant="persistent"
+          anchor="left"
+          open={drawerOpen}
+          PaperProps={{
+            style: {
+              width: drawerWidth,
+              borderRadius: '0 0 0 0',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)', // Effet de verre dépoli
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              display: 'flex',
+              flexDirection: 'column',
+              borderRight: '1px solid rgba(255, 255, 255, 0.3)', // Optionnel : bordure pour séparer visuellement
+            },
+          }}
+          ModalProps={{
+            keepMounted: true,
+          }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
+            <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
+              <MenuIcon />
+            </IconButton>
+            <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
+              <MapsUgcRoundedIcon />
+            </IconButton>
+          </Box>
+          <div style={{ flexGrow: 1, overflowY: 'auto' }}>
+            <List style={{ padding: '0 10px' }}>
+              {/* Profil */}
+              <ListItem
+                button
+                onClick={handleDialogOpen}
+                sx={{
+                  borderRadius: '8px',
+                  backgroundColor: 'transparent', // Rendre transparent pour l'effet de verre dépoli
+                  mb: 2,
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
                   },
                 }}
               >
-                {/*
-                <MenuItem
-                  onClick={handleShare}
-                  sx={{
-                    padding: '8px', // Espacement interne
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.hover, // Couleur de fond au survol
-                    },
+                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
+                  <ProfileEdit />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Your Profile"
+                  primaryTypographyProps={{
+                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
                   }}
-                >
-                  <ShareIcon fontSize="small" sx={{ marginRight: '8px' }} />
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: '0.75rem',
-                      fontWeight: '400',
-                    }}
-                  >
-                    Share
-                  </Typography>
-                </MenuItem>
-                */}
+                />
+              </ListItem>
 
-                <MenuItem
-                  onClick={handleRename}
-                  sx={{
-                    padding: '8px',
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.hover,
-                    },
-                  }}
-                >
-                  <EditIcon fontSize="small" sx={{ marginRight: '8px' }} />
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: '0.75rem',
-                      fontWeight: '400',
-                    }}
-                  >
-                    Rename
-                  </Typography>
-                </MenuItem>
+              <Divider style={{ backgroundColor: 'lightgray', margin: '10px 0' }} />
 
-                <MenuItem
-                  onClick={handleDelete}
-                  sx={{
-                    padding: '8px',
-                    color: 'red',
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.hover,
-                    },
-                  }}
-                >
-                  <DeleteIcon fontSize="small" sx={{ marginRight: '8px' }} />
-                  <Typography
-                    variant="body2"
+              {/* Conversations */}
+              {conversations.length > 0 ? (
+                conversations.map((conversation) => (
+                  <ListItem
+                    key={conversation.chat_id}
+                    button
+                    onClick={() => handleConversationClick(conversation.chat_id)}
                     sx={{
-                      fontSize: '0.75rem',
-                      fontWeight: '400',
+                      position: 'relative',
+                      borderRadius: '8px',
+                      margin: '5px 0',
+                      paddingRight: '40px',
+                      backgroundColor:
+                        activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
+                      '&:hover': {
+                        backgroundColor: theme.palette.button.background,
+                        color: theme.palette.text_human_message_historic,
+                        '& .MuiIconButton-root': {
+                          opacity: 1,
+                          pointerEvents: 'auto',
+                        },
+                      },
+                      '& .MuiTypography-root': {
+                        color:
+                          activeChatId === conversation.chat_id
+                            ? theme.palette.text_human_message_historic
+                            : theme.palette.text.primary,
+                      },
                     }}
                   >
-                    Delete
-                  </Typography>
+                    <ListItemText
+                      primary={conversation.name}
+                      primaryTypographyProps={{
+                        style: {
+                          fontWeight: '500',
+                          fontSize: '0.875rem',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        },
+                      }}
+                    />
+                    {/* Icône des trois points - visible uniquement au survol ou si actif */}
+                    <IconButton
+                      edge="end"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMenuOpen(e, conversation.chat_id);
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: theme.palette.text.primary,
+                        opacity: activeChatId === conversation.chat_id ? 1 : 0,
+                        pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
+                        '&:hover': {
+                          backgroundColor: 'transparent',
+                        },
+                        mr: '1px',
+                      }}
+                    >
+                      <MoreHorizIcon
+                        fontSize="small"
+                        sx={{
+                          color: 'gray',
+                          fontSize: '20px',
+                        }}
+                      />
+                    </IconButton>
+                  </ListItem>
+                ))
+              ) : (
+                <Typography
+                  align="center"
+                  sx={{
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    color: theme.palette.text.secondary,
+                    marginTop: '30px',
+                  }}
+                >
+                  You have no conversations yet
+                </Typography>
+              )}
+            </List>
+
+            {/* Menu contextuel */}
+            <Menu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              PaperProps={{
+                sx: {
+                  margin: '8px',
+                  borderRadius: '16px',
+                  boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+                  padding: '4px',
+                },
+              }}
+            >
+              {/* Menu items */}
+              <MenuItem
+                onClick={handleRename}
+                sx={{
+                  padding: '8px',
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                }}
+              >
+                <EditIcon fontSize="small" sx={{ marginRight: '8px' }} />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '0.75rem',
+                    fontWeight: '400',
+                  }}
+                >
+                  Rename
+                </Typography>
+              </MenuItem>
+
+              <MenuItem
+                onClick={handleDelete}
+                sx={{
+                  padding: '8px',
+                  color: 'red',
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                }}
+              >
+                <DeleteIcon fontSize="small" sx={{ marginRight: '8px' }} />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '0.75rem',
+                    fontWeight: '400',
+                  }}
+                >
+                  Delete
+                </Typography>
+              </MenuItem>
+            </Menu>
+          </div>
+
+          {isSmallScreen && (
+            <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
+              <AccountCircleIcon
+                fontSize="large"
+                component="svg"
+                style={{
+                  color: '#9e9e9e', // Couleur grise neutre
+                  cursor: 'pointer',
+                  margin: '0 auto',
+                }}
+                onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+              />
+              <Menu
+                anchorEl={profileMenuAnchorEl}
+                open={Boolean(profileMenuAnchorEl)}
+                onClose={handleProfileMenuClose}
+                PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
+              >
+                <MenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
+                        Log-out
+                      </Typography>
+                    }
+                  />
                 </MenuItem>
               </Menu>
-            </div>
-
-            {isSmallScreen && (
-              <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
-                <img
-                  src={logo_greg}
-                  alt="Logo face"
-                  className="h-10 w-auto"
-                  style={{ cursor: 'pointer', margin: '0 auto' }}
-                  onClick={handleProfileMenuClick}
-                />
-                <Menu
-                  anchorEl={profileMenuAnchorEl}
-                  open={Boolean(profileMenuAnchorEl)}
-                  onClose={handleProfileMenuClose}
-                  PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
-                >
-                  <MenuItem onClick={handleLogout}>
-                    <ListItemIcon>
-                      <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
-                          Log-out
-                        </Typography>
-                      }
-                    />
-                  </MenuItem>
-                </Menu>
-              </Box>
-            )}
-          </Drawer>
+            </Box>
+          )}
+        </Drawer>
 
           <div
             className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : ''} ${
@@ -1097,7 +1088,7 @@ const handleNewConversation = async () => {
           >
             <div
               className="relative p-4 flex items-center justify-between "
-              style={{ backgroundColor: '#F0F4FC', borderColor: theme.palette.divider }}
+              style={{ backgroundColor: 'transparent', borderColor: theme.palette.divider }}
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 {!drawerOpen && (
@@ -1133,19 +1124,43 @@ const handleNewConversation = async () => {
                   </>
                 ) : (
                   <>
-                    <img
-                      src={logo_greg}
-                      alt="Logo face"
-                      className="h-10 w-auto"
-                      style={{ cursor: 'pointer', marginRight: '20px', marginLeft: '15px' }}
-                      onClick={handleProfileMenuClick}
+                    <AccountCircleIcon
+                      fontSize="inherit" // Permet un contrôle précis de la taille via CSS
+                      component="svg"
+                      style={{
+                        color: '#9e9e9e', // Couleur grise neutre
+                        cursor: 'pointer',
+                        margin: '0 auto 0 16px', // Ajoute une marge à droite (16px)
+                        fontSize: '2.5rem', // Augmente la taille de l'icône
+                      }}
+                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                     />
                     <Menu
                       anchorEl={profileMenuAnchorEl}
                       open={Boolean(profileMenuAnchorEl)}
                       onClose={handleProfileMenuClose}
-                      PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
+                      PaperProps={{
+                        style: {
+                          borderRadius: '12px',
+                          backgroundColor: theme.palette.background.paper,
+                        },
+                      }}
                     >
+                      {/* Nouvelle option Parameters */}
+                      <MenuItem onClick={handleParametersMenuClick}>
+                        <ListItemIcon>
+                          <SettingsIcon fontSize="small" sx={{ color: '#4A90E2' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#4A90E2' }}>
+                              Parameters
+                            </Typography>
+                          }
+                        />
+                      </MenuItem>
+
+                      {/* Option Log-out */}
                       <MenuItem onClick={handleLogout}>
                         <ListItemIcon>
                           <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
@@ -1159,10 +1174,52 @@ const handleNewConversation = async () => {
                         />
                       </MenuItem>
                     </Menu>
+
+                    {/* Menu pour Parameters */}
+                    <Menu
+                      anchorEl={parametersMenuAnchorEl}
+                      open={Boolean(parametersMenuAnchorEl)}
+                      onClose={handleParametersMenuClose}
+                      PaperProps={{
+                        style: {
+                          borderRadius: '12px',
+                          backgroundColor: theme.palette.background.paper,
+                        },
+                      }}
+                      anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right', // Origine à droite par rapport à l'élément déclencheur
+                      }}
+                      transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'left', // Position du menu à gauche
+                      }}
+                      // Optionnel : Ajouter un décalage pour éviter le chevauchement
+                      sx={{
+                        mt: -1, // Marge supérieure
+                        ml: -18, // Déplacer légèrement vers la gauche
+                      }}
+                    >
+                      {/* Option Delete Account */}
+                      <MenuItem onClick={handleDeleteAccount}>
+                        <ListItemIcon>
+                          <DeleteIcon fontSize="small" sx={{ color: '#F04261' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
+                              Delete Account
+                            </Typography>
+                          }
+                        />
+                      </MenuItem>
+                    </Menu>
                   </>
                 )}
               </div>
             </div>
+
+
 
 
             {/* Content Area */}
@@ -1174,7 +1231,7 @@ const handleNewConversation = async () => {
             ) : (
               <div
                 className="flex-grow overflow-y-auto"
-                style={{ backgroundColor: '#F0F4FC', paddingBottom: '100px' }}
+                style={{ backgroundColor: 'transparent', paddingBottom: '100px' }}
               >
                 <div className="flex flex-col space-y-2 p-4" ref={scrollableDivRef}>
                   {messages.map((message, index) =>
@@ -1195,7 +1252,7 @@ const handleNewConversation = async () => {
                                 display: 'inline-block',
                                 textAlign: 'left',
                                 maxWidth: '75%',
-                                marginRight: '30px',
+                                marginRight: '12px',
                                 fontSize: '1.05rem',
                                 color: theme.palette.text_human_message_historic,
                               }}
@@ -1258,6 +1315,8 @@ const handleNewConversation = async () => {
               </div>
             )}
 
+
+
             
             {relatedQuestions.length > 0 && (
               <div className="mt-4 px-8 flex justify-center">
@@ -1288,16 +1347,27 @@ const handleNewConversation = async () => {
             {/* Input Field */}
             {(!hasTak || inputValue.trim() !== "") && ( 
             <div
-              className="flex justify-center p-4"
-              style={{
-                  backgroundColor: '#F0F4FC',
-                  position: 'fixed',
-                  bottom: 0,
-                  width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%', // Use the same value as drawerWidth
-                  transition: 'width 0.3s',
-                  display: isLandingPageVisible ? 'none' : 'flex',
-              }}
-              >
+            className="footer"
+            style={{
+              position: 'fixed',
+              backgroundColor: '#F0F4FC', // Couleur blanche avec une légère transparence
+              bottom: 0, // Le footer s'étend jusqu'en bas de la page
+              left: drawerOpen ? `${drawerWidth}px` : '0',
+              width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
+              //backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(50px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.3)',
+              //display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingTop: '20px', // Ajoute de l'espace au-dessus du placeholder
+              paddingBottom: '20px', // Facultatif : ajoute de l'espace en bas si nécessaire
+              zIndex: 2,
+              transition: 'left 0.3s, width 0.3s',
+              display: isLandingPageVisible ? 'none' : 'flex',
+            }}
+          >
               <div style={{ maxWidth: '800px', width: '100%', position: 'relative' }}>
                   <TextField
                   fullWidth
