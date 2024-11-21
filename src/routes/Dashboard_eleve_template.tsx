@@ -1398,7 +1398,8 @@ const handleNewConversation = async () => {
                   multiline
                   minRows={1} // Adjust `minRows` to change the minimum height of the TextField
                   maxRows={6}
-                  placeholder={isStreaming ? "Please wait..." : "Message..."} // Message différent pendant le streaming
+                  //placeholder={isStreaming ? "Please wait..." : "Message..."} // Message différent pendant le streaming
+                  placeholder={isSmallScreen && drawerOpen ? "" : (isStreaming ? "Please wait..." : "Message...")}
                   //placeholder={
                     //messages.some((msg) => msg.TAK && msg.TAK.length > 0)
                       //? "" // Pas de placeholder si TAK est présent
