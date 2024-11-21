@@ -839,8 +839,10 @@ const handleNewConversation = async () => {
             position: 'fixed', // Fixe le conteneur
             top: 0,
             left: 0,
-            width: '100vw', // Assure que le conteneur occupe toute la largeur
-            height: '100vh', // Assure que le conteneur occupe toute la hauteur
+            //width: '100vw', // Assure que le conteneur occupe toute la largeur
+            //height: '100vh', // Assure que le conteneur occupe toute la hauteur
+            right: isSmallScreen && drawerOpen ? '20vw' : '0', // Laisse 20% de l'écran à droite si Drawer ouvert
+            width: isSmallScreen && drawerOpen ? '80vw' : '100%', // Ajuste la largeur
             overflow: 'hidden', // Désactive le scroll interne
           }}
         >
@@ -851,7 +853,8 @@ const handleNewConversation = async () => {
           open={drawerOpen}
           PaperProps={{
             style: {
-              width: drawerWidth,
+              //width: drawerWidth,
+              width: isSmallScreen ? '80vw' : drawerWidth, // 80% de la largeur de l'écran sur petits écrans
               borderRadius: '0 0 0 0',
               backgroundColor: 'rgba(255, 255, 255, 0.2)', // Effet de verre dépoli
               backdropFilter: 'blur(20px)',
