@@ -199,7 +199,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
   
                 {/* Current Year */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">What is your current year?*</label>
+                  <label className="block text-sm font-medium text-gray-700">Current year?*</label>
                   <select
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
