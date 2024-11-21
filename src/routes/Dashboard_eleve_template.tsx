@@ -866,22 +866,42 @@ const handleNewConversation = async () => {
             }}
             ModalProps={{
               keepMounted: true,
+              BackdropProps: {
+                style: {
+                  backgroundColor: 'rgba(0, 0, 0, 0.1)', // Ajustez l'opacité pour un effet plus clair
+                },
+              },
             }}
           >
+            {/* Header avec boutons de menu et nouvelle conversation */}
             <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
+              {/* Bouton de fermeture/ouverture de la sidebar */}
               <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
                 <MenuIcon />
               </IconButton>
-              <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
+              
+              {/* Bouton de nouvelle conversation avec fermeture automatique sur petits écrans */}
+              <IconButton
+                onClick={() => {
+                  handleNewConversation();
+                  if (isSmallScreen) toggleDrawer(); // Fermer la sidebar sur petits écrans
+                }}
+                sx={{ color: theme.palette.sidebar }}
+              >
                 <MapsUgcRoundedIcon />
               </IconButton>
             </Box>
+            
+            {/* Contenu de la sidebar */}
             <div style={{ flexGrow: 1, overflowY: 'auto' }}>
               <List style={{ padding: '0 10px' }}>
-                {/* Profil */}
+                {/* Profil avec fermeture automatique sur petits écrans */}
                 <ListItem
                   button
-                  onClick={handleDialogOpen}
+                  onClick={() => {
+                    handleDialogOpen();
+                    if (isSmallScreen) toggleDrawer(); // Fermer la sidebar sur petits écrans
+                  }}
                   sx={{
                     borderRadius: '8px',
                     backgroundColor: 'transparent', // Rendre transparent pour l'effet de verre dépoli
@@ -904,13 +924,16 @@ const handleNewConversation = async () => {
 
                 <Divider style={{ backgroundColor: 'lightgray', margin: '10px 0' }} />
 
-                {/* Conversations */}
+                {/* Liste des conversations */}
                 {conversations.length > 0 ? (
                   conversations.map((conversation) => (
                     <ListItem
                       key={conversation.chat_id}
                       button
-                      onClick={() => handleConversationClick(conversation.chat_id)}
+                      onClick={() => {
+                        handleConversationClick(conversation.chat_id);
+                        if (isSmallScreen) toggleDrawer(); // Fermer la sidebar sur petits écrans
+                      }}
                       sx={{
                         position: 'relative',
                         borderRadius: '8px',
@@ -1060,6 +1083,7 @@ const handleNewConversation = async () => {
               </Menu>
             </div>
 
+            {/* Section Profil pour petits écrans avec fermeture automatique */}
             {isSmallScreen && (
               <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
                 <AccountCircleIcon
@@ -1070,7 +1094,10 @@ const handleNewConversation = async () => {
                     cursor: 'pointer',
                     margin: '0 auto',
                   }}
-                  onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                  onClick={(event) => {
+                    handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>);
+                    if (isSmallScreen) toggleDrawer();
+                  }}
                 />
                 <Menu
                   anchorEl={profileMenuAnchorEl}
