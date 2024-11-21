@@ -1011,10 +1011,9 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   key={index}
                   className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words ${
                     !isSmallScreen ? "ml-8" : ""
-                  } text-justify ${messageFontSize}`}
+                  } text-left sm:text-justify ${messageFontSize}`} // Modification ici
                   style={{ color: theme.palette.text.primary }}
                 >
-                
                   <ReactMarkdown
                     className="prose max-w-full"
                     remarkPlugins={[remarkGfm]}
