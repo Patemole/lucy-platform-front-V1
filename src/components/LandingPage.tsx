@@ -586,7 +586,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       alignItems="center"
       height="100vh"
       bgcolor="#FFFFFF"
-      p={isSmallScreen ? 4 : 4}
+      p={isSmallScreen ? 3 : 4}
       position="relative"
       overflow="hidden"
       sx={{

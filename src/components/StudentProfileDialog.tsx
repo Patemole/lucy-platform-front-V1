@@ -179,29 +179,35 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
           </div>
         ) : (
           <form>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            {/* Grille principale à une seule colonne */}
+            <div className="grid grid-cols-1 gap-4 mb-4">
+              {/* Grille imbriquée pour "Name" et "Current Year" - Toujours sur la même ligne */}
+              <div className="grid grid-cols-2 gap-4">
                 {/* Name */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Name</label>
-                    <input
+                  <label className="block text-sm font-medium text-gray-700">Name</label>
+                  <input
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-                    />
+                  />
+                  {errors.firstName && (
+                    <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+                  )}
                 </div>
-
+  
                 {/* Current Year */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">What is your current year?*</label>
-                    <select
+                  <label className="block text-sm font-medium text-gray-700">What is your current year?*</label>
+                  <select
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
                     className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500 appearance-none"
                     style={{
-                        backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCI2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
+                      backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCI2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
                     }}
-                    >
+                  >
                     <option value="" disabled>Select your year</option>
                     <option value="Freshman">Freshman (1st Year)</option>
                     <option value="Sophomore">Sophomore (2nd Year)</option>
@@ -209,11 +215,15 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                     <option value="Senior">Senior (4th Year)</option>
                     <option value="Grad 1">Grad 1 (5th Year)</option>
                     <option value="Grad 2">Grad 2 (6th Year)</option>
-                    </select>
+                  </select>
+                  {errors.year && (
+                    <p className="text-red-500 text-xs mt-1">{errors.year}</p>
+                  )}
                 </div>
-
+              </div>
+  
               {/* Academic Advisor */}
-              <div className="sm:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Academic Advisor</label>
                 <input
                   type="text"
@@ -221,10 +231,13 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAcademicAdvisor(e.target.value)}
                   className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
                 />
+                {errors.academicAdvisor && (
+                  <p className="text-red-500 text-xs mt-1">{errors.academicAdvisor}</p>
+                )}
               </div>
-
+  
               {/* Faculty */}
-              <div className="sm:col-span-2">
+              <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-medium text-gray-700">Faculty</label>
                   {faculty.length < 3 && (
@@ -264,13 +277,16 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                         -
                       </button>
                     )}
+                    {errors.faculty && (
+                      <p className="text-red-500 text-xs mt-1">{errors.faculty}</p>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Major and Minor Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-4">
+  
+            {/* Major and Minor Section - Toujours sur la même ligne */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
               {/* Major */}
               <div>
                 <div className="flex justify-between items-center mb-1">
@@ -305,10 +321,13 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                         -
                       </button>
                     )}
+                    {errors.major && (
+                      <p className="text-red-500 text-xs mt-1">{errors.major}</p>
+                    )}
                   </div>
                 ))}
               </div>
-
+  
               {/* Minor */}
               <div>
                 <div className="flex justify-between items-center mb-1">
@@ -343,11 +362,15 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                         -
                       </button>
                     )}
+                    {errors.minor && (
+                      <p className="text-red-500 text-xs mt-1">{errors.minor}</p>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
-
+  
+            {/* Boutons d'action */}
             <div className="flex justify-end mt-6 space-x-3">
               <button
                 type="button"
@@ -370,6 +393,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
       </div>
     </div>
   ) : null;
+
 };
 
 export default StudentProfileDialog;
