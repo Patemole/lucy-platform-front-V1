@@ -474,7 +474,10 @@ var LucyWidget = (function () {
             localStorage.setItem('tempMessage', question);
 
             // Ouvrir la fenêtre flottante avec l'URL /chatWidget
-            this.openFloatingWindow('http://upenn.localhost:3001/chatWidget');
+            //this.openFloatingWindow('http://upenn.localhost:3001/chatWidget');
+
+            //En preprod
+            this.openFloatingWindow('http://upenn.my-lucy.com/chatWidget');
 
             // Réinitialiser le champ de saisie et l'état du widget
             this.inputField.value = '';
