@@ -49,7 +49,7 @@ module.exports = {
               marginTop: '0.25rem',
               marginBottom: '0.25rem',
               lineHeight: '1.4', // Par défaut pour les paragraphes
-              fontSize: '0.9rem',
+              fontSize: '0.95rem',
               '@screen lg': {
                 fontSize: '1.1rem', // Taille augmentée pour les grands écrans
               },
@@ -64,7 +64,7 @@ module.exports = {
               paddingLeft: '0.3rem',
               '& li::marker': { // Définit la couleur des puces
               color: '#011F5B', // Remplacez par la couleur souhaitée
-              fontSize: '0.9rem',
+              fontSize: '0.98rem',
               '@screen lg': {
                 fontSize: '1.1rem', // Taille augmentée pour les grands écrans
               },
@@ -76,7 +76,7 @@ module.exports = {
               paddingLeft: '0.5rem',
               '& li::marker': { // Définit la couleur des puces
               color: '#011F5B', // Remplacez par la couleur souhaitée
-              fontSize: '0.9rem',
+              fontSize: '0.98rem',
               '@screen lg': {
                 fontSize: '1.1rem', // Taille augmentée pour les grands écrans
               },
@@ -86,7 +86,7 @@ module.exports = {
             li: {
               marginBottom: '0.25rem', // Espacement entre les éléments de liste
               lineHeight: '1.4', // Hauteur de ligne par défaut pour les listes
-              fontSize: '0.9rem',
+              fontSize: '0.98rem',
               '@screen lg': {
                 fontSize: '1.1rem', // Taille augmentée pour les grands écrans
               },
@@ -112,7 +112,7 @@ module.exports = {
             strong: { // Ajout de styles pour les éléments <strong>
               marginTop: '0.5rem',
               marginBottom: '0rem',
-              fontSize: '0.9rem',
+              fontSize: '0.98rem',
               '@screen lg': {
                 fontSize: '1.1rem', // Taille augmentée pour les grands écrans
               },
