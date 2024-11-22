@@ -49,7 +49,10 @@ module.exports = {
               marginTop: '0.25rem',
               marginBottom: '0.25rem',
               lineHeight: '1.4', // Par défaut pour les paragraphes
-              fontSize: '1.1rem',
+              fontSize: '0.9rem',
+              '@screen lg': {
+                fontSize: '1.1rem', // Taille augmentée pour les grands écrans
+              },
             },
             br: {
               lineHeight: '1.0', // Espacement serré pour les sauts de ligne
@@ -59,17 +62,34 @@ module.exports = {
               marginTop: '0.5rem',
               marginBottom: '0.5rem',
               paddingLeft: '0.3rem',
+              '& li::marker': { // Définit la couleur des puces
+              color: '#011F5B', // Remplacez par la couleur souhaitée
+              fontSize: '0.9rem',
+              '@screen lg': {
+                fontSize: '1.1rem', // Taille augmentée pour les grands écrans
+              },
+            },
             },
             ol: { // CORRESPONDS DANS LES TIRETS A CHIFFRES
               marginTop: '0.5rem',
               marginBottom: '0.5rem',
               paddingLeft: '0.5rem',
+              '& li::marker': { // Définit la couleur des puces
+              color: '#011F5B', // Remplacez par la couleur souhaitée
+              fontSize: '0.9rem',
+              '@screen lg': {
+                fontSize: '1.1rem', // Taille augmentée pour les grands écrans
+              },
+            },
   
             },
             li: {
               marginBottom: '0.25rem', // Espacement entre les éléments de liste
               lineHeight: '1.4', // Hauteur de ligne par défaut pour les listes
-              fontSize: '1.1rem',
+              fontSize: '0.9rem',
+              '@screen lg': {
+                fontSize: '1.1rem', // Taille augmentée pour les grands écrans
+              },
             },
             h1: {
               fontSize: '1.875rem', // Taille pour les titres h1
@@ -88,6 +108,14 @@ module.exports = {
               marginTop: '0.5rem',
               marginBottom: '0.25rem',
               lineHeight: '1.3',
+            },
+            strong: { // Ajout de styles pour les éléments <strong>
+              marginTop: '0.5rem',
+              marginBottom: '0rem',
+              fontSize: '0.9rem',
+              '@screen lg': {
+                fontSize: '1.1rem', // Taille augmentée pour les grands écrans
+              },
             },
           },
         },
