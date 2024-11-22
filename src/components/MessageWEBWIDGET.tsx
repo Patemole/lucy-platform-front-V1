@@ -46,6 +46,7 @@ import TrackPopup from '../components/TrackPopup';
 import { ThreeDots } from 'react-loader-spinner';
 import remarkBreaks from 'remark-breaks';
 
+
 HighchartsMore(Highcharts);
 
 export const Hoverable: React.FC<{
@@ -467,7 +468,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
               className="font-bold ml-2 my-auto flex items-center"
               style={{ color: theme.palette.text.primary }}
             >
-              {personaName || "lucy"}
+              {personaName || "Lucy"}
               <img
                 src={certifiate_icon}
                 alt="Icône de certificat"
@@ -1015,12 +1016,13 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       // Gestion des paragraphes
                       p: ({ node, ...props }) => (
                         <p
-                          className="m-0 mb-md-gap leading-loose" // Ajuste marges et hauteur des lignes
+                          className={`${isSmallScreen ? "text-sm" : "text-base"} m-0 mb-md-gap leading-loose`}
                           {...props}
                         />
                       ),
                       // Gestion du texte en gras
-                      strong: ({ node, ...props }) => <strong className="font-semibold text-gray-800" {...props} />,
+                      strong: ({ node, ...props }) => <strong className="inline-block mt-4 font-semibold text-gray-800" {...props} />,
+
                       // Gestion des liens
                       a: ({ node, ...props }) => (
                         <a
@@ -1032,7 +1034,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       ),
                       // Gestion des listes à puces
                       ul: ({ node, ...props }) => (
-                        <ul className="list-disc ml-4 mb-md-gap leading-snug" {...props} />
+                        <ul className={`list-disc ${isSmallScreen ? "pl-2" : "pl-4"} mt-0 mb-md-gap leading-snug`} {...props} />
                       ),
                       // Gestion des listes numérotées
                       ol: ({ node, ...props }) => (

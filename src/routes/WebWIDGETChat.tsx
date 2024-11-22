@@ -123,7 +123,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const endDivRef = useRef<HTMLDivElement>(null);
 
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
+  const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-25';
 
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
 
