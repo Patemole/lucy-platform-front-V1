@@ -122,15 +122,6 @@ const Dashboard_eleve_template: React.FC = () => {
 
   const hasSentTempMessage = useRef(false);
 
-  //PERMET DE CREER UNE NOUVELLE CONVERSATION A CHAQUE FOIS QUE L ON RECHARGE LA PAGE 
-  useEffect(() => {
-    const initiateNewWidgetConversation = async () => {
-      await handleNewConversation(); // Crée une conversation avec le nom "WIDGET"
-    };
-  
-    initiateNewWidgetConversation();
-  }, []);
-
 
   useEffect(() => {
 
@@ -138,7 +129,7 @@ const Dashboard_eleve_template: React.FC = () => {
     console.log('window.location.origin (read):', window.location.origin);
     console.log('localStorage.tempMessage (read):', localStorage.getItem('tempMessage'));
 
-    
+
     const sendTempMessage = async () => {
       if (hasSentTempMessage.current) return;
       hasSentTempMessage.current = true;
