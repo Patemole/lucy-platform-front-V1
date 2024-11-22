@@ -191,7 +191,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Ajustement de la taille de la police en fonction de la taille de l'écran
-  const messageFontSize = isSmallScreen ? "text-base" : "text-lg";
+  const messageFontSize = isSmallScreen ? "custom-phone" : "text-lg";
 
   const navigate = useNavigate();
 
@@ -1022,12 +1022,13 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       // Gestion des paragraphes
                       p: ({ node, ...props }) => (
                         <p
-                          className="m-0 mb-md-gap leading-loose" // Ajuste marges et hauteur des lignes
+                          className={`m-0 mb-md-gap ${isSmallScreen ? "custom-phone" : "text-lg"}`} // Ajuste marges et hauteur des lignes
                           {...props}
                         />
                       ),
                       // Gestion du texte en gras
-                      strong: ({ node, ...props }) => <strong className="inline-block mt-4 font-semibold text-gray-800" {...props} />,
+                      strong: ({ node, ...props }) => <strong className={`inline-block mt-4 font-semibold text-gray-800 ${isSmallScreen ? "custom-phone" : "text-lg"}`} {...props} />,
+                      
                       // Gestion des liens
                       a: ({ node, ...props }) => (
                         <a

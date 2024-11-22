@@ -3,8 +3,12 @@ module.exports = {
   darkMode: false, // Peut être 'media' ou 'class' pour activer le mode sombre
   theme: {
     extend: {
+      fontSize: {
+        'custom-phone': '1.1rem', // Taille pour téléphone ou petits écrans avec grande police
+      },
       fontFamily: {
         sans: ['IBM Plex Sans', 'sans-serif'], // Police principale
+        
       },
       keyframes: {
         fadeInUp: {
