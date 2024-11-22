@@ -519,13 +519,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       icon: <FaGraduationCap style={{ color: '#3DD957' }} size={20} />,
     },
     {
-      label: 'Event & Tours',
-      value: 'Event & Tours',
+      label: 'Events',
+      value: 'Events',
       icon: <FaRegCalendarAlt style={{ color: '#F97315' }} size={20} />,
     },
     {
-      label: 'Admission',
-      value: 'Admission',
+      label: 'Policies',
+      value: 'Policies',
       icon: <FaBalanceScale style={{ color: '#1565D8' }} size={20} />,
     },
     {
@@ -546,6 +546,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     : allButtons;
 
   // Questions mappées à chaque bouton
+  /*
   const questionsMap: { [key: string]: string[] } = {
     'Academic Info': [
       'What are the most popular majors or programs?',
@@ -576,6 +577,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       'Will applying to financial aid impact my application?',
       'What is the work-study program, and how can I participate?',
       'How does the financial aid package compare year-to-year?',
+    ],
+  };
+  */
+
+  const questionsMap: { [key: string]: string[] } = {
+    'Academic Info': [
+      'How can I get involved in research opportunities as an undergraduate',
+      'What options are available for me to study abroad in Europe?',
+      'What tutoring or academic support services do I have if I’m struggling in my courses?',
+      'What resources are available for me to pursue independent study projects?',
+    ],
+    'Events': [
+      'How do I book an in-person campus tour for my family visiting me?',
+      'What major campus events should I look out for this semester?',
+      'Which student clubs or organizations are currently active on campus, and how do I join them?',
+      'Are there opportunities for me to host or lead events on campus?',
+    ],
+    'Policies': [
+      'What’s the process for changing my major or adding a minor?',
+      'How can I get clarification on degree requirements and academic advising?',
+      'Are there procedures in place for taking a leave of absence or withdrawing from the university?',
+      'How do I appeal a grade or academic decision if I feel it was unfair?',
+    ],
+    'Facilities': [
+      'What housing options are available for upperclassment?',
+      'Are the gym and fitness facilities accessible to all students?',
+      'How do I report maintenance issues in my housing?',
+      'What should I do if I encounter issues with roommate conflicts or community living challenges?',
+    ],
+    'Financial Aid': [
+      'How do I apply for financial aid for the next academic year?',
+      'What is the work-study program like?',
+      'Are there additional scholarships available for current students, and how do I apply?',
+      'What should I do if my financial situation changes during the academic year?',
     ],
   };
 
