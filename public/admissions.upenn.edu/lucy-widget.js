@@ -456,7 +456,7 @@ var LucyWidget = (function () {
             //this.openFloatingWindow('http://upenn.localhost:3001/chatWidget');
 
             //En preprod
-            this.openFloatingWindow('http://upenn.my-lucy.com/chatWidget');
+            this.openFloatingWindow('https://upenn.my-lucy.com/chatWidget');
 
             // Réinitialiser le champ de saisie et l'état du widget
             inputField.value = '';
@@ -477,7 +477,7 @@ var LucyWidget = (function () {
             //this.openFloatingWindow('http://upenn.localhost:3001/chatWidget');
 
             //En preprod
-            this.openFloatingWindow('http://upenn.my-lucy.com/chatWidget');
+            this.openFloatingWindow('https://upenn.my-lucy.com/chatWidget');
 
             // Réinitialiser le champ de saisie et l'état du widget
             this.inputField.value = '';
