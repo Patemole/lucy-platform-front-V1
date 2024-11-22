@@ -445,7 +445,7 @@ var LucyWidget = (function () {
             var message = inputField.value.trim();
             if (message === '') return;
 
-            
+            /*
             // Stocker le message dans le localStorage
             localStorage.setItem('tempMessage', message);
             localStorage.removeItem('chat_id');
@@ -458,6 +458,17 @@ var LucyWidget = (function () {
 
             //En preprod
             this.openFloatingWindow('https://upenn.my-lucy.com/chatWidget');
+            */
+
+            // Encodez le message pour l'inclure dans l'URL
+            const encodedMessage = encodeURIComponent(message);
+            const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget?tempMessage=${encodedMessage}`;
+
+            console.log('Tentative d\'ouverture avec message:', message);
+            console.log('URL générée:', widgetUrl);
+
+            // Ouvrir la fenêtre flottante
+            this.openFloatingWindow(widgetUrl);
 
             // Réinitialiser le champ de saisie et l'état du widget
             inputField.value = '';
