@@ -133,8 +133,13 @@ const Dashboard_eleve_template: React.FC = () => {
     const sendTempMessage = async () => {
       if (hasSentTempMessage.current) return;
       hasSentTempMessage.current = true;
+
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const tempMessage = urlParams.get('tempMessage') || 'Default message'; // Valeur par défaut
+      console.log('Message récupéré depuis l\'URL:', tempMessage);
     
-      const tempMessage = localStorage.getItem('tempMessage') || 'Default message'; // Valeur par défaut
+      //const tempMessage = localStorage.getItem('tempMessage') || 'Default message'; // Valeur par défaut
       console.log('sendTempMessage - tempMessage:', tempMessage);
     
       try {
