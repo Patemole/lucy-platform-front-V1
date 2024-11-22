@@ -44,6 +44,7 @@ import HighchartsReact from "highcharts-react-official";
 import HighchartsMore from 'highcharts/highcharts-more';
 import TrackPopup from '../components/TrackPopup';
 import { ThreeDots } from 'react-loader-spinner';
+import remarkBreaks from 'remark-breaks';
 
 HighchartsMore(Highcharts);
 
@@ -998,57 +999,85 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
 
             {/* Affichage des messages accumulés */}
-            {messages.map((msg, index) => (
-                        <div
-                        key={index}
-                        className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words mt-3 ${
-                            !isSmallScreen ? "ml-8" : ""
-                        } text-justify ${messageFontSize}`}
-                        style={{ color: theme.palette.text.primary }}
-                        >
-                        <ReactMarkdown
-                            className="prose max-w-full"
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                            p: ({ node, ...props }) => <p {...props} />,
-                            strong: ({ node, ...props }) => <strong {...props} />,
-                            a: ({ node, ...props }) => (
-                                <a
-                                {...props}
-                                className="text-blue-500 hover:text-blue-700"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                />
-                            ),
-                            ul: ({ node, ...props }) => (
-                                <ul className="list-disc ml-6" {...props} />
-                            ),
-                            ol: ({ node, ...props }) => (
-                                <ol className="list-decimal ml-6" {...props} />
-                            ),
-                            code: ({ node, className, children, ...props }) => {
-                                const match = /language-(\w+)/.exec(className || "");
-                                return match ? (
-                                <SyntaxHighlighter
-                                    language={match[1]}
-                                    PreTag="div"
-                                    {...props}
-                                >
-                                    {String(children).replace(/\n$/, '')}
-                                </SyntaxHighlighter>
-                                ) : (
-                                <code className={className} {...props}>
-                                    {children}
-                                </code>
-                                );
-                            },
-                            br: () => <br />,
-                            }}
-                        >
-                            {msg.replace(/\n/g, "  \n")}
-                        </ReactMarkdown>
-                        </div>
-                    ))}
+            {!takData || takData.length === 0 ? (
+              messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words ${
+                    !isSmallScreen ? "ml-8" : ""
+                  } text-left sm:text-justify ${messageFontSize} leading-snug`} // Hauteur de ligne par défaut ajustée
+                  style={{ color: theme.palette.text.primary }}
+                >
+                  <ReactMarkdown
+                    className="prose max-w-full" // Applique les styles par défaut pour une typographie élégante
+                    remarkPlugins={[remarkGfm, remarkBreaks]} // Ajout de remarkBreaks pour gérer les sauts de ligne
+                    components={{
+                      // Gestion des paragraphes
+                      p: ({ node, ...props }) => (
+                        <p
+                          className="m-0 mb-md-gap leading-loose" // Ajuste marges et hauteur des lignes
+                          {...props}
+                        />
+                      ),
+                      // Gestion du texte en gras
+                      strong: ({ node, ...props }) => <strong className="font-semibold text-gray-800" {...props} />,
+                      // Gestion des liens
+                      a: ({ node, ...props }) => (
+                        <a
+                          {...props}
+                          className="text-blue-500 hover:text-blue-700 underline" // Styles élégants pour les liens
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        />
+                      ),
+                      // Gestion des listes à puces
+                      ul: ({ node, ...props }) => (
+                        <ul className="list-disc ml-4 mb-md-gap leading-snug" {...props} />
+                      ),
+                      // Gestion des listes numérotées
+                      ol: ({ node, ...props }) => (
+                        <ol className="list-decimal ml-4 mb-lg-gap leading-loose" {...props} />
+                      ),
+                      // Gestion des éléments de liste
+                      li: ({ node, ...props }) => (
+                        <li className="mb-sm-gap leading-snug" {...props} />
+                      ),
+                      // Gestion des blocs de code
+                      code: ({ node, className, children, ...props }) => {
+                        const match = /language-(\w+)/.exec(className || "");
+                        return match ? (
+                          <SyntaxHighlighter
+                            language={match[1]}
+                            PreTag="div"
+                            {...props}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code className="bg-gray-100 text-red-500 px-1 rounded" {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                      // Gestion des sauts de ligne
+                      br: () => <br className="mb-sm-gap leading-extra-tight" />,
+                      // Gestion des titres
+                      h1: ({ node, ...props }) => (
+                        <h1 className="text-2xl font-bold mt-lg-gap mb-md-gap leading-tight" {...props} />
+                      ),
+                      h2: ({ node, ...props }) => (
+                        <h2 className="text-xl font-semibold mt-md-gap mb-sm-gap leading-snug" {...props} />
+                      ),
+                      h3: ({ node, ...props }) => (
+                        <h3 className="text-lg font-medium mt-sm-gap mb-sm-gap leading-snug" {...props} />
+                      ),
+                    }}
+                  >
+                    {msg.replace(/\n/g, "  \n")} 
+                  </ReactMarkdown>
+                </div>
+              ))
+            ) : null}
 
 
           {/* Gestion des images */}
