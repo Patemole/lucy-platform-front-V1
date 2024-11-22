@@ -113,7 +113,7 @@ var LucyWidget = (function () {
             inputField.style.color = '#000000';
             inputField.style.boxSizing = 'border-box';
             inputField.style.outline = 'none';
-            inputField.placeholder = this.language === 'fr' ? 'Que recherchez-vous ?' : 'What are you looking for?'; // Placeholder
+            inputField.placeholder = this.language === 'fr' ? 'What are you looking for?' : 'What are you looking for?'; // Placeholder
             inputField.style.position = 'relative';
             inputField.style.zIndex = '1'; // Assure que l'input est au-dessus du wrapper
             inputContainer.appendChild(inputField);
@@ -306,7 +306,7 @@ var LucyWidget = (function () {
                     // La largeur maximale est réinitialisée via CSS
                     self.activeButton = null;
                     inputField.value = '';
-                    inputField.placeholder = self.language === 'fr' ? 'Que recherchez-vous ?' : 'What are you looking for?';
+                    inputField.placeholder = self.language === 'fr' ? 'What are you looking for?' : 'What are you looking for?';
                 }
             });
 
@@ -457,7 +457,7 @@ var LucyWidget = (function () {
             if (this.questionsContainer) {
                 this.questionsContainer.style.display = 'none';
             }
-            inputField.placeholder = this.language === 'fr' ? 'Que recherchez-vous ?' : 'What are you looking for?';
+            inputField.placeholder = this.language === 'fr' ? 'What are you looking for?' : 'What are you looking for?';
         },
 
         handleSendQuestion: function (question) {
@@ -475,7 +475,7 @@ var LucyWidget = (function () {
             if (this.questionsContainer) {
                 this.questionsContainer.style.display = 'none';
             }
-            this.inputField.placeholder = this.language === 'fr' ? 'Que recherchez-vous ?' : 'What are you looking for?';
+            this.inputField.placeholder = this.language === 'fr' ? 'What are you looking for?' : 'What are you looking for?';
         },
 
         handleButtonMouseEnter: function (buttonLabel, questions) {
