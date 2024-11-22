@@ -392,7 +392,8 @@ const Dashboard_eleve_template: React.FC = () => {
     let error: string | null = null;
 
     try {
-      const chatSessionId = localStorage.getItem('chat_id') || 'default_chat_id';
+      //const chatSessionId = localStorage.getItem('chat_id') || 'default_chat_id';
+      const chatSessionId = 'chat_id'|| 'default_chat_id';
       const courseId = localStorage.getItem('course_id') || 'default_course_id';
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const username = user.name || 'default_user';
