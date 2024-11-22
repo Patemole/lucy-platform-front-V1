@@ -55,15 +55,16 @@ module.exports = {
               lineHeight: '1.0', // Espacement serré pour les sauts de ligne
               marginBottom: '0.25rem',
             },
-            ul: {
+            ul: { //CORRESPONDS DANS LES TIRETS 
               marginTop: '0.5rem',
               marginBottom: '0.5rem',
-              paddingLeft: '1.25rem',
+              paddingLeft: '0.3rem',
             },
-            ol: {
+            ol: { // CORRESPONDS DANS LES TIRETS A CHIFFRES
               marginTop: '0.5rem',
               marginBottom: '0.5rem',
-              paddingLeft: '1.25rem',
+              paddingLeft: '0.5rem',
+  
             },
             li: {
               marginBottom: '0.25rem', // Espacement entre les éléments de liste
