@@ -1027,7 +1027,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         />
                       ),
                       // Gestion du texte en gras
-                      strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
+                      strong: ({ node, ...props }) => <strong className="font-semibold text-gray-800" {...props} />,
                       // Gestion des liens
                       a: ({ node, ...props }) => (
                         <a
