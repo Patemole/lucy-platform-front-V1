@@ -84,15 +84,10 @@ const Dashboard_eleve_template: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isCancelled, setIsCancelled] = useState(false);
-  const [currentFeedback, setCurrentFeedback] = useState<[FeedbackType, number] | null>(null);
-  const [selectedMessageForDocDisplay, setSelectedMessageForDocDisplay] = useState<number | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [conversations, setConversations] = useState<{ chat_id: string, name: string }[]>([]);
-  const [betaViewOpen, setBetaViewOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>('');
-  const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [courseOptions, setCourseOptions] = useState<Course[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(localStorage.getItem('chat_id'));
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
@@ -102,23 +97,13 @@ const Dashboard_eleve_template: React.FC = () => {
   const [selectedAiMessage, setSelectedAiMessage] = useState<string | null>(null);
   const [selectedHumanMessage, setSelectedHumanMessage] = useState<string | null>(null);
   const [relatedQuestions, setRelatedQuestions] = useState<string[]>([]);
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(true); // Valeur initiale comme dans LandingPage
-  //const [isIAResponseReady, setIsIAResponseReady] = useState(false); // Simulation de l'attente
   const [displayedText, setDisplayedText] = useState('');
-  const typingTimeoutRef = useRef<number | null>(null);
-  const phraseIntervalRef = useRef<number | null>(null);
-  const chunkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const phraseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const wordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hasNewContent, setHasNewContent] = useState(false); // Nouvel état pour détecter du contenu
-  const [currentMessageId, setCurrentMessageId] = useState<number | null>(null);
   // Ajoutez cette ligne pour utiliser useSearchParams
 
-  const courseId = localStorage.getItem('course_id');
-  const universityDomain = localStorage.getItem('university') || 'example.edu';
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollableDivRef = useRef<HTMLDivElement>(null);
   const endDivRef = useRef<HTMLDivElement>(null);
 
@@ -137,25 +122,35 @@ const Dashboard_eleve_template: React.FC = () => {
 
   const hasSentTempMessage = useRef(false);
 
+  //PERMET DE CREER UNE NOUVELLE CONVERSATION A CHAQUE FOIS QUE L ON RECHARGE LA PAGE 
+  useEffect(() => {
+    const initiateNewWidgetConversation = async () => {
+      await handleNewConversation(); // Crée une conversation avec le nom "WIDGET"
+    };
+  
+    initiateNewWidgetConversation();
+  }, []);
+
+
   useEffect(() => {
     const sendTempMessage = async () => {
-      if (hasSentTempMessage.current) return; // Empêche la deuxième exécution
+      if (hasSentTempMessage.current) return;
       hasSentTempMessage.current = true;
-      const tempMessage = localStorage.getItem('tempMessage');
-      if (tempMessage) {
-        try {
-          console.log('sendTempMessage - tempMessage:', tempMessage);
-          await handleNewConversation(); // Crée une nouvelle conversation
-          await handleSendMessageSocraticLangGraph(tempMessage); // Envoie le message dans la nouvelle conversation
-          localStorage.removeItem('tempMessage'); // Supprime le message temporaire
-          console.log('Message envoyé dans une nouvelle conversation.');
-        } catch (error) {
-          console.error('Erreur lors de l\'envoi du message dans une nouvelle conversation:', error);
-          setPopup({
-            type: 'error',
-            message: 'Échec de l\'envoi du message. Veuillez réessayer.',
-          });
-        }
+    
+      const tempMessage = localStorage.getItem('tempMessage') || 'Default message'; // Valeur par défaut
+      console.log('sendTempMessage - tempMessage:', tempMessage);
+    
+      try {
+        await handleNewConversation(); // Crée une nouvelle conversation
+        await handleSendMessageSocraticLangGraph(tempMessage); // Envoie le message dans la nouvelle conversation
+        localStorage.removeItem('tempMessage');
+        console.log('Message envoyé dans une nouvelle conversation.');
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi du message dans une nouvelle conversation:', error);
+        setPopup({
+          type: 'error',
+          message: 'Échec de l\'envoi du message. Veuillez réessayer.',
+        });
       }
     };
     sendTempMessage();
@@ -255,29 +250,6 @@ const Dashboard_eleve_template: React.FC = () => {
 };
 
 
-  const splitPhraseIntoChunks = (phrase: string, chunkSize: number): string[] => {
-    const words = phrase.split(' ');
-    const chunks = [];
-    for (let i = 0; i < words.length; i += chunkSize) {
-      chunks.push(words.slice(i, i + chunkSize).join(' '));
-    }
-    return chunks;
-  };
-
-
-
-  const getBackgroundColor = (filter: string) => {
-    switch (filter) {
-      case 'Campus Life':
-        return { backgroundColor: '#E0F7FA', color: '#00897B' };
-      case 'Career Advisor':
-        return { backgroundColor: '#FCE4EC', color: '#C2185B' };
-      case 'Study Abroad':
-        return { backgroundColor: '#FFF3E0', color: '#FB8C00' };
-      default:
-        return { backgroundColor: '#EBE2FC', color: '#7C3BEC' };
-    }
-  };
 
   const fetchCourseOptionsAndChatSessions = async () => {
     if (uid) {
@@ -345,6 +317,8 @@ const Dashboard_eleve_template: React.FC = () => {
     fetchCourseOptionsAndChatSessions();
   }, [uid]);
 
+
+
   useEffect(() => {
     const loadMessagesFromLocalStorageChatId = async () => {
       const storedChatId = localStorage.getItem('chat_id');
@@ -355,36 +329,6 @@ const Dashboard_eleve_template: React.FC = () => {
 
 
 
-  const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setProfileMenuAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setProfileMenuAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/auth/sign-in');
-  };
-
-  const handleDropDownClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  // Function to handle menu close and course selection
-  const handleMenuClose = async (option: string) => {
-    const selectedCourse = courseOptions.find((course) => course.name === option);
-    if (selectedCourse) {
-      setSelectedFilter(selectedCourse.name);
-      localStorage.setItem('course_id', selectedCourse.id);
-      if (ALLOWED_COURSE_IDS.includes(selectedCourse.id)) {
-        setPreviousFilter(selectedFilter);
-        setFeedbackModalOpen(true);
-      }
-    }
-    setAnchorEl(null);
-  };
 
   const handleSendTAKMessage = (TAK_message: string) => {
     if (TAK_message.trim() === '') return;
@@ -782,16 +726,10 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
 
-  const handleMeetingClick = () => {
-    navigate('/contact/academic_advisor');
-  };
+  
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
-  };
-
-  const toggleBetaView = () => {
-    setBetaViewOpen(!betaViewOpen);
   };
 
   const handleSourceClick = (link: string) => {
@@ -839,16 +777,6 @@ const Dashboard_eleve_template: React.FC = () => {
     handleFeedbackModalClose();
   };
 
-  const handleLogin = () => {
-    // Navigate to the login page
-    navigate('/login');
-  };
-
-  const handleSignUp = () => {
-    // Navigate to the sign-up page
-    navigate('/signup');
-  };
-
   const handleSubmitWrongAnswerFeedback = async (feedback: string) => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const chatId = localStorage.getItem('chat_id') || 'default_chat_id';
@@ -894,23 +822,6 @@ const Dashboard_eleve_template: React.FC = () => {
     setModalOpen(false);
   };
 
-  // Fonction pour gérer les messages envoyés par le composant LandingPage
-  const handleSendMessageFromLandingPage = (message: string) => {
-    if (message.trim() !== '') {
-      const newMessage: Message = { id: Date.now(), type: 'human', content: message };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-      const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-      setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-      onSubmit([...messages, newMessage, loadingMessage], message);
-
-      setInputValue(''); // Effacer le champ de saisie après l'envoi
-
-      // Masquer la LandingPage après l'envoi d'un message
-      setIsLandingPageVisible(false);
-    }
-  };
 
   // État pour contrôler l'affichage de la LandingPage
   const [isLandingPageVisible, setIsLandingPageVisible] = useState(messages.length === 0);
