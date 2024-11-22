@@ -133,6 +133,12 @@ const Dashboard_eleve_template: React.FC = () => {
 
 
   useEffect(() => {
+
+    console.log('useEffect called');
+    console.log('window.location.origin (read):', window.location.origin);
+    console.log('localStorage.tempMessage (read):', localStorage.getItem('tempMessage'));
+
+    
     const sendTempMessage = async () => {
       if (hasSentTempMessage.current) return;
       hasSentTempMessage.current = true;

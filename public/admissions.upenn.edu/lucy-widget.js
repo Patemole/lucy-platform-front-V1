@@ -448,6 +448,9 @@ var LucyWidget = (function () {
             // Stocker le message dans le localStorage
             localStorage.setItem('tempMessage', message);
 
+            console.log('window.location.origin (write):', window.location.origin);
+            console.log('localStorage.tempMessage (write):', localStorage.getItem('tempMessage'));
+
             // Ouvrir la fenêtre flottante avec l'URL /chatWidget
             this.openFloatingWindow('http://upenn.localhost:3001/chatWidget');
 
