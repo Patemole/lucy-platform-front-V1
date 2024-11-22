@@ -445,6 +445,7 @@ var LucyWidget = (function () {
             var message = inputField.value.trim();
             if (message === '') return;
 
+            
             // Stocker le message dans le localStorage
             localStorage.setItem('tempMessage', message);
 
@@ -452,7 +453,10 @@ var LucyWidget = (function () {
             console.log('localStorage.tempMessage (write):', localStorage.getItem('tempMessage'));
 
             // Ouvrir la fenêtre flottante avec l'URL /chatWidget
-            this.openFloatingWindow('http://upenn.localhost:3001/chatWidget');
+            //this.openFloatingWindow('http://upenn.localhost:3001/chatWidget');
+
+            //En preprod
+            this.openFloatingWindow('http://upenn.my-lucy.com/chatWidget');
 
             // Réinitialiser le champ de saisie et l'état du widget
             inputField.value = '';
