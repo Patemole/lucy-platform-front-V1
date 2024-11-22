@@ -191,7 +191,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Ajustement de la taille de la police en fonction de la taille de l'écran
-  const messageFontSize = isSmallScreen ? "text-base" : "text-lg";
+  const messageFontSize = isSmallScreen ? "text-sm" : "text-base";
 
   const navigate = useNavigate();
 
@@ -1016,7 +1016,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       // Gestion des paragraphes
                       p: ({ node, ...props }) => (
                         <p
-                          className={`${isSmallScreen ? "text-sm" : "text-base"} m-0 mb-md-gap leading-loose`}
+                          className={`m-0 mb-md-gap leading-loose`}
                           {...props}
                         />
                       ),
