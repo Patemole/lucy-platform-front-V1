@@ -441,6 +441,7 @@ var LucyWidget = (function () {
             }
         },
 
+        /*
         handleSend: function (inputField) {
             var message = inputField.value.trim();
             if (message === '') return;
@@ -458,7 +459,7 @@ var LucyWidget = (function () {
 
             //En preprod
             this.openFloatingWindow('https://upenn.my-lucy.com/chatWidget');
-            */
+            *
 
             // Encodez le message pour l'inclure dans l'URL
             const encodedMessage = encodeURIComponent(message);
@@ -478,38 +479,54 @@ var LucyWidget = (function () {
             }
             inputField.placeholder = this.language === 'fr' ? 'What are you looking for?' : 'What are you looking for?';
         },
+        */
+
+        handleSend: function (inputField) {
+            const message = inputField.value.trim();
+            if (!message) return;
+        
+            // Stocker le message dans un cookie
+            document.cookie = `tempMessage=${encodeURIComponent(message)};path=/`;
+        
+            console.log('Message stocké dans un cookie:', message);
+        
+            // Générer l'URL et ouvrir la fenêtre
+            const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget`;
+            this.openFloatingWindow(widgetUrl);
+        
+            // Réinitialiser le champ
+            inputField.value = '';
+            this.activeButton = null;
+            if (this.questionsContainer) {
+                this.questionsContainer.style.display = 'none';
+            }
+            inputField.placeholder = this.language === 'fr' ? 'What are you looking for?' : 'What are you looking for?';
+        },
 
         handleSendQuestion: function (question) {
             if (!question) return;
-
-            // Stocker la question dans le localStorage
-            localStorage.setItem('tempMessage', question);
-            localStorage.removeItem('chat_id');
-
-            // Ouvrir la fenêtre flottante avec l'URL /chatWidget
-            //this.openFloatingWindow('http://upenn.localhost:3001/chatWidget');
-
-            //En preprod
-            //this.openFloatingWindow('https://upenn.my-lucy.com/chatWidget');
-
-            const encodedMessage = encodeURIComponent(message);
-            const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget?tempMessage=${encodedMessage}`;
-
-            console.log('Tentative d\'ouverture avec message:', message);
+        
+            // Stocker la question dans un cookie
+            document.cookie = `tempMessage=${encodeURIComponent(question)};path=/`;
+        
+            // Générer l'URL pour ouvrir le widget
+            const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget`;
+        
+            console.log('Tentative d\'ouverture avec question:', question);
             console.log('URL générée:', widgetUrl);
-
+        
             // Ouvrir la fenêtre flottante
             this.openFloatingWindow(widgetUrl);
-
-
+        
             // Réinitialiser le champ de saisie et l'état du widget
-            this.inputField.value = '';
+            if (this.inputField) this.inputField.value = '';
             this.activeButton = null;
             if (this.questionsContainer) {
                 this.questionsContainer.style.display = 'none';
             }
             this.inputField.placeholder = this.language === 'fr' ? 'What are you looking for?' : 'What are you looking for?';
         },
+
 
         handleButtonMouseEnter: function (buttonLabel, questions) {
             var self = this;

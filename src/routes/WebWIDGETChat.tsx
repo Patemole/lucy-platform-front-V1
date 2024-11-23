@@ -123,6 +123,45 @@ const Dashboard_eleve_template: React.FC = () => {
   const hasSentTempMessage = useRef(false);
 
 
+  // Utilitaire pour lire les cookies
+const getCookie = (cookieName: string) => {
+  const name = `${cookieName}=`;
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const cookieArray = decodedCookie.split(';');
+  for (let cookie of cookieArray) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name)) {
+          return cookie.substring(name.length);
+      }
+  }
+  return null;
+};
+
+
+// Lecture du cookie dans le useEffect
+useEffect(() => {
+  console.log('useEffect appelé');
+  const tempMessage = getCookie('tempMessage') || 'Default message'; // Valeur par défaut si le cookie est absent
+  console.log('Message récupéré depuis le cookie:', tempMessage);
+
+  const sendTempMessage = async () => {
+      if (hasSentTempMessage.current) return;
+      hasSentTempMessage.current = true;
+
+      try {
+          await handleNewConversation(); // Crée une nouvelle conversation
+          await handleSendMessageSocraticLangGraph(tempMessage); // Envoie le message
+          console.log('Message envoyé avec succès');
+      } catch (error) {
+          console.error('Erreur lors de l\'envoi du message:', error);
+      }
+  };
+
+  sendTempMessage();
+}, []);
+
+
+/*
   useEffect(() => {
 
     console.log('useEffect called');
@@ -157,6 +196,7 @@ const Dashboard_eleve_template: React.FC = () => {
     };
     sendTempMessage();
   }, []);
+  */
 
 
   //For display sentence above three dots for waiting
