@@ -490,7 +490,17 @@ var LucyWidget = (function () {
             //this.openFloatingWindow('http://upenn.localhost:3001/chatWidget');
 
             //En preprod
-            this.openFloatingWindow('https://upenn.my-lucy.com/chatWidget');
+            //this.openFloatingWindow('https://upenn.my-lucy.com/chatWidget');
+
+            const encodedMessage = encodeURIComponent(message);
+            const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget?tempMessage=${encodedMessage}`;
+
+            console.log('Tentative d\'ouverture avec message:', message);
+            console.log('URL générée:', widgetUrl);
+
+            // Ouvrir la fenêtre flottante
+            this.openFloatingWindow(widgetUrl);
+
 
             // Réinitialiser le champ de saisie et l'état du widget
             this.inputField.value = '';
