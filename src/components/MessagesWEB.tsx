@@ -1007,7 +1007,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
 
             {/* Affichage des messages accumulés */}
-            <div className="widget-container">
+            <div className="mobile-fullScreen-container">
               {!takData || takData.length === 0 ? (
                 messages.map((msg, index) => (
                   <div
