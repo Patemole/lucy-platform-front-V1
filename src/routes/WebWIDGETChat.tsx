@@ -21,7 +21,7 @@ import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firest
 import '../index.css';
 //import { AIMessage } from '../components/Messages';
 import { AIMessage } from '../components/MessageWEBWIDGET';
-import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN } from '../interfaces/interfaces_eleve';
+import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerERROR } from '../interfaces/interfaces_eleve';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
@@ -276,6 +276,7 @@ useEffect(() => {
     let answerQUORA: AnswerQUORA[] = [];
     let answerINSTA_CLUB: AnswerINSTA_CLUB[] = [];
     let answerLINKEDIN: AnswerLINKEDIN[] = [];
+    let answerERROR: AnswerERROR[] = [];
     let error: string | null = null;
 
     try {
@@ -377,6 +378,10 @@ useEffect(() => {
                 answerQUORA.push((packet as any).quora);
                 console.log("Quora ajoutées");
 
+            } else if (Object.prototype.hasOwnProperty.call(packet, 'error_back')) {
+                answerERROR.push((packet as any).error_back);
+                console.log("Error ajoutées");
+
             } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
               answerWaiting = (packet as any).answer_waiting;
             
@@ -418,6 +423,9 @@ useEffect(() => {
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'quora')) {
             answerQUORA.push((packetBunch as any).quora);
 
+          } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'error_back')) {
+            answerERROR.push((packetBunch as any).error_back);
+
           } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
             answerCHART.push((packetBunch as any).answer_CHART_data);
 
@@ -446,6 +454,7 @@ useEffect(() => {
         const flattenedCHART = answerCHART.flat();
         const flattenedCourse = answerCourse.flat();
         const flattenedwaitingdata = answerWaiting.flat();
+        const flattenedERROR = answerERROR.flat();
 
         // Check if `flattenedReasoning` contains data before updating messages
         console.log("Final flattenedReasoning array before setting messages:", flattenedReasoning);
@@ -495,6 +504,7 @@ useEffect(() => {
             QUORA: flattenedQUORA,
             INSTA_CLUB: flattenedINSTA_CLUB,
             LINKEDIN: flattenedLINKEDIN,
+            ERROR: flattenedERROR,
           };
 
           return updatedMessages;
@@ -780,6 +790,7 @@ useEffect(() => {
                           quoraData={message.QUORA}
                           instaclubData={message.INSTA_CLUB}
                           linkedinData={message.LINKEDIN}
+                          errorData = {message.ERROR}
                         />
                       </div>
                     </div>
