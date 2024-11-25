@@ -492,6 +492,7 @@ var LucyWidget = (function () {
         
             // Générer l'URL et ouvrir la fenêtre
             const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget`;
+            //const widgetUrl = 'http://upenn.localhost:3001/chatWidget';
             this.openFloatingWindow(widgetUrl);
         
             // Réinitialiser le champ
@@ -511,6 +512,7 @@ var LucyWidget = (function () {
         
             // Générer l'URL pour ouvrir le widget
             const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget`;
+            //const widgetUrl = 'http://upenn.localhost:3001/chatWidget';
         
             console.log('Tentative d\'ouverture avec question:', question);
             console.log('URL générée:', widgetUrl);
