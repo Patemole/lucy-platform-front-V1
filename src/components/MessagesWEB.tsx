@@ -26,6 +26,7 @@ import {
   AnswerINSTA_CLUB,
   AnswerLINKEDIN,
   AnswerINSTA2,
+  AnswerERROR,
 
 } from "../interfaces/interfaces";
 import { IconButton } from '@mui/material';
@@ -47,6 +48,7 @@ import TrackPopup from '../components/TrackPopup';
 import { ThreeDots } from 'react-loader-spinner';
 import remarkBreaks from 'remark-breaks';
 import './MessageWEBCSS.css';
+import { FiRefreshCw } from "react-icons/fi";
 
 HighchartsMore(Highcharts);
 
@@ -125,6 +127,7 @@ interface AIMessageProps {
   instaData?: AnswerINSTA[] | null;
   youtubeData?: AnswerYOUTUBE[] | null;
   quoraData?: AnswerQUORA[] | null;
+  errorData?: AnswerERROR[] | null;
   instaclubData?: AnswerINSTA_CLUB[] | null;
   linkedinData?: AnswerLINKEDIN[]| null;
   insta2Data?: AnswerINSTA2[] | null;
@@ -161,6 +164,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   instaData,
   youtubeData,
   quoraData,
+  errorData,
   instaclubData,
   linkedinData,
   insta2Data
@@ -197,6 +201,14 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
 
   const navigate = useNavigate();
+
+
+  //RELOAD LE MESSAGE SI IL Y A EU UNE ERREUR
+  const handleReload = (errorIndex: number) => {
+    // Implement your reload logic here
+    console.log(`Reload clicked for error at index ${errorIndex}`);
+    // Example: You might want to call a prop function like props.onReloadError(errorIndex)
+  };
 
   // Initialisation des messages avec le contenu initial
   useEffect(() => {
@@ -1091,6 +1103,28 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                 ))
               ) : null}
             </div>
+
+
+          {/* Add this section where appropriate in your JSX, e.g., after citedDocuments */}
+          {errorData && errorData.length > 0 && (
+            <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""} flex flex-col gap-4`}>
+              {errorData.map((error, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-start sm:items-center border border-red-500 bg-red-100 p-4 rounded-md"
+                >
+                  <span className="text-red-700 flex-grow">{error.errorSentence}</span>
+                  <button
+                    onClick={() => handleReload(index)}
+                    className="mt-2 sm:mt-0 sm:ml-4 flex items-center text-red-700 hover:text-red-900"
+                  >
+                    <FiRefreshCw className="mr-2" />
+                    Reload
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
             
 
 

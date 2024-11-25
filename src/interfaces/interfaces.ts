@@ -210,6 +210,10 @@ export interface AnswerQUORA{
   score: string;
 }
 
+export interface AnswerERROR{
+  errorSentence: string;
+}
+
 /*
 export type PopupSpec = {
     type: 'success' | 'error';

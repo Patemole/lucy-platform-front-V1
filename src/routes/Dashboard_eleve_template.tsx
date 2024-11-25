@@ -18,7 +18,7 @@ import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc } from 'fire
 import logo_greg from '../student_face.png';
 import '../index.css';
 import { AIMessage } from '../components/MessagesWEB';
-import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2} from '../interfaces/interfaces_eleve';
+import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR} from '../interfaces/interfaces_eleve';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
@@ -410,6 +410,7 @@ const Dashboard_eleve_template: React.FC = () => {
     let answerQUORA: AnswerQUORA[] = [];
     let answerINSTA_CLUB: AnswerINSTA_CLUB[] = [];
     let answerLINKEDIN: AnswerLINKEDIN[] = [];
+    let answerERROR: AnswerERROR[] = [];
     let error: string | null = null;
 
     try {
@@ -492,6 +493,9 @@ const Dashboard_eleve_template: React.FC = () => {
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'quora')) {
                         answerQUORA.push((packet as any).quora);
                         console.log("Quora ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'error_back')) {
+                        answerERROR.push((packet as any).error_back);
+                        console.log("Error ajoutées");
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
                         answerWaiting = (packet as any).answer_waiting;
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
@@ -522,6 +526,8 @@ const Dashboard_eleve_template: React.FC = () => {
                     answerYOUTUBE.push((packetBunch as any).youtube);
                 } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'quora')) {
                     answerQUORA.push((packetBunch as any).quora);
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'error_back')) {
+                    answerERROR.push((packetBunch as any).error_back);
                 } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
                     answerCHART.push((packetBunch as any).answer_CHART_data);
                 } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_COURSE_data')) {
@@ -545,6 +551,7 @@ const Dashboard_eleve_template: React.FC = () => {
             const flattenedLINKEDIN = answerLINKEDIN.flat();
             const flattenedYOUTUBE = answerYOUTUBE.flat();
             const flattenedQUORA = answerQUORA.flat();
+            const flattenedERROR = answerERROR.flat();
             const flattenedCHART = answerCHART.flat();
             const flattenedCourse = answerCourse.flat();
             const flattenedwaitingdata = answerWaiting.flat();
@@ -569,6 +576,7 @@ const Dashboard_eleve_template: React.FC = () => {
                         INSTA: flattenedINSTA,
                         YOUTUBE: flattenedYOUTUBE,
                         QUORA: flattenedQUORA,
+                        ERROR: flattenedERROR,
                         INSTA_CLUB: flattenedINSTA_CLUB,
                         LINKEDIN: flattenedLINKEDIN,
                         INSTA2: flattenedINSTA2,
@@ -1345,6 +1353,7 @@ const handleNewConversation = async () => {
                           instaData = {message.INSTA}
                           youtubeData= {message.YOUTUBE}
                           quoraData = {message.QUORA}
+                          errorData = {message.ERROR}
                           instaclubData = {message.INSTA_CLUB}
                           linkedinData = {message.LINKEDIN}
                           insta2Data = {message.INSTA2}
