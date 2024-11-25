@@ -82,6 +82,9 @@ export async function* handleStream<T extends NonEmptyObject>(
     let isLinkedin = false;
     let LinkedinBuffer = "";
 
+    let isError = false;
+    let ErrorBuffer = "";
+
     
 
     let previousPartialChunk: string | null = null;
@@ -296,6 +299,20 @@ export async function* handleStream<T extends NonEmptyObject>(
                 }
                 LinkedinBuffer = "";
                 isLinkedin = false;
+            }
+
+
+            if (isError && ErrorBuffer) {
+                try {
+                    console.log("Tentative de parsing du error JSON final:", ErrorBuffer);
+                    const errorJson = JSON.parse(ErrorBuffer); // Convertir le waiting final en JSON
+                    console.log("error JSON émis à la fin du flux:", errorJson);
+                    yield errorJson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du error JSON à la fin du flux:", err);
+                }
+                ErrorBuffer = "";
+                isError = false;
             }
 
             break;
@@ -709,6 +726,28 @@ export async function* handleStream<T extends NonEmptyObject>(
                     QuoraBuffer = "";
                 } catch (err) {
                     console.error("Erreur lors du parsing de quora JSON:", err);
+                }
+            }
+            continue;
+        }
+
+
+        if (decodedValue.includes("<ERROR>")) {
+            console.log("1) Détection de <ERROR> dans le chunk:", decodedValue);
+            isError = true;
+            ErrorBuffer = decodedValue.split("<ERROR>")[1].split("<ERROR_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de ERROR JSON, buffer actuel:", ErrorBuffer);
+
+            if (decodedValue.includes("<ERROR_END>")) {
+                try {
+                    console.log("3) Détection de <ERROR_END> dans le même chunk.");
+                    const errorJson = JSON.parse(ErrorBuffer);
+                    console.log("4) error JSON reçue et convertie:", errorJson);
+                    yield errorJson;
+                    isError = false;
+                    ErrorBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de error JSON:", err);
                 }
             }
             continue;
