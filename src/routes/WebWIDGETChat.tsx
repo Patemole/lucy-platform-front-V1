@@ -4,78 +4,38 @@ import {
   ThemeProvider,
   TextField,
   Button,
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Box,
   Typography,
-  Menu,
-  MenuItem,
-  Avatar,
   Divider,
   IconButton,
   InputAdornment,
   Snackbar,
   Alert,
 } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { SidebarSimple } from '@phosphor-icons/react'; // Import the icon from Phosphor
-import MenuIcon from '@mui/icons-material/Menu';
-import MapsUgcRoundedIcon from '@mui/icons-material/MapsUgcRounded';
-import HomeIcon from '@mui/icons-material/Home';
-import InfoIcon from '@mui/icons-material/Info';
-import LogoutIcon from '@mui/icons-material/Logout';
 import CloseIcon from '@mui/icons-material/Close';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
-import { ThreeDots } from 'react-loader-spinner';
 import { v4 as uuidv4 } from 'uuid';
 import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-
-import logo from '../logo_lucy.png';
-import logo_greg from '../student_face.png';
-import logo_lucy_face from '../lucy_new_face_contour2.png';
 
 import '../index.css';
 //import { AIMessage } from '../components/Messages';
 import { AIMessage } from '../components/MessageWEBWIDGET';
 import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN } from '../interfaces/interfaces_eleve';
-import { FeedbackType } from '../components/types';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
 import { handleAutoScroll } from '../components/utils';
 import { usePopup } from '../components/popup';
-import { useAuth } from '../auth/hooks/useAuth';
 import PopupWrongAnswer from '../components/PopupWrongAnswer';
 import PopupFeedback from '../components/PopupFeedback';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
-//import LandingPage from '../components/LandingPageWeb'; // Import du composant LandingPage
 
 const drawerWidth = 240;
-const ALLOWED_COURSE_IDS = ['Connf4P2TpKXXGooaQD5', 'tyPR1RAulPfqLLfNgIqF', 'Q1SjXBe30FyX6GxvJVIG', 'moRgToBTOAJZdMQPs7Ci'];
-
-const waitingPhrases = [
-  "I'm gathering relevant information...",
-  "Just a little longer...",
-  "I'm pulling together more details for you...",
-  "Almost done...",
-  "Thank you for your patience...",
-  "Just a few more seconds...",
-  "I'm verifying the UPenn data...",
-  "Still analyzing the information for you...",
-  "Putting the final pieces together...",
-  "Your answer is arriving shortly!"
-];
 
 const Dashboard_eleve_template: React.FC = () => {
   const theme = useTheme();
   const { uid } = useParams<{ uid: string }>();
-  const navigate = useNavigate();
-  const { logout } = useAuth();
   const { popup, setPopup } = usePopup();
 
   const [showChat, setShowChat] = useState(false);
@@ -97,30 +57,19 @@ const Dashboard_eleve_template: React.FC = () => {
   const [selectedAiMessage, setSelectedAiMessage] = useState<string | null>(null);
   const [selectedHumanMessage, setSelectedHumanMessage] = useState<string | null>(null);
   const [relatedQuestions, setRelatedQuestions] = useState<string[]>([]);
-  const [displayedText, setDisplayedText] = useState('');
-  const phraseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const wordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hasNewContent, setHasNewContent] = useState(false); // Nouvel état pour détecter du contenu
-  // Ajoutez cette ligne pour utiliser useSearchParams
-
-
   const scrollableDivRef = useRef<HTMLDivElement>(null);
   const endDivRef = useRef<HTMLDivElement>(null);
-
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-0' : 'mx-25';
 
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
-
 
   
   const lastAiMessageId = useMemo(() => {
     const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
     return lastAiMessage ? lastAiMessage.id : null;
   }, [messages]);
-
-
-  const hasSentTempMessage = useRef(false);
 
 
   // Utilitaire pour lire les cookies
@@ -137,160 +86,45 @@ const getCookie = (cookieName: string) => {
   return null;
 };
 
+const deleteCookie = (cookieName: string) => {
+  document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+};
 
 // Lecture du cookie dans le useEffect
 useEffect(() => {
-  console.log('useEffect appelé');
-  const tempMessage = getCookie('tempMessage') || 'Default message'; // Valeur par défaut si le cookie est absent
-  console.log('Message récupéré depuis le cookie:', tempMessage);
+  console.log('useEffect exécuté une seule fois');
+  
+  // Ajout d'un drapeau local pour éviter les appels multiples
+  let hasExecuted = false;
 
-  const sendTempMessage = async () => {
-      if (hasSentTempMessage.current) return;
-      hasSentTempMessage.current = true;
+  const tempMessage = getCookie('tempMessage');
+  if (tempMessage && !hasExecuted) {
+    console.log('Message récupéré depuis le cookie:', tempMessage);
 
-      try {
-          await handleNewConversation(); // Crée une nouvelle conversation
-          await handleSendMessageSocraticLangGraph(tempMessage); // Envoie le message
-          console.log('Message envoyé avec succès');
-      } catch (error) {
-          console.error('Erreur lors de l\'envoi du message:', error);
-      }
-  };
-
-  sendTempMessage();
-}, []);
-
-
-/*
-  useEffect(() => {
-
-    console.log('useEffect called');
-    console.log('window.location.origin (read):', window.location.origin);
-    console.log('localStorage.tempMessage (read):', localStorage.getItem('tempMessage'));
-
+    // Supprime immédiatement le cookie pour éviter d'autres appels
+    deleteCookie('tempMessage');
+    console.log('Cookie supprimé.');
 
     const sendTempMessage = async () => {
-      if (hasSentTempMessage.current) return;
-      hasSentTempMessage.current = true;
-
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const tempMessage = urlParams.get('tempMessage') || 'Default message'; // Valeur par défaut
-      console.log('Message récupéré depuis l\'URL:', tempMessage);
-    
-      //const tempMessage = localStorage.getItem('tempMessage') || 'Default message'; // Valeur par défaut
-      console.log('sendTempMessage - tempMessage:', tempMessage);
-    
       try {
-        await handleNewConversation(); // Crée une nouvelle conversation
-        await handleSendMessageSocraticLangGraph(tempMessage); // Envoie le message dans la nouvelle conversation
-        localStorage.removeItem('tempMessage');
-        console.log('Message envoyé dans une nouvelle conversation.');
+        // Crée une nouvelle conversation
+        await handleNewConversation();
+
+        console.log("Message récupéré pour SocraticLangGraph:", tempMessage);
+        await handleSendMessageSocraticLangGraph(tempMessage); // Envoie le message
+
+        console.log('Message envoyé avec succès.');
       } catch (error) {
-        console.error('Erreur lors de l\'envoi du message dans une nouvelle conversation:', error);
-        setPopup({
-          type: 'error',
-          message: 'Échec de l\'envoi du message. Veuillez réessayer.',
-        });
+        console.error('Erreur lors de l\'envoi du message:', error);
       }
     };
+
     sendTempMessage();
-  }, []);
-  */
-
-
-  //For display sentence above three dots for waiting
-  useEffect(() => {
-    if (isStreaming) {
-      let isCancelled = false;
-  
-      // Wait for 5 seconds before starting to display the phrases
-      const startDelayTimeout = setTimeout(() => {
-        const phrasesCount = waitingPhrases.length;
-  
-        const startDisplayingPhrase = (phraseIndex: number) => {
-          if (isCancelled) return;
-  
-          const currentPhrase = waitingPhrases[phraseIndex];
-          if (!currentPhrase) {
-            console.error(`Phrase at index ${phraseIndex} is undefined.`);
-            return;
-          }
-  
-          const words = currentPhrase.split(' ');
-          let wordIndex = 0;
-          setDisplayedText('');
-  
-          const displayNextWord = () => {
-            if (isCancelled) return;
-  
-            if (wordIndex < words.length) {
-              const nextWord = words[wordIndex];
-              if (nextWord === undefined) {
-                console.error(`Word at index ${wordIndex} is undefined.`);
-                return;
-              }
-  
-              setDisplayedText((prevText) =>
-                prevText ? `${prevText} ${nextWord}` : nextWord
-              );
-              wordIndex += 1;
-  
-              wordTimeoutRef.current = setTimeout(displayNextWord, 100); // Delay between words
-            } else {
-              // Entire phrase displayed, wait 1 second then move to next phrase
-              phraseTimeoutRef.current = setTimeout(() => {
-                const nextPhraseIndex = (phraseIndex + 1) % phrasesCount;
-                startDisplayingPhrase(nextPhraseIndex);
-              }, 1500); // Wait 1 second before next phrase
-            }
-          };
-  
-          displayNextWord();
-        };
-  
-        // Start with the first phrase after 5 seconds
-        startDisplayingPhrase(0);
-      }, 6000); // Delay of 5 seconds before showing any phrases
-  
-      return () => {
-        isCancelled = true;
-        if (wordTimeoutRef.current) {
-          clearTimeout(wordTimeoutRef.current);
-        }
-        if (phraseTimeoutRef.current) {
-          clearTimeout(phraseTimeoutRef.current);
-        }
-        if (startDelayTimeout) {
-          clearTimeout(startDelayTimeout);  // Clear the delay if the component unmounts
-        }
-        setDisplayedText('');
-      };
-    } else {
-      // Cleanup when isStreaming becomes false
-      if (wordTimeoutRef.current) {
-        clearTimeout(wordTimeoutRef.current);
-      }
-      if (phraseTimeoutRef.current) {
-        clearTimeout(phraseTimeoutRef.current);
-      }
-      setDisplayedText('');
-    }
-  }, [isStreaming]);
-
-
-
-  const getOrCreateUID = () => {
-    // Vérifie si un uid existe déjà dans localStorage
-    let uid = localStorage.getItem('uid');
-    if (!uid) {
-        // Génère un uid aléatoire si aucun uid n'est disponible
-        uid = uuidv4();
-        localStorage.setItem('uid', uid); // Stocke le uid temporaire
-    }
-    return uid;
-};
-
+    hasExecuted = true; // Marque comme exécuté
+  } else {
+    console.log('Aucun message à récupérer ou déjà traité.');
+  }
+}, []); // Les dépendances sont vides pour s'assurer que l'effet ne s'exécute qu'une fois.
 
 
   const fetchCourseOptionsAndChatSessions = async () => {
@@ -360,7 +194,7 @@ useEffect(() => {
   }, [uid]);
 
 
-
+/*
   useEffect(() => {
     const loadMessagesFromLocalStorageChatId = async () => {
       const storedChatId = localStorage.getItem('chat_id');
@@ -368,8 +202,7 @@ useEffect(() => {
     };
     loadMessagesFromLocalStorageChatId();
   }, []);
-
-
+  */ 
 
 
   const handleSendTAKMessage = (TAK_message: string) => {
@@ -384,6 +217,7 @@ useEffect(() => {
     onSubmit([...messages, newMessage, loadingMessage], TAK_message);
   };
 
+
   const handleSendCOURSEMessage = (COURSE_message: string) => {
     if (COURSE_message.trim() === '') return;
 
@@ -396,8 +230,13 @@ useEffect(() => {
     onSubmit([...messages, newMessage, loadingMessage], COURSE_message);
   };
 
+
+
   const handleSendMessageSocraticLangGraph = (message: string) => {
     if (message.trim() === '') return;
+  
+    console.log('handleSendMessageSocraticLangGraph called');
+    console.log('Input message:', message);
   
     setIsLandingPageVisible(false);
     setRelatedQuestions([]);
@@ -408,15 +247,56 @@ useEffect(() => {
     const newMessage: Message = { id: generateUniqueId(), type: 'human', content: message };
     const loadingMessage: Message = { id: generateUniqueId(), type: 'ai', content: '', personaName: 'Lucy' };
   
-    // Regrouper les messages pour éviter des appels multiples
-    setMessages((prevMessages) => [...prevMessages, newMessage, loadingMessage]);
+    console.log('New human message:', newMessage);
+    console.log('Loading AI message:', loadingMessage);
   
+    // Ajout des messages
+    setMessages((prevMessages) => {
+      console.log('Previous messages:', prevMessages);
+      const updatedMessages = [...prevMessages, newMessage, loadingMessage];
+      console.log('Updated messages:', updatedMessages);
+      return updatedMessages;
+    });
+  
+    // Appel à onSubmit
+    console.log('Calling onSubmit with messageHistory:', [...messages, newMessage, loadingMessage]);
     onSubmit([...messages, newMessage, loadingMessage], message);
+  
     setInputValue('');
   };
 
+
+  /*
+  const handleSendMessageSocraticLangGraph = (message: string) => {
+    if (message.trim() === '') return;
+
+    // Masquer la LandingPage après l'envoi du premier message
+    setIsLandingPageVisible(false);
+    setRelatedQuestions([]);
+    setShowChat(true);
+    setIsComplete(false);
+    setIsStreaming(true);
+
+    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: message };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy' };
+    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
+
+    onSubmit([...messages, newMessage, loadingMessage], message);
+    setInputValue('');
+  };
+  */ 
+
+
+
   // Fonction pour envoyer le message à l'AI ou à l'API
   const onSubmit = async (messageHistory: Message[], inputValue: string) => {
+
+    console.log('onSubmit called');
+    console.log('Message history passed to onSubmit:', messageHistory);
+    console.log('Input value:', inputValue);
+
     setIsStreaming(true);
     setHasNewContent(false); // Réinitialise au début de chaque message
     let answer = '';
@@ -437,20 +317,40 @@ useEffect(() => {
     let error: string | null = null;
 
     try {
+      console.log('Extracting user and session information');
       //const chatSessionId = localStorage.getItem('chat_id') || 'default_chat_id';
-      const chatSessionId = 'chat_id'|| 'default_chat_id';
+      //const chatSessionId = 'chat_id'|| 'default_chat_id';
+      const chatSessionId = localStorage.getItem('chat_id_widget')  || 'default_chat_id_widget';
       const courseId = localStorage.getItem('course_id') || 'default_course_id';
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const username = user.name || 'default_user';
       const uid = user.id || 'default_uid';
-      const university = localStorage.getItem('university') || 'default_university';
+      const university = localStorage.getItem('university') || 'upenn'; // Changer pour mettre Upenn ou autre en fonction de ou on met le widget
       const major = localStorage.getItem('major') || 'default_major';
       const minor = localStorage.getItem('minor') || 'default_minor';
       const year = localStorage.getItem('year') || 'default_year';
       const faculty = localStorage.getItem('faculty') || 'default_faculty';
       const student_profile = localStorage.getItem('student_profile') || '';
 
+      console.log('Session data:', {
+        chatSessionId,
+        courseId,
+        username,
+        uid,
+        university,
+        major,
+        minor,
+        year,
+        faculty,
+        student_profile,
+      });
+  
+
       const lastMessageIndex = messageHistory.length - 1;
+
+      console.log('Last message index:', lastMessageIndex);
+
+      
 
       for await (const packetBunch of sendMessageSocraticLangGraph({
       //for await (const packetBunch of sendMessageFakeDemo({
@@ -683,92 +583,31 @@ useEffect(() => {
     }
   };
 
+
   const handleNewConversation = async () => {
-
-    const uid = getOrCreateUID(); // Utilise getOrCreateUID pour obtenir le UID
-
-    if (!uid) {
-        console.error('UID is undefined. Cannot create new conversation.');
-        return;
-    }
-    const newChatId = uuidv4();
-    const oldChatId = localStorage.getItem('chat_id');
-
-    setMessages([]); // Efface les messages
-    setRelatedQuestions([]);
-    //setIsLandingPageVisible(true); // Affiche la LandingPage
-
-    localStorage.setItem('chat_id', newChatId);
-    setActiveChatId(newChatId);
-
-    if (uid) {
-      const userRef = doc(db, 'users', uid);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const chatsessions = userData.chatsessions || [];
-
-        if (oldChatId) {
-          await updateDoc(doc(db, 'chatsessions', oldChatId), { name: 'Conversation history' });
-        }
-
-        chatsessions.push(newChatId);
-        await updateDoc(userRef, { chatsessions });
-
-        await setDoc(doc(db, 'chatsessions', newChatId), {
-          chat_id: newChatId,
-          name: 'New chat',
-          created_at: serverTimestamp(),
-          modified_at: serverTimestamp(),
-        });
-
-        const refreshedUserSnap = await getDoc(userRef);
-        if (refreshedUserSnap.exists()) {
-          const refreshedUserData = refreshedUserSnap.data();
-          const chatSessionIds = refreshedUserData.chatsessions || [];
-
-          const chatPromises = chatSessionIds.map(async (chatId: string) => {
-            if (typeof chatId === 'string') {
-              const chatRef = doc(db, 'chatsessions', chatId);
-              const chatSnap = await getDoc(chatRef);
-              if (chatSnap.exists() && chatSnap.data().name) {
-                return { chat_id: chatId, name: chatSnap.data().name };
-              }
-            }
-            return null;
-          });
-
-          const fetchedConversations = await Promise.all(chatPromises);
-          const validConversations = fetchedConversations.filter(
-            (conversation): conversation is { chat_id: string; name: string } => conversation !== null
-          );
-          setConversations(validConversations.reverse());
-        }
-      }
-    } else {
-      console.error('UID is undefined. Cannot create new conversation.');
-    }
-  };
-
-  const handleConversationClick = async (chat_id: string) => {
-    localStorage.setItem('chat_id', chat_id);
-    setActiveChatId(chat_id);
-
-    setRelatedQuestions([]);
-
     try {
-      const chatHistory = await getChatHistory(chat_id);
-      setMessages(chatHistory);
-      setShowChat(true);
-    } catch (error) {
+      // Génère un identifiant unique pour la nouvelle conversation
+      const newChatId = uuidv4();
+      console.log("New chatId genere")
+      console.log(newChatId)
+      // Réinitialise les états liés aux messages et questions associées
+      setMessages([]); // Vide la liste des messages actuels
+      setRelatedQuestions([]); // Vide la liste des questions associées
+  
+      // Met à jour le localStorage avec le nouvel identifiant de conversation
+      localStorage.setItem('chat_id_widget', newChatId);
+      setActiveChatId(newChatId); // Met à jour l'état local pour la conversation active
+  
+      // Optionnel : Confirme la création réussie dans la console
+      console.log('Nouvelle conversation créée avec succès. Chat ID:', newChatId);
+    } catch (error: any) {
+      console.error('Erreur dans handleNewConversation:', error);
       setPopup({
         type: 'error',
-        message: 'Failed to fetch chat history. Please try again later.',
+        message: 'Échec de la création de la nouvelle conversation. Veuillez réessayer.',
       });
     }
   };
-
   
 
   const toggleDrawer = () => {
@@ -890,112 +729,6 @@ useEffect(() => {
             WebkitBackdropFilter: 'blur(20px)', // Pour les navigateurs Webkit comme Safari
         }}
       >
-        {/* Drawer */}
-        <Drawer
-          variant="persistent"
-          anchor="left"
-          open={drawerOpen}
-          PaperProps={{
-            style: {
-              width: drawerWidth, // Assurez-vous que `drawerWidth` est défini
-              borderRadius: '0 0 0 0',
-              backgroundColor: theme.palette.background.paper,
-              display: 'flex',
-              flexDirection: 'column',
-            },
-          }}
-        >
-          {/* Contenu du Drawer */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
-            <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
-              <MenuIcon />
-            </IconButton>
-            <IconButton onClick={handleNewConversation} sx={{ color: theme.palette.sidebar }}>
-              <MapsUgcRoundedIcon />
-            </IconButton>
-          </Box>
-          <div style={{ flexGrow: 1, overflowY: 'auto' }}>
-            <List style={{ padding: '0 15px' }}>
-              {/* Exemple de ListItem commenté */}
-              {/* 
-              <ListItem
-                button
-                onClick={() => navigate(`/dashboard/student/${uid}`)}
-                sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
-              >
-                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                  <HomeIcon />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Home"
-                  primaryTypographyProps={{
-                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                  }}
-                />
-              </ListItem>
-              */}
-
-              <ListItem
-                button
-                onClick={() => navigate('/about')}
-                sx={{ borderRadius: '8px', backgroundColor: theme.palette.background.paper }}
-              >
-                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
-                  <InfoIcon />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Give us feedback"
-                  primaryTypographyProps={{
-                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                  }}
-                />
-              </ListItem>
-              <Divider style={{ backgroundColor: 'lightgray', margin: '30px 0' }} />
-              {conversations.length > 0 ? (
-                conversations.map((conversation) => (
-                  <ListItem
-                    button
-                    key={conversation.chat_id}
-                    onClick={() => handleConversationClick(conversation.chat_id)}
-                    sx={{
-                      borderRadius: '8px',
-                      margin: '5px 0',
-                      backgroundColor:
-                        activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
-                      '&:hover': {
-                        backgroundColor: theme.palette.button.background,
-                        color: theme.palette.text_human_message_historic,
-                      },
-                      '& .MuiTypography-root': {
-                        color:
-                          activeChatId === conversation.chat_id
-                            ? theme.palette.text_human_message_historic
-                            : theme.palette.text.primary,
-                      },
-                    }}
-                  >
-                    <ListItemText
-                      primary={conversation.name}
-                      primaryTypographyProps={{ style: { fontWeight: '500', fontSize: '0.875rem' } }}
-                    />
-                  </ListItem>
-                ))
-              ) : (
-                <Typography
-                  align="center"
-                  sx={{
-                    fontWeight: '500',
-                    fontSize: '0.875rem',
-                    color: theme.palette.text.secondary,
-                    marginTop: '30px',
-                  }}
-                >
-                  Sign-up to have your own history
-                </Typography>
-              )}
-            </List>
-          </div>
-        </Drawer>
 
         {/* Main Content Area */}
         <div
@@ -1003,7 +736,6 @@ useEffect(() => {
             iframeSrc ? 'mr-[33vw]' : ''
           }`}
         >
-          {/* Header Supprimé */}
 
           {/* Content Area */}
           {isLandingPageVisible ? (
