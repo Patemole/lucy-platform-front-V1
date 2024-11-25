@@ -1,6 +1,6 @@
 /* widget.css */
 
-.widget-container {
+.mobile-fullScreen-container {
     font-size: 1.15rem; /* Si ça dépasse la taille max définie */
     color: var(--text-primary);
     background-color: lightgray; /* Fond par défaut */
@@ -8,80 +8,80 @@
 
 
 @media (max-width: 2000px) {
-    .widget-container {
+    .mobile-fullScreen-container {
         font-size: 1.15rem; /* Si ça dépasse la taille max définie */
         background-color: lightgray; /* Fond par défaut */
     }
 
-    .widget-container ul {
+    .mobile-fullScreen-container ul {
         padding-left: 1rem;
     }
 
-    .widget-container ol {
+    .mobile-fullScreen-container ol {
         padding-left: 0rem;
     }
 }
 
 /* Large */
 @media (max-width: 1000px) {
-    .widget-container {
+    .mobile-fullScreen-container {
         font-size: 1.1rem;
         background-color: lightblue; /* Fond bleu clair pour Large */
     }
 
-    .widget-container ul {
+    .mobile-fullScreen-container ul {
         padding-left: 0.8rem;
     }
 
-    .widget-container ol {
+    .mobile-fullScreen-container ol {
         padding-left: 0rem;
     }
 }
 
 /* Medium */
 @media (max-width: 800px) {
-    .widget-container {
+    .mobile-fullScreen-container {
         font-size: 1rem;
         background-color: lightgreen; /* Fond vert clair pour Medium */
     }
 
-    .widget-container ul {
+    .mobile-fullScreen-container ul {
         padding-left: 0.5rem;
     }
 
-    .widget-container ol {
+    .mobile-fullScreen-container ol {
         padding-left: 0rem;
     }
 }
 
 /* Small */
 @media (max-width: 590px) {
-    .widget-container {
+    .mobile-fullScreen-container {
         font-size: 0.95rem;
         background-color: lightcoral; /* Fond corail clair pour Small */
     }
 
-    .widget-container ul {
+    .mobile-fullScreen-container ul {
         padding-left: 0.3rem;
     }
 
-    .widget-container ol {
+    .mobile-fullScreen-container ol {
         padding-left: 0rem;
     }
 }
 
 /* Extra Small */
 @media (max-width: 350px) {
-    .widget-container {
+    .mobile-fullScreen-container {
         font-size: 0.9rem;
         background-color: lightgoldenrodyellow; /* Fond jaune clair pour Extra Small */
     }
 
-    .widget-container ul {
+    .mobile-fullScreen-container ul {
         padding-left: 1rem;
     }
 
-    .widget-container ol {
+    .mobile-fullScreen-container ol {
         padding-left: 1rem;
     }
 }
