@@ -194,17 +194,6 @@ useEffect(() => {
   }, [uid]);
 
 
-/*
-  useEffect(() => {
-    const loadMessagesFromLocalStorageChatId = async () => {
-      const storedChatId = localStorage.getItem('chat_id');
-      if (storedChatId) await handleConversationClick(storedChatId);
-    };
-    loadMessagesFromLocalStorageChatId();
-  }, []);
-  */ 
-
-
   const handleSendTAKMessage = (TAK_message: string) => {
     if (TAK_message.trim() === '') return;
 
@@ -229,8 +218,6 @@ useEffect(() => {
 
     onSubmit([...messages, newMessage, loadingMessage], COURSE_message);
   };
-
-
 
   const handleSendMessageSocraticLangGraph = (message: string) => {
     if (message.trim() === '') return;
@@ -264,31 +251,6 @@ useEffect(() => {
   
     setInputValue('');
   };
-
-
-  /*
-  const handleSendMessageSocraticLangGraph = (message: string) => {
-    if (message.trim() === '') return;
-
-    // Masquer la LandingPage après l'envoi du premier message
-    setIsLandingPageVisible(false);
-    setRelatedQuestions([]);
-    setShowChat(true);
-    setIsComplete(false);
-    setIsStreaming(true);
-
-    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: message };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-    onSubmit([...messages, newMessage, loadingMessage], message);
-    setInputValue('');
-  };
-  */ 
-
-
 
   // Fonction pour envoyer le message à l'AI ou à l'API
   const onSubmit = async (messageHistory: Message[], inputValue: string) => {
