@@ -1,0 +1,68 @@
+/* widget.css */
+
+.widget-container {
+  font-size: 1.15rem; /* Si ca depasse la taille max que l on a determine */
+  color: var(--text-primary);
+}
+
+/* Large */
+@media (max-width: 1000px) {
+  .widget-container {
+    font-size: 1.1rem;    
+  }
+
+  .widget-container ul {
+    padding-left: 1.75rem;
+  }
+
+  .widget-container ol {
+    padding-left: 1.75rem;
+  }
+}
+
+/* Medium */
+@media (max-width: 800px) {
+  .widget-container {
+    font-size: 1rem;
+  }
+
+  .widget-container ul {
+    padding-left: 1.5rem;
+  }
+
+  .widget-container ol {
+    padding-left: 1.5rem;
+  }
+}
+
+/* Small */
+@media (max-width: 590px) {
+  .widget-container {
+    font-size: 0.95rem;
+  }
+
+  .widget-container ul {
+    padding-left: 1.25rem;
+  }
+
+  .widget-container ol {
+    padding-left: 1.25rem;
+  }
+}
+
+/* Extra Small */
+@media (max-width: 350px) {
+  .widget-container {
+    font-size: 0.9rem;
+  }
+
+  .widget-container ul {
+    padding-left: 1rem;
+  }
+
+  .widget-container ol {
+    padding-left: 1rem;
+  }
+}
+  
+ 
