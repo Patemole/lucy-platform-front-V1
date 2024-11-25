@@ -194,6 +194,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   // Ajustement de la taille de la police en fonction de la taille de l'écran
   const messageFontSize = isSmallScreen ? "custom-phone" : "text-lg";
 
+
+
   const navigate = useNavigate();
 
   // Initialisation des messages avec le contenu initial
@@ -1014,7 +1016,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                     key={index}
                     className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words ${
                       !isSmallScreen ? "ml-8" : ""
-                    } text-left sm:text-justify ${messageFontSize} leading-snug`} // Hauteur de ligne par défaut ajustée
+                    } text-left sm:text-justify leading-snug`} // Hauteur de ligne par défaut ajustée
                     style={{ color: theme.palette.text.primary }}
                   >
                     <ReactMarkdown
@@ -1024,12 +1026,12 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         // Gestion des paragraphes
                         p: ({ node, ...props }) => (
                           <p
-                            className={`m-0 mb-md-gap ${isSmallScreen ? "custom-phone" : "text-lg"}`} // Ajuste marges et hauteur des lignes
+                            className={`m-0 mb-md-gap leading-loose`} // Ajuste marges et hauteur des lignes
                             {...props}
                           />
                         ),
                         // Gestion du texte en gras
-                        strong: ({ node, ...props }) => <strong className={`inline-block mt-4 font-semibold text-gray-800 ${isSmallScreen ? "custom-phone" : "text-lg"}`} {...props} />,
+                        strong: ({ node, ...props }) => <strong className={`inline-block mt-4 font-semibold text-gray-800`} {...props} />,
                         
                         // Gestion des liens
                         a: ({ node, ...props }) => (
