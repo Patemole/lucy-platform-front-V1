@@ -1,16 +1,90 @@
-/* widget.css */
-
+/* Conteneur général */
 .mobile-fullScreen-container {
-    font-size: 1.15rem; /* Si ça dépasse la taille max définie */
+    font-size: 1.1rem; /* Taille par défaut */
     color: var(--text-primary);
-    /*}background-color: lightgray; /* Fond par défaut */
+}
+
+/* Listes générales */
+.mobile-fullScreen-container ul,
+.mobile-fullScreen-container ol {
+    margin: 0; /* Supprime les marges externes */
+    padding-left: 1rem; /* Retrait interne par défaut */
+}
+
+/* Listes numérotées (ol) */
+.mobile-fullScreen-container ol {
+    margin-bottom: 2rem; /* Grand espace après un bloc de liste numérotée */
+    margin-top: 0.6rem; /* Plus petit espace au-dessus */
+}
+
+/* Listes à puces (ul) imbriquées dans des ol */
+.mobile-fullScreen-container ol ul {
+    padding-left: 1.5rem; /* Retrait supplémentaire pour les puces dans une liste numérotée */
+    margin-top: 0.5rem; /* Espacement réduit au-dessus des puces */
+    margin-bottom: 0.5rem; /* Espacement réduit en dessous des puces */
+}
+
+/* Listes à puces indépendantes (ul) */
+.mobile-fullScreen-container ul {
+    margin-top: 0.6rem; /* Espacement standard au-dessus */
+    margin-bottom: 1.5rem; /* Grand espace pour distinguer un bloc */
+    padding-left: 1.2rem; /* Retrait par défaut pour les puces indépendantes */
+}
+
+/* Espacement des éléments de liste (li) */
+.mobile-fullScreen-container ul li,
+.mobile-fullScreen-container ol li {
+    margin-bottom: 0rem; /* Espacement minimal entre chaque élément de la liste */
+    line-height: 1.2; /* Hauteur de ligne pour un texte clair */
+}
+
+/* Espacement entre les blocs principaux (ol > li) */
+.mobile-fullScreen-container ol > li {
+    margin-bottom: 1.5rem; /* Espace supplémentaire entre les blocs principaux */
+}
+
+/* Réduction de l'espacement entre titre et sous-éléments */
+.mobile-fullScreen-container ol li > ul,
+.mobile-fullScreen-container ol li > p {
+    margin-top: 0rem; /* Réduction de l’espace au-dessus du contenu interne */
+    margin-bottom: 0.3rem; /* Réduction de l’espace en dessous */
 }
 
 
-@media (max-width: 2000px) {
+/* Gestion des marges pour <p> suivi d'une liste numérotée (ol) */
+.mobile-fullScreen-container p + ol {
+    margin-top: 1rem; /* Espacement au-dessus de la liste numérotée */
+    margin-bottom: 2rem; /* Espacement en dessous de la liste numérotée */
+}
+
+/* Gestion des marges pour <p> suivi d'une autre liste à puces (ul) */
+.mobile-fullScreen-container p + ul {
+    margin-top: 0.8rem; /* Espacement réduit pour une liste à puces */
+    margin-bottom: 1.2rem; /* Espacement standard pour distinguer la liste */
+}
+
+/* Gestion des marges pour <p> suivi d'un autre <p> */
+.mobile-fullScreen-container p + p {
+    margin-top: 0.5rem; /* Espacement réduit entre deux paragraphes */
+    margin-bottom: 0.8rem; /* Espacement réduit en dessous */
+}
+
+/* Styles pour puces numérotées */
+.mobile-fullScreen-container ol li::marker {
+    font-size: 1.2rem; /* Taille des marqueurs numérotés */
+    color: #011F5B; /* Couleur personnalisée pour les numéros */
+}
+
+/* Styles pour puces à puces */
+.mobile-fullScreen-container ul li::marker {
+    font-size: 0.9rem; /* Taille des marqueurs de puces */
+    color: #555; /* Couleur personnalisée pour les puces */
+}
+
+/* Grands écrans (Large) */
+@media (max-width: 1000px) {
     .mobile-fullScreen-container {
-        font-size: 1.15rem; /* Si ça dépasse la taille max définie */
-       /*} background-color: lightgray; /* Fond par défaut */
+        font-size: 1.1rem;
     }
 
     .mobile-fullScreen-container ul {
@@ -18,15 +92,23 @@
     }
 
     .mobile-fullScreen-container ol {
-        padding-left: 0rem;
+        margin-bottom: 1.5rem; /* Espacement ajusté pour grands écrans */
+    }
+
+    .mobile-fullScreen-container ol ul {
+        padding-left: 1.3rem;
+        margin-bottom: 0.4rem; /* Espacement ajusté pour les puces */
+    }
+
+    .mobile-fullScreen-container ol > li {
+        margin-bottom: 1.8rem; /* Ajustement des blocs principaux */
     }
 }
 
-/* Large */
-@media (max-width: 1000px) {
+/* Écrans moyens (Medium) */
+@media (max-width: 800px) {
     .mobile-fullScreen-container {
-        font-size: 1.1rem;
-        /*}background-color: lightblue; /* Fond bleu clair pour Large */
+        font-size: 1rem;
     }
 
     .mobile-fullScreen-container ul {
@@ -34,15 +116,23 @@
     }
 
     .mobile-fullScreen-container ol {
-        padding-left: 0rem;
+        margin-bottom: 1rem; /* Espacement ajusté pour écrans moyens */
+    }
+
+    .mobile-fullScreen-container ol ul {
+        padding-left: 1rem;
+        margin-bottom: 0.3rem; /* Espacement réduit */
+    }
+
+    .mobile-fullScreen-container ol > li {
+        margin-bottom: 1.5rem; /* Ajustement des blocs principaux */
     }
 }
 
-/* Medium */
-@media (max-width: 800px) {
+/* Petits écrans (Small) */
+@media (max-width: 590px) {
     .mobile-fullScreen-container {
-        font-size: 1rem;
-        /*}background-color: lightgreen; /* Fond vert clair pour Medium */
+        font-size: 0.95rem;
     }
 
     .mobile-fullScreen-container ul {
@@ -50,15 +140,23 @@
     }
 
     .mobile-fullScreen-container ol {
-        padding-left: 0rem;
+        margin-bottom: 0.8rem; /* Espacement ajusté pour petits écrans */
+    }
+
+    .mobile-fullScreen-container ol ul {
+        padding-left: 0.3rem;
+        margin-bottom: 0.2rem; /* Espacement réduit pour les puces */
+    }
+
+    .mobile-fullScreen-container ol > li {
+        margin-bottom: 1.1rem; /* Ajustement des blocs principaux */
     }
 }
 
-/* Small */
-@media (max-width: 590px) {
+/* Très petits écrans (Extra Small) */
+@media (max-width: 350px) {
     .mobile-fullScreen-container {
-        font-size: 1rem;
-       /*} background-color: lightcoral; /* Fond corail clair pour Small */
+        font-size: 0.9rem;
     }
 
     .mobile-fullScreen-container ul {
@@ -66,22 +164,15 @@
     }
 
     .mobile-fullScreen-container ol {
-        padding-left: 0rem;
-    }
-}
-
-/* Extra Small */
-@media (max-width: 350px) {
-    .mobile-fullScreen-container {
-        font-size: 0.9rem;
-       /*} background-color: lightgoldenrodyellow; /* Fond jaune clair pour Extra Small */
+        margin-bottom: 0.6rem; /* Espacement ajusté pour très petits écrans */
     }
 
-    .mobile-fullScreen-container ul {
-        padding-left: 1rem;
+    .mobile-fullScreen-container ol ul {
+        padding-left: 0.2rem;
+        margin-bottom: 0.1rem; /* Espacement minimal pour les puces */
     }
 
-    .mobile-fullScreen-container ol {
-        padding-left: 1rem;
+    .mobile-fullScreen-container ol > li {
+        margin-bottom: 1rem; /* Ajustement des blocs principaux */
     }
 }
