@@ -1,6 +1,7 @@
 // src/components/Dashboard_eleve_template.tsx
 
 import React, { useState, useEffect, KeyboardEvent, useRef, useMemo } from 'react';
+import StopIcon from '@mui/icons-material/Stop';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -38,6 +39,8 @@ import DeleteIcon from '@mui/icons-material/Delete'; // Icône pour "Supprimer"
 import SettingsIcon from '@mui/icons-material/Settings';
 import './styles.css'; // Import du fichier CSS pour le gradient
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import debounce from 'lodash/debounce';
+import { FaArrowDown } from 'react-icons/fa'; // Import an arrow down icon
 
 
 const drawerWidth = 240;
@@ -86,6 +89,53 @@ const Dashboard_eleve_template: React.FC = () => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [parametersMenuAnchorEl, setParametersMenuAnchorEl] = useState<HTMLElement | null>(null);
+  const [userScrollingManually, setUserScrollingManually] = useState(false);
+
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
+
+
+  useEffect(() => {
+    const handleScroll = debounce(() => {
+      const scrollDiv = scrollableDivRef.current;
+      if (scrollDiv) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 100; // Adjust threshold as needed
+        setIsAtBottom(atBottom);
+        if (atBottom) setNewMessagesCount(0);
+      }
+    }, 100); // Delay of 100ms
+  
+    const scrollDiv = scrollableDivRef.current;
+    scrollDiv?.addEventListener('scroll', handleScroll);
+  
+    return () => scrollDiv?.removeEventListener('scroll', handleScroll);
+  }, []);
+
+
+  // Autoscroll logic based on isAtBottom
+  useEffect(() => {
+    if (isAtBottom) {
+      scrollToBottom();
+    } else {
+      setNewMessagesCount((prevCount) => prevCount + 1);
+    }
+  }, [messages, isAtBottom]); // Depend on messages and isAtBottom
+
+
+  const scrollToBottom = () => {
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' });
+      setIsAtBottom(true); // Mettre à jour l'état pour refléter que nous sommes en bas
+      setNewMessagesCount(0); // Réinitialiser le compteur de nouveaux messages
+    }
+  };
+
+  const scrollToBottomNewMessage = () => {
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' }); // Défilement fluide
+    }
+  };
 
 
   const lastAiMessageId = useMemo(() => {
@@ -280,17 +330,6 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   }, [messages]);
 
-  //permet de scroller automatiquement vers le bas a mesure que le stream du message arrive
-  useEffect(() => {
-    if (isStreaming) handleAutoScroll(endDivRef, scrollableDivRef);
-  }, [isStreaming, messages]);
-
-  //permet de scroller automatiquement vers le bas quand des messages changent (ex: on clique sur une ancienne conversation)
-  useEffect(() => {
-    handleAutoScroll(endDivRef, scrollableDivRef);
-  }, [messages]);
-
-
   //gere l ouverture du menu de log-out
   const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setProfileMenuAnchorEl(event.currentTarget);
@@ -376,19 +415,18 @@ const Dashboard_eleve_template: React.FC = () => {
   };
 
 
-  //permet d envoyer le message en cliquant sur la touche enter
   const handleInputKeyPressSocraticLangGraph = (event: KeyboardEvent) => {
-    if (isStreaming) {
-      console.warn("Cannot send a new message while the previous one is processing.");
-      event.preventDefault(); // Bloque l'action par défaut (éviter les sauts de ligne accidentels)
-      return; // Empêche l'envoi
-    }
-
     if (event.key === 'Enter' && !event.shiftKey) {
-      handleSendMessageSocraticLangGraph(inputValue); // Passe le message comme paramètre
-      event.preventDefault();
+      if (isStreaming) {
+        console.warn("Cannot send a new message while the AI is responding. Please stop the current response first.");
+        event.preventDefault(); // Prevents sending the message
+      } else {
+        event.preventDefault();
+        handleSendMessageSocraticLangGraph(inputValue);
+      }
     }
   };
+
 
   // Fonction pour envoyer le message à l'AI ou à l'API
   const onSubmit = async (messageHistory: Message[], inputValue: string) => {
@@ -1299,7 +1337,23 @@ const handleNewConversation = async () => {
                 className="flex-grow overflow-y-auto"
                 style={{ backgroundColor: 'transparent', paddingBottom: '100px' }}
               >
-                <div className="flex flex-col space-y-2 p-4" ref={scrollableDivRef}>
+                <div
+                  className="flex flex-col space-y-2 p-4"
+                  ref={scrollableDivRef}
+                  onScroll={() => {
+                    const scrollDiv = scrollableDivRef.current;
+                    if (scrollDiv) {
+                      const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
+                      const atBottom = scrollTop + clientHeight >= scrollHeight - 5; // Marge de 100px
+                      setIsAtBottom(atBottom); // Met à jour l'état si l'utilisateur est en bas
+                      if (atBottom) setNewMessagesCount(0); // Réinitialise les nouveaux messages si en bas
+                    }
+                  }}
+                  style={{
+                    overflowY: 'auto', // Assure que le contenu est défilable
+                    maxHeight: '100%', // Limite la hauteur pour activer le défilement
+                  }}
+                >
                   {messages.map((message, index) =>
                     message.type === 'human' ? (
                       <div
@@ -1410,6 +1464,39 @@ const handleNewConversation = async () => {
               </div>
             )}
 
+
+            {/* Bouton pour défiler vers le bas */}
+            {!isAtBottom && (
+              <button
+                onClick={scrollToBottom}
+                style={{
+                  position: 'fixed',
+                  bottom: '85px', // Ajustez cette valeur en fonction de la hauteur de votre champ de saisie
+                  //left: '50%',
+                  transform: 'translateX(-50%)',
+                  left: drawerOpen ? `calc(${drawerWidth}px + 41.5%)` : '50%',
+                  //transition: 'left 0.3s', // Ajoutez une transition douce pour un effet fluide
+                  background: 'rgba(255, 255, 255, 0.2)', // Fond semi-transparent
+                  border: '1px solid rgba(255, 255, 255, 0.3)', // Bordure subtile
+                  borderRadius: '50%',
+                  width: '30px', // Augmenté pour une meilleure visibilité
+                  height: '30px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', // Ombre légère
+                  backdropFilter: 'blur(10px)', // Effet de flou
+                  WebkitBackdropFilter: 'blur(10px)', // Support pour Safari
+                  zIndex: 1000, // Assurez-vous que le bouton apparaît au-dessus des autres éléments
+                  transition: 'left 0.3s ease-in-out, background 0.3s ease-in-out, box-shadow 0.3s ease-in-out', // Transition fluide
+                }}
+                aria-label="Scroll to bottom" // Accessibilité
+              >
+                <FaArrowDown size={12} color="#011F5B" /> {/* Icône avec la couleur spécifiée */}
+              </button>
+            )}
+
             {/* Champ de saisie en bas */}
             {/* Input Field */}
             {(!hasTak || inputValue.trim() !== "") && ( 
@@ -1448,15 +1535,7 @@ const handleNewConversation = async () => {
                   multiline
                   minRows={1} // Adjust `minRows` to change the minimum height of the TextField
                   maxRows={6}
-                  //placeholder={isStreaming ? "Please wait..." : "Message..."} // Message différent pendant le streaming
-                  placeholder={isSmallScreen && drawerOpen ? "" : (isStreaming ? "Please wait..." : "Message...")}
-                  //placeholder={
-                    //messages.some((msg) => msg.TAK && msg.TAK.length > 0)
-                      //? "" // Pas de placeholder si TAK est présent
-                      //: isStreaming
-                      //? "Please wait..."
-                      //: "Message..."
-                  //}
+                  placeholder={isSmallScreen && drawerOpen ? "" : (isStreaming ? "Type your message while AI is responding..." : "Type your message...")}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleInputKeyPressSocraticLangGraph}
@@ -1464,16 +1543,59 @@ const handleNewConversation = async () => {
                       endAdornment: (
                       <InputAdornment position="end">
                           <IconButton
-                          color="primary"
-                          onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
-                          aria-label="send message"
-                          edge="end"
-                          disabled={isStreaming} // Désactive le bouton si isStreaming est true
+                            color="primary"
+                            onClick={() => {
+                              if (isStreaming) {
+                                // Stop the AI response
+                                setCancelConversation(true);
+                                cancelConversationRef.current = true;
+                              } else {
+                                // Send the message
+                                handleSendMessageSocraticLangGraph(inputValue);
+                              }
+                            }}
+                            aria-label={isStreaming ? "Stop response" : "Send message"}
+                            edge="end"
                           >
-                          <ArrowForwardIcon style={{color: isStreaming
-                      ? "#CCC"
-                      : theme.palette.button_sign_in,
-                }} />
+                            {isStreaming ? (
+                            <div
+                              style={{
+                                backgroundColor: theme.palette.error.main, // Couleur de fond pour StopIcon
+                                borderRadius: '50%', // Cercle parfait
+                                width: '30px', // Dimensions du bouton
+                                height: '30px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <StopIcon
+                                style={{
+                                  color: '#fff', // Couleur blanche pour l'icône
+                                  fontSize: '20px', // Taille de l'icône
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              style={{
+                                backgroundColor: theme.palette.button_sign_in, // Couleur de fond pour ArrowForwardIcon
+                                borderRadius: '50%', // Cercle parfait
+                                width: '30px', // Dimensions du bouton
+                                height: '30px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <ArrowForwardIcon
+                                style={{
+                                  color: '#fff', // Couleur blanche pour l'icône
+                                  fontSize: '20px', // Taille de l'icône
+                                }}
+                              />
+                            </div>
+                          )}
                           </IconButton>
                       </InputAdornment>
                       ),

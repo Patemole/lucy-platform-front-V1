@@ -51,6 +51,7 @@ import PopupFeedback from '../components/PopupFeedback';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
 import LandingPage from '../components/LandingPageAA'; // Import du composant LandingPage
 import SidebarDashboard from '../components/SidebarDashboard'; // Chemin d'import à ajuster selon votre structure de fichiers
+import debounce from 'lodash/debounce';
 
 const drawerWidth = 240;
 const ALLOWED_COURSE_IDS = ['Connf4P2TpKXXGooaQD5', 'tyPR1RAulPfqLLfNgIqF', 'Q1SjXBe30FyX6GxvJVIG', 'moRgToBTOAJZdMQPs7Ci'];
@@ -117,6 +118,8 @@ const Dashboard_eleve_template: React.FC = () => {
 
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
 
 
   //For display sentence above three dots for waiting
@@ -648,13 +651,56 @@ const Dashboard_eleve_template: React.FC = () => {
     setIframeSrc(null);
   };
 
-  useEffect(() => {
-    if (isStreaming) handleAutoScroll(endDivRef, scrollableDivRef);
-  }, [isStreaming, messages]);
+  
 
   useEffect(() => {
-    handleAutoScroll(endDivRef, scrollableDivRef);
+    const handleScroll = debounce(() => {
+      const scrollDiv = scrollableDivRef.current;
+      if (scrollDiv) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 100; // Ajusté
+        setIsAtBottom(atBottom);
+        if (atBottom) setNewMessagesCount(0);
+      }
+    }, 1000); // Délai de 100ms
+  
+    const scrollDiv = scrollableDivRef.current;
+    scrollDiv?.addEventListener('scroll', handleScroll);
+  
+    return () => scrollDiv?.removeEventListener('scroll', handleScroll);
+  }, []);
+
+
+  useEffect(() => {
+    if (isAtBottom) {
+      scrollToBottom();
+    } else {
+      setNewMessagesCount((prevCount) => prevCount + 1);
+    }
   }, [messages]);
+
+
+  useEffect(() => {
+    scrollToBottomNewMessage();
+  }, [messages]); // Chaque changement dans messages déclenche le défilement
+
+
+  const scrollToBottom = () => {
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' });
+      setNewMessagesCount(0); // Reset new messages count
+    }
+  };
+
+  const scrollToBottomNewMessage = () => {
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' }); // Défilement fluide
+    }
+  };
+
+
+
+
 
   const handleCloseModal = () => {
     setModalOpen(false);
