@@ -451,6 +451,10 @@ const Dashboard_eleve_template: React.FC = () => {
     let answerERROR: AnswerERROR[] = [];
     let error: string | null = null;
 
+
+    const abortController = new AbortController(); // Crée un AbortController
+    cancelConversationRef.current = false; // Réinitialiser l'état d'annulation au début
+
     try {
         const chatSessionId = chatIds[0] || 'default_chat_id';
         const courseId = 'default_course_id';
@@ -483,11 +487,14 @@ const Dashboard_eleve_template: React.FC = () => {
             minor: minor,
             year: year,
             faculty: faculty,
-        })) {
+        },
+        abortController.signal // Passez le signal ici
+      )) {
 
             // Vérifier si la conversation a été annulée
             if (cancelConversationRef.current) {
               console.log("Conversation a été annulée.");
+              abortController.abort(); // Arrête immédiatement la requête
               break; // Sortir de la boucle pour arrêter le traitement des paquets
           }
 
@@ -648,8 +655,14 @@ const Dashboard_eleve_template: React.FC = () => {
             });
         }
     } catch (e: any) {
-        console.error('Error during message processing:', e.message);
-        setMessages((prevMessages) => [
+        if (e.name === 'AbortError') {
+          console.log('Requête interrompue par l’utilisateur.');
+          setIsStreaming(false); // Mettre à jour l'état ici
+          setHasNewContent(false); // Réinitialiser si nécessaire
+          // Optionnel : Ajouter une indication à l’UI pour signaler que la réponse est stoppée
+        } else {
+          console.error('Erreur lors du traitement des messages :', e.message);
+          setMessages((prevMessages) => [
             ...prevMessages,
             {
                 id: Date.now(),
@@ -657,6 +670,7 @@ const Dashboard_eleve_template: React.FC = () => {
                 content: 'An error occurred. Try to send the message again or open a new chat.',
             },
         ]);
+        }
     } finally {
         setIsStreaming(false); // Ensure streaming is set to false after completion or error
         if (cancelConversationRef.current) {
@@ -1535,7 +1549,7 @@ const handleNewConversation = async () => {
                   multiline
                   minRows={1} // Adjust `minRows` to change the minimum height of the TextField
                   maxRows={6}
-                  placeholder={isSmallScreen && drawerOpen ? "" : (isStreaming ? "Type your message while AI is responding..." : "Type your message...")}
+                  placeholder={isSmallScreen && drawerOpen ? "" : (isStreaming ? "Type your message..." : "Type your message...")}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleInputKeyPressSocraticLangGraph}
@@ -1548,6 +1562,7 @@ const handleNewConversation = async () => {
                               if (isStreaming) {
                                 // Stop the AI response
                                 setCancelConversation(true);
+                                setIsStreaming(false);
                                 cancelConversationRef.current = true;
                               } else {
                                 // Send the message
