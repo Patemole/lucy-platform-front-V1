@@ -48,18 +48,30 @@ export function getLastSuccessfulMessageId(messageHistory: Message[]) {
 export function handleAutoScroll(
     endRef: RefObject<any>,
     scrollableRef: RefObject<any>,
+    isUserScrolling: boolean, // Indicates if the user is scrolling
     buffer: number = 300
 ) {
-    // Auto-scrolls if the user is within `buffer` of the bottom of the scrollableRef
-    if (endRef && endRef.current && scrollableRef && scrollableRef.current) {
-        if (
-            scrollableRef.current.scrollHeight -
-            scrollableRef.current.scrollTop -
-            buffer <=
-            scrollableRef.current.clientHeight
-        ) {
-            endRef.current.scrollIntoView({ behavior: "smooth" });
-        }
+    console.log('🔄 handleAutoScroll appelé');
+    console.log(`📌 Parameters - isUserScrolling: ${isUserScrolling}, buffer: ${buffer}`);
+
+    if (!endRef?.current || !scrollableRef?.current) {
+        console.log('❌ Refs non disponibles');
+        return;
+    }
+
+    const { scrollHeight, scrollTop, clientHeight } = scrollableRef.current;
+    console.log(`📏 scrollHeight: ${scrollHeight}, scrollTop: ${scrollTop}, clientHeight: ${clientHeight}`);
+
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    console.log(`📉 distanceFromBottom: ${distanceFromBottom}`);
+
+    // Si l'utilisateur ne défile pas manuellement et que la distance du bas est inférieure ou égale au buffer, activer l'auto-scroll
+    if (!isUserScrolling && distanceFromBottom <= buffer) {
+        console.log('✅ Conditions remplies pour l\'auto-scroll');
+        endRef.current.scrollIntoView({ behavior: "smooth" });
+        console.log('🎯 Scrolling vers la fin déclenché');
+    } else {
+        console.log('❌ Conditions non remplies pour l\'auto-scroll');
     }
 }
 

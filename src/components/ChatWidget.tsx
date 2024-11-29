@@ -16,23 +16,66 @@ import logo_lucy_face from '../lucy_new_face_contour2.png';
 import { sendMessageSocraticLangGraph } from '../api/chat';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
 import { handleAutoScroll } from './utils';
+import debounce from 'lodash/debounce';
 
 const ChatWidget: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isCancelled, setIsCancelled] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
 
   const scrollableDivRef = useRef<HTMLDivElement>(null);
   const endDivRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isStreaming) handleAutoScroll(endDivRef, scrollableDivRef);
-  }, [isStreaming, messages]);
+    const handleScroll = debounce(() => {
+      const scrollDiv = scrollableDivRef.current;
+      if (scrollDiv) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 100; // Ajusté
+        setIsAtBottom(atBottom);
+        if (atBottom) setNewMessagesCount(0);
+      }
+    }, 1000); // Délai de 100ms
+  
+    const scrollDiv = scrollableDivRef.current;
+    scrollDiv?.addEventListener('scroll', handleScroll);
+  
+    return () => scrollDiv?.removeEventListener('scroll', handleScroll);
+  }, []);
+
 
   useEffect(() => {
-    handleAutoScroll(endDivRef, scrollableDivRef);
+    if (isAtBottom) {
+      scrollToBottom();
+    } else {
+      setNewMessagesCount((prevCount) => prevCount + 1);
+    }
   }, [messages]);
+
+
+  useEffect(() => {
+    scrollToBottomNewMessage();
+  }, [messages]); // Chaque changement dans messages déclenche le défilement
+
+
+  const scrollToBottom = () => {
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' });
+      setNewMessagesCount(0); // Reset new messages count
+    }
+  };
+
+  const scrollToBottomNewMessage = () => {
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' }); // Défilement fluide
+    }
+  };
+
+
+
 
   const handleSendMessage = (message: string) => {
     if (message.trim() === '') return;

@@ -5,6 +5,8 @@ import { handleConversationClick } from '../utils/functions_student_chat';
 import { Message, Course } from '../interfaces/interfaces_eleve';
 import { handleAutoScroll } from '../components/utils';
 import { PopupSpec } from '../interfaces/interfaces';
+import debounce from 'lodash/debounce';
+import {  useState, useCallback } from 'react';
 
 
 export const useLoadMessagesFromLocalStorageChatId = (
@@ -110,15 +112,57 @@ export const useAutoScroll = (
   scrollableDivRef: React.RefObject<HTMLDivElement>,
   isStreaming: boolean,
   messages: Message[]
+  
 ) => {
   useEffect(() => {
-    if (isStreaming) {
-      handleAutoScroll(endDivRef, scrollableDivRef);
-    }
-  }, [isStreaming, messages]);
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const [newMessagesCount, setNewMessagesCount] = useState(0);
+    const handleScroll = debounce(() => {
+      const scrollDiv = scrollableDivRef.current;
+      if (scrollDiv) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 100; // Ajusté
+        setIsAtBottom(atBottom);
+        if (atBottom) setNewMessagesCount(0);
+      }
+    }, 1000); // Délai de 100ms
+  
+    const scrollDiv = scrollableDivRef.current;
+    scrollDiv?.addEventListener('scroll', handleScroll);
+  
+    return () => scrollDiv?.removeEventListener('scroll', handleScroll);
+  }, []);
+
 
   useEffect(() => {
-    handleAutoScroll(endDivRef, scrollableDivRef);
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const [newMessagesCount, setNewMessagesCount] = useState(0);
+    if (isAtBottom) {
+      scrollToBottom();
+    } else {
+      setNewMessagesCount((prevCount) => prevCount + 1);
+    }
   }, [messages]);
+
+
+  useEffect(() => {
+    scrollToBottomNewMessage();
+  }, [messages]); // Chaque changement dans messages déclenche le défilement
+
+
+  const scrollToBottom = () => {
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const [newMessagesCount, setNewMessagesCount] = useState(0);
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' });
+      setNewMessagesCount(0); // Reset new messages count
+    }
+  };
+
+  const scrollToBottomNewMessage = () => {
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' }); // Défilement fluide
+    }
+  };
 };
 

@@ -30,6 +30,7 @@ import { usePopup } from '../components/popup';
 import PopupWrongAnswer from '../components/PopupWrongAnswer';
 import PopupFeedback from '../components/PopupFeedback';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
+import debounce from 'lodash/debounce';
 
 const drawerWidth = 240;
 
@@ -62,6 +63,8 @@ const Dashboard_eleve_template: React.FC = () => {
   const endDivRef = useRef<HTMLDivElement>(null);
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-0' : 'mx-25';
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
 
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
 
@@ -594,6 +597,7 @@ useEffect(() => {
     setIframeSrc(null);
   };
 
+  /*
   useEffect(() => {
     if (isStreaming) handleAutoScroll(endDivRef, scrollableDivRef);
   }, [isStreaming, messages]);
@@ -601,6 +605,52 @@ useEffect(() => {
   useEffect(() => {
     handleAutoScroll(endDivRef, scrollableDivRef);
   }, [messages]);
+  */
+
+  useEffect(() => {
+    const handleScroll = debounce(() => {
+      const scrollDiv = scrollableDivRef.current;
+      if (scrollDiv) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 100; // Ajusté
+        setIsAtBottom(atBottom);
+        if (atBottom) setNewMessagesCount(0);
+      }
+    }, 1000); // Délai de 100ms
+  
+    const scrollDiv = scrollableDivRef.current;
+    scrollDiv?.addEventListener('scroll', handleScroll);
+  
+    return () => scrollDiv?.removeEventListener('scroll', handleScroll);
+  }, []);
+
+
+  useEffect(() => {
+    if (isAtBottom) {
+      scrollToBottom();
+    } else {
+      setNewMessagesCount((prevCount) => prevCount + 1);
+    }
+  }, [messages]);
+
+
+  useEffect(() => {
+    scrollToBottomNewMessage();
+  }, [messages]); // Chaque changement dans messages déclenche le défilement
+
+
+  const scrollToBottom = () => {
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' });
+      setNewMessagesCount(0); // Reset new messages count
+    }
+  };
+
+  const scrollToBottomNewMessage = () => {
+    if (endDivRef.current) {
+      endDivRef.current.scrollIntoView({ behavior: 'smooth' }); // Défilement fluide
+    }
+  };
 
   const handleCloseModal = () => {
     setModalOpen(false);
