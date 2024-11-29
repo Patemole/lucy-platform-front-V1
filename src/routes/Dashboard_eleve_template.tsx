@@ -1625,6 +1625,8 @@ const handleNewConversation = async () => {
                       paddingLeft: '20px', // Ensure space for the icon
                       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Constant shadow around the field
                       border: 'none', // Remove the border
+                      //paddingBottom: isSmallScreen ? '30px' : '', // Ajoute un espace en bas
+                      //paddingBottom: isSmallScreen ? '30px' : '17px', // Ajouter une marge plus importante sur petits écrans
                       },
                   }}
                   inputProps={{
@@ -1644,6 +1646,7 @@ const handleNewConversation = async () => {
                       '& .MuiInputBase-input::placeholder': {
                       color: '#6F6F6F', // Darker color for the placeholder
                       opacity: 1,
+                      
                       },
                   }}
                   />
