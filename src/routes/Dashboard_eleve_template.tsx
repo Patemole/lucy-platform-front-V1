@@ -1540,7 +1540,7 @@ const handleNewConversation = async () => {
                   maxWidth: isSmallScreen ? '90%' : '800px', // Réduit à 90% pour petits écrans, max 800px pour grands écrans
                   width: '100%',
                   margin: '0 auto', // Centre horizontalement le champ
-                  padding: isSmallScreen ? '0 10px' : '0', // Ajoute une marge interne sur petits écrans
+                  padding: isSmallScreen ? '10px 10px' : '0', // Ajoute une marge interne sur petits écrans
                   position: 'relative',
                 }}>
                   <TextField
