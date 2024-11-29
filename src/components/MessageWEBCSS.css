@@ -132,7 +132,7 @@
 /* Petits écrans (Small) */
 @media (max-width: 590px) {
     .mobile-fullScreen-container {
-        font-size: 0.95rem;
+        font-size: 1rem;
     }
 
     .mobile-fullScreen-container ul {
@@ -156,7 +156,7 @@
 /* Très petits écrans (Extra Small) */
 @media (max-width: 350px) {
     .mobile-fullScreen-container {
-        font-size: 0.9rem;
+        font-size: 1rem;
     }
 
     .mobile-fullScreen-container ul {
