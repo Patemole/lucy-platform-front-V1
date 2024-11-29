@@ -71,8 +71,10 @@ export async function* sendMessageSocraticLangGraph({
     minor,
     year,
     faculty,
+}: SendMessageRequest,
+    signal?: AbortSignal)
 
-}: SendMessageRequest) {
+{
     console.log("SENDING MESSAGE");
     const sendMessageResponse = await fetch(`${apiUrlPrefix}/chat/send_message_socratic_langgraph`, {
         method: "POST",
@@ -91,6 +93,7 @@ export async function* sendMessageSocraticLangGraph({
             year: year,
             faculty: faculty,
         }),
+        signal: signal, // Passez le signal ici
     });
     if (!sendMessageResponse.ok) {
         const errorJson = await sendMessageResponse.json();
