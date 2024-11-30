@@ -1485,7 +1485,7 @@ const handleNewConversation = async () => {
                 onClick={scrollToBottom}
                 style={{
                   position: 'fixed',
-                  bottom: '85px', // Ajustez cette valeur en fonction de la hauteur de votre champ de saisie
+                  bottom: isSmallScreen ? '105px' : '85px', // Ajustez cette valeur en fonction de la hauteur de votre champ de saisi
                   //left: '50%',
                   transform: 'translateX(-50%)',
                   left: drawerOpen ? `calc(${drawerWidth}px + 41.5%)` : '50%',
