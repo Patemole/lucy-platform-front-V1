@@ -15,6 +15,10 @@ import {brownTheme,  brownDarkTheme } from './brownTheme';
 import {stanfordTheme,  stanfordDarkTheme } from './stanfordTheme';
 import {berkeleyTheme,  berkeleyDarkTheme } from './berkeleyTheme';
 import {umiamiTheme,  umiamiDarkTheme } from './umiamiTheme';
+import {lehighTheme,  lehighDarkTheme } from './lehighTheme';
+import {cwruTheme,  cwruDarkTheme } from './cwruTheme';
+import {uscTheme,  uscDarkTheme } from './uscTheme';
+import {holyFamilyTheme,  holyFamilyDarkTheme } from './holyFamilyTheme';
 import {drexelTheme,  drexelDarkTheme } from './drexelTheme';
 import {templeTheme,  templeDarkTheme } from './templeTheme';
 import {pennStateTheme,  pennStateDarkTheme } from './pennStateTheme';
@@ -49,6 +53,18 @@ const getTheme = (subdomain, themeMode) => {
 
     case 'ccp':
       return themeMode == 'dark' ? ccpDarkTheme : ccpTheme;
+
+    case 'holyfamily':
+      return themeMode == 'dark' ? holyFamilyDarkTheme : holyFamilyTheme;
+
+    case 'cwru':
+      return themeMode == 'dark' ? cwruDarkTheme : cwruTheme;
+
+    case 'lehigh':
+        return themeMode == 'dark' ? lehighDarkTheme : lehighTheme;
+
+    case 'usc':
+          return themeMode == 'dark' ? uscDarkTheme : uscTheme;
 
     case 'admin':
       return themeMode === 'dark' ? adminDarkTheme : adminTheme;
