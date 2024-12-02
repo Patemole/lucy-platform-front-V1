@@ -34,6 +34,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { FeedbackType } from "./types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import LanguageIcon from '@mui/icons-material/Language';
 import { SourceIcon } from "./icons/SourceIcon";
 import { ValidSources } from "./sources";
 import lucy_face_logotest from "../testlucy3.png";
@@ -180,6 +181,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [otherInput, setOtherInput] = useState<string>("");
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [showAllSteps, setShowAllSteps] = useState(false);
+  const [isOtherSelected, setIsOtherSelected] = useState<boolean>(false);
 
   // États pour la gestion des messages
   const [messages, setMessages] = useState<string[]>([]);
@@ -412,6 +414,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
       prev.includes(option)
         ? prev.filter((answer) => answer !== option)
         : [...prev, option]
+        
     );
   };
 
@@ -990,10 +993,15 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                     style={{ color: theme.palette.text.primary }}
                 >
                     <div className="mr-1 my-auto">
+                    <LanguageIcon
+                        sx={{ width: 16, height: 16}}
+                    />
+                    {/*}
                     <SourceIcon
                         sourceType={document.source_type as ValidSources}
                         iconSize={16}
                     />
+                    */}
                     </div>
                     {document.document_name}
                 </div>
@@ -1159,7 +1167,9 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </div>
           )}
 
-          {/* Gestion des données TAK */}
+
+          
+          {/* Gestion des données TAK *
           {takData && takData.length > 0 && (
             <div
               className={`mt-4 p-4 rounded-lg shadow ${
@@ -1174,10 +1184,10 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             >
               {takData.map((tak, idx) => (
                 <div key={idx} className="mb-4">
-                  {/* Question */}
+                  {/* Question *
                   <p className="text-left text-gray-800">{tak.question}</p>
 
-                  {/* Options */}
+                  {/* Options *
                   <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 max-w-full">
                     {tak.answer_options.map((option, i) => (
                       <div key={i} className="flex items-center">
@@ -1199,7 +1209,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                     ))}
                   </div>
 
-                  {/* Other Specification */}
+                  {/* Other Specification *
                   {tak.other_specification && (
                     <div className="mt-4">
                       <label
@@ -1219,7 +1229,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                     </div>
                   )}
 
-                  {/* Buttons */}
+                  {/* Buttons *
                   <div className="flex justify-end mt-4 gap-x-4">
                     <button
                       onClick={() => console.log("Ignoré")}
@@ -1233,6 +1243,119 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                       disabled={isSendDisabled}
                       className={`flex items-center px-4 py-2 text-gray-700 rounded-lg ${
                         isSendDisabled
+                          ? "bg-gray-300 cursor-not-allowed"
+                          : "text-white bg-gray-800 hover:bg-gray-900"
+                      } transition-colors`}
+                    >
+                      <FiSend className="mr-2" />
+                      Send
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gestion des données TAK */}
+          {takData && takData.length > 0 && (
+            <div
+              className={`p-4 rounded-lg shadow ${
+                !isSmallScreen ? "ml-8" : ""
+              } mb-3`} // Ajout de "mt-6" pour une marge égale en haut et en bas
+              style={{ 
+                maxWidth: "max-content",
+                backgroundColor: "rgba(255, 255, 255, 0.5)", // Effet glass
+                backdropFilter: "blur(60px)", // Flou de l'arrière-plan
+                border: "1px solid rgba(255, 255, 255, 0.2)", // Bordure transparente
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" // Ombre légère
+              }}
+              tabIndex={0} // Rendre le conteneur focusable
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isSendDisabled && (!selectedAnswers.includes("Other") || otherInput)) {
+                  handleSendClick();
+                }
+              }}
+            >
+              {takData.map((tak, idx) => (
+                <div key={idx} className="mb-4">
+                  {/* Question */}
+                  <p className="text-left text-gray-800 mt-2">{tak.question}</p>
+
+                  {/* Options */}
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 mb-6 max-w-full">
+                    {tak.answer_options.map((option, i) => (
+                      <div key={i} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`option-${idx}-${i}`}
+                          value={option}
+                          checked={selectedAnswers.includes(option)}
+                          onChange={() => handleCheckboxChange(option)}
+                          disabled={selectedAnswers.includes("Other")}
+                          className="mr-2 h-4 w-4 border-gray-300 rounded checked:bg-gray-500 checked:border-gray-600 focus:ring-gray-500"
+                        />
+                        <label
+                          htmlFor={`option-${idx}-${i}`}
+                          className="text-gray-800"
+                        >
+                          {option}
+                        </label>
+                      </div>
+                    ))}
+
+                    {/* Option "Other" */}
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`other-${idx}`}
+                        value="Other"
+                        checked={selectedAnswers.includes("Other")}
+                        onChange={() => handleCheckboxChange("Other")}
+                        disabled={selectedAnswers.length > 0 && !selectedAnswers.includes("Other")}
+                        className="mr-2 h-4 w-4 border-gray-300 rounded checked:bg-gray-500 checked:border-gray-600 focus:ring-gray-500"
+                      />
+                      <label
+                        htmlFor={`other-${idx}`}
+                        className="text-gray-800"
+                      >
+                        Other
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Input "Other Specification" */}
+                  {selectedAnswers.includes("Other") && (
+                    <div className="mt-4">
+                      <label
+                        htmlFor={`other-specification-${idx}`}
+                        className="block mb-1 text-gray-800"
+                      >
+                        If other, please specify
+                      </label>
+                      <input
+                        type="text"
+                        id={`other-specification-${idx}`}
+                        placeholder="e.g., None"
+                        value={otherInput}
+                        onChange={handleOtherInputChange}
+                        className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      {/* Message d'erreur si le champ est vide */}
+                      {isOtherSelected && !otherInput && (
+                        <p className="mt-2 text-sm text-red-600">
+                          Please specify a value for "Other" before sending.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Buttons */}
+                  <div className="flex justify-end mt-4 -mb-2 gap-x-4">
+                    <button
+                      onClick={handleSendClick}
+                      disabled={isSendDisabled || (selectedAnswers.includes("Other") && !otherInput)}
+                      className={`flex items-center px-4 py-2 text-gray-700 rounded-lg ${
+                        isSendDisabled || (selectedAnswers.includes("Other") && !otherInput)
                           ? "bg-gray-300 cursor-not-allowed"
                           : "text-white bg-gray-800 hover:bg-gray-900"
                       } transition-colors`}

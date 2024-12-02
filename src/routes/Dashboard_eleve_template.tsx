@@ -1480,7 +1480,7 @@ const handleNewConversation = async () => {
 
 
             {/* Bouton pour défiler vers le bas */}
-            {!isAtBottom && (
+            {!isAtBottom && !isLandingPageVisible && (
               <button
                 onClick={scrollToBottom}
                 style={{
