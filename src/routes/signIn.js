@@ -26,6 +26,10 @@ const allowedDomains = {
   stanford: [/^.+@([a-zA-Z0-9._-]+\.)*stanford\.edu$/i, /^.+@my-lucy\.com$/i],
   berkeley: [/^.+@([a-zA-Z0-9._-]+\.)*berkeley\.edu$/i, /^.+@my-lucy\.com$/i],
   miami: [/^.+@([a-zA-Z0-9._-]+\.)*miami\.edu$/i, /^.+@my-lucy\.com$/i],
+  holyfamily: [/^.+@([a-zA-Z0-9._-]+\.)*holy\.edu$/i, /^.+@my-lucy\.com$/i],
+  lehigh: [/^.+@([a-zA-Z0-9._-]+\.)*lehigh\.edu$/i, /^.+@my-lucy\.com$/i],
+  cwru: [/^.+@([a-zA-Z0-9._-]+\.)*cwru\.edu$/i, /^.+@my-lucy\.com$/i],
+  usc: [/^.+@([a-zA-Z0-9._-]+\.)*usc\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i],
   // other allowed domains...
 };
@@ -46,6 +50,10 @@ const getErrorMessage = (subdomain) => {
     stanford: 'Stanford',
     berkeley: 'Berkeley',
     miami: 'Miami',
+    holyfamily: 'Holy Family',
+    lehigh: 'LeHigh',
+    cwru: 'CWRU',
+    usc: "USC",
     admin: 'Admin',
     // other universities...
   };

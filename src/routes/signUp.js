@@ -34,6 +34,10 @@ const allowedDomains = {
   temple: [/^.+@([a-zA-Z0-9._-]+\.)*temple\.edu$/i, /^.+@my-lucy\.com$/i],
   psu: [/^.+@([a-zA-Z0-9._-]+\.)*psu\.edu$/i, /^.+@my-lucy\.com$/i],
   ccp: [/^.+@([a-zA-Z0-9._-]+\.)*ccp\.edu$/i, /^.+@my-lucy\.com$/i],
+  holyfamily: [/^.+@([a-zA-Z0-9._-]+\.)*holy\.edu$/i, /^.+@my-lucy\.com$/i],
+  lehigh: [/^.+@([a-zA-Z0-9._-]+\.)*lehigh\.edu$/i, /^.+@my-lucy\.com$/i],
+  cwru: [/^.+@([a-zA-Z0-9._-]+\.)*case\.edu$/i, /^.+@my-lucy\.com$/i],
+  usc: [/^.+@([a-zA-Z0-9._-]+\.)*usc\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i]
 };
 
@@ -66,6 +70,10 @@ const getErrorMessage = (subdomain) => {
     temple: 'Temple',
     psu: 'PennState',
     ccp: 'Ccp',
+    holyfamily: 'Holy Family',
+    lehigh: 'LeHigh',
+    cwru: 'CWRU',
+    usc: 'USC',
     admin: 'Admin'
   };
   return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} can register.`;
