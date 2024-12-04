@@ -30,6 +30,7 @@ const allowedDomains = {
   lehigh: [/^.+@([a-zA-Z0-9._-]+\.)*lehigh\.edu$/i, /^.+@my-lucy\.com$/i],
   cwru: [/^.+@([a-zA-Z0-9._-]+\.)*case\.edu$/i, /^.+@my-lucy\.com$/i],
   usc: [/^.+@([a-zA-Z0-9._-]+\.)*usc\.edu$/i, /^.+@my-lucy\.com$/i],
+  purdue: [/^.+@([a-zA-Z0-9._-]+\.)*purdue\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i],
   // other allowed domains...
 };
@@ -52,7 +53,9 @@ const getErrorMessage = (subdomain) => {
     miami: 'Miami',
     holyfamily: 'HolyFamily',
     lehigh: 'LeHigh',
+    purdue: 'Purdue',
     cwru: 'Case',
+    
     usc: "USC",
     admin: 'Admin',
     // other universities...
