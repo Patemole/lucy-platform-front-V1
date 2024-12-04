@@ -13,7 +13,8 @@ import {cornellTheme,  cornellDarkTheme } from './cornellTheme';
 import {berkeleycollegeTheme,  berkeleycollegeDarkTheme } from './berkeleycollegeTheme';
 import {brownTheme,  brownDarkTheme } from './brownTheme';
 import {stanfordTheme,  stanfordDarkTheme } from './stanfordTheme';
-import {berkeleyTheme,  berkeleyDarkTheme } from './berkeleyTheme';
+import {berkeleyTheme,  berkeleyDarkTheme } from './purdueTheme';
+import {purdueTheme,  purdueDarkTheme } from './berkeleyTheme';
 import {umiamiTheme,  umiamiDarkTheme } from './umiamiTheme';
 import {lehighTheme,  lehighDarkTheme } from './lehighTheme';
 import {cwruTheme,  cwruDarkTheme } from './cwruTheme';
@@ -62,6 +63,9 @@ const getTheme = (subdomain, themeMode) => {
 
     case 'lehigh':
         return themeMode == 'dark' ? lehighDarkTheme : lehighTheme;
+
+    case 'purdue':
+        return themeMode == 'dark' ? purdueDarkTheme : purdueTheme;
 
     case 'usc':
           return themeMode == 'dark' ? uscDarkTheme : uscTheme;
