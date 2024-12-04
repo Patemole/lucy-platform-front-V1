@@ -31,6 +31,7 @@ const allowedDomains = {
   cwru: [/^.+@([a-zA-Z0-9._-]+\.)*case\.edu$/i, /^.+@my-lucy\.com$/i],
   usc: [/^.+@([a-zA-Z0-9._-]+\.)*usc\.edu$/i, /^.+@my-lucy\.com$/i],
   purdue: [/^.+@([a-zA-Z0-9._-]+\.)*purdue\.edu$/i, /^.+@my-lucy\.com$/i],
+  hofstra: [/^.+@([a-zA-Z0-9._-]+\.)*hofstra\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i],
   // other allowed domains...
 };
@@ -62,6 +63,7 @@ const getErrorMessage = (subdomain) => {
     cwru: 'Case email',
     usc: 'USC email',
     purdue: 'Purdue email',
+    hofstra: 'Hofstra email',
     admin: 'Admin email'
   };
 
