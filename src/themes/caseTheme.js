@@ -3,7 +3,7 @@ import { createTheme } from '@mui/material/styles';
 // Utilitaire pour pxToRem
 const pxToRem = (size) => `${size / 16}rem`;
 
-const cwruTheme = createTheme({
+const caseTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
@@ -56,7 +56,7 @@ const cwruTheme = createTheme({
     },
   },
   logo: '/logos/cwru_logo.png', // Chemin du logo spécifique à CWRU
-  university: 'cwru',
+  university: 'case',
   facultyOptions: [
     'College of Arts and Sciences',
     'Case School of Engineering',
@@ -70,7 +70,7 @@ const cwruTheme = createTheme({
   ],
 });
 
-const cwruDarkTheme = createTheme({
+const caseDarkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
@@ -123,7 +123,7 @@ const cwruDarkTheme = createTheme({
     },
   },
   logo: '/logos/cwru_logo.png', // Chemin du logo spécifique à CWRU
-  university: 'cwru',
+  university: 'case',
   facultyOptions: [
     'College of Arts and Sciences',
     'Case School of Engineering',
@@ -138,4 +138,4 @@ const cwruDarkTheme = createTheme({
 });
 
 // Export both themes as named exports
-export { cwruTheme, cwruDarkTheme };
+export { caseTheme, caseDarkTheme };
