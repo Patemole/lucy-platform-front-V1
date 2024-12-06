@@ -4,62 +4,42 @@ import { createTheme } from '@mui/material/styles';
 const pxToRem = (size) => `${size / 16}rem`;
 
 const columbiaTheme = createTheme({
-  lightMode: {
-    palette: {
-      mode: 'light',
-      primary: {
-        main: '#0033A0', // Bleu pour Columbia
-      },
-      secondary: {
-        main: '#C4D8E2', // Couleur secondaire de Columbia
-      },
-      background: {
-        default: '#ffffff', // Fond blanc pour light mode
-        paper: '#F5F5F5', // Fond pour les éléments "paper" dans light mode
-      },
-      text: {
-        primary: '#000000', // Texte noir pour light mode
-      },
-      button: {
-        background: '#D6EAF8', // Fond des boutons en light mode
-        text: '#0033A0', // Texte bleu dans les boutons en light mode
-      },
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#0066CC', // Bleu Columbia
     },
-    typography: {
-      fontFamily: 'Roboto, Arial, sans-serif',
-      pxToRem,
+    sidebar: '#0066CC', // Couleur pour la barre latérale
+    secondary: {
+      main: '#FFFFFF', // Couleur blanche pour les accents
+    },
+    background: {
+      default: '#FFFFFF', // Fond pour light mode
+      paper: '#F4F4F4', // Fond pour les éléments "paper" dans light mode
+    },
+    text: {
+      primary: '#003366', // Texte en bleu foncé pour light mode
+    },
+    text_human_message_historic: '#000000',
+    send_button_message: '#0066CC',
+    button_sign_in: '#0066CC',
+    hover_button: '#004C99',
+    hover_button_with_button_background: '#A7C7E7',
+    button_text_sign_in: '#FFFFFF',
+    sign_up_link: '#0066CC',
+    button: {
+      background: '#D9EAF8', // Couleur de fond des boutons en light mode
+      text: '#003366', // Couleur du texte dans les boutons en light mode
     },
   },
-  darkMode: {
-    palette: {
-      mode: 'dark',
-      primary: {
-        main: '#0033A0', // Bleu pour Columbia en dark mode
-      },
-      secondary: {
-        main: '#C4D8E2', // Couleur secondaire de Columbia en dark mode
-      },
-      background: {
-        default: '#2E2E2E', // Fond sombre pour dark mode
-        paper: '#1C1C1C', // Fond pour les éléments "paper" dans dark mode
-      },
-      text: {
-        primary: '#FFFFFF', // Texte blanc pour dark mode
-      },
-      button: {
-        background: '#3E3E3E', // Fond des boutons en dark mode
-        text: '#C4D8E2', // Texte clair dans les boutons en dark mode
-      },
-    },
-    typography: {
-      fontFamily: 'Roboto, Arial, sans-serif',
-      pxToRem,
-    },
+  typography: {
+    fontFamily: 'Roboto, Arial, sans-serif',
+    pxToRem,
   },
   components: {
     MuiButton: {
       defaultProps: {
-        disableRipple: true, // Désactivation des effets ripple
+        disableRipple: true, // Désactivation des effets ripple pour éviter des erreurs d'interaction
       },
     },
     MuiIconButton: {
@@ -81,33 +61,71 @@ const columbiaTheme = createTheme({
     'Columbia College',
     'School of Engineering and Applied Science',
     'School of General Studies',
+    'Graduate School of Arts and Sciences',
+    'Columbia Business School',
+    'Columbia Law School',
+    'College of Dental Medicine',
+    'Vagelos College of Physicians and Surgeons',
+    'Mailman School of Public Health',
     'School of International and Public Affairs',
+    'School of Journalism',
+    'School of Social Work',
+    'School of Professional Studies',
+    'School of the Arts',
   ],
 });
 
-export default columbiaTheme;
-
-
-
-
-/*
-import { createTheme } from '@mui/material/styles';
-
-const columbiaTheme = createTheme({
+const columbiaDarkTheme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
-      main: '#0033A0', // Couleur bleue de Columbia
+      main: '#0066CC', // Bleu Columbia
     },
+    sidebar: '#FFFFFF', // Barre latérale blanche en mode sombre
     secondary: {
-      main: '#C4D8E2', // Couleur secondaire de Columbia
+      main: '#003366', // Couleur bleu foncé pour les accents en mode sombre
     },
+    background: {
+      default: '#1C1C1C', // Fond pour dark mode
+      paper: '#2E2E2E', // Fond pour les éléments "paper" dans dark mode
+    },
+    text: {
+      primary: '#FFFFFF', // Texte blanc pour dark mode
+    },
+    text_human_message_historic: '#0066CC',
+    send_button_message: '#0066CC',
+    button_sign_in: '#D9EAF8',
+    hover_button: '#89BEE8',
+    hover_button_with_button_background: '#A7C7E7',
+    button_text_sign_in: '#003366',
+    sign_up_link: '#FFFFFF',
     button: {
-      background: '#D6EAF8', // Couleur de fond des boutons
-      text: '#0033A0', // Couleur du texte dans les boutons
+      background: '#D9EAF8', // Couleur de fond des boutons en dark mode
+      text: '#003366', // Couleur du texte dans les boutons en dark mode
     },
   },
   typography: {
     fontFamily: 'Roboto, Arial, sans-serif',
+    pxToRem,
+  },
+  components: {
+    MuiButton: {
+      defaultProps: {
+        disableRipple: true, // Désactivation des effets ripple pour éviter des erreurs d'interaction
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          '&:focus': {
+            backgroundColor: 'rgba(255, 255, 255, 0.12)',
+          },
+          '&:active': {
+            backgroundColor: 'rgba(255, 255, 255, 0.24)',
+          },
+        },
+      },
+    },
   },
   logo: '/logos/columbia_logo.png', // Chemin du logo spécifique à Columbia
   university: 'columbia',
@@ -115,64 +133,19 @@ const columbiaTheme = createTheme({
     'Columbia College',
     'School of Engineering and Applied Science',
     'School of General Studies',
+    'Graduate School of Arts and Sciences',
+    'Columbia Business School',
+    'Columbia Law School',
+    'College of Dental Medicine',
+    'Vagelos College of Physicians and Surgeons',
+    'Mailman School of Public Health',
     'School of International and Public Affairs',
+    'School of Journalism',
+    'School of Social Work',
+    'School of Professional Studies',
+    'School of the Arts',
   ],
 });
 
-export default columbiaTheme;
-*/
-
-/*
-import { createTheme } from '@mui/material/styles';
-
-const customTheme = createTheme({
-  palette: {
-    primary: {
-      main: '#011F5B', // Couleur primaire de UPenn
-    },
-    secondary: {
-      main: '#808080', // Couleur secondaire (gris)
-    },
-    text: {
-      primary: '#100F32', // Couleur du texte par défaut
-    },
-    button: {
-      background: '#66B2A3', // Couleur de fond des boutons
-      text: '#005030', // Couleur du texte dans les boutons
-    }
-  },
-  components: {
-    MuiTypography: {
-      styleOverrides: {
-        root: {
-          color: '#100F32', // Couleur du texte par défaut pour les composants Typography
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          backgroundColor: '#CDE4FE ', // Couleur de fond du bouton   Ancienne couleur#A3C1E8
-          color: '#011F5B', // Couleur du texte dans le bouton
-          '&:hover': {
-            backgroundColor: '#92B1D6', // Couleur de fond du bouton lors du survol
-          },
-        },
-        outlined: {
-          borderColor: '#011F5B', // Couleur des contours pour les boutons outlined
-          color: '#011F5B', // Couleur du texte pour les boutons outlined
-          backgroundColor: '#FFFFFF', // Couleur de fond des boutons outlined
-          '&:hover': {
-            backgroundColor: '#E5EBF3', // Couleur de fond des boutons outlined lors du survol
-          },
-        },
-      },
-    },
-  },
-  logo: '/logos/upenn_logo.png', // Chemin vers le logo de UPenn
-  university: 'upenn', // Champ supplémentaire pour l'université
-});
-
-export default customTheme;
-*/
+// Export both themes as named exports
+export { columbiaTheme, columbiaDarkTheme };
