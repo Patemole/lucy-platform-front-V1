@@ -102,6 +102,7 @@ export interface Message {
     YOUTUBE?: AnswerYOUTUBE[] | null;
     QUORA?: AnswerQUORA[] | null;
     ERROR?: AnswerERROR[] | null;
+    CONFIDENCESCORE?: AnswerACCURACYSCORE[] | null;
     INSTA_CLUB?: AnswerINSTA_CLUB[] | null;
     LINKEDIN?: AnswerLINKEDIN[] | null;
     INSTA2?: AnswerINSTA2[] | null;
@@ -188,6 +189,10 @@ export interface AnswerQUORA{
 
 export interface AnswerERROR{
   errorSentence: string;
+}
+
+export interface AnswerACCURACYSCORE{
+  confidenceScore: string;
 }
 
 

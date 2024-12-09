@@ -85,6 +85,9 @@ export async function* handleStream<T extends NonEmptyObject>(
     let isError = false;
     let ErrorBuffer = "";
 
+    let isAccuracyScore = false;
+    let AccuracyScoreBuffer = "";
+
     
 
     let previousPartialChunk: string | null = null;
@@ -315,11 +318,24 @@ export async function* handleStream<T extends NonEmptyObject>(
                 isError = false;
             }
 
+            if (isAccuracyScore && AccuracyScoreBuffer) {
+                try {
+                    console.log("Tentative de parsing du AccuracyScore JSON final:", AccuracyScoreBuffer);
+                    const accuracyscorejson = JSON.parse(AccuracyScoreBuffer); // Convertir le waiting final en JSON
+                    console.log("error JSON émis à la fin du flux:", accuracyscorejson);
+                    yield accuracyscorejson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du AccuracyScore JSON à la fin du flux:", err);
+                }
+                AccuracyScoreBuffer = "";
+                isAccuracyScore = false;
+            }
+
             break;
         }
 
         const decodedValue = decoder.decode(value, { stream: true });
-        console.log("Chunk brut reçu:", decodedValue);
+        //console.log("Chunk brut reçu:", decodedValue);
 
         // Detection and processing of <JSON_DOCUMENT_START> and <JSON_DOCUMENT_END>
         if (decodedValue.includes("<JSON_DOCUMENT_START>")) {
@@ -748,6 +764,27 @@ export async function* handleStream<T extends NonEmptyObject>(
                     ErrorBuffer = "";
                 } catch (err) {
                     console.error("Erreur lors du parsing de error JSON:", err);
+                }
+            }
+            continue;
+        }
+
+        if (decodedValue.includes("<CONFIDENCE>")) {
+            console.log("1) Détection de <CONFIDENCE> dans le chunk:", decodedValue);
+            isAccuracyScore = true;
+            AccuracyScoreBuffer = decodedValue.split("<CONFIDENCE>")[1].split("<CONFIDENCE_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de AccuracyScore JSON, buffer actuel:", AccuracyScoreBuffer);
+
+            if (decodedValue.includes("<CONFIDENCE_END>")) {
+                try {
+                    console.log("3) Détection de <CONFIDENCE_END> dans le même chunk.");
+                    const accuracyscoreJson = JSON.parse(AccuracyScoreBuffer);
+                    console.log("4) accuracyscore JSON reçue et convertie:", accuracyscoreJson);
+                    yield accuracyscoreJson;
+                    isAccuracyScore = false;
+                    AccuracyScoreBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de AccuracyScore JSON:", err);
                 }
             }
             continue;
