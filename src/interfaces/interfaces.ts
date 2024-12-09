@@ -214,6 +214,10 @@ export interface AnswerERROR{
   errorSentence: string;
 }
 
+export interface AnswerACCURACYSCORE{
+  confidenceScore: string;
+}
+
 /*
 export type PopupSpec = {
     type: 'success' | 'error';

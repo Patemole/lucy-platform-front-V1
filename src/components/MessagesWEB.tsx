@@ -27,6 +27,7 @@ import {
   AnswerLINKEDIN,
   AnswerINSTA2,
   AnswerERROR,
+  AnswerACCURACYSCORE
 
 } from "../interfaces/interfaces";
 import { IconButton } from '@mui/material';
@@ -129,6 +130,7 @@ interface AIMessageProps {
   youtubeData?: AnswerYOUTUBE[] | null;
   quoraData?: AnswerQUORA[] | null;
   errorData?: AnswerERROR[] | null;
+  confidenceScoreData?: AnswerACCURACYSCORE[] | null;
   instaclubData?: AnswerINSTA_CLUB[] | null;
   linkedinData?: AnswerLINKEDIN[]| null;
   insta2Data?: AnswerINSTA2[] | null;
@@ -166,6 +168,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   youtubeData,
   quoraData,
   errorData,
+  confidenceScoreData,
   instaclubData,
   linkedinData,
   insta2Data
@@ -439,6 +442,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   useEffect(() => {
     console.log("ChartData reçu:", chartData);
   }, [chartData]);
+
+  // Logs pour vérifier le contenu de chartData
+  useEffect(() => {
+    console.log("Condident score received:", confidenceScoreData);
+  }, [confidenceScoreData]);
 
   const hasSocialThread =
   (redditData && redditData.length > 0) ||
@@ -1131,6 +1139,37 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+
+
+          {confidenceScoreData && confidenceScoreData.length > 0 && (
+            <div
+              className={`mt-4 flex items-center ${
+                !isSmallScreen ? "ml-8" : ""
+              } gap-2`}
+              style={{
+                fontSize: "0.90rem",
+                color: theme.palette.text.primary,
+              }}
+            >
+              <div
+                className="w-6 h-6 rounded-full"
+                style={{
+                  width: "14px", // Ajustez la largeur ici
+                  height: "14px", // Ajustez la hauteur ici
+                  backgroundColor:
+                  parseFloat(confidenceScoreData[0].confidenceScore) >= 80
+                      ? "#3DD957"
+                      : parseFloat(confidenceScoreData[0].confidenceScore) >= 30
+                      ? "#F97315"
+                      : "#EF4361",
+                }}
+              ></div>
+              <span style={{ fontWeight: 600 }}>Confidence score</span>
+              <span>
+                {confidenceScoreData[0].confidenceScore}%
+              </span>
             </div>
           )}
             
