@@ -5,7 +5,7 @@ import StopIcon from '@mui/icons-material/Stop';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ThemeProvider, TextField, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Menu, MenuItem, Divider, IconButton, Snackbar, InputAdornment, Alert,
+  ThemeProvider, TextField, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Menu, MenuItem, Divider, IconButton, Snackbar, InputAdornment, Alert, CircularProgress,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -15,7 +15,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { v4 as uuidv4 } from 'uuid';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs } from 'firebase/firestore';
 import logo_greg from '../student_face.png';
 import '../index.css';
 import { AIMessage } from '../components/MessagesWEB';
@@ -28,7 +28,7 @@ import { usePopup } from '../components/popup';
 import { useAuth } from '../auth/hooks/useAuth';
 import PopupWrongAnswer from '../components/PopupWrongAnswer';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
-import LandingPage from '../components/LandingPage'; // Import du composant LandingPage
+import LandingPage from '../components/LandingPageImprove'; // Import du composant LandingPage
 import StudentProfileDialog from '../components/StudentProfileDialog'; // Import the dialog component
 import MoreVertIcon from '@mui/icons-material/MoreVert'; // Import de l'icône des trois petits points
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
@@ -41,6 +41,22 @@ import './styles.css'; // Import du fichier CSS pour le gradient
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import debounce from 'lodash/debounce';
 import { FaArrowDown } from 'react-icons/fa'; // Import an arrow down icon
+import ForumIcon from '@mui/icons-material/Forum';
+import HistoryIcon from '@mui/icons-material/History';
+import PeopleIcon from '@mui/icons-material/People';
+import { format, isToday, isYesterday } from 'date-fns';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import LockIcon from '@mui/icons-material/Lock';
+
+
+
+// Définir l'interface pour un thread social
+interface SocialThread {
+  chat_id: string;
+  name: string;
+  created_at: any; // ou un type plus précis comme firebase.Timestamp
+}
+
 
 
 const drawerWidth = 240;
@@ -88,11 +104,69 @@ const Dashboard_eleve_template: React.FC = () => {
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+   // État pour gérer le basculement entre History et Social Thread
+  const [isHistory, setIsHistory] = useState(false);
   const [parametersMenuAnchorEl, setParametersMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [userScrollingManually, setUserScrollingManually] = useState(false);
-
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
+  // État pour stocker les conversations sociales
+  const [socialThreads, setSocialThreads] = useState<SocialThread[]>([]);
+  const [loadingSocialThreads, setLoadingSocialThreads] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false); // false = Public, true = Private
+
+
+  useEffect(() => {
+    console.log("isPrivate changed to:", isPrivate);
+  }, [isPrivate]);
+
+
+  const togglePrivacy = () => {
+    setIsPrivate((prev) => !prev);
+  };
+
+  // Fonction pour formater la date
+  const formatDate = (timestamp: { toDate: () => Date }) => {
+    const date = timestamp.toDate();
+    if (isToday(date)) {
+      return `Today, ${format(date, 'HH:mm')}`;
+    } else if (isYesterday(date)) {
+      return `Yesterday, ${format(date, 'HH:mm')}`;
+    } else {
+      return `${format(date, 'dd/MM/yyyy')}, ${format(date, 'HH:mm')}`;
+    }
+  };
+
+  // Fonction pour récupérer les 50 dernières conversations sociales depuis Firestore
+  const fetchSocialThreads = async () => {
+    setLoadingSocialThreads(true);
+    try {
+      const q = query(
+        collection(db, 'chatsessions'),
+        orderBy('created_at', 'desc'),
+        limit(50)
+      );
+      const querySnapshot = await getDocs(q);
+      const threads = querySnapshot.docs.map((doc) => ({
+        chat_id: doc.data().chat_id,
+        name: doc.data().name,
+        created_at: doc.data().created_at,
+      }));
+      setSocialThreads(threads);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des social threads :', error);
+    } finally {
+      setLoadingSocialThreads(false);
+    }
+  };
+
+  // Utilisez useEffect pour récupérer les social threads lorsque l'état change vers Social Thread
+  useEffect(() => {
+    if (!isHistory) {
+      fetchSocialThreads();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHistory]);
 
 
   useEffect(() => {
@@ -135,6 +209,11 @@ const Dashboard_eleve_template: React.FC = () => {
     if (endDivRef.current) {
       endDivRef.current.scrollIntoView({ behavior: 'smooth' }); // Défilement fluide
     }
+  };
+
+  // Fonction pour gérer le clic sur le bouton History/Social Thread
+  const handleToggleHistory = () => {
+    setIsHistory((prev) => !prev);
   };
 
 
@@ -922,68 +1001,65 @@ const handleNewConversation = async () => {
         >
           
           <Drawer
-      variant={isSmallScreen ? "temporary" : "persistent"} // Variant conditionnel basé sur la taille de l'écran
+      variant={isSmallScreen ? "temporary" : "persistent"}
       anchor="left"
       open={drawerOpen}
-      onClose={isSmallScreen ? toggleDrawer : undefined} // Ajout de onClose uniquement pour les petits écrans
+      onClose={isSmallScreen ? toggleDrawer : undefined}
       PaperProps={{
         style: {
-          width: isSmallScreen ? '80vw' : drawerWidth, // 80% de la largeur de l'écran sur petits écrans
-          borderRadius: '0 0 0 0',
-          backgroundColor: 'rgba(255, 255, 255, 0.2)', // Effet de verre dépoli
+          width: isSmallScreen ? '80vw' : drawerWidth,
+          borderRadius: '0',
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(12px)',
           display: 'flex',
           flexDirection: 'column',
-          borderRight: '1px solid rgba(255, 255, 255, 0.3)', // Optionnel : bordure pour séparer visuellement
+          borderRight: '1px solid rgba(255, 255, 255, 0.3)',
         },
       }}
       ModalProps={{
         keepMounted: true,
         BackdropProps: {
           style: {
-            backgroundColor: 'rgba(0, 0, 0, 0.1)', // Ajustez l'opacité pour un effet plus clair
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
           },
         },
       }}
     >
       {/* Header avec boutons de menu et nouvelle conversation */}
       <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
-        {/* Bouton de fermeture/ouverture de la sidebar */}
         <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
           <MenuIcon />
         </IconButton>
-        
-        {/* Bouton de nouvelle conversation avec fermeture automatique sur petits écrans */}
+
         <IconButton
           onClick={() => {
             handleNewConversation();
-            if (isSmallScreen) toggleDrawer(); // Fermer la sidebar sur petits écrans
+            if (isSmallScreen) toggleDrawer();
           }}
           sx={{ color: theme.palette.sidebar }}
         >
           <MapsUgcRoundedIcon />
         </IconButton>
       </Box>
-      
+
       {/* Contenu de la sidebar */}
       <div style={{ flexGrow: 1, overflowY: 'auto' }}>
-        <List style={{ padding: '0 10px' }}>
+        <List style={{ padding: '0 15px' }}>
           {/* Profil avec fermeture automatique sur petits écrans */}
           <ListItem
             button
             onClick={() => {
               handleDialogOpen();
-              if (isSmallScreen) toggleDrawer(); // Fermer la sidebar sur petits écrans
+              if (isSmallScreen) toggleDrawer();
             }}
             sx={{
               borderRadius: '8px',
-              backgroundColor: 'transparent', // Rendre transparent pour l'effet de verre dépoli
+              backgroundColor: 'transparent',
               mb: 2,
               '&:hover': {
                 backgroundColor: theme.palette.action.hover,
               },
-              // Appliquer les styles de survol uniquement si le dispositif supporte le hover
               '@media (hover: hover) and (pointer: fine)': {
                 '&:hover': {
                   backgroundColor: theme.palette.action.hover,
@@ -1002,104 +1078,249 @@ const handleNewConversation = async () => {
             />
           </ListItem>
 
+          {/* Nouveau Bouton History/Social Thread */}
+          <ListItem
+            button
+            onClick={handleToggleHistory}
+            sx={{
+              borderRadius: '8px',
+              backgroundColor: 'transparent',
+              mb: 2,
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+              },
+              '@media (hover: hover) and (pointer: fine)': {
+                '&:hover': {
+                  backgroundColor: theme.palette.action.hover,
+                },
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '40px' }}>
+              {/* Icône dynamique */}
+              {isHistory ? <PeopleIcon /> : <HistoryIcon />}
+            </ListItemIcon>
+            <ListItemText
+              primary={isHistory ? "Social Thread" : "Conversation History"}
+              primaryTypographyProps={{
+                style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
+              }}
+            />
+          </ListItem>
+
           <Divider style={{ backgroundColor: 'lightgray', margin: '10px 0' }} />
 
-          {/* Liste des conversations */}
-          {conversations.length > 0 ? (
-            conversations.map((conversation) => (
-              <ListItem
-                key={conversation.chat_id}
-                button
-                onClick={() => {
-                  handleConversationClick(conversation.chat_id);
-                  if (isSmallScreen) toggleDrawer(); // Fermer la sidebar sur petits écrans
-                }}
-                sx={{
-                  position: 'relative',
-                  borderRadius: '8px',
-                  margin: '5px 0',
-                  paddingRight: '40px',
-                  backgroundColor:
-                    activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
-                  // Styles par défaut pour les dispositifs tactiles
-                  '& .MuiIconButton-root': {
-                    opacity: activeChatId === conversation.chat_id ? 1 : 0,
-                    pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
-                  },
-                  '& .MuiTypography-root': {
-                    color:
-                      activeChatId === conversation.chat_id
-                        ? theme.palette.text_human_message_historic
-                        : theme.palette.text.primary,
-                  },
-                  // Appliquer les styles de survol uniquement si le dispositif supporte le hover
-                  '@media (hover: hover) and (pointer: fine)': {
-                    '&:hover': {
-                      backgroundColor: theme.palette.button.background,
-                      color: theme.palette.text_human_message_historic,
+          {/* Titre de l'état actuel */}
+          <div className="text-center text-gray-500 font-semibold mt-5 mb-2 text-sm">
+            {isHistory ? "Conversation History" : "Last interactions"}
+          </div>
+
+          {/* Contenu Conditionnel : Conversation History ou Social Thread */}
+          {isHistory ? (
+            // Liste des conversations historiques existantes
+            <List>
+              {conversations.length > 0 ? (
+                conversations.map((conversation) => (
+                  <ListItem
+                    key={conversation.chat_id}
+                    button
+                    onClick={() => {
+                      handleConversationClick(conversation.chat_id);
+                      if (isSmallScreen) toggleDrawer();
+                    }}
+                    sx={{
+                      position: 'relative',
+                      borderRadius: '8px',
+                      margin: '5px 0',
+                      paddingRight: '40px',
+                      backgroundColor:
+                        activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
                       '& .MuiIconButton-root': {
-                        opacity: 1,
-                        pointerEvents: 'auto',
+                        opacity: activeChatId === conversation.chat_id ? 1 : 0,
+                        pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
                       },
-                    },
-                  },
-                }}
-              >
-                <ListItemText
-                  primary={conversation.name}
-                  primaryTypographyProps={{
-                    style: {
-                      fontWeight: '500',
-                      fontSize: '0.875rem',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    },
-                  }}
-                />
-                {/* Icône des trois points - visible uniquement au survol ou si actif */}
-                <IconButton
-                  edge="end"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMenuOpen(e, conversation.chat_id);
-                  }}
+                      '& .MuiTypography-root': {
+                        color:
+                          activeChatId === conversation.chat_id
+                            ? theme.palette.text_human_message_historic
+                            : theme.palette.text.primary,
+                      },
+                      '@media (hover: hover) and (pointer: fine)': {
+                        '&:hover': {
+                          backgroundColor: theme.palette.button.background,
+                          color: theme.palette.text_human_message_historic,
+                          '& .MuiIconButton-root': {
+                            opacity: 1,
+                            pointerEvents: 'auto',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={conversation.name}
+                      primaryTypographyProps={{
+                        style: {
+                          fontWeight: '500',
+                          fontSize: '0.875rem',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        },
+                      }}
+                    />
+                    <IconButton
+                      edge="end"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMenuOpen(e, conversation.chat_id);
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: theme.palette.text.primary,
+                        opacity: activeChatId === conversation.chat_id ? 1 : 0,
+                        pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
+                        '&:hover': {
+                          backgroundColor: 'transparent',
+                        },
+                        mr: '1px',
+                      }}
+                    >
+                      <MoreHorizIcon
+                        fontSize="small"
+                        sx={{
+                          color: 'gray',
+                          fontSize: '20px',
+                        }}
+                      />
+                    </IconButton>
+                  </ListItem>
+                ))
+              ) : (
+                <Typography
+                  align="center"
                   sx={{
-                    position: 'absolute',
-                    right: '8px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: theme.palette.text.primary,
-                    opacity: activeChatId === conversation.chat_id ? 1 : 0,
-                    pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                    },
-                    mr: '1px',
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    color: theme.palette.text.secondary,
+                    marginTop: '30px',
                   }}
                 >
-                  <MoreHorizIcon
-                    fontSize="small"
-                    sx={{
-                      color: 'gray',
-                      fontSize: '20px',
-                    }}
-                  />
-                </IconButton>
-              </ListItem>
-            ))
+                  You have no conversations yet
+                </Typography>
+              )}
+            </List>
           ) : (
-            <Typography
-              align="center"
-              sx={{
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                color: theme.palette.text.secondary,
-                marginTop: '30px',
-              }}
-            >
-              You have no conversations yet
-            </Typography>
+            // Liste des dernières 50 conversations sociales
+            <List>
+              {loadingSocialThreads ? (
+                <Box display="flex" justifyContent="center" alignItems="center" p={2}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : socialThreads.length > 0 ? (
+                socialThreads.map((thread) => (
+                  <ListItem
+                    key={thread.chat_id}
+                    button
+                    onClick={() => {
+                      handleConversationClick(thread.chat_id);
+                      if (isSmallScreen) toggleDrawer();
+                    }}
+                    sx={{
+                      position: 'relative',
+                      borderRadius: '8px',
+                      margin: '5px 0',
+                      paddingRight: '40px',
+                      backgroundColor:
+                        activeChatId === thread.chat_id ? theme.palette.button.background : 'transparent',
+                      '& .MuiIconButton-root': {
+                        opacity: activeChatId === thread.chat_id ? 1 : 0,
+                        pointerEvents: activeChatId === thread.chat_id ? 'auto' : 'none',
+                      },
+                      '& .MuiTypography-root': {
+                        color:
+                          activeChatId === thread.chat_id
+                            ? theme.palette.text_human_message_historic
+                            : theme.palette.text.primary,
+                      },
+                      '@media (hover: hover) and (pointer: fine)': {
+                        '&:hover': {
+                          backgroundColor: theme.palette.button.background,
+                          color: theme.palette.text_human_message_historic,
+                          '& .MuiIconButton-root': {
+                            opacity: 1,
+                            pointerEvents: 'auto',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={thread.name}
+                      secondary={formatDate(thread.created_at)}
+                      primaryTypographyProps={{
+                        style: {
+                          fontWeight: '500',
+                          fontSize: '0.875rem',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        },
+                      }}
+                      secondaryTypographyProps={{
+                        style: {
+                          fontSize: '0.75rem',
+                          color: theme.palette.text.secondary,
+                        },
+                      }}
+                    />
+                    <IconButton
+                      edge="end"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMenuOpen(e, thread.chat_id);
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: theme.palette.text.primary,
+                        opacity: activeChatId === thread.chat_id ? 1 : 0,
+                        pointerEvents: activeChatId === thread.chat_id ? 'auto' : 'none',
+                        '&:hover': {
+                          backgroundColor: 'transparent',
+                        },
+                        mr: '1px',
+                      }}
+                    >
+                      <MoreHorizIcon
+                        fontSize="small"
+                        sx={{
+                          color: 'gray',
+                          fontSize: '20px',
+                        }}
+                      />
+                    </IconButton>
+                  </ListItem>
+                ))
+              ) : (
+                <Typography
+                  align="center"
+                  sx={{
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    color: theme.palette.text.secondary,
+                    marginTop: '30px',
+                  }}
+                >
+                  You have no social threads yet
+                </Typography>
+              )}
+            </List>
           )}
         </List>
 
@@ -1178,7 +1399,7 @@ const handleNewConversation = async () => {
             fontSize="large"
             component="svg"
             style={{
-              color: '#9e9e9e', // Couleur grise neutre
+              color: '#9e9e9e',
               cursor: 'pointer',
               margin: '0 auto',
             }}
@@ -1569,6 +1790,58 @@ const handleNewConversation = async () => {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleInputKeyPressSocraticLangGraph}
                   InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IconButton
+                          onClick={() => {
+                            const newPrivacyState = !isPrivate; // Inverse l'état
+                            console.log("Toggling privacy state:", newPrivacyState); // Log la nouvelle valeur
+                            setIsPrivate(newPrivacyState); // Met à jour l'état
+                          }}
+                          edge="start"
+                          aria-label={isPrivate ? "Set to Public" : "Set to Private"}
+                          sx={{
+                            backgroundColor: isPrivate ? '#E0E0E0' : '#DCC6E0',
+                            color: isPrivate ? '#6F6F6F' : '#6A0DAD',
+                            borderRadius: '12px',
+                            padding: '4px 8px',
+                            marginRight: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            width: '80px',
+                            height: '30px',
+                            '&:hover': {
+                              backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
+                              color: isPrivate ? '#5A5A5A' : '#4A0B8A',
+                            },
+                          }}
+                          ref={(el) => {
+                            if (el) {
+                              console.log("Background color applied:", getComputedStyle(el).backgroundColor);
+                            }
+                          }}
+                        >
+                          {isPrivate ? (
+                            <>
+                              <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                              <Typography variant="caption" sx={{ color: '#000' }}>
+                                Private
+                              </Typography>
+                            </>
+                          ) : (
+                            <>
+                              <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                              <Typography variant="caption" sx={{ color: '#6A0DAD' }}>
+                                Public
+                              </Typography>
+                            </>
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    
                       endAdornment: (
                       <InputAdornment position="end">
                           <IconButton

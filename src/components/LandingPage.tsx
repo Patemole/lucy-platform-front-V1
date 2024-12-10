@@ -368,6 +368,8 @@ import {
   FaBuilding,
   FaHandHoldingUsd,
 } from 'react-icons/fa';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import LockIcon from '@mui/icons-material/Lock';
 
 interface LandingPageProps {
   onSend: (message: string) => void;
@@ -384,6 +386,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [isHoveringQuestions, setIsHoveringQuestions] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
+  // État pour la confidentialité (Public/Private)
+  const [isPrivate, setIsPrivate] = React.useState(false); // Par défaut, en mode Public
+
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -407,6 +412,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       console.log('Message is empty');
     }
   };
+
+  React.useEffect(() => {
+    console.log("Privacy state changed:", isPrivate ? "Private" : "Public");
+  }, [isPrivate]);
 
   // Gestion de la touche Entrée
   const handleKeyPress = (event: KeyboardEvent) => {
@@ -679,6 +688,54 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           onKeyPress={handleKeyPress}
           placeholder={isTyping ? '' : `${placeholderText}${showCursor ? '|' : ''}`}
           InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <IconButton
+                  onClick={() => {
+                    const newPrivacyState = !isPrivate; // Inverse l'état
+                    console.log("Toggling privacy state:", newPrivacyState); // Log la nouvelle valeur
+                    setIsPrivate(newPrivacyState); // Met à jour l'état
+                  }}
+                  edge="start"
+                  aria-label={isPrivate ? "Set to Public" : "Set to Private"}
+                  sx={{
+                    backgroundColor: isPrivate ? '#E0E0E0' : '#DCC6E0', // Fond
+                    color: isPrivate ? '#6F6F6F' : '#6A0DAD', // Texte
+                    borderRadius: '12px', // Bords arrondis
+                    padding: '6px 12px', // Ajustement de l'espacement interne pour rendre le rectangle plus grand
+                    marginLeft: '8px', // Ajout d'espace entre le rectangle et la gauche du placeholder
+                    marginRight: '12px', // Espace entre le rectangle et le champ texte
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    width: '100px', // Largeur plus grande
+                    height: '40px', // Hauteur plus grande
+                    fontSize: '0.9rem', // Taille du texte proportionnée
+                    '&:hover': {
+                      backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8', // Variation légère au hover
+                      color: isPrivate ? '#5A5A5A' : '#4A0B8A', // Couleur du texte au hover
+                    },
+                  }}
+                >
+                  {isPrivate ? (
+                    <>
+                      <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                      <Typography variant="caption" sx={{ color: '#000' }}>
+                        Private
+                      </Typography>
+                    </>
+                  ) : (
+                    <>
+                      <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                      <Typography variant="caption" sx={{ color: '#6A0DAD' }}>
+                        Public
+                      </Typography>
+                    </>
+                  )}
+                </IconButton>
+              </InputAdornment>
+            ),
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={handleSend}>
