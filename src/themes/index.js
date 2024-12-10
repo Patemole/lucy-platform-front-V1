@@ -15,6 +15,7 @@ import {brownTheme,  brownDarkTheme } from './brownTheme';
 import {stanfordTheme,  stanfordDarkTheme } from './stanfordTheme';
 import {berkeleyTheme,  berkeleyDarkTheme } from './berkeleyTheme';
 import {purdueTheme,  purdueDarkTheme } from './purdueTheme';
+import {mdcTheme,  mdcDarkTheme } from './mdcTheme';
 import {umiamiTheme,  umiamiDarkTheme } from './umiamiTheme';
 import {lehighTheme,  lehighDarkTheme } from './lehighTheme';
 import {caseTheme,  caseDarkTheme } from './caseTheme';
@@ -76,6 +77,9 @@ const getTheme = (subdomain, themeMode) => {
 
     case 'columbia':
           return themeMode == 'dark' ? columbiaDarkTheme : columbiaTheme;
+
+    case 'mdc':
+          return themeMode == 'dark' ? mdcDarkTheme : mdcTheme;
 
     case 'admin':
       return themeMode === 'dark' ? adminDarkTheme : adminTheme;

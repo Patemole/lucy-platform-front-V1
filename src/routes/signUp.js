@@ -38,6 +38,7 @@ const allowedDomains = {
   lehigh: [/^.+@([a-zA-Z0-9._-]+\.)*lehigh\.edu$/i, /^.+@my-lucy\.com$/i],
   purdue: [/^.+@([a-zA-Z0-9._-]+\.)*purdue\.edu$/i, /^.+@my-lucy\.com$/i],
   hofstra: [/^.+@([a-zA-Z0-9._-]+\.)*hofstra\.edu$/i, /^.+@my-lucy\.com$/i],
+  mdc: [/^.+@([a-zA-Z0-9._-]+\.)*mymdc\.net$/i, /^.+@my-lucy\.com$/i],
   case: [/^.+@([a-zA-Z0-9._-]+\.)*case\.edu$/i, /^.+@my-lucy\.com$/i],
   usc: [/^.+@([a-zA-Z0-9._-]+\.)*usc\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i]
@@ -76,6 +77,7 @@ const getErrorMessage = (subdomain) => {
     lehigh: 'LeHigh email',
     case: 'Case email',
     usc: 'USC email',
+    mdc: 'Miami Dade College email',
     purdue: 'Purdue email',
     hofstra: 'Hofstra email',
     admin: 'Admin email'
