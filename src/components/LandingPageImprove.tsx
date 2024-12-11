@@ -20,6 +20,7 @@ import {
 } from 'react-icons/fa';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
+import Tooltip from '@mui/material/Tooltip';
 
 interface LandingPageProps {
   onSend: (message: string) => void;
@@ -321,6 +322,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           sx={{
             color: '#011F5B',
             maxWidth: '100%',
+            mb: 2, // Ajoute une marge inférieure de 4 unités de spacing (par défaut 4 * 8px = 32px)
             wordBreak: 'break-word',
             ...(isSmallScreen && {
               fontSize: '1.5rem', // Taille ajustée pour les petits écrans
@@ -340,50 +342,70 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <IconButton
-                  onClick={() => {
-                    const newPrivacyState = !isPrivate; // Inverse l'état
-                    console.log("Toggling privacy state:", newPrivacyState); // Log la nouvelle valeur
-                    setIsPrivate(newPrivacyState); // Met à jour l'état
-                  }}
-                  edge="start"
-                  aria-label={isPrivate ? "Set to Public" : "Set to Private"}
-                  sx={{
-                    backgroundColor: isPrivate ? '#E0E0E0' : '#DCC6E0', // Fond
-                    color: isPrivate ? '#6F6F6F' : '#6A0DAD', // Texte
-                    borderRadius: '12px', // Bords arrondis
-                    padding: '6px 12px', // Ajustement de l'espacement interne pour rendre le rectangle plus grand
-                    marginLeft: '8px', // Ajout d'espace entre le rectangle et la gauche du placeholder
-                    marginRight: '12px', // Espace entre le rectangle et le champ texte
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    width: '100px', // Largeur plus grande
-                    height: '40px', // Hauteur plus grande
-                    fontSize: '0.9rem', // Taille du texte proportionnée
-                    '&:hover': {
-                      backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8', // Variation légère au hover
-                      color: isPrivate ? '#5A5A5A' : '#4A0B8A', // Couleur du texte au hover
-                    },
-                  }}
+                <Tooltip
+                    title={
+                        isPrivate ? (
+                          <>
+                            Your content is private and only visible to you.
+                            <br />
+                            Click to make public.
+                          </>
+                        ) : (
+                          <>
+                            Your content is public and visible to everyone.
+                            <br />
+                            Click to make private.
+                          </>
+                        )
+                      }
+                    arrow // Ajoute une petite flèche à la bulle
+                    placement="top" // Position de la bulle par rapport à l'élément
                 >
-                  {isPrivate ? (
-                    <>
-                      <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                      <Typography variant="caption" sx={{ color: '#000' }}>
-                        Private
-                      </Typography>
-                    </>
-                  ) : (
-                    <>
-                      <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                      <Typography variant="caption" sx={{ color: '#6A0DAD' }}>
-                        Public
-                      </Typography>
-                    </>
-                  )}
-                </IconButton>
+                    <IconButton
+                    onClick={() => {
+                        const newPrivacyState = !isPrivate; // Inverse l'état
+                        console.log("Toggling privacy state:", newPrivacyState); // Log la nouvelle valeur
+                        setIsPrivate(newPrivacyState); // Met à jour l'état
+                    }}
+                    edge="start"
+                    aria-label={isPrivate ? "Set to Public" : "Set to Private"}
+                    sx={{
+                        backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5', // Fond
+                        color: isPrivate ? '#6F6F6F' : '#3155CC', // Texte
+                        borderRadius: '12px', // Bords arrondis
+                        padding: '6px 12px', // Ajustement de l'espacement interne pour rendre le rectangle plus grand
+                        marginLeft: '8px', // Ajout d'espace entre le rectangle et la gauche du placeholder
+                        marginRight: '12px', // Espace entre le rectangle et le champ texte
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        width: '80px', // Largeur plus grande
+                        height: '35px', // Hauteur plus grande
+                        fontSize: '0.9rem', // Taille du texte proportionnée
+                        '&:hover': {
+                        backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8', // Variation légère au hover
+                        color: isPrivate ? '#5A5A5A' : '#4A0B8A', // Couleur du texte au hover
+                        },
+                    }}
+                    >
+                    {isPrivate ? (
+                        <>
+                        <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                        <Typography variant="caption" sx={{ color: '#000' }}>
+                            Private
+                        </Typography>
+                        </>
+                    ) : (
+                        <>
+                        <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                        <Typography variant="caption" sx={{ color: '#3155CC' }}>
+                            Public
+                        </Typography>
+                        </>
+                    )}
+                    </IconButton>
+                    </Tooltip>
               </InputAdornment>
             ),
             endAdornment: (
