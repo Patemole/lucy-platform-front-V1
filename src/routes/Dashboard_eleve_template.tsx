@@ -61,6 +61,13 @@ interface SocialThread {
   thread_type?: string;
 }
 
+
+interface Conversation {
+  chat_id: string;
+  name: string;
+  thread_type: string;
+}
+
 const topicColors: { [key: string]: string } = {
   "Upenn": "#8E44AD",
   "New Chat": "#E74C3C",
@@ -82,9 +89,9 @@ const Dashboard_eleve_template: React.FC = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [conversations, setConversations] = useState<{ chat_id: string, name: string }[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [betaViewOpen, setBetaViewOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>('');
@@ -125,6 +132,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [socialThreads, setSocialThreads] = useState<SocialThread[]>([]);
   const [loadingSocialThreads, setLoadingSocialThreads] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false); // false = Public, true = Private
+  const [profilePicture, setProfilePicture] = useState<string | null>(null); // null signifie qu'aucune image n'est définie
 
 
   useEffect(() => {
@@ -146,6 +154,17 @@ const Dashboard_eleve_template: React.FC = () => {
     } else {
       return `${format(date, 'dd/MM/yyyy')}, ${format(date, 'HH:mm')}`;
     }
+  };
+
+
+  const updateThreadTypeLocally = (threadType: string) => {
+    setConversations((prevConversations) =>
+      prevConversations.map((conv) =>
+        conv.chat_id === activeChatId
+          ? { ...conv, thread_type: threadType }
+          : conv
+      )
+    );
   };
 
   const fetchSocialThreads = async () => {
@@ -183,6 +202,41 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
 
+
+
+  const updateConversationPrivacy = (chatId: string, newThreadType: string) => {
+    setConversations((prevConversations) =>
+      prevConversations.map((conv) =>
+        conv.chat_id === chatId
+          ? { ...conv, thread_type: newThreadType }
+          : conv
+      )
+    );
+  };
+
+
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      if (!user?.id) return;
+  
+      try {
+        const userRef = doc(db, 'users', user.id);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setProfilePicture(userData.profile_picture || null); // Met à jour avec l'URL ou null
+          console.log('Fetched profile picture:', userData.profile_picture || 'No profile picture found');
+        } else {
+          console.warn('User document does not exist.');
+        }
+      } catch (error) {
+        console.error('Error fetching profile picture:', error);
+      }
+    };
+  
+    fetchProfilePicture();
+  }, [user?.id]);
 
 
   // Utilisez useEffect pour récupérer les social threads lorsque l'état change vers Social Thread
@@ -228,6 +282,11 @@ const Dashboard_eleve_template: React.FC = () => {
       setIsAtBottom(true); // Mettre à jour l'état pour refléter que nous sommes en bas
       setNewMessagesCount(0); // Réinitialiser le compteur de nouveaux messages
     }
+  };
+
+  const handlePrivacyChange = (newPrivacyState: boolean) => {
+    setIsPrivate(newPrivacyState);
+    console.log(`Privacy state updated in parent: ${newPrivacyState ? 'Private' : 'Public'}`);
   };
 
   const scrollToBottomNewMessage = () => {
@@ -391,14 +450,19 @@ const Dashboard_eleve_template: React.FC = () => {
           if (typeof chatId === 'string') {
             const chatRef = doc(db, 'chatsessions', chatId);
             const chatSnap = await getDoc(chatRef);
-            if (chatSnap.exists() && chatSnap.data().name) return { chat_id: chatId, name: chatSnap.data().name };
+            if (chatSnap.exists() && chatSnap.data().name) 
+              return { 
+            chat_id: chatId, 
+            name: chatSnap.data().name,
+            thread_type: chatSnap.data().thread_type || 'Public' // Inclure thread_type avec valeur par défaut
+            };
           }
           return null;
         });
 
         const fetchedConversations = await Promise.all(chatPromises);
         const validConversations = fetchedConversations.filter(
-          (conversation): conversation is { chat_id: string; name: string } => conversation !== null
+          (conversation): conversation is Conversation => conversation !== null
         );
         setConversations(validConversations.reverse());
       }
@@ -913,7 +977,7 @@ const handleNewConversation = async () => {
 
   // Ajout immédiat de la nouvelle conversation dans la liste
   setConversations((prevConversations) => [
-    { chat_id: newChatId, name: 'New Chat' },
+    { chat_id: newChatId, name: 'New Chat', thread_type: 'Public'}, //toujours public pour une nouvelle conversation
     ...prevConversations,
   ]);
 
@@ -1002,6 +1066,8 @@ const handleNewConversation = async () => {
   }
 };
 
+
+  /*
   //Permet de mettre a jour la conversation active quand on clique sur une une conversation deja presente dans l historique
   const handleConversationClick = async (chat_id: string) => {
     //localStorage.setItem('chat_id', chat_id);
@@ -1019,6 +1085,49 @@ const handleNewConversation = async () => {
         type: 'error',
         message: 'Failed to fetch chat history. Please try again later.',
       });
+    }
+  };
+  */
+
+  const handleConversationClick = async (chat_id: string) => {
+    setPrimaryChatId(chat_id); // Met à jour le chat_id principal
+    setActiveChatId(chat_id); // Définit la conversation active
+  
+    setRelatedQuestions([]);
+  
+    try {
+      // Récupère l'historique des messages
+      const chatHistory = await getChatHistory(chat_id);
+      setMessages(chatHistory);
+      setShowChat(true);
+  
+      // Récupère les détails de la conversation pour vérifier si elle est Public ou Private
+      const chatRef = doc(db, 'chatsessions', chat_id);
+      const chatSnap = await getDoc(chatRef);
+  
+      if (chatSnap.exists()) {
+        const chatData = chatSnap.data();
+  
+        // Vérifie et met à jour l'état isPrivate
+        if (chatData.thread_type) {
+          const isConversationPrivate = chatData.thread_type === 'Private';
+          setIsPrivate(isConversationPrivate);
+          console.log(`Conversation is now ${isConversationPrivate ? 'Private' : 'Public'}`);
+        } else {
+          console.warn('No thread_type field found in chat session document. Defaulting to Public.');
+          setIsPrivate(false); // Défaut à Public si thread_type est absent
+        }
+      } else {
+        console.warn(`No chat session found with chat_id: ${chat_id}. Defaulting to Public.`);
+        setIsPrivate(false); // Défaut à Public si le document est introuvable
+      }
+    } catch (error) {
+      console.error('Error fetching chat history or thread_type:', error);
+      setPopup({
+        type: 'error',
+        message: 'Failed to fetch chat history. Please try again later.',
+      });
+      setIsPrivate(false); // Défaut à Public en cas d'erreur
     }
   };
 
@@ -1257,28 +1366,49 @@ const handleNewConversation = async () => {
                         paddingRight: '40px',
                         backgroundColor:
                           activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
-                        '& .MuiIconButton-root': {
-                          opacity: activeChatId === conversation.chat_id ? 1 : 0,
-                          pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
-                        },
-                        '& .MuiTypography-root': {
-                          color:
+                        '& .circle': {
+                          backgroundColor:
                             activeChatId === conversation.chat_id
-                              ? theme.palette.text_human_message_historic
-                              : theme.palette.text.primary,
+                              ? conversation.thread_type === 'Private'
+                                ? '#6F6F6F' // Gris foncé pour conversation privée sélectionnée
+                                : '#4A90E2' // Bleu pour conversation publique sélectionnée
+                              : conversation.thread_type === 'Private'
+                              ? '#BDBDBD'
+                              : '#A9C2E8',
                         },
                         '@media (hover: hover) and (pointer: fine)': {
                           '&:hover': {
-                            backgroundColor: theme.palette.button.background,
-                            color: theme.palette.text_human_message_historic,
-                            '& .MuiIconButton-root': {
-                              opacity: 1,
-                              pointerEvents: 'auto',
+                            backgroundColor:
+                              activeChatId === conversation.chat_id
+                                ? theme.palette.button.background // Pas de changement pour une conversation sélectionnée
+                                : theme.palette.button.background,
+                            '& .circle': {
+                              backgroundColor:
+                                activeChatId === conversation.chat_id
+                                  ? conversation.thread_type === 'Private'
+                                    ? '#6F6F6F' // Pas de changement pour une conversation privée sélectionnée
+                                    : '#4A90E2' // Pas de changement pour une conversation publique sélectionnée
+                                  : conversation.thread_type === 'Private'
+                                  ? '#6F6F6F' // Gris clair pour hover privé non sélectionné
+                                  : '#4A90E2', // Bleu clair pour hover public non sélectionné
                             },
                           },
                         },
                       }}
                     >
+                      {/* Cercle coloré indiquant le type de conversation */}
+                      <Box
+                        className="circle"
+                        sx={{
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          marginRight: '8px',
+                          marginLeft: '8px',
+                          flexShrink: 0,
+                        }}
+                      />
+
                       <ListItemText
                         primary={conversation.name}
                         primaryTypographyProps={{
@@ -1505,19 +1635,36 @@ const handleNewConversation = async () => {
           {/* Section Profil pour petits écrans avec fermeture automatique */}
           {isSmallScreen && (
             <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
-              <AccountCircleIcon
-                fontSize="large"
-                component="svg"
-                style={{
-                  color: '#9e9e9e',
-                  cursor: 'pointer',
-                  margin: '0 auto',
-                }}
-                onClick={(event) => {
-                  handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>);
-                  if (isSmallScreen) toggleDrawer();
-                }}
-              />
+              {profilePicture ? (
+                    <>
+                      {console.log('Rendering profile picture with URL:', profilePicture)}
+                      <img
+                        src={profilePicture}
+                        alt="Profile"
+                        style={{
+                          width: '55px', // Largeur personnalisée
+                          height: '55px', // Hauteur personnalisée
+                        }}
+                        className="rounded-full object-cover cursor-pointer"
+                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      {console.log('Rendering default AccountCircleIcon')} 
+                      <AccountCircleIcon
+                        fontSize="inherit"
+                        component="svg"
+                        style={{
+                          color: '#9e9e9e',
+                          cursor: 'pointer',
+                          margin: '0 auto 0 16px',
+                          fontSize: '2.5rem',
+                        }}
+                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                      />
+                    </>
+                  )}
               <Menu
                 anchorEl={profileMenuAnchorEl}
                 open={Boolean(profileMenuAnchorEl)}
@@ -1543,6 +1690,7 @@ const handleNewConversation = async () => {
 
           <div
             className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : ''} ${
+              drawerOpen ? 'ml-60 pl-5' : 'pl-4'}
               iframeSrc ? 'mr-[33vw]' : ''
             }`}
           >
@@ -1601,17 +1749,36 @@ const handleNewConversation = async () => {
                   </>
                 ) : (
                   <>
-                    <AccountCircleIcon
-                      fontSize="inherit" // Permet un contrôle précis de la taille via CSS
-                      component="svg"
-                      style={{
-                        color: '#9e9e9e', // Couleur grise neutre
-                        cursor: 'pointer',
-                        margin: '0 auto 0 16px', // Ajoute une marge à droite (16px)
-                        fontSize: '2.5rem', // Augmente la taille de l'icône
-                      }}
-                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
-                    />
+                    {profilePicture ? (
+                    <>
+                      {console.log('Rendering profile picture with URL:', profilePicture)}
+                      <img
+                        src={profilePicture}
+                        alt="Profile"
+                        style={{
+                          width: '55px', // Largeur personnalisée
+                          height: '55px', // Hauteur personnalisée
+                        }}
+                        className="rounded-full object-cover cursor-pointer"
+                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      {console.log('Rendering default AccountCircleIcon')} 
+                      <AccountCircleIcon
+                        fontSize="inherit"
+                        component="svg"
+                        style={{
+                          color: '#9e9e9e',
+                          cursor: 'pointer',
+                          margin: '0 auto 0 16px',
+                          fontSize: '2.5rem',
+                        }}
+                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                      />
+                    </>
+                  )}
                     <Menu
                       anchorEl={profileMenuAnchorEl}
                       open={Boolean(profileMenuAnchorEl)}
@@ -1627,11 +1794,11 @@ const handleNewConversation = async () => {
                       {/* Change the function to trigger here to show popup*/}
                       <MenuItem onClick={handleDialogOpen}> 
                         <ListItemIcon>
-                          <ProfileEdit fontSize="small" sx={{ color: '#4A90E2' }} />
+                          <ProfileEdit fontSize="small" sx={{ color: '#011F5B' }} />
                         </ListItemIcon>
                         <ListItemText
                           primary={
-                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#4A90E2' }}>
+                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
                               Edit Profile
                             </Typography>
                           }
@@ -1641,11 +1808,11 @@ const handleNewConversation = async () => {
                       {/* Nouvelle option Parameters */}
                       <MenuItem onClick={handleParametersMenuClick}>
                         <ListItemIcon>
-                          <SettingsIcon fontSize="small" sx={{ color: '#4A90E2' }} />
+                          <SettingsIcon fontSize="small" sx={{ color: '#011F5B' }} />
                         </ListItemIcon>
                         <ListItemText
                           primary={
-                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#4A90E2' }}>
+                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
                               Parameters
                             </Typography>
                           }
@@ -1718,7 +1885,7 @@ const handleNewConversation = async () => {
             {isLandingPageVisible ? (
               // Utilisez un fragment React pour envelopper Spline et LandingPage
               <>
-                <LandingPage onSend={handleSendMessageFromLandingPage} />
+                <LandingPage onSend={handleSendMessageFromLandingPage} onPrivacyChange={handlePrivacyChange} updateThreadTypeLocally={updateThreadTypeLocally}/>
               </>
             ) : (
               <div
@@ -1947,6 +2114,14 @@ const handleNewConversation = async () => {
                               await updateDoc(docRef, { thread_type: currentThreadType });
                     
                               console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
+                              // Mettre à jour localement le thread_type de la conversation active
+                              setConversations((prevConversations) =>
+                                prevConversations.map((conv) =>
+                                  conv.chat_id === chatSessionId
+                                    ? { ...conv, thread_type: currentThreadType }
+                                    : conv
+                                )
+                              );
                             } catch (error) {
                               console.error('Erreur lors de la mise à jour du thread_type :', error);
                             }
@@ -2110,7 +2285,7 @@ const handleNewConversation = async () => {
         
 
         {/* Render the StudentProfileDialog component */}
-        <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} />
+        <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
 
         <Snackbar
           open={snackbarOpen}

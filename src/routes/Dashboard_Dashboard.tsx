@@ -78,6 +78,8 @@ const Dashboard_dashboard: React.FC = () => {
   const [relatedQuestions, setRelatedQuestions] = useState<string[]>([]);
   const [cancelConversation, setCancelConversation] = useState(false);
   const cancelConversationRef = useRef(false);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  
   
 
   const toggleDrawer = () => {
@@ -496,7 +498,7 @@ const Dashboard_dashboard: React.FC = () => {
             <ListItem
               button
               onClick={() => {
-                navigate(`/dashboard/dashboard/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Dashboard
+                navigate(`/dashboard/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Dashboard
                 if (isSmallScreen) toggleDrawer();
               }}
               sx={{
@@ -906,17 +908,28 @@ const Dashboard_dashboard: React.FC = () => {
                   <></>
                 ) : (
                   <>
+
+                    {profilePicture ? (
+                    <img
+                        src={profilePicture}
+                        alt="Profile"
+                        className="w-12 h-12 rounded-full object-cover cursor-pointer"
+                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                    />
+                    ) : (
                     <AccountCircleIcon
-                      fontSize="inherit"
-                      component="svg"
-                      style={{
+                        fontSize="inherit"
+                        component="svg"
+                        style={{
                         color: '#9e9e9e',
                         cursor: 'pointer',
                         margin: '0 auto 0 16px',
                         fontSize: '2.5rem',
-                      }}
-                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                        }}
+                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                     />
+                    )}
+
                     <Menu
                       anchorEl={profileMenuAnchorEl}
                       open={Boolean(profileMenuAnchorEl)}
@@ -1013,45 +1026,68 @@ const Dashboard_dashboard: React.FC = () => {
 
 
             {/* Zone de contenu personnalisée */}
+            {/* Zone de contenu personnalisée */}
             <div
             className={`pl-10 pr-4 transition-all duration-300 ${
                 drawerOpen ? 'pl-20' : 'pl-20'
             }`}
             >
             {/* Titre principal Dashboard */}
-            <h5 className="text-xl font-bold mt-5">
-                Dashboard
-            </h5>
+            <h5 className="text-xl font-bold mt-5">Dashboard</h5>
 
-            {/* Event Recommendation */}
-            <div className="mt-10">
-                <h6 className="text-lg font-medium">Event Recommendation</h6>
-                <p className="text-sm text-gray-500">Coming Soon</p>
-                <div className="flex gap-2 mt-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <div
-                    key={i}
-                    className="w-[100px] h-[100px] bg-gray-300 rounded-lg animate-pulse"
-                    />
-                ))}
+            {/* Grille horizontale contenant les recommandations et le calendrier */}
+            <div className="grid grid-cols-1 md:grid-cols-2 mt-3">
+                
+                {/* Section de recommandations (Event et Course) */}
+                <div>
+                
+                {/* Event Recommendation */}
+                <div className="mt-4">
+                    <h6 className="text-lg font-medium">Event Recommendation</h6>
+                    <p className="text-sm text-gray-500">Coming Soon</p>
+                    <div className="flex gap-2 mt-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div
+                        key={i}
+                        className="w-[100px] h-[100px] bg-gray-300 rounded-lg animate-pulse"
+                        />
+                    ))}
+                    </div>
                 </div>
-            </div>
 
-            {/* Course Recommendation */}
-            <div className="mt-10">
-                <h6 className="text-lg font-medium">Course Recommendation</h6>
-                <p className="text-sm text-gray-500">Coming Soon</p>
-                <div className="flex gap-2 mt-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <div
-                    key={i}
-                    className="w-[100px] h-[100px] bg-gray-300 rounded-lg animate-pulse"
-                    />
-                ))}
+                {/* Course Recommendation */}
+                <div className="mt-8">
+                    <h6 className="text-lg font-medium">Course Recommendation</h6>
+                    <p className="text-sm text-gray-500">Coming Soon</p>
+                    <div className="flex gap-2 mt-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div
+                        key={i}
+                        className="w-[100px] h-[100px] bg-gray-300 rounded-lg animate-pulse"
+                        />
+                    ))}
+                    </div>
                 </div>
+                
+                </div>
+
+                {/* Section Centralized Calendar */}
+                <div className="mr-10 mt-4">
+                <h6 className="text-lg font-medium">Centralized Calendar</h6>
+                <p className="text-sm text-gray-500">Coming Soon</p>
+                
+                {/* Calendrier placeholder */}
+                <div className="mt-2">
+                    <div className="w-full h-[300px] bg-gray-300 rounded-lg animate-pulse flex items-center justify-center">
+                    {/* Vous pouvez remplacer ceci par un composant de calendrier réel plus tard */}
+                    {/*<span className="text-gray-500">Calendrier en chargement...</span>*/}
+                    </div>
+                </div>
+                </div>
+                
             </div>
             </div>
-          </div>
+        </div>
         </div>
       </motion.div>
     </ThemeProvider>
