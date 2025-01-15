@@ -21,24 +21,31 @@ import {
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
 import Tooltip from '@mui/material/Tooltip';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../auth/firebase';
+import { useAuth } from '../auth/hooks/useAuth';
 
 interface LandingPageProps {
   onSend: (message: string) => void;
+  onPrivacyChange: (isPrivate: boolean) => void; // Nouvelle prop pour gérer l'état de confidentialité
+  updateThreadTypeLocally: (threadType: string) => void; // Utilise uniquement threadType
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, updateThreadTypeLocally }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
 
   const [inputValue, setInputValue] = useState('');
+  const { user, logout, chatIds, addChatId, setPrimaryChatId } = useAuth();
   const [isTyping, setIsTyping] = useState(true);
   const [placeholderText, setPlaceholderText] = useState('');
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [isHoveringQuestions, setIsHoveringQuestions] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
   // État pour la confidentialité (Public/Private)
-  const [isPrivate, setIsPrivate] = React.useState(false); // Par défaut, en mode Public
+  //const [isPrivate, setIsPrivate] = React.useState(false); // Par défaut, en mode Public
+  const [isPrivate, setIsPrivate] = useState(false);
 
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -341,73 +348,82 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           placeholder={isTyping ? '' : `${placeholderText}${showCursor ? '|' : ''}`}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start">
-                <Tooltip
-                    title={
-                        isPrivate ? (
-                          <>
-                            Your content is private and only visible to you.
-                            <br />
-                            Click to make public.
-                          </>
-                        ) : (
-                          <>
-                            Your content is public and visible to everyone.
-                            <br />
-                            Click to make private.
-                          </>
-                        )
+                <InputAdornment position="start">
+                  <IconButton
+                    onClick={async () => {
+                      try {
+                        const newPrivacyState = !isPrivate; 
+                        setIsPrivate(newPrivacyState); 
+
+                        // Appeler la fonction du parent pour mettre à jour son état
+                        if (typeof onPrivacyChange === 'function') {
+                            onPrivacyChange(newPrivacyState);
+                        }
+
+                        const currentThreadType = newPrivacyState ? 'Private' : 'Public';
+
+                        // Appeler la fonction pour mettre à jour localement
+                        if (typeof updateThreadTypeLocally === 'function') {
+                            updateThreadTypeLocally(currentThreadType);
+                        }
+
+                        const chatSessionId = chatIds[0] || 'default_chat_id';
+              
+                        // On récupère la référence du document dans chatsessions
+                        const docRef = doc(db, 'chatsessions', chatSessionId);
+              
+                        // Mise à jour du champ thread_type
+                        await updateDoc(docRef, { thread_type: currentThreadType });
+              
+                        console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
+                      } catch (error) {
+                        console.error('Erreur lors de la mise à jour du thread_type :', error);
                       }
-                    arrow // Ajoute une petite flèche à la bulle
-                    placement="top" // Position de la bulle par rapport à l'élément
-                >
-                    <IconButton
-                    onClick={() => {
-                        const newPrivacyState = !isPrivate; // Inverse l'état
-                        console.log("Toggling privacy state:", newPrivacyState); // Log la nouvelle valeur
-                        setIsPrivate(newPrivacyState); // Met à jour l'état
                     }}
                     edge="start"
                     aria-label={isPrivate ? "Set to Public" : "Set to Private"}
                     sx={{
-                        backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5', // Fond
-                        color: isPrivate ? '#6F6F6F' : '#3155CC', // Texte
-                        borderRadius: '12px', // Bords arrondis
-                        padding: '6px 12px', // Ajustement de l'espacement interne pour rendre le rectangle plus grand
-                        marginLeft: '8px', // Ajout d'espace entre le rectangle et la gauche du placeholder
-                        marginRight: '12px', // Espace entre le rectangle et le champ texte
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        width: '80px', // Largeur plus grande
-                        height: '35px', // Hauteur plus grande
-                        fontSize: '0.9rem', // Taille du texte proportionnée
-                        '&:hover': {
-                        backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8', // Variation légère au hover
-                        color: isPrivate ? '#5A5A5A' : '#4A0B8A', // Couleur du texte au hover
-                        },
+                      backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5',
+                      color: isPrivate ? '#6F6F6F' : '#3155CC',
+                      borderRadius: '12px',
+                      padding: '6px 12px',
+                      marginLeft: '8px',
+                      marginRight: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      width: '80px',
+                      height: '35px',
+                      '&:hover': {
+                        backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
+                        color: isPrivate ? '#5A5A5A' : '#4A0B8A',
+                      },
                     }}
-                    >
+                    ref={(el) => {
+                      if (el) {
+                        console.log("Background color applied:", getComputedStyle(el).backgroundColor);
+                      }
+                    }}
+                  >
                     {isPrivate ? (
-                        <>
+                      <>
                         <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
                         <Typography variant="caption" sx={{ color: '#000' }}>
-                            Private
+                          Private
                         </Typography>
-                        </>
+                      </>
                     ) : (
-                        <>
+                      <>
                         <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
                         <Typography variant="caption" sx={{ color: '#3155CC' }}>
-                            Public
+                          Public
                         </Typography>
-                        </>
+                      </>
                     )}
-                    </IconButton>
-                    </Tooltip>
-              </InputAdornment>
-            ),
+                  </IconButton>
+                </InputAdornment>
+              ),
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={handleSend}>
