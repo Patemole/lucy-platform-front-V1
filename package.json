@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@clerk/clerk-react": "^5.15.5",
+    "@datadog/browser-rum": "^6.0.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@fullcalendar/daygrid": "^6.1.15",
@@ -24,6 +25,8 @@
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "@types/react-router-dom": "^5.3.3",
+    "@vercel/analytics": "^1.4.1",
+    "@vercel/speed-insights": "^1.1.0",
     "avatar-initials": "^6.0.0",
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.4",

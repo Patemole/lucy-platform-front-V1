@@ -40,6 +40,25 @@ import config from './config';
 import NotFound from './routes/NotFound';
 import StudentProfilePage from './routes/StudentProfilePage';
 
+import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from "@vercel/analytics/react"
+
+import { datadogRum } from '@datadog/browser-rum';
+
+// Initialisation de Datadog RUM
+datadogRum.init({
+    applicationId: 'ed2cd42b-2fa8-401b-ba7f-e023c7917061', // Remplacez avec vos identifiants Datadog
+    clientToken: 'pub644e464c299d06e4b7b2cbc85f59e637',
+    site: 'datadoghq.com',
+    service: 'lucy-platform-front-v1',
+    env: 'production', // Utilisez 'staging' ou 'development' selon l'environnement
+    version: '1.0.0', // Optionnel : version de l'application
+    trackUserInteractions: true,
+    trackResources: true,
+    defaultPrivacyLevel: 'mask-user-input',
+});
+datadogRum.startSessionReplayRecording(); // Activer l'enregistrement de session utilisateur
+
 const App: React.FC = () => {
     const subdomain = config.subdomain || 'default';
 
@@ -66,6 +85,12 @@ const App: React.FC = () => {
     // Composant pour gérer les routes animées
     const AnimatedRoutes: React.FC = () => {
         const location = useLocation(); // Obtenir la localisation actuelle pour les transitions
+
+        // Ajouter le suivi des vues avec Datadog RUM
+        useEffect(() => {
+            datadogRum.startView(location.pathname); // Mettre à jour la vue sur chaque changement de route
+        }, [location]);
+
 
         return (
             <AnimatePresence mode="wait" initial={false}>
@@ -105,6 +130,8 @@ const App: React.FC = () => {
                 <ErrorBoundary>
                     <Router>
                         <AnimatedRoutes /> {/* Utilisation des routes animées */}
+                        <SpeedInsights /> {/* Ajout ici pour surveiller toute l'application */}
+                        <Analytics /> {/* Suivi des analyses de trafic */}
                     </Router>
                 </ErrorBoundary>
             </ThemeProvider>
