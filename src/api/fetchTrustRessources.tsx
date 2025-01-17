@@ -145,6 +145,30 @@ export const requestDocumentDownload = async ({
             downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Online+Subscription+Agreement++-+My+Lucy+Corp+-+2024.pdf";
         }
 
+        if (documentName === "Information Security Policy") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Information+Security+Policy+(ISP)+-+My+Lucy+Corp+-+2025.pdf";
+        }
+
+        if (documentName === "Third-Party Management Policy") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Third-Party+Management+Policy+-+My+Lucy+Corp+-+2025.pdf";
+        }
+
+        if (documentName === "Privileged Access Review Policy") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Privileged+Access+Review+Policy+-+My+Lucy+Corp+-+2025.pdf";
+        }
+
+        if (documentName === "Quality Assurance (QA) Program") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Quality+Assurance+(QA)+Program+-+My+Lucy+Corp+-+2025.pdf";
+        }
+
+        if (documentName === "Systems Development Life Cycle (SDLC)") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Systems+Development+Life+Cycle+(SDLC)+-+My+Lucy+Corp+-+2025.pdf";
+        }
+
+        if (documentName === "Change Management Policy") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Change+Management+Policy+-+My+Lucy+Corp+-+2025.pdf";
+        }
+
 
         // Ajouter d'autres conditions pour d'autres documents si nécessaire
         // if (documentName === "Autre Nom") {

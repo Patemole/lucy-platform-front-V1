@@ -221,6 +221,12 @@ const SecurityDashboard: React.FC = () => {
   const documents = [
     'Incidence Response Plan',
     'Risk Assessment Policy',
+    'Information Security Policy', // need to add the s3
+    'Third-Party Management Policy', // need to add the s3
+    'Privileged Access Review Policy', // need to add the s3
+    'Quality Assurance (QA) Program', // need to add the s3
+    'Systems Development Life Cycle (SDLC)', // need to add the s3
+    'Change Management Policy', // need to add the s3
     'Data Protection Policy',
     'Data Retention Policy',
     'Business Continuity Plan',
