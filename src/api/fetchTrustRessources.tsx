@@ -169,6 +169,10 @@ export const requestDocumentDownload = async ({
             downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/Change+Management+Policy+-+My+Lucy+Corp+-+2025.pdf";
         }
 
+        if (documentName === "HECVAT - full - January 2025") {
+            downloadUrl = "https://trust-ressources.s3.us-east-1.amazonaws.com/HECVAT+-+FULL+-+January+2025.xlsx";
+        }
+
 
         // Ajouter d'autres conditions pour d'autres documents si nécessaire
         // if (documentName === "Autre Nom") {

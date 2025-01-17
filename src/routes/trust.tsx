@@ -236,6 +236,7 @@ const SecurityDashboard: React.FC = () => {
     'Encryption Policy',
     'Privacy Policy',
     'Online Subscription Agreement',
+    'HECVAT - full - January 2025',
   ];
 
   const controls = [
