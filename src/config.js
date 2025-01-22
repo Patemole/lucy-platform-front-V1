@@ -86,8 +86,11 @@ const getSubdomain = () => {
 const getServerUrl = () => {
     const env = process.env.REACT_APP_NODE_ENV;
 
+    //const env = 'preprod' ;
+  
+
     if (env === 'development') {
-        return 'http://localhost:5001'; // URL pour le développement
+        return 'https://localhost:5001'; // URL pour le développement
 
     } else if (env === 'preprod') {
         return 'https://2bhmhbizbn.us-east-1.awsapprunner.com'; // URL pour la pré-production
@@ -103,7 +106,7 @@ const getServerUrl = () => {
 
 // Configuration de l'application
 const config = {
-    node_env: process.env.REACT_APP_NODE_ENV || 'development',
+    node_env: process.env.REACT_APP_NODE_ENV || 'development', //remplacer par development
     server_url: getServerUrl(),
     subdomain: getSubdomain()
 };
