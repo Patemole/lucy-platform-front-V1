@@ -20,7 +20,7 @@ import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, coll
 import logo_greg from '../student_face.png';
 import '../index.css';
 import { AIMessage } from '../components/MessagesWEB';
-import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE} from '../interfaces/interfaces_eleve';
+import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY} from '../interfaces/interfaces_eleve';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
@@ -51,7 +51,7 @@ import LockIcon from '@mui/icons-material/Lock';
 
 
 
-// Définir l'interface pour un thread social
+// Définir l'interface pour une conversation de thread social (social conversation)
 interface SocialThread {
   chat_id: string;
   name: string;
@@ -59,21 +59,34 @@ interface SocialThread {
   topic?: string;
   university?: string;
   thread_type?: string;
+  isRead?: boolean; // Ajout de la propriété isRead
 }
 
-
+// Definis l interface pour une conversation mais de l historique pas de social conversation
 interface Conversation {
   chat_id: string;
   name: string;
   thread_type: string;
+  topic?: string;
 }
 
+/*
 const topicColors: { [key: string]: string } = {
   "Upenn": "#8E44AD",
   "New Chat": "#E74C3C",
   "Wharton": "#F1C40F",
   "YouTube": "#2980B9",
   "Default": "#7F8C8D"
+};
+*/
+
+const topicColors: { [key: string]: string } = {
+  "Financial Aids": "#27AE60", // Vert
+  "Events": "#E67E22", // Orange
+  "Policies": "#2980B9", // Bleu
+  "Housing": "#8E44AD", // Violet
+  "Courses": "#F39C12", // Jaune
+  "Default": "#7F8C8D" // Gris
 };
 
 
@@ -167,6 +180,8 @@ const Dashboard_eleve_template: React.FC = () => {
     );
   };
 
+  
+  //RECUPERE LES SOCIAL CONVERSATION PAR NOM D UNIVERSITY ET CELLE QUI SONT PUBLIC 
   const fetchSocialThreads = async () => {
     setLoadingSocialThreads(true);
     const university = user.university || 'upenn'; // par défaut si user.university n'existe pas
@@ -189,6 +204,7 @@ const Dashboard_eleve_template: React.FC = () => {
             topic: data.topic,
             university: data.university || 'upenn',
             thread_type: data.thread_type || 'Public',
+          
           };
         })
         // On filtre par l'université et on ne garde que les threads Public
@@ -201,6 +217,43 @@ const Dashboard_eleve_template: React.FC = () => {
       setLoadingSocialThreads(false);
     }
   };
+  
+
+  /*
+  //RECUPERE LES SOCIAL CONVERSATION PAR NOM D UNIVERSITY ET CELLE QUI SONT PUBLIC 
+  //Recupere egalement pour l utilisateur en cours les threads qu il n a pas encore lu et les ajoute dans le thread comme ca on peut afficher ou pas
+  //le cercle montrant qu il a lu ou pas la conversation.  
+  const fetchSocialThreads = async () => {
+    const userRef = doc(db, 'users', user.id);
+    const userSnap = await getDoc(userRef);
+  
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      const unreadThreads = userData.unread_social_threads || []; // Threads non lus
+  
+      const q = query(
+        collection(db, 'chatsessions'),
+        orderBy('created_at', 'desc'),
+        limit(50)
+      );
+      const querySnapshot = await getDocs(q);
+  
+      const threads = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          chat_id: data.chat_id,
+          name: data.name,
+          created_at: data.created_at,
+          topic: data.topic || "Default",
+          thread_type: data.thread_type || "Public",
+          isRead: !unreadThreads.includes(data.chat_id), // Si non dans la liste, alors lu
+        };
+      });
+  
+      setSocialThreads(threads);
+    }
+  };
+  */
 
 
 
@@ -401,7 +454,7 @@ const Dashboard_eleve_template: React.FC = () => {
   }, [messages]);
 
 
-  //fonction qui permet d afficher les anciennes conversations dans la sidebar (a modifier pour enlever la logique de course_id)
+  //fonction qui permet d afficher les anciennes conversations dans la sidebar of historic conversation and not social conversation
   const fetchCourseOptionsAndChatSessions = async () => {
     if (user.id) {
       const userRef = doc(db, 'users', user.id);
@@ -454,7 +507,9 @@ const Dashboard_eleve_template: React.FC = () => {
               return { 
             chat_id: chatId, 
             name: chatSnap.data().name,
-            thread_type: chatSnap.data().thread_type || 'Public' // Inclure thread_type avec valeur par défaut
+            thread_type: chatSnap.data().thread_type || 'Public', // Inclure thread_type avec valeur par défaut
+            topic: chatSnap.data().topic || "Default", // Ajout de `topic` avec une valeur par défaut
+
             };
           }
           return null;
@@ -563,6 +618,30 @@ const Dashboard_eleve_template: React.FC = () => {
   };
   */
 
+
+  //NOUVELLE FONCTION A IMPLEMENTER 
+  /*
+  const handleSendMessageFromLandingPage = (message: string) => {
+    if (message.trim() !== '') {
+      const newMessage: Message = { id: Date.now(), type: 'human', content: message };
+      const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
+  
+      // Mettre à jour les messages localement
+      const newMessagesArray = [...messages, newMessage, loadingMessage];
+      setMessages(newMessagesArray);
+  
+      // Envoyer les messages au backend
+      onSubmit(newMessagesArray, message);
+  
+      // Réinitialiser l'input et masquer la Landing Page
+      setInputValue('');
+      setIsLandingPageVisible(false);
+    }
+  };
+  */
+
+
+  //ANCIENNE FONCTION A MODIFIER AVEC LA LOGIQUE DE MODIFICATION DU TITLE FROM THE BACK OPENAI
   const handleSendMessageFromLandingPage = (message: string) => {
     console.log("handleSendMessageFromLandingPage called with message:", message);
     console.log("Before adding message, messages.length:", messages.length);
@@ -640,6 +719,7 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
 
+
   //fonction qui gere differents etats et les messages avant d aller traiter la reponse par onsubmit
   const handleSendMessageSocraticLangGraph = (message: string) => {
     if (message.trim() === '') return;
@@ -697,6 +777,7 @@ const Dashboard_eleve_template: React.FC = () => {
     let answerLINKEDIN: AnswerLINKEDIN[] = [];
     let answerERROR: AnswerERROR[] = [];
     let answerACCURACYSCORE: AnswerACCURACYSCORE[] = [];
+    let answerTITLEANDCATEGORY: AnswerTITLEANDCATEGORY[] = [];
     let error: string | null = null;
 
 
@@ -724,6 +805,17 @@ const Dashboard_eleve_template: React.FC = () => {
 
         const lastMessageIndex = messageHistory.length - 1;
 
+        /*
+        const currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
+        const isFirstMessage = currentConversation?.name === 'New Chat'; // Vérifie si le titre est par défaut
+        */
+
+        const isFirstMessage = (lastMessageIndex === -1); // Vérifie si l'historique est vide
+
+        console.log(`lastMessageIndex: ${lastMessageIndex}`);
+        console.log(`messageHistory.length: ${messageHistory.length}`);
+        console.log(`Is this the first message? ${lastMessageIndex === -1}`);
+
         for await (const packetBunch of sendMessageSocraticLangGraph({
             message: inputValue,
             chatSessionId: chatSessionId,
@@ -735,6 +827,7 @@ const Dashboard_eleve_template: React.FC = () => {
             minor: minor,
             year: year,
             faculty: faculty,
+            isFirstMessage: isFirstMessage,
         },
         abortController.signal // Passez le signal ici
       )) {
@@ -792,6 +885,9 @@ const Dashboard_eleve_template: React.FC = () => {
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'accuracy_score')) {
                         answerACCURACYSCORE.push((packet as any).accuracy_score);
                         console.log("Accuracy score ajoutées");
+                    } else if (Object.prototype.hasOwnProperty.call(packet, 'classification_title_result')) {
+                        answerTITLEANDCATEGORY.push((packet as any).classification_title_result);
+                        console.log("title and category ajoutées");
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
                         answerWaiting = (packet as any).answer_waiting;
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
@@ -826,6 +922,10 @@ const Dashboard_eleve_template: React.FC = () => {
                     answerERROR.push((packetBunch as any).error_back);
                 } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'accuracy_score')) {
                     answerACCURACYSCORE.push((packetBunch as any).accuracy_score);
+
+                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'classification_title_result')) {
+                    answerTITLEANDCATEGORY.push((packetBunch as any).classification_title_result);
+
                 } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
                     answerCHART.push((packetBunch as any).answer_CHART_data);
                 } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_COURSE_data')) {
@@ -854,6 +954,53 @@ const Dashboard_eleve_template: React.FC = () => {
             console.log("Raw answerACCURACYSCORE received:", answerACCURACYSCORE);
 
             const flattenedACCURACYSCORE = answerACCURACYSCORE.flat();
+
+            const flattenedTITLEANDCATEGORY = answerTITLEANDCATEGORY.flat();
+            console.log("Flattened answerTITLEANDCATEGORY:", flattenedTITLEANDCATEGORY);
+
+
+
+            //permet de pouvoir update le topic de la conversation en cours en fonction de la question de l utilisateur
+            
+            if (flattenedTITLEANDCATEGORY.length > 0) {
+              const { category: newCategory, conversationTitle: newTitle } = flattenedTITLEANDCATEGORY[0];
+            
+              // Mise à jour locale du topic et du titre
+              setConversations((prevConversations) =>
+                prevConversations.map((conv) =>
+                  conv.chat_id === chatSessionId
+                    ? { ...conv, topic: newCategory, name: newTitle } // Mise à jour locale
+                    : conv
+                )
+              );
+
+              // Mise à jour locale du topic pour `socialThreads`
+              setSocialThreads((prevSocialThreads) =>
+                prevSocialThreads.map((thread) =>
+                  thread.chat_id === chatSessionId
+                    ? { ...thread, topic: newCategory, name: newTitle } // Mise à jour locale
+                    : thread
+                )
+              );
+            
+              // Mise à jour dans Firestore pour le topic et le titre
+              const updateThreadData = async (chatId: string, data: { topic: string; name: string }) => {
+                try {
+                  const docRef = doc(db, "chatsessions", chatId); // Référence au document Firestore
+                  await updateDoc(docRef, data); // Mise à jour des champs `topic` et `name`
+                  console.log(`Thread ${chatId} updated with topic: ${data.topic} and title: ${data.name}`);
+                } catch (error) {
+                  console.error("Erreur lors de la mise à jour du thread :", error);
+                }
+              };
+            
+              // Appel de la mise à jour persistante
+              updateThreadData(chatSessionId, { topic: newCategory, name: newTitle });
+            }
+
+            //const flattenedTITLEANDCATEGORY = [
+            //  { category: "Financial Aids", conversation_title: "Scholarship Details" }
+            //];
 
             // Log after flattening `answerACCURACYSCORE`
             console.log("Flattened answerACCURACYSCORE:", flattenedACCURACYSCORE);
@@ -1513,16 +1660,17 @@ const handleNewConversation = async () => {
                           },
                         }}
                       >
+                        
                         {/* Barre Colorée à gauche */}
                         <Box
                           sx={{
-                            width: '9px', // Augmenter la largeur
-                            minWidth: '9px', // Empêche la largeur d'être réduite
+                            width: '8px', // Augmenter la largeur
+                            minWidth: '8px', // Empêche la largeur d'être réduite
                             height: '38px', // Hauteur explicite pour tester
                             //backgroundColor: color,
                             backgroundColor: color,
                             borderRadius: '3px',
-                            marginRight: '8px',
+                            marginRight: '10px',
                           }}
                         />
 
@@ -1530,6 +1678,10 @@ const handleNewConversation = async () => {
                         <ListItemText
                           primary={thread.name}
                           secondary={`${formatDate(thread.created_at)} | ${topic}`}
+                          sx={{
+                            maxWidth: 'calc(100% - 40px)', // Réduit la largeur du texte pour laisser de la place au cercle
+                            flexShrink: 1, // Évite que le texte empiète sur le cercle
+                          }}
                           primaryTypographyProps={{
                             style: {
                               fontWeight: '500',
@@ -1544,6 +1696,19 @@ const handleNewConversation = async () => {
                               fontSize: '0.75rem',
                               color: theme.palette.text.secondary,
                             },
+                          }}
+                        />
+                        {/* Cercle indiquant si la conversation est lue */}
+                        <Box
+                          sx={{
+                            width: '7px', // Taille du cercle
+                            minWidth: '7px', // Empêche la largeur d'être réduite
+                            height: '7px',
+                            borderRadius: '50%', // Cercle parfait
+                            backgroundColor: thread.isRead ? 'transparent' : '#3155CC ', // Vert si non lu, transparent sinon
+                            //marginRight: '10px',
+                            marginLeft: 'auto', // Pousse le cercle complètement à droite
+                          marginRight: '3px', // Ajoute un léger espacement par rapport au bord
                           }}
                         />
                       </ListItem>

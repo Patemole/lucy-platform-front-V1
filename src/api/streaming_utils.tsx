@@ -88,6 +88,9 @@ export async function* handleStream<T extends NonEmptyObject>(
     let isAccuracyScore = false;
     let AccuracyScoreBuffer = "";
 
+    let isTitleAndCategory = false;
+    let TitleAndCategoryBuffer = "";
+
     
 
     let previousPartialChunk: string | null = null;
@@ -329,6 +332,19 @@ export async function* handleStream<T extends NonEmptyObject>(
                 }
                 AccuracyScoreBuffer = "";
                 isAccuracyScore = false;
+            }
+
+            if (isTitleAndCategory && TitleAndCategoryBuffer) {
+                try {
+                    console.log("Tentative de parsing du TitleAndCategory JSON final:", TitleAndCategoryBuffer);
+                    const titleandcategoryjson = JSON.parse(TitleAndCategoryBuffer); // Convertir le waiting final en JSON
+                    console.log("error JSON émis à la fin du flux:", titleandcategoryjson);
+                    yield titleandcategoryjson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du TitleAndCategory JSON à la fin du flux:", err);
+                }
+                TitleAndCategoryBuffer = "";
+                isTitleAndCategory = false;
             }
 
             break;
@@ -785,6 +801,28 @@ export async function* handleStream<T extends NonEmptyObject>(
                     AccuracyScoreBuffer = "";
                 } catch (err) {
                     console.error("Erreur lors du parsing de AccuracyScore JSON:", err);
+                }
+            }
+            continue;
+        }
+
+
+        if (decodedValue.includes("<CLASSIFICATION_AND_TITLE_RESULT>")) {
+            console.log("1) Détection de <CLASSIFICATION_AND_TITLE_RESULT> dans le chunk:", decodedValue);
+            isTitleAndCategory = true;
+            TitleAndCategoryBuffer = decodedValue.split("<CLASSIFICATION_AND_TITLE_RESULT>")[1].split("<CLASSIFICATION_AND_TITLE_RESULT_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de TitleAndCategory JSON, buffer actuel:", TitleAndCategoryBuffer);
+
+            if (decodedValue.includes("<CLASSIFICATION_AND_TITLE_RESULT_END>")) {
+                try {
+                    console.log("3) Détection de <CLASSIFICATION_AND_TITLE_RESULT_END> dans le même chunk.");
+                    const titleandcategoryJson = JSON.parse(TitleAndCategoryBuffer);
+                    console.log("4) accuracyscore JSON reçue et convertie:", titleandcategoryJson);
+                    yield titleandcategoryJson;
+                    isTitleAndCategory = false;
+                    TitleAndCategoryBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de TitleAndCategory JSON:", err);
                 }
             }
             continue;

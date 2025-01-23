@@ -672,6 +672,7 @@ const Chat: React.FC<ChatProps> = ({ handleAddCourseToCalendar, handleOpenDrawer
         minor: [minor],
         year: year,
         faculty: [faculty],
+        isFirstMessage: false
       })) {
         if (Array.isArray(packetBunch)) {
           for (const packet of packetBunch) {

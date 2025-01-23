@@ -417,6 +417,7 @@ const Dashboard_eleve_template: React.FC = () => {
         minor: [minor],
         year: year,
         faculty: [faculty],
+        isFirstMessage: false
 
       })) {
         if (Array.isArray(packetBunch)) {
