@@ -195,6 +195,11 @@ export interface AnswerACCURACYSCORE{
   confidenceScore: string;
 }
 
+export interface AnswerTITLEANDCATEGORY {
+  category: string; // The category of the question (e.g., Financial Aids, Events, Policies, Housing, Courses)
+  conversationTitle: string; // A concise and descriptive title for the conversation
+}
+
 
 export interface ChartData {
   chartType: 'line' | 'bar' | 'pie' | 'column' | 'doughnut' | 'scatter' | 'pyramid' | 'gauge' | 'bubble' | 'treemap' | 'waterfall';

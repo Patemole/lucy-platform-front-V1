@@ -124,6 +124,7 @@ const ChatWidget: React.FC = () => {
         minor: [minor],
         year: year,
         faculty: [faculty],
+        isFirstMessage: false
       })) {
         if (Array.isArray(packetBunch)) {
           for (const packet of packetBunch) {

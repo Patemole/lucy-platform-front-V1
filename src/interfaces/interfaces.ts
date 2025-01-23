@@ -245,4 +245,18 @@ export interface ReasoningStep {
   step: number;                  // Numéro de l'étape
   description: string;           // Description de l'étape
 }
+
+interface SendMessageRequest {
+  message: string;
+  chatSessionId: string;
+  courseId: string;
+  username: string;
+  university: string;
+  student_profile: string;
+  major: string[];
+  minor: string[];
+  year: string;
+  faculty: string[];
+  isFirstMessage: boolean;
+}
   

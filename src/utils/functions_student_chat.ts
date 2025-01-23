@@ -167,7 +167,7 @@ export const onSubmit = async (
           minor: [minor],
           year: year,
           faculty: [faculty],
-
+          isFirstMessage: false
         })) {
             console.log("Received a bunch of response packets:", packetBunch);
 
@@ -1071,7 +1071,7 @@ const getBackgroundColor = (filter: string) => {
 
 
   // POUR CRÉER UNE NOUVELLE CONVERSATION
-  const handleNewConversation = async () => {
+const handleNewConversation = async () => {
     const newChatId = uuidv4();
     const oldChatId = localStorage.getItem('chat_id');
   
@@ -1139,8 +1139,9 @@ const getBackgroundColor = (filter: string) => {
 
 
 
+
   // POUR RÉCUPÉRER LES MESSAGES D'UNE CONVERSATION ET L'AFFICHER
-  const handleConversationClick = async (chat_id: string) => {
+const handleConversationClick = async (chat_id: string) => {
     // On met le chat_id de la conversation dans le localStorage
     localStorage.setItem('chat_id', chat_id);
     setActiveChatId(chat_id);
@@ -1160,25 +1161,25 @@ const getBackgroundColor = (filter: string) => {
   };
 
 
+
   // POUR CHANGER DE PAGE QUAND ON CLIQUE SUR TA'S HELP
-  const handleMeetingClick = () => {
+const handleMeetingClick = () => {
     navigate('/contact/academic_advisor');
   };
 
-
-  const toggleDrawer = () => {
+const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
   };
 
 
-  const handleCloseModal = () => {
+
+const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedFilter(previousFilter);
     localStorage.setItem('course_id', courseOptions.find(course => course.name === previousFilter)?.id || '');
   };
 
-
-  const handleSubmitFeedback = (feedback: string) => {
+const handleSubmitFeedback = (feedback: string) => {
     console.log("Feedback submitted:", feedback);
     setModalOpen(false);
     setSelectedFilter(previousFilter);
@@ -1187,6 +1188,8 @@ const getBackgroundColor = (filter: string) => {
 
 
 
+
+// Export functions
 export { 
     getBackgroundColor, 
     handleProfileMenuClick, 

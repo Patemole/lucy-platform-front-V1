@@ -21,6 +21,7 @@ export interface SendMessageRequest {
     minor: string[];
     year: string;
     faculty: string[];
+    isFirstMessage: boolean;
 }
 
 
@@ -71,6 +72,7 @@ export async function* sendMessageSocraticLangGraph({
     minor,
     year,
     faculty,
+    isFirstMessage, 
 }: SendMessageRequest,
     signal?: AbortSignal)
 
@@ -92,6 +94,7 @@ export async function* sendMessageSocraticLangGraph({
             minor:minor,
             year: year,
             faculty: faculty,
+            is_first_message: isFirstMessage, // Ajoute isFirstMessage au payload
         }),
         signal: signal, // Passez le signal ici
     });

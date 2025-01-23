@@ -325,7 +325,7 @@ const Dashboard_eleve_template: React.FC = () => {
   
       handleSendMessageSocraticLangGraph(tempMessage);
   
-      // Supprimer le message de localStorage après l’envoi pour éviter un envoi multiple
+      // Supprimer le message de localStorage après l'envoi pour éviter un envoi multiple
       localStorage.removeItem('tempMessage');
     }
   }, []);
@@ -459,6 +459,7 @@ const Dashboard_eleve_template: React.FC = () => {
         minor: [minor],
         year: year,
         faculty: [faculty],
+        isFirstMessage: false
 
       })) {
         if (Array.isArray(packetBunch)) {

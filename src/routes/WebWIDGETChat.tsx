@@ -330,6 +330,7 @@ useEffect(() => {
         minor: [minor],
         year: year,
         faculty: [faculty],
+        isFirstMessage: false
 
       })) {
         if (Array.isArray(packetBunch)) {
