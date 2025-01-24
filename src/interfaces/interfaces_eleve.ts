@@ -197,7 +197,7 @@ export interface AnswerACCURACYSCORE{
 
 export interface AnswerTITLEANDCATEGORY {
   category: string; // The category of the question (e.g., Financial Aids, Events, Policies, Housing, Courses)
-  conversationTitle: string; // A concise and descriptive title for the conversation
+  conversation_title: string; // A concise and descriptive title for the conversation
 }
 
 

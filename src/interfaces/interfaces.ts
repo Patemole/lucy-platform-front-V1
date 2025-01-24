@@ -25,6 +25,12 @@ export interface AnswerTAK {
   }
 
 
+  export interface AnswerTITLEANDCATEGORY {
+    category: string; // The category of the question (e.g., Financial Aids, Events, Policies, Housing, Courses)
+    conversation_title: string; // A concise and descriptive title for the conversation
+  }
+
+
 // Interface pour la structure de AnswerCourse
 /*
 export interface AnswerCourse {
