@@ -817,7 +817,7 @@ export async function* handleStream<T extends NonEmptyObject>(
                 try {
                     console.log("3) Détection de <CLASSIFICATION_AND_TITLE_RESULT_END> dans le même chunk.");
                     const titleandcategoryJson = JSON.parse(TitleAndCategoryBuffer);
-                    console.log("4) accuracyscore JSON reçue et convertie:", titleandcategoryJson);
+                    console.log("4) TitleAndCategory JSON reçue et convertie:", titleandcategoryJson);
                     yield titleandcategoryJson;
                     isTitleAndCategory = false;
                     TitleAndCategoryBuffer = "";

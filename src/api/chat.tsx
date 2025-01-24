@@ -95,6 +95,7 @@ export async function* sendMessageSocraticLangGraph({
             year: year,
             faculty: faculty,
             is_first_message: isFirstMessage, // Ajoute isFirstMessage au payload
+            //is_first_message: true, // Ajoute isFirstMessage au payload
         }),
         signal: signal, // Passez le signal ici
     });

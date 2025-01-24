@@ -146,6 +146,8 @@ const Dashboard_eleve_template: React.FC = () => {
   const [loadingSocialThreads, setLoadingSocialThreads] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false); // false = Public, true = Private
   const [profilePicture, setProfilePicture] = useState<string | null>(null); // null signifie qu'aucune image n'est définie
+  const [unreadCount, setUnreadCount] = useState<number>(0); //Count for number of conversation social thread dont opened
+
 
 
   useEffect(() => {
@@ -193,24 +195,36 @@ const Dashboard_eleve_template: React.FC = () => {
         limit(50)
       );
       const querySnapshot = await getDocs(q);
+
+      const userId = user.id; // ID de l'utilisateur actuel
   
-      const threads = querySnapshot.docs
-        .map((doc) => {
-          const data = doc.data();
-          return {
-            chat_id: data.chat_id,
-            name: data.name,
-            created_at: data.created_at,
-            topic: data.topic,
-            university: data.university || 'upenn',
-            thread_type: data.thread_type || 'Public',
-          
-          };
-        })
-        // On filtre par l'université et on ne garde que les threads Public
-        .filter((thread) => thread.university === university && thread.thread_type === 'Public');
-  
-      setSocialThreads(threads);
+      // Transformation des threads depuis Firestore
+      const threads = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          chat_id: data.chat_id,
+          name: data.name,
+          created_at: data.created_at,
+          topic: data.topic || "Default",
+          thread_type: data.thread_type || "Public",
+          university: data.university || "Default",
+          isRead: (data.ReadBy || []).includes(userId), // Marque comme lu si userId est dans ReadBy
+        };
+      });
+
+      // Filtrer les threads publics pour l'université actuelle
+      const filteredThreads = threads.filter(
+        (thread) => thread.university === university && thread.thread_type === 'Public'
+      );
+
+      // Met à jour les threads sociaux avec les threads filtrés
+      setSocialThreads(filteredThreads);
+
+      // Calculer le nombre de conversations non lues parmi les threads filtrés
+      const unread = filteredThreads.filter((thread) => !thread.isRead).length;
+      setUnreadCount(unread); // Mettre à jour l'état du compteur
+
+
     } catch (error) {
       console.error('Erreur lors de la récupération des social threads :', error);
     } finally {
@@ -661,6 +675,7 @@ const Dashboard_eleve_template: React.FC = () => {
       // Met à jour l'état des messages
       setMessages(newMessagesArray);
   
+      /*
       // Si c'est le premier message et qu'on a un activeChatId, on tente de renommer la conversation
       if (wasEmpty && activeChatId) {
         const firstMessageContent = message || 'Conversation history';
@@ -708,6 +723,7 @@ const Dashboard_eleve_template: React.FC = () => {
         console.log("No rename triggered. Conditions not met.");
         console.log("wasEmpty:", wasEmpty, "| activeChatId:", activeChatId);
       }
+      */
   
       console.log("Calling onSubmit with newMessagesArray and message:", message);
       onSubmit(newMessagesArray, message);
@@ -805,16 +821,19 @@ const Dashboard_eleve_template: React.FC = () => {
 
         const lastMessageIndex = messageHistory.length - 1;
 
-        /*
+        
         const currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
         const isFirstMessage = currentConversation?.name === 'New Chat'; // Vérifie si le titre est par défaut
-        */
-
+        console.log("This is the name of the current conversation", currentConversation?.name)
+        console.log("This is the value of isfirstmessage", isFirstMessage)
+        
+        /*
         const isFirstMessage = (lastMessageIndex === -1); // Vérifie si l'historique est vide
 
         console.log(`lastMessageIndex: ${lastMessageIndex}`);
         console.log(`messageHistory.length: ${messageHistory.length}`);
         console.log(`Is this the first message? ${lastMessageIndex === -1}`);
+        */
 
         for await (const packetBunch of sendMessageSocraticLangGraph({
             message: inputValue,
@@ -939,6 +958,8 @@ const Dashboard_eleve_template: React.FC = () => {
                 }
             }
 
+            console.log("Valeur brute de answerTITLEANDCATEGORY :", answerTITLEANDCATEGORY);
+
             const flattenedImages = answerImages.flat();
             const flattenedTAK = answerTAK.flat();
             const flattenedReasoning = answerReasoning.flat();
@@ -963,7 +984,7 @@ const Dashboard_eleve_template: React.FC = () => {
             //permet de pouvoir update le topic de la conversation en cours en fonction de la question de l utilisateur
             
             if (flattenedTITLEANDCATEGORY.length > 0) {
-              const { category: newCategory, conversationTitle: newTitle } = flattenedTITLEANDCATEGORY[0];
+              const { category: newCategory, conversation_title: newTitle } = flattenedTITLEANDCATEGORY[0];
             
               // Mise à jour locale du topic et du titre
               setConversations((prevConversations) =>
@@ -1178,7 +1199,8 @@ const handleNewConversation = async () => {
           name: 'New Chat',
           created_at: serverTimestamp(),
           modified_at: serverTimestamp(),
-          university: university, // Ajout du champ university
+          university: university, // Ajout du champ university 
+          ReadBy:[user.id] //Ajout du champ readby to kown who see the conversation. Has he is the creator, he saw it
         });
         console.log(`Nouvelle session de chat créée avec chat_id: ${newChatId}`);
 
@@ -1236,6 +1258,7 @@ const handleNewConversation = async () => {
   };
   */
 
+  //Fonction qui gere quand on clique sur une conversation
   const handleConversationClick = async (chat_id: string) => {
     setPrimaryChatId(chat_id); // Met à jour le chat_id principal
     setActiveChatId(chat_id); // Définit la conversation active
@@ -1243,10 +1266,25 @@ const handleNewConversation = async () => {
     setRelatedQuestions([]);
   
     try {
+
+      // Simule immédiatement que la conversation est lue localement pour une réactivité instantanée
+      setSocialThreads((prevThreads) =>
+        prevThreads.map((thread) => {
+          if (thread.chat_id === chat_id && !thread.isRead) {
+            return { ...thread, isRead: true };
+          }
+          return thread;
+        })
+      );
+      
+      // Réduire le compteur si la conversation était non lue
+      setUnreadCount((prevCount) => Math.max(prevCount - 1, 0));
+
       // Récupère l'historique des messages
       const chatHistory = await getChatHistory(chat_id);
       setMessages(chatHistory);
       setShowChat(true);
+
   
       // Récupère les détails de la conversation pour vérifier si elle est Public ou Private
       const chatRef = doc(db, 'chatsessions', chat_id);
@@ -1254,7 +1292,6 @@ const handleNewConversation = async () => {
   
       if (chatSnap.exists()) {
         const chatData = chatSnap.data();
-  
         // Vérifie et met à jour l'état isPrivate
         if (chatData.thread_type) {
           const isConversationPrivate = chatData.thread_type === 'Private';
@@ -1264,10 +1301,31 @@ const handleNewConversation = async () => {
           console.warn('No thread_type field found in chat session document. Defaulting to Public.');
           setIsPrivate(false); // Défaut à Public si thread_type est absent
         }
+
+
+        // Ajoutez le code ici pour vérifier et mettre à jour `ReadBy`
+        const userId = user.id; // Récupère l'ID de l'utilisateur actuel
+        const readBy = chatData.ReadBy || []; // Liste des utilisateurs ayant lu la conversation
+
+        if (!readBy.includes(userId)) {
+          console.log(`Ajout de l'utilisateur ${userId} à ReadBy pour la conversation ${chat_id}`);
+      
+          try {
+            // Met à jour Firestore pour inclure l'utilisateur dans ReadBy
+            await updateDoc(chatRef, { ReadBy: [...readBy, userId] });
+            console.log('ReadBy mis à jour avec succès dans Firestore');
+          } catch (updateError) {
+            console.error('Erreur lors de la mise à jour de ReadBy dans Firestore :', updateError);
+          }
+        }
+
+
       } else {
         console.warn(`No chat session found with chat_id: ${chat_id}. Defaulting to Public.`);
         setIsPrivate(false); // Défaut à Public si le document est introuvable
       }
+
+
     } catch (error) {
       console.error('Error fetching chat history or thread_type:', error);
       setPopup({
@@ -1478,10 +1536,36 @@ const handleNewConversation = async () => {
                 {isHistory ? <PeopleIcon sx={{ fontSize: '22px' }}/> : <HistoryIcon sx={{ fontSize: '22px' }}/>}
               </ListItemIcon>
               <ListItemText
-                primary={isHistory ? "Social Thread" : "Conversation History"}
-                primaryTypographyProps={{
-                  style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                }}
+                primary={
+                  <Box display="flex" alignItems="center">
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary }}
+                    >
+                      {isHistory ? "Social Thread" : "Conversation History"}
+                    </Typography>
+                    {/* Ajouter la vignette uniquement si c'est Social Thread */}
+                    {isHistory && unreadCount > 0 && (
+                      <Box
+                        sx={{
+                          backgroundColor: 'red',
+                          color: 'white',
+                          borderRadius: '8px',
+                          padding: '2px 6px',
+                          marginLeft: '8px',
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          minWidth: '20px', // Taille minimale pour la vignette
+                        }}
+                      >
+                        {unreadCount}
+                      </Box>
+                    )}
+                  </Box>
+                }
               />
             </ListItem>
           </List>
@@ -1706,6 +1790,7 @@ const handleNewConversation = async () => {
                             height: '7px',
                             borderRadius: '50%', // Cercle parfait
                             backgroundColor: thread.isRead ? 'transparent' : '#3155CC ', // Vert si non lu, transparent sinon
+                            transition: 'background-color 0.3s ease', // Transition douce
                             //marginRight: '10px',
                             marginLeft: 'auto', // Pousse le cercle complètement à droite
                           marginRight: '3px', // Ajoute un léger espacement par rapport au bord

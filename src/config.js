@@ -90,7 +90,7 @@ const getServerUrl = () => {
   
 
     if (env === 'development') {
-        return 'https://localhost:5001'; // URL pour le développement
+        return 'http://localhost:5001'; // URL pour le développement
 
     } else if (env === 'preprod') {
         return 'https://2bhmhbizbn.us-east-1.awsapprunner.com'; // URL pour la pré-production
