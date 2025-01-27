@@ -1266,6 +1266,8 @@ const handleNewConversation = async () => {
   
     try {
 
+
+      /*
       // Simule immédiatement que la conversation est lue localement pour une réactivité instantanée
       setSocialThreads((prevThreads) =>
         prevThreads.map((thread) => {
@@ -1284,6 +1286,23 @@ const handleNewConversation = async () => {
           return thread;
         })
       );
+      */
+
+      setSocialThreads((prevThreads) => {
+        const updatedThreads = prevThreads.map((thread) => {
+          if (thread.chat_id === chat_id && !thread.isRead) {
+            return { ...thread, isRead: true };
+          }
+          return thread;
+        });
+      
+        // Recalcul global du compteur d'éléments non lus
+        const newUnreadCount = updatedThreads.filter((thread) => !thread.isRead).length;
+        setUnreadCount(newUnreadCount);
+      
+        return updatedThreads;
+      });
+      
 
 
       // Récupère l'historique des messages
@@ -1313,12 +1332,18 @@ const handleNewConversation = async () => {
         const userId = user.id; // Récupère l'ID de l'utilisateur actuel
         const readBy = chatData.ReadBy || []; // Liste des utilisateurs ayant lu la conversation
 
+
+        
         if (!readBy.includes(userId)) {
           console.log(`Ajout de l'utilisateur ${userId} à ReadBy pour la conversation ${chat_id}`);
+
+
       
           try {
             // Met à jour Firestore pour inclure l'utilisateur dans ReadBy
-            await updateDoc(chatRef, { ReadBy: [...readBy, userId] });
+            //await updateDoc(chatRef, { ReadBy: [...readBy, userId] });
+            await updateDoc(chatRef, { ReadBy: Array.from(new Set([...readBy, userId])) });
+          
             console.log('ReadBy mis à jour avec succès dans Firestore');
           } catch (updateError) {
             console.error('Erreur lors de la mise à jour de ReadBy dans Firestore :', updateError);
