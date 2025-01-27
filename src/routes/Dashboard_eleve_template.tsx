@@ -1262,7 +1262,6 @@ const handleNewConversation = async () => {
   const handleConversationClick = async (chat_id: string) => {
     setPrimaryChatId(chat_id); // Met à jour le chat_id principal
     setActiveChatId(chat_id); // Définit la conversation active
-  
     setRelatedQuestions([]);
   
     try {
@@ -1271,14 +1270,21 @@ const handleNewConversation = async () => {
       setSocialThreads((prevThreads) =>
         prevThreads.map((thread) => {
           if (thread.chat_id === chat_id && !thread.isRead) {
+            // Vérifie si la conversation est dans socialThreads
+            const isSocialThread = prevThreads.some((t) => t.chat_id === chat_id);
+
+            if (isSocialThread) {
+              // Réduire le compteur uniquement pour les Social Threads
+              setUnreadCount((prevCount) => Math.max(prevCount - 1, 0));
+            }
+
+            // Marque la conversation comme lue
             return { ...thread, isRead: true };
           }
           return thread;
         })
       );
-      
-      // Réduire le compteur si la conversation était non lue
-      setUnreadCount((prevCount) => Math.max(prevCount - 1, 0));
+
 
       // Récupère l'historique des messages
       const chatHistory = await getChatHistory(chat_id);
@@ -1573,9 +1579,29 @@ const handleNewConversation = async () => {
           <Divider style={{ backgroundColor: 'lightgray',  }} />
 
           {/* Titre de l'état actuel */}
-          <div className="text-center text-black-500 font-semibold mt-5 mb-4 text-sm">
-            {isHistory ? "Conversation History" : "Last Public Interactions"}
+          <div className="text-center text-black-500 font-semibold mt-5 mb-4 text-sm flex justify-center items-center">
+            <span>
+              {isHistory ? "Conversation History" : "Last Public Interactions"}
+            </span>
+            {/* Ajouter la vignette uniquement si c'est Last Public Interactions */}
+            {!isHistory && unreadCount > 0 && (
+              <div
+                className="ml-2 flex items-center justify-center text-white"
+                style={{
+                  backgroundColor: 'red',
+                  borderRadius: '8px',
+                  padding: '2px 8px',
+                  fontSize: '0.75rem',
+                  fontWeight: '500',
+                  minWidth: '20px', // Taille minimale pour un affichage cohérent
+                  height: '20px', // Hauteur constante pour garder l'alignement
+                }}
+              >
+                {unreadCount}
+              </div>
+            )}
           </div>
+
 
           {/* Conteneur défilant uniquement pour la liste */}
           <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 10px' }}>
