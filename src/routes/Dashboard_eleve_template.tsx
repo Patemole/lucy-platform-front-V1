@@ -86,6 +86,7 @@ const topicColors: { [key: string]: string } = {
   "Policies": "#2980B9", // Bleu
   "Housing": "#8E44AD", // Violet
   "Courses": "#F39C12", // Jaune
+  "Chitchat": "#7F8C8D", // Jaune
   "Default": "#7F8C8D" // Gris
 };
 
@@ -214,7 +215,7 @@ const Dashboard_eleve_template: React.FC = () => {
 
       // Filtrer les threads publics pour l'université actuelle
       const filteredThreads = threads.filter(
-        (thread) => thread.university === university && thread.thread_type === 'Public'
+        (thread) => thread.university === university && thread.thread_type === 'Public' && thread.name != 'New Chat'
       );
 
       // Met à jour les threads sociaux avec les threads filtrés
