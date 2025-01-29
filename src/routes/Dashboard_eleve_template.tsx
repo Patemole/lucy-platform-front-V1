@@ -2419,6 +2419,15 @@ const handleNewConversation = async () => {
                   minRows={1} // Adjust `minRows` to change the minimum height of the TextField
                   maxRows={6}
                   placeholder={isSmallScreen && drawerOpen ? "" : (isStreaming ? "Type your message..." : "Type your message...")}
+
+                  /*
+                  placeholder={isSmallScreen && drawerOpen 
+                    ? "" 
+                    : socialThreads.some(thread => thread.chat_id === activeChatId) 
+                      ? "Continue this thread" 
+                      : (isStreaming ? "Type your message..." : "Type your message...")}
+                    */
+
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleInputKeyPressSocraticLangGraph}
