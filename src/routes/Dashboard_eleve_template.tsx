@@ -1378,6 +1378,7 @@ const handleNewConversation = async () => {
   };
 
 
+  /*
   //Recupere les informations d un feedback pouce vers le bas et les envoie au backend
   const handleSubmitWrongAnswerFeedback = async (feedback: string) => {
     const uid = user.id || 'default_uid';
@@ -1391,6 +1392,30 @@ const handleNewConversation = async () => {
       feedback,
     });
 
+    setSnackbarOpen(true);
+    handleCloseWrongAnswerModal();
+  };
+
+  */
+
+  const handleSubmitWrongAnswerFeedback = async (
+    feedback: string,
+    aiMessageContent: string | null,
+    humanMessageContent: string | null,
+    ratings: { relevance?: number; accuracy?: number; format?: number; sources?: number; overall_satisfaction?: number }
+  ) => {
+    const uid = user.id || 'default_uid';
+    const chatId = chatIds[0] || 'default_chat_id';
+  
+    await submitFeedbackWrongAnswer({
+      userId: uid,
+      chatId,
+      aiMessageContent: aiMessageContent || 'default_ai_message',
+      humanMessageContent: humanMessageContent || 'default_human_message',
+      feedback,
+      ...ratings,
+    });
+  
     setSnackbarOpen(true);
     handleCloseWrongAnswerModal();
   };
@@ -2577,7 +2602,6 @@ const handleNewConversation = async () => {
         <PopupWrongAnswer
           open={modalOpen}
           onClose={handleCloseWrongAnswerModal}
-          selectedFilter={selectedFilter}
           onSubmit={handleSubmitWrongAnswerFeedback}
           aiMessageContent={selectedAiMessage}
           humanMessageContent={selectedHumanMessage}

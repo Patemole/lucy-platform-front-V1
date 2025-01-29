@@ -974,7 +974,6 @@ useEffect(() => {
         <PopupWrongAnswer
           open={modalOpen}
           onClose={handleCloseWrongAnswerModal}
-          selectedFilter={selectedFilter}
           onSubmit={handleSubmitWrongAnswerFeedback}
           aiMessageContent={selectedAiMessage}
           humanMessageContent={selectedHumanMessage}
