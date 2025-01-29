@@ -3,6 +3,7 @@ import config from '../config';
 // Define the API URL prefix based on the environment
 const apiUrlPrefix: string = config.server_url;
 
+/*
 interface WrongAnswerFeedback {
   userId: string;
   chatId: string;
@@ -10,12 +11,28 @@ interface WrongAnswerFeedback {
   humanMessageContent: string;
   feedback: string;
 }
+*/
+
+interface WrongAnswerFeedback {
+  userId: string;
+  chatId: string;
+  aiMessageContent: string;
+  humanMessageContent: string;
+  feedback: string;
+  relevance?: number;
+  accuracy?: number;
+  format?: number;
+  sources?: number;
+  overall_satisfaction?: number;
+}
 
 interface GeneralFeedback {
   userId: string;
   feedback: string;
   courseId: string;
 }
+
+
 
 // Function to send feedback on wrong answers to the backend
 export const submitFeedbackWrongAnswer = async (feedback: WrongAnswerFeedback): Promise<void> => {
@@ -26,6 +43,12 @@ export const submitFeedbackWrongAnswer = async (feedback: WrongAnswerFeedback): 
     console.log(`AI Message Content: ${feedback.aiMessageContent}`);
     console.log(`Human Message Content: ${feedback.humanMessageContent}`);
     console.log(`Feedback: ${feedback.feedback}`);
+
+    console.log(`Feedback relevance: ${feedback.relevance}`);
+    console.log(`Feedback accuracy: ${feedback.accuracy}`);
+    console.log(`Feedback format: ${feedback.format}`);
+    console.log(`Feedback sources: ${feedback.sources}`);
+    console.log(`Feedback overall_satisfaction: ${feedback.overall_satisfaction}`);
 
     const response = await fetch(`${apiUrlPrefix}/feedback/wrong_answer`, {
       method: 'POST',
@@ -117,273 +140,3 @@ export const submitFeedbackAnswer = async (feedback: GeneralFeedback): Promise<v
 };
 
 
-
-/* CODE QUI MARCHE POUR LA RÉCUPÉRATION DES MESSAGES DANS WRONG ANSWER
-import config from '../config';
-
-// Define the API URL prefix based on the environment
-const apiUrlPrefix: string = config.server_url;
-
-interface WrongAnswerFeedback {
-  userId: string;
-  chatId: string;
-  aiMessageContent: string;
-  humanMessageContent: string;
-  feedback: string;
-}
-
-// Function to send feedback on wrong answers to the backend
-export const submitFeedbackWrongAnswer = async (feedback: WrongAnswerFeedback): Promise<void> => {
-  try {
-    console.log('Submitting feedback with the following data:');
-    console.log(`User ID: ${feedback.userId}`);
-    console.log(`Chat ID: ${feedback.chatId}`);
-    console.log(`AI Message Content: ${feedback.aiMessageContent}`);
-    console.log(`Human Message Content: ${feedback.humanMessageContent}`);
-    console.log(`Feedback: ${feedback.feedback}`);
-
-    const response = await fetch(`${apiUrlPrefix}/feedback/wrong_answer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(feedback),
-    });
-
-    console.log(`Response status: ${response.status}`);
-    console.log(`Response status text: ${response.statusText}`);
-
-    if (!response.ok) {
-      const responseText = await response.text();
-      console.error(`Error response from server: ${responseText}`);
-      throw new Error('Failed to submit feedback');
-    }
-
-    console.log('Feedback successfully submitted');
-  } catch (error) {
-    console.error('Error submitting feedback:', error);
-  }
-};
-
-// Function to send general feedback on the student platform to the backend
-export const submitFeedbackAnswer = async (feedback: string): Promise<void> => {
-  try {
-    console.log(`Submitting general feedback: ${feedback}`);
-
-    const response = await fetch(`${apiUrlPrefix}/feedback/feedback_answer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ feedback }),
-    });
-
-    console.log(`Response status: ${response.status}`);
-    console.log(`Response status text: ${response.statusText}`);
-
-    if (!response.ok) {
-      const responseText = await response.text();
-      console.error(`Error response from server: ${responseText}`);
-      throw new Error('Failed to submit feedback');
-    }
-
-    console.log('Feedback successfully submitted');
-  } catch (error) {
-    console.error('Error submitting feedback:', error);
-  }
-};
-*/
-
-
-
-/*
-import config from '../config';
-
-// Define the API URL prefix based on the environment
-const apiUrlPrefix: string = config.server_url;
-
-// Function to send feedback on wrong answers to the backend
-export const submitFeedbackWrongAnswer = async (feedback: {
-  userId: string;
-  chatId: string;
-  aiMessageContent: string;
-  humanMessageContent: string;
-  feedback: string;
-}) => {
-  try {
-    console.log('Submitting feedback with the following data:');
-    console.log(`User ID: ${feedback.userId}`);
-    console.log(`Chat ID: ${feedback.chatId}`);
-    console.log(`AI Message Content: ${feedback.aiMessageContent}`);
-    console.log(`Human Message Content: ${feedback.humanMessageContent}`);
-    console.log(`Feedback: ${feedback.feedback}`);
-
-    const response = await fetch(`${apiUrlPrefix}/feedback/wrong_answer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(feedback),
-    });
-
-    console.log(`Response status: ${response.status}`);
-    console.log(`Response status text: ${response.statusText}`);
-
-    if (!response.ok) {
-      const responseText = await response.text();
-      console.error(`Error response from server: ${responseText}`);
-      throw new Error('Failed to submit feedback');
-    }
-
-    console.log('Feedback successfully submitted');
-  } catch (error) {
-    console.error('Error submitting feedback:', error);
-  }
-};
-
-// Function to send general feedback on the student platform to the backend
-export const submitFeedbackAnswer = async (feedback: string) => {
-  try {
-    console.log(`Submitting general feedback: ${feedback}`);
-
-    const response = await fetch(`${apiUrlPrefix}/feedback/feedback_answer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ feedback }),
-    });
-
-    console.log(`Response status: ${response.status}`);
-    console.log(`Response status text: ${response.statusText}`);
-
-    if (!response.ok) {
-      const responseText = await response.text();
-      console.error(`Error response from server: ${responseText}`);
-      throw new Error('Failed to submit feedback');
-    }
-
-    console.log('Feedback successfully submitted');
-  } catch (error) {
-    console.error('Error submitting feedback:', error);
-  }
-};
-*/
-
-
-
-
-
-/*
-import config from '../config';
-
-// Define the API URL prefix based on the environment
-const apiUrlPrefix: string = config.server_url;
-
-// Function to send feedback on wrong answers to the backend
-export const submitFeedbackWrongAnswer = async (feedback: {
-  userId: string;
-  chatId: string;
-  aiMessageContent: string;
-  humanMessageContent: string;
-  feedback: string;
-}) => {
-  try {
-    const response = await fetch(`${apiUrlPrefix}/feedback/wrong_answer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(feedback),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to submit feedback');
-    }
-
-    console.log('Feedback successfully submitted');
-  } catch (error) {
-    console.log('Error submitting feedback:', error);
-  }
-};
-
-// Function to send general feedback on the student platform to the backend
-export const submitFeedbackAnswer = async (feedback: string) => {
-  try {
-    const response = await fetch(`${apiUrlPrefix}/feedback/feedback_answer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ feedback }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to submit feedback');
-    }
-
-    console.log('Feedback successfully submitted');
-  } catch (error) {
-    console.log('Error submitting feedback:', error);
-  }
-};
-*/
-
-
-
-
-
-
-/*
-// src/api/feedback_wrong_answer.ts
-
-import config from '../config';  // Utilisez import au lieu de require
-
-// Définir le préfixe de l'URL de l'API en fonction de l'environnement
-const apiUrlPrefix: string = config.server_url;
-
-
-
-//Function to send the backend the feedback on wrong answer or issue on the studen platform message
-export const submitFeedbackWrongAnswer = async (feedback: string) => {
-    try {
-        const response = await fetch(`${apiUrlPrefix}/feedback/wrong_answer`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ feedback }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to submit feedback');
-        }
-
-        console.log('Feedback successfully submitted');
-    } catch (error) {
-        console.log('Error submitting feedback:', error);
-    }
-};
-
-
-//Function to send the backend the feedback on the studen platform
-export const submitFeedbackAnswer = async (feedback: string) => {
-    try {
-        const response = await fetch(`${apiUrlPrefix}/feedback/feedback_answer`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ feedback }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to submit feedback');
-        }
-
-        console.log('Feedback successfully submitted');
-    } catch (error) {
-        console.log('Error submitting feedback:', error);
-    }
-};
-*/

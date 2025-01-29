@@ -1295,7 +1295,6 @@ const Dashboard_eleve_template: React.FC = () => {
       <PopupWrongAnswer
         open={modalOpen}
         onClose={handleCloseWrongAnswerModal}
-        selectedFilter={selectedFilter}
         onSubmit={handleSubmitWrongAnswerFeedback}
         aiMessageContent={selectedAiMessage}
         humanMessageContent={selectedHumanMessage}
