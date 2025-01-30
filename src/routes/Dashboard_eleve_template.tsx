@@ -148,7 +148,30 @@ const Dashboard_eleve_template: React.FC = () => {
   const [isPrivate, setIsPrivate] = useState(false); // false = Public, true = Private
   const [profilePicture, setProfilePicture] = useState<string | null>(null); // null signifie qu'aucune image n'est définie
   const [unreadCount, setUnreadCount] = useState<number>(0); //Count for number of conversation social thread dont opened
+  const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
+  const [isSocialThread, setIsSocialThread] = useState(false); // Permet de savoir si c'est un Social Thread
 
+
+  //Change the fake number of online student every 15 secondes
+  useEffect(() => {
+    const updateOnlineUsers = () => {
+      setOnlineUsers((prev) => {
+        let variation = Math.floor(Math.random() * 7) - 3; // Variation entre -3 et +3
+        let newCount = prev + variation;
+  
+        if (newCount < 10) newCount = 10;
+        if (newCount > 50) newCount = 50;
+  
+        return newCount;
+      });
+  
+      const nextUpdate = Math.floor(Math.random() * 60000) + 1000; // Entre 1s et 60s
+      setTimeout(updateOnlineUsers, nextUpdate);
+    };
+  
+    const initialTimeout = setTimeout(updateOnlineUsers, Math.floor(Math.random() * 60000) + 1000);
+    return () => clearTimeout(initialTimeout);
+  }, []);
 
 
   useEffect(() => {
@@ -210,6 +233,7 @@ const Dashboard_eleve_template: React.FC = () => {
           thread_type: data.thread_type || "Public",
           university: data.university || "Default",
           isRead: (data.ReadBy || []).includes(userId), // Marque comme lu si userId est dans ReadBy
+          
         };
       });
 
@@ -1237,6 +1261,98 @@ const handleNewConversation = async () => {
 };
 
 
+
+
+const handleConversationClick = async (chat_id: string) => {
+  setPrimaryChatId(chat_id); // Met à jour le chat_id principal
+  setActiveChatId(chat_id); // Définit la conversation active
+  setRelatedQuestions([]);
+
+  try {
+    // *1️⃣ Met à jour l'état des Social Threads (Marque comme lu)*
+    setSocialThreads((prevThreads) => {
+      const updatedThreads = prevThreads.map((thread) => {
+        if (thread.chat_id === chat_id && !thread.isRead) {
+          return { ...thread, isRead: true };
+        }
+        return thread;
+      });
+
+      // Recalcul du nombre total d'éléments non lus
+      const newUnreadCount = updatedThreads.filter((thread) => !thread.isRead).length;
+      setUnreadCount(newUnreadCount);
+
+      return updatedThreads;
+    });
+
+    // *2️⃣ Récupère l'historique des messages*
+    const chatHistory = await getChatHistory(chat_id);
+    setMessages(chatHistory);
+    setShowChat(true);
+
+    // *3️⃣ Récupère les détails de la conversation*
+    const chatRef = doc(db, 'chatsessions', chat_id);
+    const chatSnap = await getDoc(chatRef);
+
+    if (chatSnap.exists()) {
+      const chatData = chatSnap.data();
+
+      // *4️⃣ Vérifie si la conversation est privée ou publique*
+      const isConversationPrivate = chatData.thread_type === 'Private';
+      setIsPrivate(isConversationPrivate);
+      //console.log('Conversation is now ${isConversationPrivate ? 'Private' : 'Public'}'⁠);
+
+      // *5️⃣ Détermine si c'est un Social Thread*
+      const isChatInSocialThreads = socialThreads.some(thread => thread.chat_id === chat_id);
+      const isChatInConversations = conversations.some(conv => conv.chat_id === chat_id);
+
+      // Un vrai Social Thread est une conversation publique qui *n'est pas* dans les conversations personnelles
+      const isThreadSocial = isChatInSocialThreads && !isChatInConversations;
+
+      // Met à jour l'état de isSocialThread
+      setIsSocialThread(isThreadSocial);
+
+      // Affichage dans la console pour vérification
+      if (isThreadSocial) {
+        console.log('✅ Chat ${chat_id} est un vrai Social Thread');
+      } else if (isChatInSocialThreads && isChatInConversations) {
+        console.log('Chat ${chat_id} est une conversation publique personnelle');
+      } else {
+        console.log('🔒 Chat ${chat_id} est une conversation privée.');
+      }
+
+      // *6️⃣ Ajoute l'utilisateur à ⁠ ReadBy ⁠ s'il ne l'a pas encore lu*
+      const userId = user.id;
+      const readBy = chatData.ReadBy || [];
+
+      if (!readBy.includes(userId)) {
+        console.log('Ajout de l utilisateur ${userId} à ReadBy pour la conversation ${chat_id}');
+
+        try {
+          // Met à jour Firestore avec un ⁠ Set ⁠ pour éviter les doublons
+          await updateDoc(chatRef, { ReadBy: Array.from(new Set([...readBy, userId])) });
+          console.log('ReadBy mis à jour avec succès dans Firestore');
+        } catch (updateError) {
+          console.error('Erreur lors de la mise à jour de ReadBy dans Firestore :', updateError);
+        }
+      }
+    } else {
+      //console.warn(⁠ No chat session found with chat_id: ${chat_id}. Defaulting to Public. ⁠);
+      setIsPrivate(false); // Par défaut, on considère que c'est public si la donnée est absente
+    }
+  } catch (error) {
+    console.error('Error fetching chat history or thread_type:', error);
+    setPopup({
+      type: 'error',
+      message: 'Failed to fetch chat history. Please try again later.',
+    });
+    setIsPrivate(false); // Défaut à Public en cas d'erreur
+  }
+};
+
+
+
+
   /*
   //Permet de mettre a jour la conversation active quand on clique sur une une conversation deja presente dans l historique
   const handleConversationClick = async (chat_id: string) => {
@@ -1259,6 +1375,8 @@ const handleNewConversation = async () => {
   };
   */
 
+
+  /*
   //Fonction qui gere quand on clique sur une conversation
   const handleConversationClick = async (chat_id: string) => {
     setPrimaryChatId(chat_id); // Met à jour le chat_id principal
@@ -1266,28 +1384,6 @@ const handleNewConversation = async () => {
     setRelatedQuestions([]);
   
     try {
-
-
-      /*
-      // Simule immédiatement que la conversation est lue localement pour une réactivité instantanée
-      setSocialThreads((prevThreads) =>
-        prevThreads.map((thread) => {
-          if (thread.chat_id === chat_id && !thread.isRead) {
-            // Vérifie si la conversation est dans socialThreads
-            const isSocialThread = prevThreads.some((t) => t.chat_id === chat_id);
-
-            if (isSocialThread) {
-              // Réduire le compteur uniquement pour les Social Threads
-              setUnreadCount((prevCount) => Math.max(prevCount - 1, 0));
-            }
-
-            // Marque la conversation comme lue
-            return { ...thread, isRead: true };
-          }
-          return thread;
-        })
-      );
-      */
 
       setSocialThreads((prevThreads) => {
         const updatedThreads = prevThreads.map((thread) => {
@@ -1367,6 +1463,7 @@ const handleNewConversation = async () => {
       setIsPrivate(false); // Défaut à Public en cas d'erreur
     }
   };
+  */
 
 
   //permet d ouvir la sidebar (change l etat de ouvir/fermer)
@@ -2058,6 +2155,36 @@ const handleNewConversation = async () => {
                         style={{ height: '40px', marginRight: '10px' }}
               />
 
+
+
+              {/* Vignette avec le nombre d'étudiants en ligne */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginLeft: '0px',
+                  padding: '5px 10px',
+                  borderRadius: '15px',
+                  border: '1.3px solid #27AE60', // Bordure verte
+                  backgroundColor: 'transparent', // Fond transparent
+                  color: '#011F5B', // Texte vert
+                  //fontWeight: 'semi-bold',
+                  fontSize: '0.83rem',
+                }}
+              >
+                {onlineUsers} online users
+                <div
+                  style={{
+                    width: '8.5px',
+                    height: '8.5px',
+                    borderRadius: '50%',
+                    backgroundColor: '#27AE60', // Cercle vert
+                    marginLeft: '6px',
+                  }}
+                />
+              </div>
+          
+
               <div style={{ flexGrow: 1 }}></div>
 
               <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -2418,92 +2545,94 @@ const handleNewConversation = async () => {
                   multiline
                   minRows={1} // Adjust `minRows` to change the minimum height of the TextField
                   maxRows={6}
-                  placeholder={isSmallScreen && drawerOpen ? "" : (isStreaming ? "Type your message..." : "Type your message...")}
+                  //placeholder={isSmallScreen && drawerOpen ? "" : (isStreaming ? "Type your message..." : "Type your message...")}
 
-                  /*
-                  placeholder={isSmallScreen && drawerOpen 
-                    ? "" 
-                    : socialThreads.some(thread => thread.chat_id === activeChatId) 
-                      ? "Continue this thread" 
-                      : (isStreaming ? "Type your message..." : "Type your message...")}
-                    */
+                  placeholder={isSmallScreen && drawerOpen
+                    ? ""
+                    : isSocialThread
+                      ? "Write a public message in this discussion..."
+                      : "Type your message..."
+                  }
 
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleInputKeyPressSocraticLangGraph}
                   InputProps={{
                     startAdornment: (
-                      <InputAdornment position="start">
-                        <IconButton
-                          onClick={async () => {
-                            try {
-                              const newPrivacyState = !isPrivate; 
-                              setIsPrivate(newPrivacyState); 
-                    
-                              const currentThreadType = newPrivacyState ? 'Private' : 'Public';
-                              const chatSessionId = chatIds[0] || 'default_chat_id';
-                    
-                              // On récupère la référence du document dans chatsessions
-                              const docRef = doc(db, 'chatsessions', chatSessionId);
-                    
-                              // Mise à jour du champ thread_type
-                              await updateDoc(docRef, { thread_type: currentThreadType });
-                    
-                              console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
-                              // Mettre à jour localement le thread_type de la conversation active
-                              setConversations((prevConversations) =>
-                                prevConversations.map((conv) =>
-                                  conv.chat_id === chatSessionId
-                                    ? { ...conv, thread_type: currentThreadType }
-                                    : conv
-                                )
-                              );
-                            } catch (error) {
-                              console.error('Erreur lors de la mise à jour du thread_type :', error);
-                            }
-                          }}
-                          edge="start"
-                          aria-label={isPrivate ? "Set to Public" : "Set to Private"}
-                          sx={{
-                            backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5',
-                            color: isPrivate ? '#6F6F6F' : '#3155CC',
-                            borderRadius: '12px',
-                            padding: '4px 8px',
-                            marginRight: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            width: '80px',
-                            height: '30px',
-                            '&:hover': {
-                              backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
-                              color: isPrivate ? '#5A5A5A' : '#4A0B8A',
-                            },
-                          }}
-                          ref={(el) => {
-                            if (el) {
-                              console.log("Background color applied:", getComputedStyle(el).backgroundColor);
-                            }
-                          }}
-                        >
-                          {isPrivate ? (
-                            <>
-                              <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                              <Typography variant="caption" sx={{ color: '#000' }}>
-                                Private
-                              </Typography>
-                            </>
-                          ) : (
-                            <>
-                              <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                              <Typography variant="caption" sx={{ color: '#3155CC' }}>
-                                Public
-                              </Typography>
-                            </>
-                          )}
-                        </IconButton>
+                      !isSocialThread && (
+                        <InputAdornment position="start">
+                          <IconButton
+                            onClick={async () => {
+                              try {
+                                const newPrivacyState = !isPrivate; 
+                                setIsPrivate(newPrivacyState); 
+                      
+                                const currentThreadType = newPrivacyState ? 'Private' : 'Public';
+                                const chatSessionId = chatIds[0] || 'default_chat_id';
+                      
+                                // On récupère la référence du document dans chatsessions
+                                const docRef = doc(db, 'chatsessions', chatSessionId);
+                      
+                                // Mise à jour du champ thread_type
+                                await updateDoc(docRef, { thread_type: currentThreadType });
+                      
+                                console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
+                                // Mettre à jour localement le thread_type de la conversation active
+                                setConversations((prevConversations) =>
+                                  prevConversations.map((conv) =>
+                                    conv.chat_id === chatSessionId
+                                      ? { ...conv, thread_type: currentThreadType }
+                                      : conv
+                                  )
+                                );
+                              } catch (error) {
+                                console.error('Erreur lors de la mise à jour du thread_type :', error);
+                              }
+                            }}
+                            edge="start"
+                            aria-label={isPrivate ? "Set to Public" : "Set to Private"}
+                            sx={{
+                              backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5',
+                              color: isPrivate ? '#6F6F6F' : '#3155CC',
+                              borderRadius: '12px',
+                              padding: '4px 8px',
+                              marginRight: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              width: '80px',
+                              height: '30px',
+                              '&:hover': {
+                                backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
+                                color: isPrivate ? '#5A5A5A' : '#4A0B8A',
+                              },
+                            }}
+                            ref={(el) => {
+                              if (el) {
+                                console.log("Background color applied:", getComputedStyle(el).backgroundColor);
+                              }
+                            }}
+                          >
+                            {isPrivate ? (
+                              <>
+                                <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                                <Typography variant="caption" sx={{ color: '#000' }}>
+                                  Private
+                                </Typography>
+                              </>
+                            ) : (
+                              <>
+                                <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                                <Typography variant="caption" sx={{ color: '#3155CC' }}>
+                                  Public
+                                </Typography>
+                              </>
+                            )}
+                          </IconButton>
+                      
                       </InputAdornment>
+                      )
                     ),
                     
                       endAdornment: (
