@@ -62,6 +62,7 @@ const holyFamilyTheme = createTheme({
     'School of Business and Professional Studies',
     'School of Education',
     'School of Nursing and Health Sciences',
+    'Undecided',
   ],
 });
 
@@ -124,6 +125,7 @@ const holyFamilyDarkTheme = createTheme({
     'School of Business and Professional Studies',
     'School of Education',
     'School of Nursing and Health Sciences',
+    'Undecided',
   ],
 });
 
