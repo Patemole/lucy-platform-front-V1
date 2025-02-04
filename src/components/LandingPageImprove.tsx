@@ -42,7 +42,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
   const [placeholderText, setPlaceholderText] = useState('');
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [isHoveringQuestions, setIsHoveringQuestions] = useState(false);
-  const [showCursor, setShowCursor] = useState(true);
+  //const [showCursor, setShowCursor] = useState(true);
+  const [showPlaceholder, setShowPlaceholder] = useState(true);
+
   // État pour la confidentialité (Public/Private)
   //const [isPrivate, setIsPrivate] = React.useState(false); // Par défaut, en mode Public
   const [isPrivate, setIsPrivate] = useState(false);
@@ -83,6 +85,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
     }
   };
 
+  const handlePlaceholderClick = () => {
+    setShowPlaceholder(false); // Cache immédiatement le placeholder au clic
+  };
+
+  /*
   // Gestion du faux curseur clignotant
   useEffect(() => {
     const cursorInterval = setInterval(() => {
@@ -91,6 +98,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
 
     return () => clearInterval(cursorInterval);
   }, []);
+  */
 
   // Gestion du survol des boutons
   const handleButtonMouseEnter = (buttonText: string) => {
@@ -344,8 +352,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
           variant="outlined"
           value={inputValue}
           onChange={handleInputChange}
+          onMouseDown={handlePlaceholderClick}  // Capture le clic sur le placeholder
           onKeyPress={handleKeyPress}
-          placeholder={isTyping ? '' : `${placeholderText}${showCursor ? '|' : ''}`}
+          //placeholder={isTyping ? '' : `${placeholderText}${showCursor ? '|' : ''}`}
+          placeholder={isTyping ? '' : `${placeholderText}`}
           InputProps={{
             startAdornment: (
                 <InputAdornment position="start">
