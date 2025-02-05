@@ -218,7 +218,9 @@ const Dashboard_eleve_template: React.FC = () => {
       const q = query(
         collection(db, 'chatsessions'),
         orderBy('created_at', 'desc'),
-        limit(150)
+        where("university", "==", university), 
+        where("thread_type", "==", "Public"),  // 🔥 Ne récupère que les Social Threads dès la requête
+        limit(50)
       );
       const querySnapshot = await getDocs(q);
 
