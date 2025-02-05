@@ -207,7 +207,7 @@ const Dashboard_eleve_template: React.FC = () => {
     );
   };
 
-  /*
+  
   
   //RECUPERE LES SOCIAL CONVERSATION PAR NOM D UNIVERSITY ET CELLE QUI SONT PUBLIC - ANCIENNE VERSION QUI N AFFICHAIT PAS TOUT
   const fetchSocialThreads = async () => {
@@ -258,8 +258,9 @@ const Dashboard_eleve_template: React.FC = () => {
       setLoadingSocialThreads(false);
     }
   };
-  */
   
+  
+  /*
   const fetchSocialThreads = async (lastDoc: QueryDocumentSnapshot<DocumentData> | null = null) => {
     setLoadingSocialThreads(true);
     const university = user.university || "upenn"; // Valeur par défaut si non défini
@@ -314,6 +315,7 @@ const Dashboard_eleve_template: React.FC = () => {
       setLoadingSocialThreads(false);
     }
   };
+  */
 
 
 
