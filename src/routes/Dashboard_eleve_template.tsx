@@ -16,7 +16,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { v4 as uuidv4 } from 'uuid';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs, where, startAfter, QueryDocumentSnapshot, DocumentData} from 'firebase/firestore';
 import logo_greg from '../student_face.png';
 import '../index.css';
 import { AIMessage } from '../components/MessagesWEB';
@@ -150,6 +150,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState<number>(0); //Count for number of conversation social thread dont opened
   const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
   const [isSocialThread, setIsSocialThread] = useState(false); // Permet de savoir si c'est un Social Thread
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
 
 
   //Change the fake number of online student every 15 secondes
@@ -206,8 +207,9 @@ const Dashboard_eleve_template: React.FC = () => {
     );
   };
 
+  /*
   
-  //RECUPERE LES SOCIAL CONVERSATION PAR NOM D UNIVERSITY ET CELLE QUI SONT PUBLIC 
+  //RECUPERE LES SOCIAL CONVERSATION PAR NOM D UNIVERSITY ET CELLE QUI SONT PUBLIC - ANCIENNE VERSION QUI N AFFICHAIT PAS TOUT
   const fetchSocialThreads = async () => {
     setLoadingSocialThreads(true);
     const university = user.university || 'upenn'; // par défaut si user.university n'existe pas
@@ -256,7 +258,65 @@ const Dashboard_eleve_template: React.FC = () => {
       setLoadingSocialThreads(false);
     }
   };
+  */
   
+  const fetchSocialThreads = async (lastDoc: QueryDocumentSnapshot<DocumentData> | null = null) => {
+    setLoadingSocialThreads(true);
+    const university = user.university || "upenn"; // Valeur par défaut si non défini
+  
+    try {
+      let q = query(
+        collection(db, "chatsessions"),
+        where("university", "==", university), 
+        where("thread_type", "==", "Public"),  // 🔥 Ne récupère que les publics
+        orderBy("created_at", "desc"),
+        limit(50)
+      );
+  
+      if (lastDoc) {
+        q = query(q, startAfter(lastDoc)); // 🔥 Pagination si un dernier document existe
+      }
+  
+      const querySnapshot = await getDocs(q);
+      const userId = user.id; // ID de l'utilisateur actuel
+  
+      // Transformer les résultats Firestore
+      const threads = querySnapshot.docs
+        .map((doc) => {
+          const data = doc.data();
+          return {
+            chat_id: data.chat_id,
+            name: data.name,
+            created_at: data.created_at,
+            topic: data.topic || "Default",
+            thread_type: data.thread_type || "Public",
+            university: data.university || "Default",
+            isRead: Array.isArray(data.ReadBy) ? data.ReadBy.includes(userId) : false, // 🔥 Sécurisation du ReadBy
+          };
+        })
+        .filter((thread) => thread.name !== "New Chat"); // 🚨 Exclure "New Chat"
+  
+      // Ajoute les nouveaux threads aux existants (pagination)
+      setSocialThreads((prevThreads) => [...prevThreads, ...threads]);
+  
+      // Stocke le dernier document récupéré pour la pagination
+      if (querySnapshot.docs.length > 0) {
+        setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+      }
+  
+      // Compte les conversations non lues
+      const unread = threads.filter((thread) => !thread.isRead).length;
+      setUnreadCount((prevCount) => prevCount + unread); // 🔥 Ajoute aux non lus sans écraser la valeur précédente
+  
+    } catch (error) {
+      console.error("Erreur lors de la récupération des social threads :", error);
+    } finally {
+      setLoadingSocialThreads(false);
+    }
+  };
+
+
+
 
   /*
   //RECUPERE LES SOCIAL CONVERSATION PAR NOM D UNIVERSITY ET CELLE QUI SONT PUBLIC 
