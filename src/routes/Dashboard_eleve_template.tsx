@@ -218,7 +218,7 @@ const Dashboard_eleve_template: React.FC = () => {
       const q = query(
         collection(db, 'chatsessions'),
         orderBy('created_at', 'desc'),
-        limit(300)
+        limit(130)
       );
       const querySnapshot = await getDocs(q);
 
@@ -1702,7 +1702,8 @@ const handleConversationClick = async (chat_id: string) => {
             <ListItem
               button
               onClick={() => {
-                navigate(`/dashboard/dashboard/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Dashboard
+                //navigate(`/dashboard/dashboard/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Dashboard
+                navigate(`/dashboard/calendar/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Calendar
                 if (isSmallScreen) toggleDrawer();
               }}
               sx={{
@@ -1723,7 +1724,7 @@ const handleConversationClick = async (chat_id: string) => {
                 <DashboardIcon sx={{ fontSize: '22px' }} />
               </ListItemIcon>
               <ListItemText
-                primary="Dashboard"
+                primary="Your Calendar"
                 primaryTypographyProps={{
                   style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
                 }}
