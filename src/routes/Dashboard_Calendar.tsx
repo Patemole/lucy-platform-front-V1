@@ -371,27 +371,48 @@ const Dashboard_Calendar: React.FC = () => {
 
   const fetchSocialThreads = async () => {
     setLoadingSocialThreads(true);
-    const university = user.university || 'upenn';
+    const university = user.university || 'upenn'; // par défaut si user.university n'existe pas
+  
     try {
-      const q = query(collection(db, 'chatsessions'), orderBy('created_at', 'desc'), limit(50));
+      const q = query(
+        collection(db, 'chatsessions'),
+        orderBy('created_at', 'desc'),
+        limit(130)
+      );
       const querySnapshot = await getDocs(q);
-      const threads = querySnapshot.docs
-        .map((doc) => {
-          const data = doc.data();
-          return {
-            chat_id: data.chat_id,
-            name: data.name,
-            created_at: data.created_at,
-            topic: data.topic,
-            university: data.university || 'upenn',
-            thread_type: data.thread_type || 'Public',
-          };
-        })
-        .filter((thread) => thread.university === university && thread.thread_type === 'Public');
 
-      setSocialThreads(threads);
+      const userId = user.id; // ID de l'utilisateur actuel
+  
+      // Transformation des threads depuis Firestore
+      const threads = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          chat_id: data.chat_id,
+          name: data.name,
+          created_at: data.created_at,
+          topic: data.topic || "Default",
+          thread_type: data.thread_type || "Public",
+          university: data.university || "Default",
+          isRead: (data.ReadBy || []).includes(userId), // Marque comme lu si userId est dans ReadBy
+          
+        };
+      });
+
+      // Filtrer les threads publics pour l'université actuelle
+      const filteredThreads = threads.filter(
+        (thread) => thread.university === university && thread.thread_type === 'Public' && thread.name != 'New Chat'
+      );
+
+      // Met à jour les threads sociaux avec les threads filtrés
+      setSocialThreads(filteredThreads);
+
+      // Calculer le nombre de conversations non lues parmi les threads filtrés
+      const unread = filteredThreads.filter((thread) => !thread.isRead).length;
+      setUnreadCount(unread); // Mettre à jour l'état du compteur
+
+
     } catch (error) {
-      console.error('error fetching social threads:', error);
+      console.error('Erreur lors de la récupération des social threads :', error);
     } finally {
       setLoadingSocialThreads(false);
     }
