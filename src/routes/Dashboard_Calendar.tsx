@@ -16,19 +16,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  setDoc,
-  serverTimestamp,
-  deleteDoc,
-  query,
-  collection,
-  orderBy,
-  limit,
-  getDocs,
-} from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs, where, startAfter, QueryDocumentSnapshot, DocumentData} from 'firebase/firestore';
 import {
   sendMessageFakeDemo,
   saveMessageAIToBackend,
@@ -62,22 +50,36 @@ import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday } from 'date-fns';
 import { Message } from '../interfaces/interfaces_eleve';
 
+// Définir l'interface pour une conversation de thread social (social conversation)
 interface SocialThread {
-  chat_id: string;
-  name: string;
-  created_at: any;
-  topic?: string;
-  university?: string;
-  thread_type?: string;
-}
+    chat_id: string;
+    name: string;
+    created_at: any; // ou un type plus précis comme firebase.Timestamp
+    topic?: string;
+    university?: string;
+    thread_type?: string;
+    isRead?: boolean; // Ajout de la propriété isRead
+  }
+  
+  // Definis l interface pour une conversation mais de l historique pas de social conversation
+  interface Conversation {
+    chat_id: string;
+    name: string;
+    thread_type: string;
+    topic?: string;
+  }
+
 
 const topicColors: { [key: string]: string } = {
-  Upenn: '#8E44AD',
-  'New Chat': '#E74C3C',
-  Wharton: '#F1C40F',
-  YouTube: '#2980B9',
-  Default: '#7F8C8D',
-};
+    "Financial Aids": "#27AE60", // Vert
+    "Events": "#E67E22", // Orange
+    "Policies": "#2980B9", // Bleu
+    "Housing": "#8E44AD", // Violet
+    "Courses": "#F39C12", // Jaune
+    "Chitchat": "#7F8C8D", // Jaune
+    "Default": "#7F8C8D" // Gris
+  };
+  
 
 const drawerWidth = 270;
 
@@ -144,6 +146,34 @@ const Dashboard_Calendar: React.FC = () => {
   const cancelConversationRef = useRef(false);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0); //Count for number of conversation social thread dont opened
+  const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
+  const [isSocialThread, setIsSocialThread] = useState(false); // Permet de savoir si c'est un Social Thread
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+
+
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      if (!user?.id) return;
+  
+      try {
+        const userRef = doc(db, 'users', user.id);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setProfilePicture(userData.profile_picture || null); // Met à jour avec l'URL ou null
+          console.log('Fetched profile picture:', userData.profile_picture || 'No profile picture found');
+        } else {
+          console.warn('User document does not exist.');
+        }
+      } catch (error) {
+        console.error('Error fetching profile picture:', error);
+      }
+    };
+  
+    fetchProfilePicture();
+  }, [user?.id]);
 
   const handleDialogOpen = () => setDialogOpen(true);
   const handleDialogClose = () => setDialogOpen(false);
