@@ -750,6 +750,20 @@ const Dashboard_Calendar: React.FC = () => {
                               style: { fontSize: '0.75rem', color: theme.palette.text.secondary },
                             }}
                           />
+                          {/* Cercle indiquant si la conversation est lue */}
+                            <Box
+                            sx={{
+                                width: '7px', // Taille du cercle
+                                minWidth: '7px', // Empêche la largeur d'être réduite
+                                height: '7px',
+                                borderRadius: '50%', // Cercle parfait
+                                backgroundColor: thread.isRead ? 'transparent' : '#3155CC ', // Vert si non lu, transparent sinon
+                                transition: 'background-color 0.3s ease', // Transition douce
+                                //marginRight: '10px',
+                                marginLeft: 'auto', // Pousse le cercle complètement à droite
+                            marginRight: '3px', // Ajoute un léger espacement par rapport au bord
+                            }}
+                            />
                         </ListItem>
                       );
                     })
