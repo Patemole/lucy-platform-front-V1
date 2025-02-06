@@ -65,7 +65,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { Message } from '../interfaces/interfaces_eleve';
 
 // import the custom calendar component
-import Calendar from '../components/NewCalendarCustom';
+import Calendar from '../components/NewCalendarCustomEvents';
 
 const drawerWidth = 270;
 
