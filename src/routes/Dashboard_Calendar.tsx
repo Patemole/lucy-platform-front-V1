@@ -49,6 +49,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MapsUgcRoundedIcon from '@mui/icons-material/MapsUgcRounded';
+import StudentProfileDialog from '../components/StudentProfileDialog';
 import { useAuth } from '../auth/hooks/useAuth';
 import { db } from '../auth/firebase';
 import { usePopup } from '../components/popup';
@@ -142,6 +143,10 @@ const Dashboard_Calendar: React.FC = () => {
   const [cancelConversation, setCancelConversation] = useState(false);
   const cancelConversationRef = useRef(false);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleDialogOpen = () => setDialogOpen(true);
+  const handleDialogClose = () => setDialogOpen(false);
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
@@ -161,6 +166,11 @@ const Dashboard_Calendar: React.FC = () => {
 
   const handleParametersMenuClose = () => {
     setParametersMenuAnchorEl(null);
+  };
+
+  const handleDeleteAccount = () => {
+    console.log('Delete Account clicked');
+    handleParametersMenuClose();
   };
 
   const handleLogout = () => {
@@ -463,9 +473,7 @@ const Dashboard_Calendar: React.FC = () => {
             ModalProps={{
               keepMounted: true,
               BackdropProps: {
-                style: {
-                  backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                },
+                style: { backgroundColor: 'rgba(0, 0, 0, 0.1)' },
               },
             }}
           >
@@ -502,13 +510,9 @@ const Dashboard_Calendar: React.FC = () => {
                   borderRadius: '8px',
                   backgroundColor: 'transparent',
                   mb: 1,
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
+                  '&:hover': { backgroundColor: theme.palette.action.hover },
                   '@media (hover: hover) and (pointer: fine)': {
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.hover,
-                    },
+                    '&:hover': { backgroundColor: theme.palette.action.hover },
                   },
                 }}
               >
@@ -530,13 +534,9 @@ const Dashboard_Calendar: React.FC = () => {
                   borderRadius: '8px',
                   backgroundColor: 'transparent',
                   mb: 2,
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
+                  '&:hover': { backgroundColor: theme.palette.action.hover },
                   '@media (hover: hover) and (pointer: fine)': {
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.hover,
-                    },
+                    '&:hover': { backgroundColor: theme.palette.action.hover },
                   },
                 }}
               >
@@ -625,19 +625,11 @@ const Dashboard_Calendar: React.FC = () => {
                             color: theme.palette.text.primary,
                             opacity: activeChatId === conversation.chat_id ? 1 : 0,
                             pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
-                            '&:hover': {
-                              backgroundColor: 'transparent',
-                            },
+                            '&:hover': { backgroundColor: 'transparent' },
                             mr: '1px',
                           }}
                         >
-                          <MoreHorizIcon
-                            fontSize="small"
-                            sx={{
-                              color: 'gray',
-                              fontSize: '20px',
-                            }}
-                          />
+                          <MoreHorizIcon fontSize="small" sx={{ color: 'gray', fontSize: '20px' }} />
                         </IconButton>
                       </ListItem>
                     ))
@@ -725,10 +717,7 @@ const Dashboard_Calendar: React.FC = () => {
                               },
                             }}
                             secondaryTypographyProps={{
-                              style: {
-                                fontSize: '0.75rem',
-                                color: theme.palette.text.secondary,
-                              },
+                              style: { fontSize: '0.75rem', color: theme.palette.text.secondary },
                             }}
                           />
                         </ListItem>
@@ -755,14 +744,8 @@ const Dashboard_Calendar: React.FC = () => {
               anchorEl={menuAnchorEl}
               open={Boolean(menuAnchorEl)}
               onClose={handleMenuClose}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
+              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
               PaperProps={{
                 sx: {
                   margin: '8px',
@@ -772,45 +755,15 @@ const Dashboard_Calendar: React.FC = () => {
                 },
               }}
             >
-              <MenuItem
-                onClick={handleRename}
-                sx={{
-                  padding: '8px',
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                }}
-              >
+              <MenuItem onClick={handleRename} sx={{ padding: '8px', '&:hover': { backgroundColor: theme.palette.action.hover } }}>
                 <EditIcon fontSize="small" sx={{ marginRight: '8px' }} />
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontSize: '0.75rem',
-                    fontWeight: '400',
-                  }}
-                >
+                <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: '400' }}>
                   Rename
                 </Typography>
               </MenuItem>
-
-              <MenuItem
-                onClick={handleDelete}
-                sx={{
-                  padding: '8px',
-                  color: 'red',
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                }}
-              >
+              <MenuItem onClick={handleDelete} sx={{ padding: '8px', color: 'red', '&:hover': { backgroundColor: theme.palette.action.hover } }}>
                 <DeleteIcon fontSize="small" sx={{ marginRight: '8px' }} />
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontSize: '0.75rem',
-                    fontWeight: '400',
-                  }}
-                >
+                <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: '400' }}>
                   Delete
                 </Typography>
               </MenuItem>
@@ -821,11 +774,7 @@ const Dashboard_Calendar: React.FC = () => {
                 <AccountCircleIcon
                   fontSize="large"
                   component="svg"
-                  style={{
-                    color: '#9e9e9e',
-                    cursor: 'pointer',
-                    margin: '0 auto',
-                  }}
+                  style={{ color: '#9e9e9e', cursor: 'pointer', margin: '0 auto' }}
                   onClick={(event) => {
                     handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>);
                     if (isSmallScreen) toggleDrawer();
@@ -857,10 +806,7 @@ const Dashboard_Calendar: React.FC = () => {
           <div className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : ''}`}>
             <div
               className="relative p-4 flex items-center justify-between"
-              style={{
-                backgroundColor: 'transparent',
-                borderColor: theme.palette.divider,
-              }}
+              style={{ backgroundColor: 'transparent', borderColor: theme.palette.divider }}
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 {!drawerOpen && (
@@ -888,79 +834,80 @@ const Dashboard_Calendar: React.FC = () => {
                 ) : (
                   <>
                     {profilePicture ? (
-                      <img
-                        src={profilePicture}
-                        alt="Profile"
-                        className="w-12 h-12 rounded-full object-cover cursor-pointer"
-                        onClick={(event) =>
-                          handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)
-                        }
-                      />
+                      <>
+                        {console.log('Rendering profile picture with URL:', profilePicture)}
+                        <img
+                          src={profilePicture}
+                          alt="Profile"
+                          style={{ width: '55px', height: '55px' }}
+                          className="rounded-full object-cover cursor-pointer"
+                          onClick={(event) =>
+                            handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)
+                          }
+                        />
+                      </>
                     ) : (
-                      <AccountCircleIcon
-                        fontSize="inherit"
-                        component="svg"
-                        style={{
-                          color: '#9e9e9e',
-                          cursor: 'pointer',
-                          margin: '0 auto 0 16px',
-                          fontSize: '2.5rem',
-                        }}
-                        onClick={(event) =>
-                          handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)
-                        }
-                      />
+                      <>
+                        {console.log('Rendering default AccountCircleIcon')}
+                        <AccountCircleIcon
+                          fontSize="inherit"
+                          component="svg"
+                          style={{
+                            color: '#9e9e9e',
+                            cursor: 'pointer',
+                            margin: '0 auto 0 16px',
+                            fontSize: '2.5rem',
+                          }}
+                          onClick={(event) =>
+                            handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)
+                          }
+                        />
+                      </>
                     )}
-
                     <Menu
                       anchorEl={profileMenuAnchorEl}
                       open={Boolean(profileMenuAnchorEl)}
                       onClose={handleProfileMenuClose}
                       PaperProps={{
-                        style: {
-                          borderRadius: '12px',
-                          backgroundColor: theme.palette.background.paper,
-                        },
+                        style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper },
                       }}
                     >
-                      <MenuItemMui onClick={() => { /* edit profile */ }}>
+                      <MenuItem onClick={handleDialogOpen}>
                         <ListItemIcon>
-                          <ProfileEdit fontSize="small" sx={{ color: '#4A90E2' }} />
+                          <ProfileEdit fontSize="small" sx={{ color: '#011F5B' }} />
                         </ListItemIcon>
-                        <ListItemTextMui
+                        <ListItemText
                           primary={
-                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#4A90E2' }}>
+                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
                               Edit Profile
                             </Typography>
                           }
                         />
-                      </MenuItemMui>
-
-                      <MenuItemMui onClick={handleParametersMenuClick}>
+                      </MenuItem>
+                      <MenuItem onClick={handleParametersMenuClick}>
                         <ListItemIcon>
-                          <SettingsIcon fontSize="small" sx={{ color: '#4A90E2' }} />
+                          <SettingsIcon fontSize="small" sx={{ color: '#011F5B' }} />
                         </ListItemIcon>
-                        <ListItemTextMui
+                        <ListItemText
                           primary={
-                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#4A90E2' }}>
+                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
                               Parameters
                             </Typography>
                           }
                         />
-                      </MenuItemMui>
-
-                      <MenuItemMui onClick={handleLogout}>
+                      </MenuItem>
+                      <MenuItem onClick={handleLogout}>
                         <ListItemIcon>
                           <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
                         </ListItemIcon>
-                        <ListItemTextMui
+                        <ListItemText
                           primary={
                             <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
                               Log-out
                             </Typography>
                           }
                         />
-                      </MenuItemMui>
+                      </MenuItem>
                     </Menu>
 
                     <Menu
@@ -968,36 +915,24 @@ const Dashboard_Calendar: React.FC = () => {
                       open={Boolean(parametersMenuAnchorEl)}
                       onClose={handleParametersMenuClose}
                       PaperProps={{
-                        style: {
-                          borderRadius: '12px',
-                          backgroundColor: theme.palette.background.paper,
-                        },
+                        style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper },
                       }}
-                      anchorOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                      }}
-                      transformOrigin={{
-                        vertical: 'top',
-                        horizontal: 'left',
-                      }}
-                      sx={{
-                        mt: -1,
-                        ml: -18,
-                      }}
+                      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                      sx={{ mt: -1, ml: -18 }}
                     >
-                      <MenuItemMui onClick={() => console.log('Delete Account clicked')}>
+                      <MenuItem onClick={handleDeleteAccount}>
                         <ListItemIcon>
                           <DeleteIcon fontSize="small" sx={{ color: '#F04261' }} />
                         </ListItemIcon>
-                        <ListItemTextMui
+                        <ListItemText
                           primary={
                             <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
                               Delete Account
                             </Typography>
                           }
                         />
-                      </MenuItemMui>
+                      </MenuItem>
                     </Menu>
                   </>
                 )}
@@ -1010,6 +945,8 @@ const Dashboard_Calendar: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* render the StudentProfileDialog component */}
+        <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
       </motion.div>
     </ThemeProvider>
   );
