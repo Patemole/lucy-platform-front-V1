@@ -14,9 +14,14 @@ import {
   Menu,
   MenuItem,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs, where, startAfter, QueryDocumentSnapshot, DocumentData} from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import {
   sendMessageFakeDemo,
   saveMessageAIToBackend,
@@ -50,75 +55,204 @@ import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday } from 'date-fns';
 import { Message } from '../interfaces/interfaces_eleve';
 
-// Définir l'interface pour une conversation de thread social (social conversation)
+//
+// interfaces
+//
+
 interface SocialThread {
-    chat_id: string;
-    name: string;
-    created_at: any; // ou un type plus précis comme firebase.Timestamp
-    topic?: string;
-    university?: string;
-    thread_type?: string;
-    isRead?: boolean; // Ajout de la propriété isRead
-  }
-  
-  // Definis l interface pour une conversation mais de l historique pas de social conversation
-  interface Conversation {
-    chat_id: string;
-    name: string;
-    thread_type: string;
-    topic?: string;
-  }
+  chat_id: string;
+  name: string;
+  created_at: any;
+  topic?: string;
+  university?: string;
+  thread_type?: string;
+  isRead?: boolean;
+}
 
+interface Conversation {
+  chat_id: string;
+  name: string;
+  thread_type: string;
+  topic?: string;
+}
 
+interface CalendarEventData {
+  id: string;
+  title: string;
+  description: string;
+  topic: string;
+  start: Date;
+  end: Date;
+  url: string;
+}
+
+//
+// topic colors – note: events now use pastel backgrounds based on topic,
+// and the social thread unread indicator (blue circle) will be shown if not read.
+//
 const topicColors: { [key: string]: string } = {
-    "Financial Aids": "#27AE60", // Vert
-    "Events": "#E67E22", // Orange
-    "Policies": "#2980B9", // Bleu
-    "Housing": "#8E44AD", // Violet
-    "Courses": "#F39C12", // Jaune
-    "Chitchat": "#7F8C8D", // Jaune
-    "Default": "#7F8C8D" // Gris
-  };
-  
+  "Financial Aids": "#27AE60",
+  "Events": "#E67E22",
+  "Policies": "#2980B9",
+  "Housing": "#8E44AD",
+  "Courses": "#F39C12",
+  "Chitchat": "#7F8C8D",
+  "Default": "#7F8C8D"
+};
 
 const drawerWidth = 270;
 
-// new calendar component
-const CalendarComponent: React.FC = () => {
+//
+// helper to convert hex color to rgba with opacity
+//
+const hexToRgba = (hex: string, opacity: number): string => {
+  let r = 0, g = 0, b = 0;
+  if (hex.length === 7) {
+    r = parseInt(hex.substring(1, 3), 16);
+    g = parseInt(hex.substring(3, 5), 16);
+    b = parseInt(hex.substring(5, 7), 16);
+  }
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
+
+//
+// calendar event component – renders an individual event over the grid.
+// it uses absolute positioning relative to the calendar container.
+//
+const CalendarEvent: React.FC<{ event: CalendarEventData; onClick: (event: CalendarEventData) => void; containerWidth: number; }> = ({ event, onClick, containerWidth }) => {
+  const timeLabelWidth = 60; // fixed width for time label column
+  const cellHeight = 64; // matching tailwind h-16 (64px)
+  const headerHeight = 40; // approximate header row height
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  // hours from 8:00 to 23:00 (inclusive)
-  const hours = Array.from({ length: 16 }, (_, i) => i + 8);
+  const dayWidth = (containerWidth - timeLabelWidth) / 7;
+
+  // in javascript, getDay returns 0 for sunday; we adjust so monday = 0, ... sunday = 6.
+  const eventDayIndex = event.start.getDay() === 0 ? 6 : event.start.getDay() - 1;
+  const startHour = event.start.getHours() + event.start.getMinutes() / 60;
+  const endHour = event.end.getHours() + event.end.getMinutes() / 60;
+  const top = headerHeight + (startHour - 8) * cellHeight;
+  const height = (endHour - startHour) * cellHeight;
+  const left = timeLabelWidth + eventDayIndex * dayWidth;
+  const width = dayWidth;
+  const accentColor = topicColors[event.topic] || topicColors["Default"];
+  const pastelColor = hexToRgba(accentColor, 0.2);
 
   return (
-    <div className="p-4">
+    <div
+      onClick={() => onClick(event)}
+      style={{
+        position: 'absolute',
+        top: top,
+        left: left,
+        width: width,
+        height: height,
+        backgroundColor: pastelColor,
+        borderTop: `3px solid ${accentColor}`,
+        borderRadius: '4px',
+        padding: '4px',
+        boxSizing: 'border-box',
+        cursor: 'pointer',
+        overflow: 'hidden'
+      }}
+    >
+      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#011F5B' }}>
+        {event.title}
+      </div>
+      <div style={{ fontSize: '0.75rem', color: '#011F5B', marginTop: '4px' }}>
+        {event.topic}
+      </div>
+    </div>
+  );
+};
+
+//
+// event popup component – shows detailed event information in a dialog
+//
+const EventPopup: React.FC<{ open: boolean; event: CalendarEventData | null; onClose: () => void; }> = ({ open, event, onClose }) => {
+  return (
+    <Dialog open={open} onClose={onClose}>
+      {event && (
+        <>
+          <DialogTitle>{event.title}</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" gutterBottom>
+              {event.description}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={onClose}>Close</Button>
+            <Button
+              component="a"
+              href={event.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              color="primary"
+            >
+              See more
+            </Button>
+          </DialogActions>
+        </>
+      )}
+    </Dialog>
+  );
+};
+
+//
+// calendar component – renders the original grid layout and overlays events.
+// note: the grid layout is unchanged, so the calendar retains its original aspect ratio.
+//
+interface CalendarComponentProps {
+  events: CalendarEventData[];
+  onEventClick: (event: CalendarEventData) => void;
+}
+const CalendarComponent: React.FC<CalendarComponentProps> = ({ events, onEventClick }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const hours = Array.from({ length: 16 }, (_, i) => i + 8); // from 8:00 to 23:00
+
+  useEffect(() => {
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth);
+    }
+  }, []);
+
+  return (
+    <div className="p-4" ref={containerRef}>
       <h2 className="text-2xl font-bold mb-2">Calendar</h2>
       <p className="text-sm text-gray-500 mb-4">Weekly view for the current week</p>
-      <div className="overflow-auto">
+      <div className="overflow-auto" style={{ position: 'relative' }}>
+        {/* calendar grid (layout unchanged) */}
         <div className="grid grid-cols-8 border border-gray-300">
-          {/* header row: empty cell for the time labels */}
+          {/* header row: first empty cell then day names */}
           <div className="border border-gray-300 bg-white"></div>
           {days.map((day) => (
             <div key={day} className="border border-gray-300 bg-white text-center py-2 font-medium">
               {day}
             </div>
           ))}
-          {/* rows for each hour */}
           {hours.map((hour) => (
             <React.Fragment key={hour}>
-              {/* time label */}
               <div className="border border-gray-300 bg-white text-center py-2">{`${hour}:00`}</div>
-              {/* cells for each day */}
               {days.map((day) => (
                 <div key={day + hour} className="border border-gray-300 h-16"></div>
               ))}
             </React.Fragment>
           ))}
         </div>
+        {/* overlay events on top of the grid */}
+        {containerWidth > 0 && events.map(event => (
+          <CalendarEvent key={event.id} event={event} onClick={onEventClick} containerWidth={containerWidth} />
+        ))}
       </div>
     </div>
   );
 };
 
+//
+// dashboard calendar component – combines sidebar, header, conversation list,
+// social threads (with unread blue circles), and the full-page calendar with events
+//
 const Dashboard_Calendar: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -146,32 +280,31 @@ const Dashboard_Calendar: React.FC = () => {
   const cancelConversationRef = useRef(false);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState<number>(0); //Count for number of conversation social thread dont opened
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
-  const [isSocialThread, setIsSocialThread] = useState(false); // Permet de savoir si c'est un Social Thread
+  const [isSocialThread, setIsSocialThread] = useState(false);
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
+  const [eventPopupOpen, setEventPopupOpen] = useState(false);
 
-
+  // fetch profile picture on mount
   useEffect(() => {
     const fetchProfilePicture = async () => {
       if (!user?.id) return;
-  
       try {
         const userRef = doc(db, 'users', user.id);
         const userSnap = await getDoc(userRef);
-  
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          setProfilePicture(userData.profile_picture || null); // Met à jour avec l'URL ou null
-          console.log('Fetched profile picture:', userData.profile_picture || 'No profile picture found');
+          setProfilePicture(userData.profile_picture || null);
+          console.log('fetched profile picture:', userData.profile_picture || 'no profile picture found');
         } else {
-          console.warn('User document does not exist.');
+          console.warn('user document does not exist.');
         }
       } catch (error) {
-        console.error('Error fetching profile picture:', error);
+        console.error('error fetching profile picture:', error);
       }
     };
-  
     fetchProfilePicture();
   }, [user?.id]);
 
@@ -199,7 +332,7 @@ const Dashboard_Calendar: React.FC = () => {
   };
 
   const handleDeleteAccount = () => {
-    console.log('Delete Account clicked');
+    console.log('delete account clicked');
     handleParametersMenuClose();
   };
 
@@ -225,14 +358,13 @@ const Dashboard_Calendar: React.FC = () => {
 
   const handleRename = async () => {
     handleMenuClose();
-
     if (!selectedConversation) {
-      alert('No conversation selected.');
+      alert('no conversation selected.');
       return;
     }
-    const newName = prompt('Enter new name:', '');
+    const newName = prompt('enter new name:', '');
     if (!newName) {
-      alert('Conversation name cannot be empty.');
+      alert('conversation name cannot be empty.');
       return;
     }
     try {
@@ -243,10 +375,10 @@ const Dashboard_Calendar: React.FC = () => {
           conv.chat_id === selectedConversation ? { ...conv, name: newName } : conv
         )
       );
-      alert('Conversation renamed successfully.');
+      alert('conversation renamed successfully.');
     } catch (error) {
-      console.error('Failed to rename the conversation:', error);
-      alert('Failed to rename the conversation. Please try again.');
+      console.error('failed to rename the conversation:', error);
+      alert('failed to rename the conversation. please try again.');
     }
   };
 
@@ -261,19 +393,17 @@ const Dashboard_Calendar: React.FC = () => {
     } catch (error) {
       setPopup({
         type: 'error',
-        message: 'Failed to fetch chat history. Please try again later.',
+        message: 'failed to fetch chat history. please try again later.',
       });
     }
   };
 
   const handleNewConversation = async () => {
     console.log('new conversation');
-
     if (isLandingPageVisible) {
       console.log('cannot create a new conversation when landing page is visible.');
       return;
     }
-
     if (isStreaming) {
       setCancelConversation(true);
       cancelConversationRef.current = true;
@@ -281,26 +411,21 @@ const Dashboard_Calendar: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
       console.log('after timeout:', cancelConversationRef.current);
     }
-
     const university = user.university || 'University Name';
     const firstMessageContent = messages.length > 0 ? messages[0].content : 'Conversation history';
     console.log('first message content:', firstMessageContent);
-
     const newChatId = uuidv4();
     const oldChatId = chatIds[0];
-
     setIsStreaming(false);
     setMessages([]);
     setRelatedQuestions([]);
     setIsLandingPageVisible(true);
     setPrimaryChatId(newChatId);
     setActiveChatId(newChatId);
-
     setConversations((prevConversations) => [
       { chat_id: newChatId, name: 'New Chat' },
       ...prevConversations,
     ]);
-
     if (user.id) {
       const userRef = doc(db, 'users', user.id);
       try {
@@ -318,7 +443,6 @@ const Dashboard_Calendar: React.FC = () => {
             university: university,
           });
           console.log(`new chat session created with chat_id: ${newChatId}`);
-
           const refreshedUserSnap = await getDoc(userRef);
           if (refreshedUserSnap.exists()) {
             const refreshedUserData = refreshedUserSnap.data();
@@ -333,7 +457,6 @@ const Dashboard_Calendar: React.FC = () => {
               }
               return null;
             });
-
             const fetchedConversations = await Promise.all(chatPromises);
             const validConversations = fetchedConversations.filter(
               (conversation): conversation is { chat_id: string; name: string } => conversation !== null
@@ -353,26 +476,25 @@ const Dashboard_Calendar: React.FC = () => {
   const handleDelete = async () => {
     handleMenuClose();
     if (!selectedConversation) {
-      alert('No conversation selected.');
+      alert('no conversation selected.');
       return;
     }
-    const confirmDelete = window.confirm('Are you sure you want to delete this conversation?');
+    const confirmDelete = window.confirm('are you sure you want to delete this conversation?');
     if (!confirmDelete) return;
     try {
       const conversationRef = doc(db, 'chatsessions', selectedConversation);
       await deleteDoc(conversationRef);
       setConversations((prev) => prev.filter((conv) => conv.chat_id !== selectedConversation));
-      alert('Conversation deleted successfully.');
+      alert('conversation deleted successfully.');
     } catch (error) {
       console.error('failed to delete the conversation:', error);
-      alert('Failed to delete the conversation. Please try again.');
+      alert('failed to delete the conversation. please try again.');
     }
   };
 
   const fetchSocialThreads = async () => {
     setLoadingSocialThreads(true);
-    const university = user.university || 'upenn'; // par défaut si user.university n'existe pas
-  
+    const university = user.university || 'upenn';
     try {
       const q = query(
         collection(db, 'chatsessions'),
@@ -380,10 +502,7 @@ const Dashboard_Calendar: React.FC = () => {
         limit(130)
       );
       const querySnapshot = await getDocs(q);
-
-      const userId = user.id; // ID de l'utilisateur actuel
-  
-      // Transformation des threads depuis Firestore
+      const userId = user.id;
       const threads = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
@@ -393,26 +512,17 @@ const Dashboard_Calendar: React.FC = () => {
           topic: data.topic || "Default",
           thread_type: data.thread_type || "Public",
           university: data.university || "Default",
-          isRead: (data.ReadBy || []).includes(userId), // Marque comme lu si userId est dans ReadBy
-          
+          isRead: (data.ReadBy || []).includes(userId),
         };
       });
-
-      // Filtrer les threads publics pour l'université actuelle
       const filteredThreads = threads.filter(
-        (thread) => thread.university === university && thread.thread_type === 'Public' && thread.name != 'New Chat'
+        (thread) => thread.university === university && thread.thread_type === 'Public' && thread.name !== 'New Chat'
       );
-
-      // Met à jour les threads sociaux avec les threads filtrés
       setSocialThreads(filteredThreads);
-
-      // Calculer le nombre de conversations non lues parmi les threads filtrés
       const unread = filteredThreads.filter((thread) => !thread.isRead).length;
-      setUnreadCount(unread); // Mettre à jour l'état du compteur
-
-
+      setUnreadCount(unread);
     } catch (error) {
-      console.error('Erreur lors de la récupération des social threads :', error);
+      console.error('erreur lors de la récupération des social threads :', error);
     } finally {
       setLoadingSocialThreads(false);
     }
@@ -441,7 +551,6 @@ const Dashboard_Calendar: React.FC = () => {
             }
             return null;
           });
-
           const fetchedConversations = await Promise.all(chatPromises);
           const validConversations = fetchedConversations.filter(
             (conversation): conversation is { chat_id: string; name: string } => conversation !== null
@@ -450,7 +559,6 @@ const Dashboard_Calendar: React.FC = () => {
         }
       }
     };
-
     fetchCourseOptionsAndChatSessions();
   }, [user.id]);
 
@@ -470,6 +578,62 @@ const Dashboard_Calendar: React.FC = () => {
     setSelectedConversation(null);
   };
 
+  //
+  // fake events for demonstration – these will be mapped onto the calendar grid
+  //
+  const getMonday = (d: Date) => {
+    d = new Date(d);
+    const day = d.getDay();
+    const diff = d.getDate() - (day === 0 ? 6 : day - 1);
+    return new Date(d.setDate(diff));
+  };
+
+  const now = new Date();
+  const monday = getMonday(now);
+  const currentYear = monday.getFullYear();
+  const currentMonth = monday.getMonth();
+  const mondayDate = monday.getDate();
+
+  const fakeEvents: CalendarEventData[] = [
+    {
+      id: "1",
+      title: "financial aid workshop",
+      description: "learn about financial aid options in detail.",
+      topic: "Financial Aids",
+      start: new Date(currentYear, currentMonth, mondayDate, 10, 30),
+      end: new Date(currentYear, currentMonth, mondayDate, 12, 0),
+      url: "https://example.com/financial-aid"
+    },
+    {
+      id: "2",
+      title: "policy briefing",
+      description: "briefing on new university policies and guidelines.",
+      topic: "Policies",
+      start: new Date(currentYear, currentMonth, mondayDate + 2, 14, 0),
+      end: new Date(currentYear, currentMonth, mondayDate + 2, 15, 30),
+      url: "https://example.com/policies"
+    },
+    {
+      id: "3",
+      title: "housing fair",
+      description: "explore various housing options and meet potential landlords.",
+      topic: "Housing",
+      start: new Date(currentYear, currentMonth, mondayDate + 4, 9, 0),
+      end: new Date(currentYear, currentMonth, mondayDate + 4, 10, 0),
+      url: "https://example.com/housing"
+    },
+  ];
+
+  const handleEventClick = (eventData: CalendarEventData) => {
+    setSelectedEvent(eventData);
+    setEventPopupOpen(true);
+  };
+
+  const closeEventPopup = () => {
+    setEventPopupOpen(false);
+    setSelectedEvent(null);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <div className="background-container">
@@ -480,7 +644,6 @@ const Dashboard_Calendar: React.FC = () => {
         <div className="blob blob-5"></div>
         <div className="frosted-glass"></div>
       </div>
-
       <motion.div
         initial="initial"
         animate="animate"
@@ -523,16 +686,13 @@ const Dashboard_Calendar: React.FC = () => {
             }}
             ModalProps={{
               keepMounted: true,
-              BackdropProps: {
-                style: { backgroundColor: 'rgba(0, 0, 0, 0.1)' },
-              },
+              BackdropProps: { style: { backgroundColor: 'rgba(0, 0, 0, 0.1)' } },
             }}
           >
             <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
               <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
                 <MenuIcon />
               </IconButton>
-
               <IconButton
                 onClick={() => {
                   if (!isLandingPageVisible) {
@@ -549,7 +709,6 @@ const Dashboard_Calendar: React.FC = () => {
                 <MapsUgcRoundedIcon />
               </IconButton>
             </Box>
-
             <List style={{ padding: '0 10px' }}>
               <ListItem
                 button
@@ -577,7 +736,6 @@ const Dashboard_Calendar: React.FC = () => {
                   }}
                 />
               </ListItem>
-
               <ListItem
                 button
                 onClick={handleToggleHistory}
@@ -602,34 +760,26 @@ const Dashboard_Calendar: React.FC = () => {
                 />
               </ListItem>
             </List>
-
             <Divider style={{ backgroundColor: 'lightgray' }} />
-            
-
-            {/* Titre de l'état actuel */}
-          <div className="text-center text-black-500 font-semibold mt-5 mb-4 text-sm flex justify-center items-center">
-            <span>
-              {isHistory ? "Conversation History" : "Last Public Interactions"}
-            </span>
-            {/* Ajouter la vignette uniquement si c'est Last Public Interactions */}
-            {!isHistory && unreadCount > 0 && (
-              <div
-                className="ml-2 flex items-center justify-center text-white"
-                style={{
-                  backgroundColor: 'red',
-                  borderRadius: '8px',
-                  padding: '2px 8px',
-                  fontSize: '0.75rem',
-                  fontWeight: '500',
-                  minWidth: '20px', // Taille minimale pour un affichage cohérent
-                  height: '20px', // Hauteur constante pour garder l'alignement
-                }}
-              >
-                {unreadCount}
-              </div>
-            )}
-          </div>
-
+            <div className="text-center text-black-500 font-semibold mt-5 mb-4 text-sm flex justify-center items-center">
+              <span>{isHistory ? "Conversation History" : "Last Public Interactions"}</span>
+              {!isHistory && unreadCount > 0 && (
+                <div
+                  className="ml-2 flex items-center justify-center text-white"
+                  style={{
+                    backgroundColor: 'red',
+                    borderRadius: '8px',
+                    padding: '2px 8px',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    minWidth: '20px',
+                    height: '20px',
+                  }}
+                >
+                  {unreadCount}
+                </div>
+              )}
+            </div>
             <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 10px' }}>
               {isHistory ? (
                 <List>
@@ -715,7 +865,7 @@ const Dashboard_Calendar: React.FC = () => {
                         marginTop: '30px',
                       }}
                     >
-                      You have no conversations yet
+                      you have no conversations yet
                     </Typography>
                   )}
                 </List>
@@ -792,20 +942,21 @@ const Dashboard_Calendar: React.FC = () => {
                               style: { fontSize: '0.75rem', color: theme.palette.text.secondary },
                             }}
                           />
-                          {/* Cercle indiquant si la conversation est lue */}
+                          {/* unread indicator – blue circle if not read */}
+                          {!thread.isRead && (
                             <Box
-                            sx={{
-                                width: '7px', // Taille du cercle
-                                minWidth: '7px', // Empêche la largeur d'être réduite
+                              sx={{
+                                width: '7px',
+                                minWidth: '7px',
                                 height: '7px',
-                                borderRadius: '50%', // Cercle parfait
-                                backgroundColor: thread.isRead ? 'transparent' : '#3155CC ', // Vert si non lu, transparent sinon
-                                transition: 'background-color 0.3s ease', // Transition douce
-                                //marginRight: '10px',
-                                marginLeft: 'auto', // Pousse le cercle complètement à droite
-                            marginRight: '3px', // Ajoute un léger espacement par rapport au bord
-                            }}
+                                borderRadius: '50%',
+                                backgroundColor: '#3155CC',
+                                transition: 'background-color 0.3s ease',
+                                marginLeft: 'auto',
+                                marginRight: '3px',
+                              }}
                             />
+                          )}
                         </ListItem>
                       );
                     })
@@ -819,13 +970,12 @@ const Dashboard_Calendar: React.FC = () => {
                         marginTop: '30px',
                       }}
                     >
-                      You have no social threads yet
+                      you have no social threads yet
                     </Typography>
                   )}
                 </List>
               )}
             </Box>
-
             <Menu
               anchorEl={menuAnchorEl}
               open={Boolean(menuAnchorEl)}
@@ -844,17 +994,16 @@ const Dashboard_Calendar: React.FC = () => {
               <MenuItem onClick={handleRename} sx={{ padding: '8px', '&:hover': { backgroundColor: theme.palette.action.hover } }}>
                 <EditIcon fontSize="small" sx={{ marginRight: '8px' }} />
                 <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: '400' }}>
-                  Rename
+                  rename
                 </Typography>
               </MenuItem>
               <MenuItem onClick={handleDelete} sx={{ padding: '8px', color: 'red', '&:hover': { backgroundColor: theme.palette.action.hover } }}>
                 <DeleteIcon fontSize="small" sx={{ marginRight: '8px' }} />
                 <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: '400' }}>
-                  Delete
+                  delete
                 </Typography>
               </MenuItem>
             </Menu>
-
             {isSmallScreen && (
               <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
                 <AccountCircleIcon
@@ -879,7 +1028,7 @@ const Dashboard_Calendar: React.FC = () => {
                     <ListItemText
                       primary={
                         <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
-                          Log-out
+                          log-out
                         </Typography>
                       }
                     />
@@ -888,7 +1037,6 @@ const Dashboard_Calendar: React.FC = () => {
               </Box>
             )}
           </Drawer>
-
           <div className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : ''}`}>
             <div
               className="relative p-4 flex items-center justify-between"
@@ -903,7 +1051,7 @@ const Dashboard_Calendar: React.FC = () => {
               </div>
               <img
                 src={theme.logo}
-                alt="University Logo"
+                alt="university logo"
                 style={{
                   height: '40px',
                   marginRight: '10px',
@@ -911,9 +1059,7 @@ const Dashboard_Calendar: React.FC = () => {
                   transition: 'padding-left 0.3s ease-in-out',
                 }}
               />
-
               <div style={{ flexGrow: 1 }}></div>
-
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 {isSmallScreen ? (
                   <></>
@@ -921,10 +1067,10 @@ const Dashboard_Calendar: React.FC = () => {
                   <>
                     {profilePicture ? (
                       <>
-                        {console.log('Rendering profile picture with URL:', profilePicture)}
+                        {console.log('rendering profile picture with url:', profilePicture)}
                         <img
                           src={profilePicture}
-                          alt="Profile"
+                          alt="profile"
                           style={{ width: '55px', height: '55px' }}
                           className="rounded-full object-cover cursor-pointer"
                           onClick={(event) =>
@@ -934,7 +1080,7 @@ const Dashboard_Calendar: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        {console.log('Rendering default AccountCircleIcon')}
+                        {console.log('rendering default accountcircleicon')}
                         <AccountCircleIcon
                           fontSize="inherit"
                           component="svg"
@@ -965,7 +1111,7 @@ const Dashboard_Calendar: React.FC = () => {
                         <ListItemText
                           primary={
                             <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
-                              Edit Profile
+                              edit profile
                             </Typography>
                           }
                         />
@@ -977,7 +1123,7 @@ const Dashboard_Calendar: React.FC = () => {
                         <ListItemText
                           primary={
                             <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
-                              Parameters
+                              parameters
                             </Typography>
                           }
                         />
@@ -989,13 +1135,12 @@ const Dashboard_Calendar: React.FC = () => {
                         <ListItemText
                           primary={
                             <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
-                              Log-out
+                              log-out
                             </Typography>
                           }
                         />
                       </MenuItem>
                     </Menu>
-
                     <Menu
                       anchorEl={parametersMenuAnchorEl}
                       open={Boolean(parametersMenuAnchorEl)}
@@ -1014,7 +1159,7 @@ const Dashboard_Calendar: React.FC = () => {
                         <ListItemText
                           primary={
                             <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
-                              Delete Account
+                              delete account
                             </Typography>
                           }
                         />
@@ -1024,15 +1169,16 @@ const Dashboard_Calendar: React.FC = () => {
                 )}
               </div>
             </div>
-
-            {/* calendar section replaces the previous recommendations and placeholders */}
+            {/* calendar section – remains full-page as before */}
             <div className="pl-10 pr-4 transition-all duration-300">
-              <CalendarComponent />
+              <CalendarComponent events={fakeEvents} onEventClick={handleEventClick} />
             </div>
           </div>
         </div>
-        {/* render the StudentProfileDialog component */}
+        {/* render student profile dialog */}
         <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
+        {/* render event popup */}
+        <EventPopup open={eventPopupOpen} event={selectedEvent} onClose={closeEventPopup} />
       </motion.div>
     </ThemeProvider>
   );
