@@ -583,10 +583,31 @@ const Dashboard_Calendar: React.FC = () => {
             </List>
 
             <Divider style={{ backgroundColor: 'lightgray' }} />
+            
 
-            <div className="text-center text-black-500 font-semibold mt-5 mb-4 text-sm">
-              {isHistory ? 'Conversation History' : 'Last Public Interactions'}
-            </div>
+            {/* Titre de l'état actuel */}
+          <div className="text-center text-black-500 font-semibold mt-5 mb-4 text-sm flex justify-center items-center">
+            <span>
+              {isHistory ? "Conversation History" : "Last Public Interactions"}
+            </span>
+            {/* Ajouter la vignette uniquement si c'est Last Public Interactions */}
+            {!isHistory && unreadCount > 0 && (
+              <div
+                className="ml-2 flex items-center justify-center text-white"
+                style={{
+                  backgroundColor: 'red',
+                  borderRadius: '8px',
+                  padding: '2px 8px',
+                  fontSize: '0.75rem',
+                  fontWeight: '500',
+                  minWidth: '20px', // Taille minimale pour un affichage cohérent
+                  height: '20px', // Hauteur constante pour garder l'alignement
+                }}
+              >
+                {unreadCount}
+              </div>
+            )}
+          </div>
 
             <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 10px' }}>
               {isHistory ? (
