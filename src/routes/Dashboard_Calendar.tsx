@@ -14,14 +14,23 @@ import {
   Menu,
   MenuItem,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  setDoc,
+  serverTimestamp,
+  deleteDoc,
+  query,
+  collection,
+  orderBy,
+  limit,
+  getDocs,
+  QueryDocumentSnapshot,
+  DocumentData,
+} from 'firebase/firestore';
 import {
   sendMessageFakeDemo,
   saveMessageAIToBackend,
@@ -55,9 +64,10 @@ import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday } from 'date-fns';
 import { Message } from '../interfaces/interfaces_eleve';
 
-//
-// interfaces
-//
+// import the custom calendar component
+import Calendar from '../components/NewCalendarCustom';
+
+const drawerWidth = 270;
 
 interface SocialThread {
   chat_id: string;
@@ -76,183 +86,16 @@ interface Conversation {
   topic?: string;
 }
 
-interface CalendarEventData {
-  id: string;
-  title: string;
-  description: string;
-  topic: string;
-  start: Date;
-  end: Date;
-  url: string;
-}
-
-//
-// topic colors – note: events now use pastel backgrounds based on topic,
-// and the social thread unread indicator (blue circle) will be shown if not read.
-//
 const topicColors: { [key: string]: string } = {
-  "Financial Aids": "#27AE60",
-  "Events": "#E67E22",
-  "Policies": "#2980B9",
-  "Housing": "#8E44AD",
-  "Courses": "#F39C12",
-  "Chitchat": "#7F8C8D",
-  "Default": "#7F8C8D"
+  'Financial Aids': '#27AE60',
+  Events: '#E67E22',
+  Policies: '#2980B9',
+  Housing: '#8E44AD',
+  Courses: '#F39C12',
+  Chitchat: '#7F8C8D',
+  Default: '#7F8C8D',
 };
 
-const drawerWidth = 270;
-
-//
-// helper to convert hex color to rgba with opacity
-//
-const hexToRgba = (hex: string, opacity: number): string => {
-  let r = 0, g = 0, b = 0;
-  if (hex.length === 7) {
-    r = parseInt(hex.substring(1, 3), 16);
-    g = parseInt(hex.substring(3, 5), 16);
-    b = parseInt(hex.substring(5, 7), 16);
-  }
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-};
-
-//
-// calendar event component – renders an individual event over the grid.
-// it uses absolute positioning relative to the calendar container.
-//
-const CalendarEvent: React.FC<{ event: CalendarEventData; onClick: (event: CalendarEventData) => void; containerWidth: number; }> = ({ event, onClick, containerWidth }) => {
-  const timeLabelWidth = 60; // fixed width for time label column
-  const cellHeight = 64; // matching tailwind h-16 (64px)
-  const headerHeight = 40; // approximate header row height
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const dayWidth = (containerWidth - timeLabelWidth) / 7;
-
-  // in javascript, getDay returns 0 for sunday; we adjust so monday = 0, ... sunday = 6.
-  const eventDayIndex = event.start.getDay() === 0 ? 6 : event.start.getDay() - 1;
-  const startHour = event.start.getHours() + event.start.getMinutes() / 60;
-  const endHour = event.end.getHours() + event.end.getMinutes() / 60;
-  const top = headerHeight + (startHour - 8) * cellHeight;
-  const height = (endHour - startHour) * cellHeight;
-  const left = timeLabelWidth + eventDayIndex * dayWidth;
-  const width = dayWidth;
-  const accentColor = topicColors[event.topic] || topicColors["Default"];
-  const pastelColor = hexToRgba(accentColor, 0.2);
-
-  return (
-    <div
-      onClick={() => onClick(event)}
-      style={{
-        position: 'absolute',
-        top: top,
-        left: left,
-        width: width,
-        height: height,
-        backgroundColor: pastelColor,
-        borderTop: `3px solid ${accentColor}`,
-        borderRadius: '4px',
-        padding: '4px',
-        boxSizing: 'border-box',
-        cursor: 'pointer',
-        overflow: 'hidden'
-      }}
-    >
-      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#011F5B' }}>
-        {event.title}
-      </div>
-      <div style={{ fontSize: '0.75rem', color: '#011F5B', marginTop: '4px' }}>
-        {event.topic}
-      </div>
-    </div>
-  );
-};
-
-//
-// event popup component – shows detailed event information in a dialog
-//
-const EventPopup: React.FC<{ open: boolean; event: CalendarEventData | null; onClose: () => void; }> = ({ open, event, onClose }) => {
-  return (
-    <Dialog open={open} onClose={onClose}>
-      {event && (
-        <>
-          <DialogTitle>{event.title}</DialogTitle>
-          <DialogContent>
-            <Typography variant="body1" gutterBottom>
-              {event.description}
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={onClose}>Close</Button>
-            <Button
-              component="a"
-              href={event.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              color="primary"
-            >
-              See more
-            </Button>
-          </DialogActions>
-        </>
-      )}
-    </Dialog>
-  );
-};
-
-//
-// calendar component – renders the original grid layout and overlays events.
-// note: the grid layout is unchanged, so the calendar retains its original aspect ratio.
-//
-interface CalendarComponentProps {
-  events: CalendarEventData[];
-  onEventClick: (event: CalendarEventData) => void;
-}
-const CalendarComponent: React.FC<CalendarComponentProps> = ({ events, onEventClick }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState<number>(0);
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const hours = Array.from({ length: 16 }, (_, i) => i + 8); // from 8:00 to 23:00
-
-  useEffect(() => {
-    if (containerRef.current) {
-      setContainerWidth(containerRef.current.offsetWidth);
-    }
-  }, []);
-
-  return (
-    <div className="p-4" ref={containerRef}>
-      <h2 className="text-2xl font-bold mb-2">Calendar</h2>
-      <p className="text-sm text-gray-500 mb-4">Weekly view for the current week</p>
-      <div className="overflow-auto" style={{ position: 'relative' }}>
-        {/* calendar grid (layout unchanged) */}
-        <div className="grid grid-cols-8 border border-gray-300">
-          {/* header row: first empty cell then day names */}
-          <div className="border border-gray-300 bg-white"></div>
-          {days.map((day) => (
-            <div key={day} className="border border-gray-300 bg-white text-center py-2 font-medium">
-              {day}
-            </div>
-          ))}
-          {hours.map((hour) => (
-            <React.Fragment key={hour}>
-              <div className="border border-gray-300 bg-white text-center py-2">{`${hour}:00`}</div>
-              {days.map((day) => (
-                <div key={day + hour} className="border border-gray-300 h-16"></div>
-              ))}
-            </React.Fragment>
-          ))}
-        </div>
-        {/* overlay events on top of the grid */}
-        {containerWidth > 0 && events.map(event => (
-          <CalendarEvent key={event.id} event={event} onClick={onEventClick} containerWidth={containerWidth} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-//
-// dashboard calendar component – combines sidebar, header, conversation list,
-// social threads (with unread blue circles), and the full-page calendar with events
-//
 const Dashboard_Calendar: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -284,10 +127,7 @@ const Dashboard_Calendar: React.FC = () => {
   const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
   const [isSocialThread, setIsSocialThread] = useState(false);
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
-  const [eventPopupOpen, setEventPopupOpen] = useState(false);
 
-  // fetch profile picture on mount
   useEffect(() => {
     const fetchProfilePicture = async () => {
       if (!user?.id) return;
@@ -348,9 +188,9 @@ const Dashboard_Calendar: React.FC = () => {
   const formatDate = (timestamp: { toDate: () => Date }) => {
     const date = timestamp.toDate();
     if (isToday(date)) {
-      return `Today, ${format(date, 'HH:mm')}`;
+      return `today, ${format(date, 'HH:mm')}`;
     } else if (isYesterday(date)) {
-      return `Yesterday, ${format(date, 'HH:mm')}`;
+      return `yesterday, ${format(date, 'HH:mm')}`;
     } else {
       return `${format(date, 'dd/MM/yyyy')}, ${format(date, 'HH:mm')}`;
     }
@@ -412,7 +252,7 @@ const Dashboard_Calendar: React.FC = () => {
       console.log('after timeout:', cancelConversationRef.current);
     }
     const university = user.university || 'University Name';
-    const firstMessageContent = messages.length > 0 ? messages[0].content : 'Conversation history';
+    const firstMessageContent = messages.length > 0 ? messages[0].content : 'conversation history';
     console.log('first message content:', firstMessageContent);
     const newChatId = uuidv4();
     const oldChatId = chatIds[0];
@@ -459,7 +299,8 @@ const Dashboard_Calendar: React.FC = () => {
             });
             const fetchedConversations = await Promise.all(chatPromises);
             const validConversations = fetchedConversations.filter(
-              (conversation): conversation is { chat_id: string; name: string } => conversation !== null
+              (conversation): conversation is { chat_id: string; name: string } =>
+                conversation !== null
             );
             setConversations(validConversations.reverse());
             console.log('updated conversations:', validConversations);
@@ -509,14 +350,17 @@ const Dashboard_Calendar: React.FC = () => {
           chat_id: data.chat_id,
           name: data.name,
           created_at: data.created_at,
-          topic: data.topic || "Default",
-          thread_type: data.thread_type || "Public",
-          university: data.university || "Default",
+          topic: data.topic || 'Default',
+          thread_type: data.thread_type || 'Public',
+          university: data.university || 'Default',
           isRead: (data.ReadBy || []).includes(userId),
         };
       });
       const filteredThreads = threads.filter(
-        (thread) => thread.university === university && thread.thread_type === 'Public' && thread.name !== 'New Chat'
+        (thread) =>
+          thread.university === university &&
+          thread.thread_type === 'Public' &&
+          thread.name !== 'New Chat'
       );
       setSocialThreads(filteredThreads);
       const unread = filteredThreads.filter((thread) => !thread.isRead).length;
@@ -553,7 +397,8 @@ const Dashboard_Calendar: React.FC = () => {
           });
           const fetchedConversations = await Promise.all(chatPromises);
           const validConversations = fetchedConversations.filter(
-            (conversation): conversation is { chat_id: string; name: string } => conversation !== null
+            (conversation): conversation is { chat_id: string; name: string } =>
+              conversation !== null
           );
           setConversations(validConversations.reverse());
         }
@@ -578,60 +423,10 @@ const Dashboard_Calendar: React.FC = () => {
     setSelectedConversation(null);
   };
 
-  //
-  // fake events for demonstration – these will be mapped onto the calendar grid
-  //
-  const getMonday = (d: Date) => {
-    d = new Date(d);
-    const day = d.getDay();
-    const diff = d.getDate() - (day === 0 ? 6 : day - 1);
-    return new Date(d.setDate(diff));
-  };
-
-  const now = new Date();
-  const monday = getMonday(now);
-  const currentYear = monday.getFullYear();
-  const currentMonth = monday.getMonth();
-  const mondayDate = monday.getDate();
-
-  const fakeEvents: CalendarEventData[] = [
-    {
-      id: "1",
-      title: "financial aid workshop",
-      description: "learn about financial aid options in detail.",
-      topic: "Financial Aids",
-      start: new Date(currentYear, currentMonth, mondayDate, 10, 30),
-      end: new Date(currentYear, currentMonth, mondayDate, 12, 0),
-      url: "https://example.com/financial-aid"
-    },
-    {
-      id: "2",
-      title: "policy briefing",
-      description: "briefing on new university policies and guidelines.",
-      topic: "Policies",
-      start: new Date(currentYear, currentMonth, mondayDate + 2, 14, 0),
-      end: new Date(currentYear, currentMonth, mondayDate + 2, 15, 30),
-      url: "https://example.com/policies"
-    },
-    {
-      id: "3",
-      title: "housing fair",
-      description: "explore various housing options and meet potential landlords.",
-      topic: "Housing",
-      start: new Date(currentYear, currentMonth, mondayDate + 4, 9, 0),
-      end: new Date(currentYear, currentMonth, mondayDate + 4, 10, 0),
-      url: "https://example.com/housing"
-    },
-  ];
-
-  const handleEventClick = (eventData: CalendarEventData) => {
-    setSelectedEvent(eventData);
-    setEventPopupOpen(true);
-  };
-
-  const closeEventPopup = () => {
-    setEventPopupOpen(false);
-    setSelectedEvent(null);
+  // simple event click handler for the custom calendar
+  const handleEventClick = (eventData: any) => {
+    console.log('event clicked:', eventData);
+    // add your event handling logic here
   };
 
   return (
@@ -686,7 +481,9 @@ const Dashboard_Calendar: React.FC = () => {
             }}
             ModalProps={{
               keepMounted: true,
-              BackdropProps: { style: { backgroundColor: 'rgba(0, 0, 0, 0.1)' } },
+              BackdropProps: {
+                style: { backgroundColor: 'rgba(0, 0, 0, 0.1)' },
+              },
             }}
           >
             <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
@@ -721,9 +518,6 @@ const Dashboard_Calendar: React.FC = () => {
                   backgroundColor: 'transparent',
                   mb: 1,
                   '&:hover': { backgroundColor: theme.palette.action.hover },
-                  '@media (hover: hover) and (pointer: fine)': {
-                    '&:hover': { backgroundColor: theme.palette.action.hover },
-                  },
                 }}
               >
                 <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
@@ -744,9 +538,6 @@ const Dashboard_Calendar: React.FC = () => {
                   backgroundColor: 'transparent',
                   mb: 2,
                   '&:hover': { backgroundColor: theme.palette.action.hover },
-                  '@media (hover: hover) and (pointer: fine)': {
-                    '&:hover': { backgroundColor: theme.palette.action.hover },
-                  },
                 }}
               >
                 <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
@@ -762,7 +553,7 @@ const Dashboard_Calendar: React.FC = () => {
             </List>
             <Divider style={{ backgroundColor: 'lightgray' }} />
             <div className="text-center text-black-500 font-semibold mt-5 mb-4 text-sm flex justify-center items-center">
-              <span>{isHistory ? "Conversation History" : "Last Public Interactions"}</span>
+              <span>{isHistory ? 'Conversation History' : 'Last Public Interactions'}</span>
               {!isHistory && unreadCount > 0 && (
                 <div
                   className="ml-2 flex items-center justify-center text-white"
@@ -799,26 +590,6 @@ const Dashboard_Calendar: React.FC = () => {
                           paddingRight: '40px',
                           backgroundColor:
                             activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
-                          '& .MuiIconButton-root': {
-                            opacity: activeChatId === conversation.chat_id ? 1 : 0,
-                            pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
-                          },
-                          '& .MuiTypography-root': {
-                            color:
-                              activeChatId === conversation.chat_id
-                                ? theme.palette.text_human_message_historic
-                                : theme.palette.text.primary,
-                          },
-                          '@media (hover: hover) and (pointer: fine)': {
-                            '&:hover': {
-                              backgroundColor: theme.palette.button.background,
-                              color: theme.palette.text_human_message_historic,
-                              '& .MuiIconButton-root': {
-                                opacity: 1,
-                                pointerEvents: 'auto',
-                              },
-                            },
-                          },
                         }}
                       >
                         <ListItemText
@@ -845,10 +616,6 @@ const Dashboard_Calendar: React.FC = () => {
                             top: '50%',
                             transform: 'translateY(-50%)',
                             color: theme.palette.text.primary,
-                            opacity: activeChatId === conversation.chat_id ? 1 : 0,
-                            pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
-                            '&:hover': { backgroundColor: 'transparent' },
-                            mr: '1px',
                           }}
                         >
                           <MoreHorizIcon fontSize="small" sx={{ color: 'gray', fontSize: '20px' }} />
@@ -894,26 +661,6 @@ const Dashboard_Calendar: React.FC = () => {
                             paddingRight: '20px',
                             backgroundColor:
                               activeChatId === thread.chat_id ? theme.palette.button.background : 'transparent',
-                            '& .MuiIconButton-root': {
-                              opacity: activeChatId === thread.chat_id ? 1 : 0,
-                              pointerEvents: activeChatId === thread.chat_id ? 'auto' : 'none',
-                            },
-                            '& .MuiTypography-root': {
-                              color:
-                                activeChatId === thread.chat_id
-                                  ? theme.palette.text_human_message_historic
-                                  : theme.palette.text.primary,
-                            },
-                            '@media (hover: hover) and (pointer: fine)': {
-                              '&:hover': {
-                                backgroundColor: theme.palette.button.background,
-                                color: theme.palette.text_human_message_historic,
-                                '& .MuiIconButton-root': {
-                                  opacity: 1,
-                                  pointerEvents: 'auto',
-                                },
-                              },
-                            },
                           }}
                         >
                           <Box
@@ -942,21 +689,18 @@ const Dashboard_Calendar: React.FC = () => {
                               style: { fontSize: '0.75rem', color: theme.palette.text.secondary },
                             }}
                           />
-                          {/* unread indicator – blue circle if not read */}
-                          {!thread.isRead && (
-                            <Box
-                              sx={{
-                                width: '7px',
-                                minWidth: '7px',
-                                height: '7px',
-                                borderRadius: '50%',
-                                backgroundColor: '#3155CC',
-                                transition: 'background-color 0.3s ease',
-                                marginLeft: 'auto',
-                                marginRight: '3px',
-                              }}
-                            />
-                          )}
+                          <Box
+                            sx={{
+                              width: '7px',
+                              minWidth: '7px',
+                              height: '7px',
+                              borderRadius: '50%',
+                              backgroundColor: thread.isRead ? 'transparent' : '#3155CC',
+                              transition: 'background-color 0.3s ease',
+                              marginLeft: 'auto',
+                              marginRight: '3px',
+                            }}
+                          />
                         </ListItem>
                       );
                     })
@@ -1051,7 +795,7 @@ const Dashboard_Calendar: React.FC = () => {
               </div>
               <img
                 src={theme.logo}
-                alt="university logo"
+                alt="University Logo"
                 style={{
                   height: '40px',
                   marginRight: '10px',
@@ -1061,40 +805,28 @@ const Dashboard_Calendar: React.FC = () => {
               />
               <div style={{ flexGrow: 1 }}></div>
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                {isSmallScreen ? (
-                  <></>
-                ) : (
+                {isSmallScreen ? null : (
                   <>
                     {profilePicture ? (
-                      <>
-                        {console.log('rendering profile picture with url:', profilePicture)}
-                        <img
-                          src={profilePicture}
-                          alt="profile"
-                          style={{ width: '55px', height: '55px' }}
-                          className="rounded-full object-cover cursor-pointer"
-                          onClick={(event) =>
-                            handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)
-                          }
-                        />
-                      </>
+                      <img
+                        src={profilePicture}
+                        alt="Profile"
+                        style={{ width: '55px', height: '55px' }}
+                        className="rounded-full object-cover cursor-pointer"
+                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                      />
                     ) : (
-                      <>
-                        {console.log('rendering default accountcircleicon')}
-                        <AccountCircleIcon
-                          fontSize="inherit"
-                          component="svg"
-                          style={{
-                            color: '#9e9e9e',
-                            cursor: 'pointer',
-                            margin: '0 auto 0 16px',
-                            fontSize: '2.5rem',
-                          }}
-                          onClick={(event) =>
-                            handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)
-                          }
-                        />
-                      </>
+                      <AccountCircleIcon
+                        fontSize="inherit"
+                        component="svg"
+                        style={{
+                          color: '#9e9e9e',
+                          cursor: 'pointer',
+                          margin: '0 auto 0 16px',
+                          fontSize: '2.5rem',
+                        }}
+                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                      />
                     )}
                     <Menu
                       anchorEl={profileMenuAnchorEl}
@@ -1145,9 +877,7 @@ const Dashboard_Calendar: React.FC = () => {
                       anchorEl={parametersMenuAnchorEl}
                       open={Boolean(parametersMenuAnchorEl)}
                       onClose={handleParametersMenuClose}
-                      PaperProps={{
-                        style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper },
-                      }}
+                      PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
                       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                       transformOrigin={{ vertical: 'top', horizontal: 'left' }}
                       sx={{ mt: -1, ml: -18 }}
@@ -1169,17 +899,14 @@ const Dashboard_Calendar: React.FC = () => {
                 )}
               </div>
             </div>
-            {/* calendar section – remains full-page as before */}
+            {/* replace the previous table-based calendar with the custom calendar */}
             <div className="pl-10 pr-4 transition-all duration-300">
-              <CalendarComponent events={fakeEvents} onEventClick={handleEventClick} />
+              <Calendar onEventClick={handleEventClick} />
             </div>
           </div>
         </div>
-        {/* render student profile dialog */}
-        <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
-        {/* render event popup */}
-        <EventPopup open={eventPopupOpen} event={selectedEvent} onClose={closeEventPopup} />
       </motion.div>
+      <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
     </ThemeProvider>
   );
 };
