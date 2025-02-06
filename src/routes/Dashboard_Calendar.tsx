@@ -65,7 +65,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { Message } from '../interfaces/interfaces_eleve';
 
 // import the custom calendar component (new version with custom events)
-import Calendar from '../components/NewCalendarCustomEvents';
+import Calendar from '../components/NewCalendarCustom';
 
 const drawerWidth = 270;
 
@@ -903,13 +903,13 @@ const Dashboard_Calendar: React.FC = () => {
             <div className="pl-10 pr-4 transition-all duration-300 flex flex-col h-full">
               <div className="mb-4">
                 <Typography variant="h4" component="h1" style={{ fontWeight: 500 }}>
-                  calendar
+                  Calendar
                 </Typography>
                 <Typography variant="subtitle1" component="h2" style={{ color: theme.palette.text.secondary }}>
-                  your schedule overview
+                  Your schedule overview
                 </Typography>
               </div>
-              <div className="flex-grow">
+              <div className="flex-grow h-full w-full flex flex-col">
                 <Calendar onEventClick={handleEventClick} />
               </div>
             </div>

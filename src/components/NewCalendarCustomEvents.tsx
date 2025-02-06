@@ -11,7 +11,7 @@ export interface CalendarHandles {
 
 interface CalendarProps {
   onEventClick: (event: Event) => void;
-}
+} 
 
 const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick }, ref) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -194,7 +194,7 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick }, r
   };
 
   return (
-    <div className="calendar-container">
+    <div className="calendar-container flex-grow">
       <div className="calendar-header">
         <div className="calendar-header-left">
           <button onClick={prevWeek} style={{ marginLeft: '10px' }}>{'<'}</button>
