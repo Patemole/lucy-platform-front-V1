@@ -587,8 +587,8 @@ const CourseSelectionEleveTemplate: React.FC = () => {
               course={popupEvent.answerCourse}
               isOpen={isPopupOpen}
               onClose={handleCloseCalendarEventPanel}
-              onDeleteCourse={() => handleDeleteCourse(popupEvent.code)}
-              onConfirmSlot={(newSlotIndex: number) => handleConfirmSlot(popupEvent.code, newSlotIndex)}
+              onDeleteCourse={() => handleDeleteCourse(popupEvent.category)}
+              onConfirmSlot={(newSlotIndex: number) => handleConfirmSlot(popupEvent.category, newSlotIndex)}
               currentSlot={popupEvent.answerCourse.CoursesSlot.find(slot => slot.CourseID === popupEvent.id.split('-').pop()) || popupEvent.answerCourse.CoursesSlot[0]}
             />
           ) : null}

@@ -62,10 +62,12 @@ import MenuItemMui from '@mui/material/MenuItem';
 import ListItemTextMui from '@mui/material/ListItemText';
 import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday } from 'date-fns';
-import { Message } from '../interfaces/interfaces_eleve';
+import { Message, StudentProfile } from '../interfaces/interfaces_eleve';
+import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
 
 // import the custom calendar component (new version with custom events)
-import Calendar from '../components/NewCalendarCustom';
+import Calendar from '../components/Calendar_StudentProfile';
+import { EventStudentProfile } from '../interfaces/interfaces_eleve';
 
 const drawerWidth = 270;
 
@@ -127,6 +129,8 @@ const Dashboard_Calendar: React.FC = () => {
   const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
   const [isSocialThread, setIsSocialThread] = useState(false);
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [events, setEvents] = useState<EventStudentProfile[]>([]);
+
 
   useEffect(() => {
     const fetchProfilePicture = async () => {
@@ -147,6 +151,58 @@ const Dashboard_Calendar: React.FC = () => {
     };
     fetchProfilePicture();
   }, [user?.id]);
+
+
+  //Function to future call the API for events but first collect all user informations
+  const fetchUserInfo = async () => {
+    if (!user) {
+      console.warn("User data is unavailable.");
+      return;
+    }
+  
+    const userInfo: StudentProfile = {
+      username: user.name || "default_username",
+      university: user.university || "University Name",
+      year: user.year || "Null",
+      studentProfile: localStorage.getItem("student_profile") || "Brief profile description",
+      major: Array.isArray(user.major) ? user.major : ["None_Default"],
+      minor: Array.isArray(user.minor) ? user.minor : ["None_Default"],
+      faculty: Array.isArray(user.faculty) ? user.faculty : ["None_Default"],
+      email: user.email || "No email provided",
+      userId: user.id || "No ID",
+      role: user.role || "No role",
+      createdAt: user.createdAt || "Unknown",
+      lastLogin: user.lastLogin || "Unknown",
+      profilePicture: user.profilePicture || "No profile picture",
+      name: user.name || "default_username",
+      academic_advisor: user.academic_advisor || "Unknown"  // Ajoute `academic_advisor` si absent
+    };
+  
+    console.log("Fetched user info:", userInfo);
+  
+    try {
+      // Envoi des informations de l'utilisateur au backend
+      const response = await sendUserInfoToBackend(userInfo);
+      
+      // Vérifie si la réponse contient des événements
+      if (response && response.events) {
+        setEvents(response.events);
+        console.log("Events successfully retrieved:", response.events);
+      } else {
+        console.warn("No events found in response.");
+      }
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  };
+  
+  
+  //Future function to call the API to retrieve the personalized events bqsed on the student profile
+  useEffect(() => {
+    fetchUserInfo();
+  }, [user]);
+
+  
 
   const handleDialogOpen = () => setDialogOpen(true);
   const handleDialogClose = () => setDialogOpen(false);
@@ -910,7 +966,8 @@ const Dashboard_Calendar: React.FC = () => {
                 </Typography>
               </div>
               <div className="flex-grow h-full w-full flex flex-col">
-                <Calendar onEventClick={handleEventClick} />
+                <Calendar onEventClick={handleEventClick} events={events} />
+
               </div>
             </div>
           </div>

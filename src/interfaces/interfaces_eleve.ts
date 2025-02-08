@@ -78,10 +78,55 @@ export interface Event {
   startMinute: number;
   endHour: number;
   endMinute: number;
-  code: string; // Code unique du cours
-  type: string; // Type de cours (pour la couleur/affichage)
+  category: string; // Code unique du cours
+  description: string; // Type de cours (pour la couleur/affichage)
   answerCourse: AnswerCourse; // Détails complets du cours
 }
+
+
+export interface StudentProfile {
+  userId: string;
+  username: string;
+  name: string;
+  university: string;
+  year: string;
+  studentProfile: string;
+  major: string[];
+  minor: string[];
+  faculty: string[];
+  email: string;
+  role: string;
+  createdAt: string;
+  lastLogin: string;
+  profilePicture: string;
+  academic_advisor?: string; // Ajoute la propriété `academic_advisor`
+}
+
+
+/*
+// type simplifié pour les événements (profil étudiant)
+export interface EventStudentProfile {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  code: string;
+  type: string;
+}
+*/
+
+export interface EventStudentProfile {
+  id: string; // Ajouté : un identifiant unique (peut être l'index ou un hash basé sur le titre)
+  title: string;
+  start: Date; // Converti depuis `day`, `month`, `year`, et `start_time`
+  end: Date; // Converti depuis `day`, `month`, `year`, et `end_time`
+  location: string;
+  organizer: string;
+  category: string;
+  description: string;
+  tags: string[];
+}
+
 
 
 export interface Message {

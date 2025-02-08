@@ -45,13 +45,13 @@ const EventTitle = styled.div`
 
 interface CourseEventProps {
   title: string;
-  code: string;
-  type: string;
+  description: string;
+  category: string;
   onClick: () => void; // onClick added to handle event click
 }
 
-const CourseEvent: React.FC<CourseEventProps> = ({ title, code, type, onClick }) => {
-  const colors = courseColors[type] || {
+const CourseEvent: React.FC<CourseEventProps> = ({ title, description, category, onClick }) => {
+  const colors = courseColors[description] || {
     pastel: '#E5E7EB',
     dark: '#374151',
   };
