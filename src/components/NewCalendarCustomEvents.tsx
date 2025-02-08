@@ -117,10 +117,10 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick }, r
       setEvents((prevEvents) => [...prevEvents, ...newEvents]);
     },
     deleteCourse: (courseCode: string) => {
-      setEvents((prevEvents) => prevEvents.filter((event) => event.code !== courseCode));
+      setEvents((prevEvents) => prevEvents.filter((event) => event.category !== courseCode));
     },
     confirmSlot: (courseCode: string, newSlotIndex: number) => {
-      const course = events.find((event) => event.code === courseCode)?.answerCourse;
+      const course = events.find((event) => event.category === courseCode)?.answerCourse;
       if (!course) {
         console.error(`course with code ${courseCode} not found.`);
         return;
@@ -130,7 +130,7 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick }, r
         console.error('invalid slot index.');
         return;
       }
-      setEvents((prevEvents) => prevEvents.filter((event) => event.code !== courseCode));
+      setEvents((prevEvents) => prevEvents.filter((event) => event.category !== courseCode));
       const updatedEvents = addCourseSlot(newSlot, course);
       setEvents((prevEvents) => [...prevEvents, ...updatedEvents]);
     },
@@ -168,8 +168,8 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick }, r
           startMinute,
           endHour,
           endMinute,
-          code: answerCourse.code,
-          type: answerCourse.code,
+          category: answerCourse.code,
+          description: answerCourse.code,
           answerCourse: { ...answerCourse },
         };
         newEvents.push(event);
@@ -248,8 +248,8 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick }, r
                     >
                       <CourseEvent
                         title={event.title}
-                        code={event.code}
-                        type={event.type}
+                        category={event.category}
+                        description={event.description}
                         onClick={() => onEventClick(event)}
                       />
                     </div>
