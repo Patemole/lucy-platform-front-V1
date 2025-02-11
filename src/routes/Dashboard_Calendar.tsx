@@ -14,6 +14,7 @@ import {
   Menu,
   MenuItem,
   CircularProgress,
+  Button,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {
@@ -67,7 +68,9 @@ import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
 
 // import the custom calendar component (new version with custom events)
 import Calendar from '../components/Calendar_StudentProfile';
+import Kanban from '../components/Kanban_StudentProfile';
 import { EventStudentProfile } from '../interfaces/interfaces_eleve';
+import EventDetailsSidebar from '../components/EventDetailsSidebar';
 
 const drawerWidth = 270;
 
@@ -129,8 +132,10 @@ const Dashboard_Calendar: React.FC = () => {
   const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
   const [isSocialThread, setIsSocialThread] = useState(false);
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [events, setEvents] = useState<EventStudentProfile[]>([]);
-
+  const [events, setEvents] = useState<EventStudentProfile[]>([]); // on charge les événements du backend ici
+  const [isCalendarView, setIsCalendarView] = useState(false); // état pour savoir si on est en vue calendar ou pas
+  const [selectedEvent, setSelectedEvent] = useState<EventStudentProfile | null>(null); // événement sélectionné lors d'un clic
+  const [sidebarOpen, setSidebarOpen] = useState(false); // si la sidebar est ouverte ou pas
 
   useEffect(() => {
     const fetchProfilePicture = async () => {
@@ -152,57 +157,63 @@ const Dashboard_Calendar: React.FC = () => {
     fetchProfilePicture();
   }, [user?.id]);
 
+  const handleEventClick = (event: EventStudentProfile) => {
+    setSelectedEvent(event);
+    setSidebarOpen(true);
+  };
 
-  //Function to future call the API for events but first collect all user informations
+  const handleCloseSidebar = () => {
+    setSidebarOpen(false);
+  };
+
+  // fonction de basculement de vue entre le calendar et le kanban
+  const toggleView = () => {
+    setIsCalendarView((prev) => !prev);
+  };
+
+  // fonction pour envoyer les infos de l'utilisateur au backend et récupérer les événements
   const fetchUserInfo = async () => {
     if (!user) {
-      console.warn("User data is unavailable.");
+      console.warn('User data is unavailable.');
       return;
     }
   
     const userInfo: StudentProfile = {
-      username: user.name || "default_username",
-      university: user.university || "University Name",
-      year: user.year || "Null",
-      studentProfile: localStorage.getItem("student_profile") || "Brief profile description",
-      major: Array.isArray(user.major) ? user.major : ["None_Default"],
-      minor: Array.isArray(user.minor) ? user.minor : ["None_Default"],
-      faculty: Array.isArray(user.faculty) ? user.faculty : ["None_Default"],
-      email: user.email || "No email provided",
-      userId: user.id || "No ID",
-      role: user.role || "No role",
-      createdAt: user.createdAt || "Unknown",
-      lastLogin: user.lastLogin || "Unknown",
-      profilePicture: user.profilePicture || "No profile picture",
-      name: user.name || "default_username",
-      academic_advisor: user.academic_advisor || "Unknown"  // Ajoute `academic_advisor` si absent
+      username: user.name || 'default_username',
+      university: user.university || 'University Name',
+      year: user.year || 'Null',
+      studentProfile: localStorage.getItem('student_profile') || 'Brief profile description',
+      major: Array.isArray(user.major) ? user.major : ['None_Default'],
+      minor: Array.isArray(user.minor) ? user.minor : ['None_Default'],
+      faculty: Array.isArray(user.faculty) ? user.faculty : ['None_Default'],
+      email: user.email || 'No email provided',
+      userId: user.id || 'No ID',
+      role: user.role || 'No role',
+      createdAt: user.createdAt || 'Unknown',
+      lastLogin: user.lastLogin || 'Unknown',
+      profilePicture: user.profilePicture || 'No profile picture',
+      name: user.name || 'default_username',
+      academic_advisor: user.academic_advisor || 'Unknown',
     };
   
-    console.log("Fetched user info:", userInfo);
+    console.log('Fetched user info:', userInfo);
   
     try {
-      // Envoi des informations de l'utilisateur au backend
       const response = await sendUserInfoToBackend(userInfo);
-      
-      // Vérifie si la réponse contient des événements
       if (response && response.events) {
         setEvents(response.events);
-        console.log("Events successfully retrieved:", response.events);
+        console.log('Events successfully retrieved:', response.events);
       } else {
-        console.warn("No events found in response.");
+        console.warn('No events found in response.');
       }
     } catch (error) {
-      console.error("Error fetching events:", error);
+      console.error('Error fetching events:', error);
     }
   };
   
-  
-  //Future function to call the API to retrieve the personalized events bqsed on the student profile
   useEffect(() => {
     fetchUserInfo();
   }, [user]);
-
-  
 
   const handleDialogOpen = () => setDialogOpen(true);
   const handleDialogClose = () => setDialogOpen(false);
@@ -479,14 +490,9 @@ const Dashboard_Calendar: React.FC = () => {
     setSelectedConversation(null);
   };
 
-  // simple event click handler for the custom calendar
-  const handleEventClick = (eventData: any) => {
-    console.log('event clicked:', eventData);
-    // add your event handling logic here
-  };
-
   return (
     <ThemeProvider theme={theme}>
+      {/* background et éléments décoratifs */}
       <div className="background-container">
         <div className="blob blob-1"></div>
         <div className="blob blob-2"></div>
@@ -495,6 +501,20 @@ const Dashboard_Calendar: React.FC = () => {
         <div className="blob blob-5"></div>
         <div className="frosted-glass"></div>
       </div>
+      {/* bouton de basculement fixe en haut à droite */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 16,
+          right: 16,
+          zIndex: 1100,
+        }}
+      >
+        <Button variant="outlined" onClick={toggleView} sx={{ mt: 1.6, mr: 8.5 }}>
+          {isCalendarView ? 'Kanban View' : 'Calendar View'}
+        </Button>
+
+      </Box>
       <motion.div
         initial="initial"
         animate="animate"
@@ -837,6 +857,8 @@ const Dashboard_Calendar: React.FC = () => {
               </Box>
             )}
           </Drawer>
+
+
           <div className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : ''}`}>
             <div
               className="relative p-4 flex items-center justify-between"
@@ -884,6 +906,8 @@ const Dashboard_Calendar: React.FC = () => {
                         onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                       />
                     )}
+
+
                     <Menu
                       anchorEl={profileMenuAnchorEl}
                       open={Boolean(profileMenuAnchorEl)}
@@ -929,6 +953,7 @@ const Dashboard_Calendar: React.FC = () => {
                         />
                       </MenuItem>
                     </Menu>
+                    
                     <Menu
                       anchorEl={parametersMenuAnchorEl}
                       open={Boolean(parametersMenuAnchorEl)}
@@ -955,24 +980,32 @@ const Dashboard_Calendar: React.FC = () => {
                 )}
               </div>
             </div>
-            {/* new container for title, subtitle and calendar */}
-            <div className="pl-10 pr-4 transition-all duration-300 flex flex-col h-full">
-              <div className="mb-4">
-                <Typography variant="h4" component="h1" style={{ fontWeight: 500 }}>
-                  Calendar
-                </Typography>
-                <Typography variant="subtitle1" component="h2" style={{ color: theme.palette.text.secondary }}>
-                  Your schedule overview
-                </Typography>
-              </div>
-              <div className="flex-grow h-full w-full flex flex-col">
-                <Calendar onEventClick={handleEventClick} events={events} />
 
+
+            {/* conteneur regroupant le titre et le sous-titre (sans le bouton) */}
+            <div className="pl-10 pr-4 transition-all duration-300 flex flex-col h-full">
+              <div className="sticky top-0 z-20 mb-4 ml-5 flex items-center">
+                <div>
+                  <Typography variant="h5" component="h1" style={{ fontWeight: 500 }}>
+                    {isCalendarView ? 'Calendar' : 'Kanban'}
+                  </Typography>
+                  <Typography variant="subtitle2" component="h2" style={{ color: theme.palette.text.secondary }}>
+                    {isCalendarView ? 'Your schedule overview' : 'Your tasks overview'}
+                  </Typography>
+                </div>
+              </div>
+              <div className="flex-grow h-full flex flex-col min-w-0 overflow-x-auto">
+                {isCalendarView ? (
+                  <Calendar onEventClick={handleEventClick} events={events} />
+                ) : (
+                  <Kanban onEventClick={handleEventClick} events={events} />
+                )}
               </div>
             </div>
           </div>
         </div>
       </motion.div>
+      <EventDetailsSidebar event={selectedEvent} open={sidebarOpen} onClose={handleCloseSidebar} />
       <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
     </ThemeProvider>
   );

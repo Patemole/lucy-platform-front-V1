@@ -77,6 +77,10 @@ const getTheme = (subdomain, themeMode) => {
     case 'columbia':
           return themeMode == 'dark' ? columbiaDarkTheme : columbiaTheme;
 
+    case 'berkeley':
+          return themeMode == 'dark' ? berkeleyDarkTheme : berkeleyTheme;
+  
+
     case 'admin':
       return themeMode === 'dark' ? adminDarkTheme : adminTheme;
 
