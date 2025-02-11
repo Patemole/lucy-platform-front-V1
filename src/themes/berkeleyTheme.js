@@ -49,6 +49,21 @@ const berkeleyTheme = createTheme({
   },
   logo: '/logos/berkeley_logo.png', // chemin du logo spécifique à berkeley
   university: 'berkeley',
+  facultyOptions: [
+    'College of Letters & Science',
+    'Haas School of Business',
+    'College of Chemistry',
+    'College of Engineering',
+    'College of Environmental Design',
+    'Graduate School of Education',
+    'Goldman School of Public Policy',
+    'School of Information',
+    'School of Journalism',
+    'School of Law (Berkeley Law)',
+    'School of Optometry',
+    'School of Public Health',
+    'School of Social Welfare',
+  ],
 });
 
 const berkeleyDarkTheme = createTheme({
@@ -97,6 +112,21 @@ const berkeleyDarkTheme = createTheme({
   },
   logo: '/logos/berkeley_logo.png', // chemin du logo spécifique à berkeley
   university: 'berkeley',
+  facultyOptions: [
+    'College of Letters & Science',
+    'Haas School of Business',
+    'College of Chemistry',
+    'College of Engineering',
+    'College of Environmental Design',
+    'Graduate School of Education',
+    'Goldman School of Public Policy',
+    'School of Information',
+    'School of Journalism',
+    'School of Law (Berkeley Law)',
+    'School of Optometry',
+    'School of Public Health',
+    'School of Social Welfare',
+  ],
 });
 
 export { berkeleyTheme, berkeleyDarkTheme };
