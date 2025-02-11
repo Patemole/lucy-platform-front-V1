@@ -123,8 +123,10 @@ export interface EventStudentProfile {
   location: string;
   organizer: string;
   category: string;
+  sub_category: string;
   description: string;
   tags: string[];
+  banner: string;
 }
 
 

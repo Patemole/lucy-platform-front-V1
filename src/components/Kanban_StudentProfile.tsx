@@ -11,13 +11,13 @@ interface KanbanProps {
 
 const topicColors: { [key: string]: string } = {
   'Financial Aids': '#27ae60',
-  Sports: '#e67e22',
-  Basketball: '#2980b9',
-  Cultural: '#8e44ad',
-  Track: '#f39c12',
-  Lacrosse: '#27ae60',
-  Health: '#d32f2f',
-  Default: '#7f8c8d',
+  athletics: '#2980b9', //
+  academic: '#e67e22',
+  'campus life': '#f39c12',
+  'art & culture': '#8e44ad',
+  esports: '#27ae60',
+  'campus ministry': '#d32f2f',
+  'holidays': '#7f8c8d',
 };
 
 const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -79,7 +79,7 @@ const Kanban: React.FC<KanbanProps> = ({ events, onEventClick }) => {
               height: '100%', // occupe toute la hauteur disponible dans le conteneur parent
             }}
           >
-            {/* titre fixe grâce à position sticky avec arrondi en haut */}
+            {/* Titre fixe grâce à position sticky avec arrondi en haut */}
             <Box
               sx={{
                 position: 'sticky',
@@ -96,7 +96,7 @@ const Kanban: React.FC<KanbanProps> = ({ events, onEventClick }) => {
                 {day}
               </Typography>
             </Box>
-            {/* zone scrollable verticalement pour les événements */}
+            {/* Zone scrollable verticalement pour les événements */}
             <Box sx={{ flex: 1, overflowY: 'auto', padding: 1 }}>
               {groupedEvents[day].length === 0 ? (
                 <Typography variant="caption" sx={{ textAlign: 'center', marginTop: 2, color: 'grey' }}>
@@ -104,8 +104,9 @@ const Kanban: React.FC<KanbanProps> = ({ events, onEventClick }) => {
                 </Typography>
               ) : (
                 groupedEvents[day].map((event) => {
-                  const tag = event.category || 'Default';
-                  const color = topicColors[tag] || topicColors['Default'];
+                  // le tag affiché provient de sub_category et la couleur est déterminée par category
+                  const tag = event.sub_category || 'Default';
+                  const color = topicColors[event.category || 'Default'] || topicColors['Default'];
                   return (
                     <Paper
                       key={event.id}
@@ -117,7 +118,7 @@ const Kanban: React.FC<KanbanProps> = ({ events, onEventClick }) => {
                       }}
                       elevation={3}
                     >
-                      {/* bande colorée en haut pour symboliser le tag */}
+                      {/* Bande colorée en haut pour symboliser la category */}
                       <Box
                         sx={{
                           position: 'absolute',
@@ -158,7 +159,7 @@ const Kanban: React.FC<KanbanProps> = ({ events, onEventClick }) => {
             </Box>
           </Box>
         ))}
-        {/* élément espaceur pour étendre l'amplitude du scroll horizontal */}
+        {/* Élément espaceur pour étendre l'amplitude du scroll horizontal */}
         <Box sx={{ flex: '0 0 auto', width: extraScrollSpace }} />
       </Box>
     </Box>
@@ -166,5 +167,3 @@ const Kanban: React.FC<KanbanProps> = ({ events, onEventClick }) => {
 };
 
 export default Kanban;
-
-

@@ -16,15 +16,15 @@ interface CalendarProps {
 }
 
 const topicColors: { [key: string]: string } = {
-  'Financial Aids': '#27ae60',
-  Sports: '#e67e22',
-  Basketball: '#2980b9',
-  Cultural: '#8e44ad',
-  Track: '#f39c12',
-  Lacrosse: '#27ae60',
-  Health: '#d32f2f',
-  Default: '#7f8c8d',
-};
+    'Financial Aids': '#27ae60',
+    athletics: '#2980b9', //
+    academic: '#e67e22',
+    'campus life': '#f39c12',
+    'art & culture': '#8e44ad', 
+    esports: '#27ae60',
+    'campus ministry': '#d32f2f',
+    'holidays': '#7f8c8d',
+  };
 
 const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick, events }, ref) => {
   // fonction pour obtenir le lundi de la semaine d'une date donnée
@@ -209,8 +209,9 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick, eve
                   console.error(`Invalid time value for event "${event.title}"`, event);
                   return null;
                 }
-                const tag = event.category || 'Default';
-                const color = topicColors[tag] || topicColors['Default'];
+                const tag = event.sub_category || 'Default';
+                //const color = topicColors[tag] || topicColors['Default'];
+                const color = topicColors[event.category || 'Default'] || topicColors['Default'];
                 return (
                   <div
                     key={event.id}
