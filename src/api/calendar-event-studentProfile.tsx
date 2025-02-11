@@ -55,8 +55,10 @@ export const formatEvents = (rawEvents: any[]): EventStudentProfile[] => {
         location: event.location || "No location specified",
         organizer: event.organizer || "Unknown",
         category: event.category || "General",
+        sub_category: event.sub_category || "General",
         description: event.description || "No description available",
         tags: event.tags ? (Array.isArray(event.tags) ? event.tags : event.tags.split(",")) : [],
+        banner: event.banner || "Unknown",
       };
     });
   };

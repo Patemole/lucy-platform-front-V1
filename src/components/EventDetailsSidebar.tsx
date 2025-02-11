@@ -9,13 +9,13 @@ import { EventStudentProfile } from '../interfaces/interfaces_eleve';
 
 const topicColors: { [key: string]: string } = {
   'Financial Aids': '#27ae60',
-  Sports: '#e67e22',
-  Basketball: '#2980b9',
-  Cultural: '#8e44ad',
-  Track: '#f39c12',
-  Lacrosse: '#27ae60',
-  Health: '#d32f2f',
-  Default: '#7f8c8d',
+  athletics: '#e67e22',
+  academic: '#2980b9',
+  'campus life': '#8e44ad',
+  'art & culture': '#f39c12',
+  esports: '#27ae60',
+  'campus ministry': '#d32f2f',
+  'holidays': '#7f8c8d',
 };
 
 interface EventDetailsSidebarProps {
@@ -50,8 +50,18 @@ const EventDetailsSidebar: React.FC<EventDetailsSidebarProps> = ({ event, open, 
         >
           <CloseIcon />
         </IconButton>
+        {/* Bannière récupérée via event.banner */}
+        {event && event.banner && (
+          <Box sx={{ mb: 2 }}>
+            <img
+              src={event.banner}
+              alt={`${event.category || 'Default'} banner`}
+              style={{ width: '100%', borderRadius: '8px' }}
+            />
+          </Box>
+        )}
         {event ? (
-          <Box sx={{ mt: 8 }}>
+          <Box sx={{ mt: 3 }}>
             <Typography variant="h6" sx={{ pb: 2 }} gutterBottom>
               {event.title}
             </Typography>
