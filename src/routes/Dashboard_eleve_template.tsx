@@ -1724,7 +1724,7 @@ const handleConversationClick = async (chat_id: string) => {
                 <DashboardIcon sx={{ fontSize: '22px' }} />
               </ListItemIcon>
               <ListItemText
-                primary="Your Calendar"
+                primary="Your Events"
                 primaryTypographyProps={{
                   style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
                 }}

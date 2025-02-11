@@ -17,6 +17,7 @@ import Student_list_academic_advisor from './routes/Student_list_academic_adviso
 import Dashboard_admin from './routes/Dashboard_admin';
 import Dashboard_Dashboard from './routes/Dashboard_Dashboard'
 import Dashboard_Calendar from './routes/Dashboard_Calendar'
+//import Dashboard_Calendar_Kanban from './routes/Dashboard_Calendar_Kanban'
 import Dashboard_feedback_admin from './routes/Dashboard_feedback_admin';
 import AcademicAdvisorContact from './routes/Academic_advisor_contact';
 import About from './routes/about';
