@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../auth/firebase';
@@ -6,6 +9,8 @@ import { useParams } from 'react-router-dom';
 import { useTheme, Theme } from '@mui/material/styles';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'; // Assurez-vous que ce composant est importé
 import { CircularProgress } from '@mui/material';
+import RemoveIcon from '@mui/icons-material/Remove';
+import AddIcon from '@mui/icons-material/Remove';
 
 // Extend the MUI theme to include `facultyOptions`
 declare module '@mui/material/styles' {
@@ -41,6 +46,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>('');
   const [isLoadingImages, setIsLoadingImages] = useState<boolean>(true);
   const [loadedImages, setLoadedImages] = useState<number>(0);
+  const [newInterest, setNewInterest] = useState<string>("");
 
   // État pour la photo de profil
   const [profilePictureUrl, setProfilePictureUrl] = useState<string>('');
@@ -658,50 +664,62 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                 </div>
               </div>
 
-              {/* Center of Interests */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">Center of Interests</label>
-                  {interests.length < 10 && (
-                    <button
-                      type="button"
-                      onClick={() => setInterests([...interests, ''])}
-                      className="text-green-500 text-2xl hover:text-green-700"
-                      aria-label="Add an interest"
+             
+             {/* Center of Interests */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select at least 5 interest tags*
+              </label>
+              {/* Affichage des tags sous forme de badges */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {interests.filter(tag => tag.trim() !== "").map((tag, index) => (
+                  <div
+                    key={index}
+                    className="group relative inline-block px-3 py-1 border border-gray-300 rounded-full text-sm text-gray-700"
+                  >
+                    {tag}
+                    <div
+                      className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      onClick={() => setInterests(interests.filter((_, i) => i !== index))}
+                      aria-label="Remove this interest"
                     >
-                      +
-                    </button>
-                  )}
-                </div>
-                {interests.map((interest, index) => (
-                  <div key={index} className="relative mb-2">
-                    <input
-                      type="text"
-                      value={interest}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        const updatedInterests = [...interests];
-                        updatedInterests[index] = e.target.value;
-                        setInterests(updatedInterests);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-                      placeholder="Enter your interest"
-                    />
-                    {index > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setInterests(interests.filter((_, i) => i !== index))}
-                        className="absolute top-1/2 right-2 transform -translate-y-1/2 text-red-500 text-2xl hover:text-red-700"
-                        aria-label="Remove this interest"
-                      >
-                        -
-                      </button>
-                    )}
-                    {errors.interests && errors.interests[index] && (
-                      <p className="text-red-500 text-xs mt-1">{errors.interests[index]}</p>
-                    )}
+                      <div className="flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white">
+                        <RemoveIcon fontSize="small" />
+                      </div>
+                    </div>
                   </div>
                 ))}
+                {/* Champ d'ajout d'un nouveau tag, stylisé comme un badge */}
+                <input
+                  type="text"
+                  value={newInterest}
+                  onChange={(e) => setNewInterest(e.target.value)}
+                  onBlur={() => {
+                    const trimmed = newInterest.trim();
+                    if (trimmed && !interests.includes(trimmed)) {
+                      setInterests([...interests, trimmed]);
+                    }
+                    setNewInterest("");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const trimmed = newInterest.trim();
+                      if (trimmed && !interests.includes(trimmed)) {
+                        setInterests([...interests, trimmed]);
+                      }
+                      setNewInterest("");
+                    }
+                  }}
+                  placeholder="Add a new interest"
+                  className="inline-block w-auto max-w-xs px-2 py-1 border border-gray-300 rounded-full text-sm text-gray-700 focus:outline-none focus:ring focus:ring-blue-100"
+                />
               </div>
+              {errors.interests && <p className="text-xs text-red-600 mt-1">{errors.interests}</p>}
+            </div>
+
+
+
 
               {/* Boutons d'action */}
               <div className="flex justify-end mt-6 space-x-3">
