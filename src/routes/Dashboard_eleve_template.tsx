@@ -151,6 +151,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
   const [isSocialThread, setIsSocialThread] = useState(false); // Permet de savoir si c'est un Social Thread
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
 
   //Change the fake number of online student every 15 secondes
@@ -1701,10 +1702,13 @@ const handleConversationClick = async (chat_id: string) => {
             {/* Profil avec fermeture automatique sur petits écrans */}
             <ListItem
               button
-              onClick={() => {
-                //navigate(`/dashboard/dashboard/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Dashboard
-                navigate(`/dashboard/calendar/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Calendar
-                if (isSmallScreen) toggleDrawer();
+              onClick={(event) => {
+                  event.preventDefault(); // Empêche tout comportement par défaut
+                  event.stopPropagation(); // Empêche la propagation de l’événement
+                  setSnackbarMessage("Available very soon! :)"); // Définir le message
+                  setSnackbarOpen(true); // Ouvrir le Snackbar
+                //navigate(`/dashboard/calendar/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Calendar
+                //if (isSmallScreen) toggleDrawer();
               }}
               sx={{
                 borderRadius: '8px',
@@ -1715,7 +1719,8 @@ const handleConversationClick = async (chat_id: string) => {
                 },
                 '@media (hover: hover) and (pointer: fine)': {
                   '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
+                    //backgroundColor: theme.palette.action.hover,
+                    backgroundColor: 'transparent',
                   },
                 },
               }}
@@ -2816,17 +2821,18 @@ const handleConversationClick = async (chat_id: string) => {
 
         <Snackbar
           open={snackbarOpen}
-          autoHideDuration={2000}
+          autoHideDuration={3000}
           onClose={() => setSnackbarOpen(false)}
         >
           <Alert
             onClose={() => setSnackbarOpen(false)}
-            severity="success"
+            severity="info" // Tu peux ajuster `info`, `warning`, `success`, etc.
             sx={{ width: '100%', fontWeight: '500', fontSize: '0.875rem' }}
           >
-            Feedback submitted successfully. Thank you!
+            {snackbarMessage}
           </Alert>
         </Snackbar>
+
       </motion.div>
     </ThemeProvider>
   );
