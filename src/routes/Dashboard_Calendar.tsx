@@ -183,6 +183,9 @@ const Dashboard_Calendar: React.FC = () => {
       university: user.university || 'University Name',
       year: user.year || 'Null',
       studentProfile: localStorage.getItem('student_profile') || 'Brief profile description',
+      interests: Array.isArray(user.interests) ? user.interests : ['No interests now'], //Adding interest to the student profile
+      registered_club_status: user.registered_club_status || 'No registered_club_status',
+      registered_clubs: user.registered_clubs || 'No registered_clubs',
       major: Array.isArray(user.major) ? user.major : ['None_Default'],
       minor: Array.isArray(user.minor) ? user.minor : ['None_Default'],
       faculty: Array.isArray(user.faculty) ? user.faculty : ['None_Default'],

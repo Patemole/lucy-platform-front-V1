@@ -894,6 +894,7 @@ const Dashboard_eleve_template: React.FC = () => {
         const username = user.name || 'default_username';
         const university = user.university || 'University Name';
         const year = user.year || 'Null';
+        const interests = Array.isArray(user.interests) ? user.interests : ['No interest']; //Adding new interest into Lucy
         const student_profile = localStorage.getItem('student_profile') || 'Brief profile description';
         const major = Array.isArray(user.major) ? user.major : ['None_Default'];
         const minor = Array.isArray(user.minor) ? user.minor : ['None_Default'];
@@ -902,6 +903,7 @@ const Dashboard_eleve_template: React.FC = () => {
         console.log('chatSessionId:', chatSessionId);
         console.log('username:', username);
         console.log('university:', university);
+        console.log('interests', interests);
         console.log('major:', major);
         console.log('minor:', minor);
         console.log('year:', year);
@@ -929,6 +931,7 @@ const Dashboard_eleve_template: React.FC = () => {
             courseId: courseId,
             username: username,
             university: university,
+            interests: interests,
             student_profile: student_profile,
             major: major,
             minor: minor,

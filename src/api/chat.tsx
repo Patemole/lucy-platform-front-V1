@@ -16,6 +16,7 @@ export interface SendMessageRequest {
     courseId: string;
     username: string;
     university: string;
+    interests: string[];
     student_profile: string; 
     major: string[];
     minor: string[];
@@ -67,6 +68,7 @@ export async function* sendMessageSocraticLangGraph({
     courseId,
     username,
     university,
+    interests,
     student_profile, //We dont using it now 
     major,
     minor,
@@ -89,6 +91,7 @@ export async function* sendMessageSocraticLangGraph({
             message: message,
             chat_id: chatSessionId,
             university: university,
+            interests: interests,
             student_profile: student_profile,
             major: major,
             minor:minor,

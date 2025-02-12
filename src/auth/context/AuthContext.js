@@ -49,9 +49,12 @@ export const AuthProvider = ({ children }) => {
               faculty: userData.faculty || [],
               year: userData.year || '',
               academic_advisor: userData.academic_advisor || '',
+              interests: userData.interests || [],
               major: userData.major || [],
               minor: userData.minor || [],
               role: userData.role || '',
+              registered_club_status: userData.registered_club_status || '',
+              registered_clubs: userData.registered_clubs || '',
             });
             // Récupération des sessions de chat depuis Firestore
               const chatSessions = userData.chatsessions || [];

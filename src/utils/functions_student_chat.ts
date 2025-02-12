@@ -140,6 +140,7 @@ export const onSubmit = async (
       const uid = user.id || 'default_uid';
       const university = localStorage.getItem('university') || 'default_university';
       const major = localStorage.getItem('major') || 'default_major';
+      const interests = localStorage.getItem('interests') || 'default_interests';
       const minor = localStorage.getItem('minor') || 'default_minor';
       const year = localStorage.getItem('year') || 'default_year';
       const faculty = localStorage.getItem('faculty') || 'default_faculty';
@@ -162,6 +163,7 @@ export const onSubmit = async (
           courseId: courseId,
           username: username,
           university: university,
+          interests: [interests],
           student_profile: student_profile,
           major: [major],
           minor: [minor],
