@@ -218,7 +218,7 @@ const Dashboard_eleve_template: React.FC = () => {
       const q = query(
         collection(db, 'chatsessions'),
         orderBy('created_at', 'desc'),
-        limit(130)
+        limit(330)
       );
       const querySnapshot = await getDocs(q);
 

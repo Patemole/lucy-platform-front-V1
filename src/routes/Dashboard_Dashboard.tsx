@@ -328,7 +328,7 @@ const Dashboard_dashboard: React.FC = () => {
       const q = query(
         collection(db, 'chatsessions'),
         orderBy('created_at', 'desc'),
-        limit(50)
+        limit(250)
       );
       const querySnapshot = await getDocs(q);
   
