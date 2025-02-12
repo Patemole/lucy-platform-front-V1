@@ -290,6 +290,7 @@ useEffect(() => {
       const courseId = localStorage.getItem('course_id') || 'default_course_id';
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const username = user.name || 'default_user';
+      const interests = localStorage.getItem('interests') || 'default_interests';
       const uid = user.id || 'default_uid';
       const university = localStorage.getItem('university') || 'upenn'; // Changer pour mettre Upenn ou autre en fonction de ou on met le widget
       const major = localStorage.getItem('major') || 'default_major';
@@ -325,6 +326,7 @@ useEffect(() => {
         courseId: courseId,
         username: username,
         university: university,
+        interests: [interests],
         student_profile: student_profile,
         major: [major],
         minor: [minor],

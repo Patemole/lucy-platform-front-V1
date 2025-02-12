@@ -438,6 +438,7 @@ const Dashboard_eleve_template: React.FC = () => {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const username = user.name || 'default_user';
       const uid = user.id || 'default_uid';
+      const interests = localStorage.getItem('interests') || 'default_interests';
       const university = localStorage.getItem('university') || 'default_university';
       const major = localStorage.getItem('major') || 'default_major';
       const minor = localStorage.getItem('minor') || 'default_minor';
@@ -454,6 +455,7 @@ const Dashboard_eleve_template: React.FC = () => {
         courseId: courseId,
         username: username,
         university: university,
+        interests: [interests],
         student_profile: student_profile,
         major: [major],
         minor: [minor],

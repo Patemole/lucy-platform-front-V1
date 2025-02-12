@@ -107,6 +107,7 @@ const ChatWidget: React.FC = () => {
       const courseId = "dummyCourseId";
       const username = "dummyUsername";
       const university = "dummyUniversity";
+      const interests = "Dummyinterests";
       const student_profile = "dummyProfile";
       const major = "dummyMajor";
       const minor = "dummyMinor";
@@ -119,6 +120,7 @@ const ChatWidget: React.FC = () => {
         courseId: courseId,
         username: username,
         university: university,
+        interests: [interests],
         student_profile: student_profile,
         major: [major],
         minor: [minor],

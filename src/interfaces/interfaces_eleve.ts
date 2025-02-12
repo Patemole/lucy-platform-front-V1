@@ -90,6 +90,7 @@ export interface StudentProfile {
   name: string;
   university: string;
   year: string;
+  interests:string[];
   studentProfile: string;
   major: string[];
   minor: string[];
@@ -100,6 +101,8 @@ export interface StudentProfile {
   lastLogin: string;
   profilePicture: string;
   academic_advisor?: string; // Ajoute la propriété `academic_advisor`
+  registered_club_status?: string;
+  registered_clubs?: string;
 }
 
 
