@@ -1706,11 +1706,11 @@ const handleConversationClick = async (chat_id: string) => {
             <ListItem
               button
               onClick={(event) => {
-                  event.preventDefault(); // Empêche tout comportement par défaut
-                  event.stopPropagation(); // Empêche la propagation de l’événement
-                  setSnackbarMessage("Available very soon! :)"); // Définir le message
-                  setSnackbarOpen(true); // Ouvrir le Snackbar
-                //navigate(`/dashboard/calendar/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Calendar
+                  //event.preventDefault(); // Empêche tout comportement par défaut
+                  //event.stopPropagation(); // Empêche la propagation de l’événement
+                  //setSnackbarMessage("Available very soon! :)"); // Définir le message
+                  //setSnackbarOpen(true); // Ouvrir le Snackbar
+                navigate(`/dashboard/calendar/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Calendar
                 //if (isSmallScreen) toggleDrawer();
               }}
               sx={{
