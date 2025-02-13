@@ -15,8 +15,9 @@ import FlagingDashboard from './routes/FlagingDashboard';
 import EnrollmentDashboard from './routes/EnrollmentDashboard';
 import Student_list_academic_advisor from './routes/Student_list_academic_advisor';
 import Dashboard_admin from './routes/Dashboard_admin';
-import Dashboard_Dashboard from './routes/Dashboard_Dashboard'
-import Dashboard_Calendar from './routes/Dashboard_Calendar'
+import Dashboard_Dashboard from './routes/Dashboard_Dashboard';
+import Dashboard_Calendar from './routes/Dashboard_Calendar';
+import User_analytics from './routes/User_analytics';
 //import Dashboard_Calendar_Kanban from './routes/Dashboard_Calendar_Kanban'
 import Dashboard_feedback_admin from './routes/Dashboard_feedback_admin';
 import AcademicAdvisorContact from './routes/Academic_advisor_contact';
@@ -81,6 +82,7 @@ const App: React.FC = () => {
                     <Route path="/auth/sign-up/enrollment" element={<SignUp_enrollment />} />
                     <Route path="/overview" element={<TrustPage />} />
                     <Route path="/controls" element={<TrustControlPage />} />
+                    <Route path="/dashboard/admin" element={<User_analytics />} />
 
                     <Route path="/" element={<PrivateRoute />}>
                         <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
