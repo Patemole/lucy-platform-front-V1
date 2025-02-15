@@ -137,7 +137,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
    // État pour gérer le basculement entre History et Social Thread
-  const [isHistory, setIsHistory] = useState(false);
+  const [isHistory, setIsHistory] = useState(true);
   const [parametersMenuAnchorEl, setParametersMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [userScrollingManually, setUserScrollingManually] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -394,6 +394,7 @@ const Dashboard_eleve_template: React.FC = () => {
   }, [user?.id]);
 
 
+  /*
   // Utilisez useEffect pour récupérer les social threads lorsque l'état change vers Social Thread
   useEffect(() => {
     if (!isHistory) {
@@ -401,6 +402,14 @@ const Dashboard_eleve_template: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHistory]);
+  */
+
+
+  // Lance la récupération des Social Threads au chargement de la page
+  useEffect(() => {
+    fetchSocialThreads();
+  }, []);
+
   
 
   useEffect(() => {
@@ -450,10 +459,24 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
 
+  /*
   // Fonction pour gérer le clic sur le bouton History/Social Thread
   const handleToggleHistory = () => {
     setIsHistory((prev) => !prev);
   };
+  */
+
+  const handleToggleHistory = () => {
+    setIsHistory((prev) => {
+      const newIsHistory = !prev;
+      
+      // 🔥 Toujours recharger les Social Threads, que l'on active ou désactive l'historique
+      fetchSocialThreads();
+  
+      return newIsHistory;
+    });
+  };
+  
 
 
   const lastAiMessageId = useMemo(() => {
@@ -1291,6 +1314,7 @@ const handleNewConversation = async () => {
           created_at: serverTimestamp(),
           modified_at: serverTimestamp(),
           university: university, // Ajout du champ university 
+          thread_type: 'Public', // 🔥 thread_type est bien ajouté ici
           ReadBy:[user.id] //Ajout du champ readby to kown who see the conversation. Has he is the creator, he saw it
         });
         console.log(`Nouvelle session de chat créée avec chat_id: ${newChatId}`);
@@ -2802,6 +2826,20 @@ const handleConversationClick = async (chat_id: string) => {
                       },
                   }}
                   />
+                  <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      marginTop: '6px', // Ajuste l'espacement sous le champ
+                      color: '#6F6F6F',
+                      textAlign: 'center', // Centre le texte
+                      fontSize: '0.6rem', // Réduit la taille du texte
+                      opacity: 0.8, // Légère transparence
+                    }}
+                  >
+                    Lucy can make mistakes. Look at the confidence score and consider checking important information.
+                  </Typography>
+                </div>
               </div>
               </div>
             )}
