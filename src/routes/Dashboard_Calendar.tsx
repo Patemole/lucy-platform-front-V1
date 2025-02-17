@@ -31,6 +31,8 @@ import {
   getDocs,
   QueryDocumentSnapshot,
   DocumentData,
+  onSnapshot,
+  where
 } from 'firebase/firestore';
 import {
   sendMessageFakeDemo,
@@ -63,8 +65,8 @@ import MenuItemMui from '@mui/material/MenuItem';
 import ListItemTextMui from '@mui/material/ListItemText';
 import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday } from 'date-fns';
-import { Message, StudentProfile } from '../interfaces/interfaces_eleve';
 import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
+import { Message,StudentProfile, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY} from '../interfaces/interfaces_eleve';
 
 // import the custom calendar component (new version with custom events)
 import Calendar from '../components/Calendar_StudentProfile';
@@ -91,6 +93,7 @@ interface Conversation {
   topic?: string;
 }
 
+
 const topicColors: { [key: string]: string } = {
   'Financial Aids': '#27AE60',
   Events: '#E67E22',
@@ -111,10 +114,9 @@ const Dashboard_Calendar: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [parametersMenuAnchorEl, setParametersMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [isHistory, setIsHistory] = useState(false);
+  const [isHistory, setIsHistory] = useState(true);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [conversations, setConversations] = useState<{ chat_id: string; name: string }[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLandingPageVisible, setIsLandingPageVisible] = useState(messages.length === 0);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -122,10 +124,12 @@ const Dashboard_Calendar: React.FC = () => {
   const [loadingSocialThreads, setLoadingSocialThreads] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [courseOptions, setCourseOptions] = useState<Course[]>([]);
   const [showChat, setShowChat] = useState(false);
   const [relatedQuestions, setRelatedQuestions] = useState<string[]>([]);
   const [cancelConversation, setCancelConversation] = useState(false);
   const cancelConversationRef = useRef(false);
+  const [selectedFilter, setSelectedFilter] = useState<string>('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -136,6 +140,7 @@ const Dashboard_Calendar: React.FC = () => {
   const [isCalendarView, setIsCalendarView] = useState(false); // état pour savoir si on est en vue calendar ou pas
   const [selectedEvent, setSelectedEvent] = useState<EventStudentProfile | null>(null); // événement sélectionné lors d'un clic
   const [sidebarOpen, setSidebarOpen] = useState(false); // si la sidebar est ouverte ou pas
+  const [conversations, setConversations] = useState<Conversation[]>([]);
 
   useEffect(() => {
     const fetchProfilePicture = async () => {
@@ -251,9 +256,19 @@ const Dashboard_Calendar: React.FC = () => {
     navigate('/auth/sign-in', { replace: true });
   };
 
+
   const handleToggleHistory = () => {
-    setIsHistory((prev) => !prev);
+    setIsHistory((prev) => {
+      const newIsHistory = !prev;
+      
+      // 🔥 Toujours recharger les Social Threads, que l'on active ou désactive l'historique
+      fetchSocialThreads();
+  
+      return newIsHistory;
+    });
   };
+
+
 
   const formatDate = (timestamp: { toDate: () => Date }) => {
     const date = timestamp.toDate();
@@ -309,50 +324,99 @@ const Dashboard_Calendar: React.FC = () => {
   };
 
   const handleNewConversation = async () => {
-    console.log('new conversation');
+    console.log('NEW CONVERSATION');
+  
     if (isLandingPageVisible) {
-      console.log('cannot create a new conversation when landing page is visible.');
+      console.log("Impossible de créer une nouvelle conversation, la landing page est visible.");
       return;
     }
+  
     if (isStreaming) {
       setCancelConversation(true);
       cancelConversationRef.current = true;
-      console.log('canceling ongoing conversation.');
+      console.log("Annulation de la conversation en cours.");
       await new Promise((resolve) => setTimeout(resolve, 0));
-      console.log('after timeout:', cancelConversationRef.current);
+      console.log("Après le timeout:", cancelConversationRef.current);
     }
-    const university = user.university || 'University Name';
-    const firstMessageContent = messages.length > 0 ? messages[0].content : 'conversation history';
-    console.log('first message content:', firstMessageContent);
+  
+    const university = user.university || 'University Name'; // Définition de la valeur du champ university
+    const firstMessageContent = messages.length > 0 ? messages[0].content : 'Conversation history';
+    console.log("Contenu du premier message capturé:", firstMessageContent);
+  
     const newChatId = uuidv4();
     const oldChatId = chatIds[0];
+  
+    // Mise à jour immédiate de l'état
     setIsStreaming(false);
     setMessages([]);
     setRelatedQuestions([]);
     setIsLandingPageVisible(true);
     setPrimaryChatId(newChatId);
     setActiveChatId(newChatId);
+  
+    // Ajout immédiat de la nouvelle conversation dans la liste
     setConversations((prevConversations) => [
-      { chat_id: newChatId, name: 'New Chat' },
+      { chat_id: newChatId, name: 'New Chat', thread_type: 'Public'}, //toujours public pour une nouvelle conversation
       ...prevConversations,
     ]);
+  
+    /*
+    // Affiche une roue tournante pour l'ancienne conversation
+    setConversations((prevConversations) =>
+      prevConversations.map((conversation) =>
+        conversation.chat_id === oldChatId
+          ? { ...conversation, name: 'Updating...' }
+          : conversation
+      )
+    );
+    */
+  
+    // Tâches en arrière-plan
     if (user.id) {
       const userRef = doc(db, 'users', user.id);
+  
       try {
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
           const userData = userSnap.data();
           const chatsessions = userData.chatsessions || [];
+  
+          /*
+          // Renommer l'ancienne conversation
+          if (oldChatId) {
+            const oldChatRef = doc(db, 'chatsessions', oldChatId);
+            const oldChatSnap = await getDoc(oldChatRef);
+  
+            if (oldChatSnap.exists()) {
+              try {
+                await updateDoc(oldChatRef, { name: firstMessageContent });
+                console.log(`Renommage de l'ancienne conversation (${oldChatId}) en "${firstMessageContent}"`);
+              } catch (error) {
+                console.error(`Erreur lors du renommage de l'ancienne conversation (${oldChatId}):`, error);
+              }
+            } else {
+              console.warn(`Aucune conversation trouvée avec chat_id: ${oldChatId}`);
+            }
+          }
+          */
+  
+          // Ajouter le nouvel ID de chat aux sessions
           chatsessions.push(newChatId);
           await updateDoc(userRef, { chatsessions });
+  
+          // Créer la nouvelle session de chat avec le champ university
           await setDoc(doc(db, 'chatsessions', newChatId), {
             chat_id: newChatId,
             name: 'New Chat',
             created_at: serverTimestamp(),
             modified_at: serverTimestamp(),
-            university: university,
+            university: university, // Ajout du champ university 
+            thread_type: 'Public', // 🔥 thread_type est bien ajouté ici
+            ReadBy:[user.id] //Ajout du champ readby to kown who see the conversation. Has he is the creator, he saw it
           });
-          console.log(`new chat session created with chat_id: ${newChatId}`);
+          console.log(`Nouvelle session de chat créée avec chat_id: ${newChatId}`);
+  
+          // Actualiser la liste des conversations
           const refreshedUserSnap = await getDoc(userRef);
           if (refreshedUserSnap.exists()) {
             const refreshedUserData = refreshedUserSnap.data();
@@ -367,21 +431,31 @@ const Dashboard_Calendar: React.FC = () => {
               }
               return null;
             });
+  
             const fetchedConversations = await Promise.all(chatPromises);
-            const validConversations = fetchedConversations.filter(
-              (conversation): conversation is { chat_id: string; name: string } =>
-                conversation !== null
-            );
+            const validConversations = fetchedConversations.filter(Boolean);
+  
             setConversations(validConversations.reverse());
-            console.log('updated conversations:', validConversations);
+            console.log("Conversations actualisées:", validConversations);
           }
         }
       } catch (error) {
-        console.error('error managing user and chats:', error);
+        console.error("Erreur lors de la gestion de l'utilisateur et des chats:", error);
       }
     } else {
-      console.error('user id is undefined. cannot create a new conversation.');
+      console.error('UID est undefined. Impossible de créer une nouvelle conversation.');
     }
+  };
+
+
+  const updateThreadTypeLocally = (threadType: string) => {
+    setConversations((prevConversations) =>
+      prevConversations.map((conv) =>
+        conv.chat_id === activeChatId
+          ? { ...conv, thread_type: threadType }
+          : conv
+      )
+    );
   };
 
   const handleDelete = async () => {
@@ -403,79 +477,134 @@ const Dashboard_Calendar: React.FC = () => {
     }
   };
 
-  const fetchSocialThreads = async () => {
+  const fetchSocialThreads = () => {
     setLoadingSocialThreads(true);
-    const university = user.university || 'upenn';
-    try {
-      const q = query(
-        collection(db, 'chatsessions'),
-        orderBy('created_at', 'desc'),
-        limit(130)
-      );
-      const querySnapshot = await getDocs(q);
-      const userId = user.id;
-      const threads = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          chat_id: data.chat_id,
-          name: data.name,
-          created_at: data.created_at,
-          topic: data.topic || 'Default',
-          thread_type: data.thread_type || 'Public',
-          university: data.university || 'Default',
-          isRead: (data.ReadBy || []).includes(userId),
-        };
-      });
+    const university = user.university || "upenn"; // Université par défaut
+  
+    // 🔥 Ne filtrer que par "university" dans Firestore
+    const q = query(
+      collection(db, "chatsessions"),
+      where("university", "==", university), // ✅ Filtrer uniquement par université
+      orderBy("created_at", "desc") // Trier du plus récent au plus ancien
+    );
+  
+    return onSnapshot(q, (snapshot) => {
+      const userId = user.id; // ID de l'utilisateur actuel
+  
+      // 🔥 Transformation des threads depuis Firestore
+      const threads = snapshot.docs.map((doc) => ({
+        chat_id: doc.id,
+        name: doc.data().name,
+        created_at: doc.data().created_at,
+        topic: doc.data().topic || "Default",
+        thread_type: doc.data().thread_type || "Public", // 🔥 Si `thread_type` est absent, on met "Public"
+        university: doc.data().university || "Default",
+        isRead: (doc.data().ReadBy || []).includes(userId),
+      }));
+  
+      // 🔥 Appliquer le filtre `thread_type === "Public"` après récupération
       const filteredThreads = threads.filter(
-        (thread) =>
-          thread.university === university &&
-          thread.thread_type === 'Public' &&
-          thread.name !== 'New Chat'
+        (thread) => thread.thread_type === "Public" && thread.name !== "New Chat"
       );
+  
+      console.log(`📌 Après filtrage manuel, ${filteredThreads.length} conversations sont affichées`);
+  
       setSocialThreads(filteredThreads);
+  
+      // 🔥 Mise à jour du compteur des messages non lus
       const unread = filteredThreads.filter((thread) => !thread.isRead).length;
       setUnreadCount(unread);
-    } catch (error) {
-      console.error('erreur lors de la récupération des social threads :', error);
-    } finally {
+  
       setLoadingSocialThreads(false);
-    }
+    });
   };
 
+  /*
   useEffect(() => {
     if (!isHistory) {
       fetchSocialThreads();
     }
   }, [isHistory]);
+  */
+
+
+
+  //fonction qui permet d afficher les anciennes conversations dans la sidebar of historic conversation and not social conversation
+  const fetchCourseOptionsAndChatSessions = async () => {
+    if (user.id) {
+      const userRef = doc(db, 'users', user.id);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const courseIds = userData.courses || [];
+        const chatSessionIds = userData.chatsessions || [];
+
+        const coursePromises = courseIds.map(async (courseId: string) => {
+          if (typeof courseId === 'string') {
+            const courseRef = doc(db, 'courses', courseId);
+            const courseSnap = await getDoc(courseRef);
+            if (courseSnap.exists()) return { id: courseId, name: courseSnap.data().name };
+          }
+          return null;
+        });
+
+        const courses = await Promise.all(coursePromises);
+        const validCourses = courses.filter((course): course is Course => course !== null);
+
+        // Custom order
+        const customOrder = ['Academic Advisor', 'Course Selection', 'Career Advisor', 'Campus Life'];
+
+        // Filter out unwanted courses and sort by custom order
+        const filteredAndSortedCourses = validCourses
+          .filter((course) => course.name !== 'Study Abroad')
+          .sort((a, b) => customOrder.indexOf(a.name) - customOrder.indexOf(b.name));
+
+        setCourseOptions(filteredAndSortedCourses);
+
+        // Handle current course_id (to display the correct course in dropdown)
+        const currentCourseId = localStorage.getItem('course_id');
+        if (currentCourseId) {
+          const currentCourse = filteredAndSortedCourses.find((course) => course.id === currentCourseId);
+          if (currentCourse) {
+            setSelectedFilter(currentCourse.name);
+          } else {
+            setSelectedFilter('Academic Advisor'); // Default fallback if course_id is not found
+          }
+        }
+
+        // Now handle the chat sessions...
+        const chatPromises = chatSessionIds.map(async (chatId: string) => {
+          if (typeof chatId === 'string') {
+            const chatRef = doc(db, 'chatsessions', chatId);
+            const chatSnap = await getDoc(chatRef);
+            if (chatSnap.exists() && chatSnap.data().name) 
+              return { 
+            chat_id: chatId, 
+            name: chatSnap.data().name,
+            thread_type: chatSnap.data().thread_type || 'Public', // Inclure thread_type avec valeur par défaut
+            topic: chatSnap.data().topic || "Default", // Ajout de `topic` avec une valeur par défaut
+
+            };
+          }
+          return null;
+        });
+
+        const fetchedConversations = await Promise.all(chatPromises);
+        const validConversations = fetchedConversations.filter(
+          (conversation): conversation is Conversation => conversation !== null
+        );
+        setConversations(validConversations.reverse());
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchCourseOptionsAndChatSessions = async () => {
-      if (user.id) {
-        const userRef = doc(db, 'users', user.id);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          const chatSessionIds = userData.chatsessions || [];
-          const chatPromises = chatSessionIds.map(async (chatId: string) => {
-            if (typeof chatId === 'string') {
-              const chatRef = doc(db, 'chatsessions', chatId);
-              const chatSnap = await getDoc(chatRef);
-              if (chatSnap.exists() && chatSnap.data().name)
-                return { chat_id: chatId, name: chatSnap.data().name };
-            }
-            return null;
-          });
-          const fetchedConversations = await Promise.all(chatPromises);
-          const validConversations = fetchedConversations.filter(
-            (conversation): conversation is { chat_id: string; name: string } =>
-              conversation !== null
-          );
-          setConversations(validConversations.reverse());
-        }
-      }
-    };
     fetchCourseOptionsAndChatSessions();
   }, [user.id]);
+
+
+
 
   const variants = {
     initial: { opacity: 0, x: -50 },
@@ -620,185 +749,391 @@ const Dashboard_Calendar: React.FC = () => {
                 }}
               >
                 <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
-                  {isHistory ? <PeopleIcon sx={{ fontSize: '22px' }} /> : <HistoryIcon sx={{ fontSize: '22px' }} />}
-                </ListItemIcon>
-                <ListItemText
-                  primary={isHistory ? 'Social Thread' : 'Conversation History'}
-                  primaryTypographyProps={{
-                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
-                  }}
-                />
-              </ListItem>
-            </List>
+                {isHistory ? <PeopleIcon sx={{ fontSize: '22px' }}/> : <HistoryIcon sx={{ fontSize: '22px' }}/>}
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Box display="flex" alignItems="center">
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary }}
+                    >
+                      {isHistory ? "Social Thread" : "Conversation History"}
+                    </Typography>
+                    {/* Ajouter la vignette uniquement si c'est Social Thread */}
+                    {isHistory && unreadCount > 0 && (
+                      <Box
+                        sx={{
+                          backgroundColor: 'red',
+                          color: 'white',
+                          borderRadius: '8px',
+                          padding: '2px 6px',
+                          marginLeft: '8px',
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          minWidth: '20px', // Taille minimale pour la vignette
+                        }}
+                      >
+                        {unreadCount}
+                      </Box>
+                    )}
+                  </Box>
+                }
+              />
+            </ListItem>
+          </List>
+
             <Divider style={{ backgroundColor: 'lightgray' }} />
-            <div className="text-center text-black-500 font-semibold mt-5 mb-4 text-sm flex justify-center items-center">
-              <span>{isHistory ? 'Conversation History' : 'Last Public Interactions'}</span>
-              {!isHistory && unreadCount > 0 && (
-                <div
-                  className="ml-2 flex items-center justify-center text-white"
-                  style={{
-                    backgroundColor: 'red',
-                    borderRadius: '8px',
-                    padding: '2px 8px',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    minWidth: '20px',
-                    height: '20px',
-                  }}
-                >
-                  {unreadCount}
-                </div>
-              )}
-            </div>
-            <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 10px' }}>
-              {isHistory ? (
-                <List>
-                  {conversations.length > 0 ? (
-                    conversations.map((conversation) => (
+            
+      
+          <div 
+          className="text-center text-black-500 font-semibold mt-5 mb-2 flex justify-center items-center"
+          style={{
+                  fontSize: '0.95rem', // 🔥 Ajuste la taille (1rem = 16px, ici 1.25rem = 20px)
+                  fontWeight: '700', // 🔥 Rend le texte plus épais (700 = bold)
+                  marginBottom: '8px', // 🔥 Ajuste l’espacement en dessous
+                }}
+            >
+            <span>
+              {isHistory ? "Conversation History" : "Last Public Interactions"}
+            </span>
+            {/* Ajouter la vignette uniquement si c'est Last Public Interactions */}
+            {!isHistory && unreadCount > 0 && (
+              <div
+                className="ml-2 flex items-center justify-center text-white"
+                style={{
+                  backgroundColor: 'red',
+                  borderRadius: '8px',
+                  padding: '2px 8px',
+                  fontSize: '0.8rem',
+                  fontWeight: '500',
+                  minWidth: '20px', // Taille minimale pour un affichage cohérent
+                  height: '20px', // Hauteur constante pour garder l'alignement
+                }}
+              >
+                {unreadCount}
+              </div>
+            )}
+          </div>
+
+
+            {/* Conteneur défilant uniquement pour la liste */}
+          <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 5px' }}>
+            {isHistory ? (
+              <List>
+                {conversations.length > 0 ? (
+                  conversations.map((conversation) => (
+                    <ListItem
+                      key={conversation.chat_id}
+                      button
+                      onClick={() => {
+                        handleConversationClick(conversation.chat_id);
+                        if (isSmallScreen) toggleDrawer();
+                      }}
+                      sx={{
+                        position: 'relative',
+                        borderRadius: '8px',
+                        margin: '2px 0',
+                        paddingRight: '40px',
+                        backgroundColor:
+                          activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
+                        '& .circle': {
+                          backgroundColor:
+                            activeChatId === conversation.chat_id
+                              ? conversation.thread_type === 'Private'
+                                ? '#6F6F6F' // Gris foncé pour conversation privée sélectionnée
+                                : '#4A90E2' // Bleu pour conversation publique sélectionnée
+                              : conversation.thread_type === 'Private'
+                              ? '#BDBDBD'
+                              : '#A9C2E8',
+                        },
+                        '@media (hover: hover) and (pointer: fine)': {
+                          '&:hover': {
+                            backgroundColor:
+                              activeChatId === conversation.chat_id
+                                ? theme.palette.button.background // Pas de changement pour une conversation sélectionnée
+                                : theme.palette.button.background,
+                            '& .circle': {
+                              backgroundColor:
+                                activeChatId === conversation.chat_id
+                                  ? conversation.thread_type === 'Private'
+                                    ? '#6F6F6F' // Pas de changement pour une conversation privée sélectionnée
+                                    : '#4A90E2' // Pas de changement pour une conversation publique sélectionnée
+                                  : conversation.thread_type === 'Private'
+                                  ? '#6F6F6F' // Gris clair pour hover privé non sélectionné
+                                  : '#4A90E2', // Bleu clair pour hover public non sélectionné
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      {/* Cercle coloré indiquant le type de conversation */}
+                      <Box
+                        className="circle"
+                        sx={{
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          marginRight: '14px',
+                          //marginLeft: '1px',
+                          flexShrink: 0,
+                        }}
+                      />
+
+                      <ListItemText
+                        primary={conversation.name}
+                        primaryTypographyProps={{
+                          style: {
+                            fontWeight: '500',
+                            fontSize: '0.875rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          },
+                        }}
+                        secondary={
+                          <Box
+                            sx={{
+                              display: 'flex', // 🔥 Permet d'afficher "Public/Private" et "Topic" côte à côte
+                              alignItems: 'center', // 🔥 Assure un alignement parfait
+                              gap: '8px', // 🔥 Espacement entre les deux rectangles
+                              marginTop: '2px',
+                            }}
+                          >
+                            {/* Badge Public / Private */}
+                            <Box
+                              sx={{
+                                fontSize: '0.7rem',
+                                fontWeight: 'bold',
+                                color: conversation.thread_type === 'Private' ? '#6F6F6F' : '#4A90E2',
+                                backgroundColor: conversation.thread_type === 'Private' ? '#F0F0F0' : '#E0F2FF',
+                                padding: '2px 6px',
+                                borderRadius: '5px',
+                                display: 'inline-block',
+                              }}
+                            >
+                              {conversation.thread_type === 'Private' ? 'Private' : 'Public'}
+                            </Box>
+                        
+                            {/* Badge Topic */}
+                            {conversation.topic && (
+                              <Box
+                                sx={{
+                                  fontSize: '0.7rem',
+                                  fontWeight: 'bold',
+                                  color: topicColors[conversation.topic] || topicColors["Default"], // Texte coloré
+                                  backgroundColor: `${(topicColors[conversation.topic] || topicColors["Default"])}20`, // Fond en version claire
+                                  padding: '2px 6px',
+                                  borderRadius: '5px',
+                                  display: 'inline-block',
+                                }}
+                              >
+                                {conversation.topic}
+                              </Box>
+                            )}
+                          </Box>
+                        }                        
+                        
+                        
+                      />
+                      <IconButton
+                        edge="end"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMenuOpen(e, conversation.chat_id);
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          color: theme.palette.text.primary,
+                          opacity: activeChatId === conversation.chat_id ? 1 : 0,
+                          pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
+                          '&:hover': {
+                            backgroundColor: 'transparent',
+                          },
+                          mr: '1px',
+                        }}
+                      >
+                        <MoreHorizIcon
+                          fontSize="small"
+                          sx={{
+                            color: 'gray',
+                            fontSize: '20px',
+                          }}
+                        />
+                      </IconButton>
+                    </ListItem>
+                  ))
+                ) : (
+                  <Typography
+                    align="center"
+                    sx={{
+                      fontWeight: '500',
+                      fontSize: '0.875rem',
+                      color: theme.palette.text.secondary,
+                      marginTop: '30px',
+                    }}
+                  >
+                    You have no conversations yet
+                  </Typography>
+                )}
+              </List>
+            ) : (
+              <List>
+                {loadingSocialThreads ? (
+                  <Box display="flex" justifyContent="center" alignItems="center" p={2}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : socialThreads.length > 0 ? (
+                  socialThreads.map((thread) => {
+                    const topic = thread.topic || "Default"; // Fallback au topic "Upenn"
+                    const color = topicColors[topic] || topicColors["Default"]; // Couleur associée ou par défaut
+
+                    return (
                       <ListItem
-                        key={conversation.chat_id}
+                        key={thread.chat_id}
                         button
                         onClick={() => {
-                          handleConversationClick(conversation.chat_id);
+                          handleConversationClick(thread.chat_id);
                           if (isSmallScreen) toggleDrawer();
                         }}
                         sx={{
                           position: 'relative',
                           borderRadius: '8px',
-                          margin: '5px 0',
-                          paddingRight: '40px',
+                          margin: '0.5px 0',
+                          paddingRight: '20px',
                           backgroundColor:
-                            activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
+                            activeChatId === thread.chat_id ? theme.palette.button.background : 'transparent',
+                          '& .MuiIconButton-root': {
+                            opacity: activeChatId === thread.chat_id ? 1 : 0,
+                            pointerEvents: activeChatId === thread.chat_id ? 'auto' : 'none',
+                          },
+                          '& .MuiTypography-root': {
+                            color:
+                              activeChatId === thread.chat_id
+                                ? theme.palette.text_human_message_historic
+                                : theme.palette.text.primary,
+                          },
+                          '@media (hover: hover) and (pointer: fine)': {
+                            '&:hover': {
+                              backgroundColor: theme.palette.button.background,
+                              color: theme.palette.text_human_message_historic,
+                              '& .MuiIconButton-root': {
+                                opacity: 1,
+                                pointerEvents: 'auto',
+                              },
+                            },
+                          },
                         }}
                       >
+                        
+                        {/* Barre Colorée à gauche */}
+                        <Box
+                          sx={{
+                            width: '8px', // Augmenter la largeur
+                            minWidth: '8px', // Empêche la largeur d'être réduite
+                            height: '38px', // Hauteur explicite pour tester
+                            //backgroundColor: color,
+                            backgroundColor: color,
+                            borderRadius: '3px',
+                            marginRight: '10px',
+                          }}
+                        />
+
+                        {/* Texte Principal et Secondaire */}
                         <ListItemText
-                          primary={conversation.name}
+                          primary={thread.name}
+                          secondary={
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px', // 🔥 Espacement entre la date et le topic
+                                whiteSpace: 'nowrap', // 🔥 Empêche le retour à la ligne
+                                marginTop: '2px',
+                              }}
+                            >
+                              {/* Date */}
+                              <Typography
+                                variant="caption"
+                                sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}
+                              >
+                                {formatDate(thread.created_at).slice(-17)}
+                              </Typography>
+
+                              {/* Badge Topic */}
+                              {thread.topic && (
+                                <Box
+                                  sx={{
+                                    fontSize: '0.7rem',
+                                    fontWeight: 'bold',
+                                    color: topicColors[thread.topic] || topicColors["Default"], // Texte coloré
+                                    backgroundColor: `${(topicColors[thread.topic] || topicColors["Default"])}20`, // Fond clair basé sur la couleur du topic
+                                    padding: '2px 6px',
+                                    borderRadius: '5px',
+                                    display: 'inline-block',
+                                  }}
+                                >
+                                  {thread.topic}
+                                </Box>
+                              )}
+                            </Box>
+                          }
+                          sx={{
+                            maxWidth: 'calc(100% - 40px)', // Réduit la largeur du texte pour laisser de la place au cercle
+                            flexShrink: 1, // Évite que le texte empiète sur le cercle
+                          }}
                           primaryTypographyProps={{
                             style: {
                               fontWeight: '500',
-                              fontSize: '0.875rem',
+                              fontSize: '0.850rem',
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                             },
                           }}
                         />
-                        <IconButton
-                          edge="end"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMenuOpen(e, conversation.chat_id);
-                          }}
+
+                        {/* Cercle indiquant si la conversation est lue */}
+                        <Box
                           sx={{
-                            position: 'absolute',
-                            right: '8px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: theme.palette.text.primary,
+                            width: '7px', // Taille du cercle
+                            minWidth: '7px', // Empêche la largeur d'être réduite
+                            height: '7px',
+                            borderRadius: '50%', // Cercle parfait
+                            backgroundColor: thread.isRead ? 'transparent' : '#3155CC ', // Vert si non lu, transparent sinon
+                            transition: 'background-color 0.3s ease', // Transition douce
+                            //marginRight: '10px',
+                            marginLeft: 'auto', // Pousse le cercle complètement à droite
+                          marginRight: '3px', // Ajoute un léger espacement par rapport au bord
                           }}
-                        >
-                          <MoreHorizIcon fontSize="small" sx={{ color: 'gray', fontSize: '20px' }} />
-                        </IconButton>
+                        />
                       </ListItem>
-                    ))
-                  ) : (
-                    <Typography
-                      align="center"
-                      sx={{
-                        fontWeight: '500',
-                        fontSize: '0.875rem',
-                        color: theme.palette.text.secondary,
-                        marginTop: '30px',
-                      }}
-                    >
-                      you have no conversations yet
-                    </Typography>
-                  )}
-                </List>
-              ) : (
-                <List>
-                  {loadingSocialThreads ? (
-                    <Box display="flex" justifyContent="center" alignItems="center" p={2}>
-                      <CircularProgress size={24} />
-                    </Box>
-                  ) : socialThreads.length > 0 ? (
-                    socialThreads.map((thread) => {
-                      const topic = thread.topic || 'Default';
-                      const color = topicColors[topic] || topicColors['Default'];
-                      return (
-                        <ListItem
-                          key={thread.chat_id}
-                          button
-                          onClick={() => {
-                            handleConversationClick(thread.chat_id);
-                            if (isSmallScreen) toggleDrawer();
-                          }}
-                          sx={{
-                            position: 'relative',
-                            borderRadius: '8px',
-                            margin: '1px 0',
-                            paddingRight: '20px',
-                            backgroundColor:
-                              activeChatId === thread.chat_id ? theme.palette.button.background : 'transparent',
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: '9px',
-                              minWidth: '9px',
-                              height: '38px',
-                              backgroundColor: color,
-                              borderRadius: '3px',
-                              marginRight: '8px',
-                            }}
-                          />
-                          <ListItemText
-                            primary={thread.name}
-                            secondary={`${formatDate(thread.created_at)} | ${topic}`}
-                            primaryTypographyProps={{
-                              style: {
-                                fontWeight: '500',
-                                fontSize: '0.850rem',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              },
-                            }}
-                            secondaryTypographyProps={{
-                              style: { fontSize: '0.75rem', color: theme.palette.text.secondary },
-                            }}
-                          />
-                          <Box
-                            sx={{
-                              width: '7px',
-                              minWidth: '7px',
-                              height: '7px',
-                              borderRadius: '50%',
-                              backgroundColor: thread.isRead ? 'transparent' : '#3155CC',
-                              transition: 'background-color 0.3s ease',
-                              marginLeft: 'auto',
-                              marginRight: '3px',
-                            }}
-                          />
-                        </ListItem>
-                      );
-                    })
-                  ) : (
-                    <Typography
-                      align="center"
-                      sx={{
-                        fontWeight: '500',
-                        fontSize: '0.875rem',
-                        color: theme.palette.text.secondary,
-                        marginTop: '30px',
-                      }}
-                    >
-                      you have no social threads yet
-                    </Typography>
-                  )}
-                </List>
-              )}
-            </Box>
+                    );
+                  })
+                ) : (
+                  <Typography
+                    align="center"
+                    sx={{
+                      fontWeight: '500',
+                      fontSize: '0.875rem',
+                      color: theme.palette.text.secondary,
+                      marginTop: '30px',
+                    }}
+                  >
+                    You have no social threads yet
+                  </Typography>
+                )}
+              </List>
+            )}
+          </Box>
+
+
             <Menu
               anchorEl={menuAnchorEl}
               open={Boolean(menuAnchorEl)}
