@@ -16,7 +16,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { v4 as uuidv4 } from 'uuid';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs, where, startAfter, QueryDocumentSnapshot, DocumentData} from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs, where, startAfter, QueryDocumentSnapshot, DocumentData, onSnapshot} from 'firebase/firestore';
 import logo_greg from '../student_face.png';
 import '../index.css';
 import { AIMessage } from '../components/MessagesWEB';
@@ -208,9 +208,99 @@ const Dashboard_eleve_template: React.FC = () => {
     );
   };
 
+
+
+/*
+  const fetchSocialThreads = () => {
+    setLoadingSocialThreads(true);
+    const university = user.university || "upenn"; // Université par défaut
+  
+    // 🔥 Écouter les changements en direct
+    const q = query(
+      collection(db, "chatsessions"),
+      where("thread_type", "==", "Public"), // Ne récupérer que les conversations publiques
+      where("university", "==", university), // Filtrer par université
+      orderBy("created_at", "desc")
+    );
+  
+    return onSnapshot(q, (snapshot) => {
+      const userId = user.id; // ID de l'utilisateur actuel
+  
+      // Transformation des threads depuis Firestore
+      const threads = snapshot.docs
+        .map((doc) => ({
+          chat_id: doc.id,
+          name: doc.data().name,
+          created_at: doc.data().created_at,
+          topic: doc.data().topic || "Default",
+          thread_type: doc.data().thread_type || "Public",
+          university: doc.data().university || "Default",
+          isRead: (doc.data().ReadBy || []).includes(userId), // Vérifier si l'utilisateur a lu la conversation
+        }))
+        .filter((thread) => thread.name !== "New Chat"); // Exclure les threads vides
+  
+      // Mettre à jour l'état avec les nouvelles conversations publiques
+      setSocialThreads(threads);
+  
+      // Mise à jour du compteur de conversations non lues
+      const unread = threads.filter((thread) => !thread.isRead).length;
+      setUnreadCount(unread);
+  
+      setLoadingSocialThreads(false);
+    });
+  };
+  */
+  
+
+
+
+  const fetchSocialThreads = () => {
+    setLoadingSocialThreads(true);
+    const university = user.university || "upenn"; // Université par défaut
+  
+    const q = query(
+      collection(db, "chatsessions"),
+      orderBy("created_at", "desc"),
+      limit(330) // 🔥 S'assurer qu'on récupère assez de données
+    );
+  
+    return onSnapshot(q, (snapshot) => {
+      console.log(`📡 Firestore a renvoyé ${snapshot.docs.length} conversations`);
+  
+      const userId = user.id; // ID de l'utilisateur actuel
+  
+      const threads = snapshot.docs.map((doc) => ({
+        chat_id: doc.id,
+        name: doc.data().name,
+        created_at: doc.data().created_at,
+        topic: doc.data().topic || "Default",
+        thread_type: doc.data().thread_type || "Public",
+        university: doc.data().university || "Default",
+        isRead: (doc.data().ReadBy || []).includes(userId),
+      }));
+  
+      // 🔥 Filtrer après récupération, comme avant
+      const filteredThreads = threads.filter(
+        (thread) => thread.university === university && thread.thread_type === "Public" && thread.name !== "New Chat"
+      );
+  
+      console.log(`📌 Après filtrage, ${filteredThreads.length} conversations sont affichées`);
+  
+      setSocialThreads(filteredThreads);
+  
+      // 🔥 Calcul du nombre de messages non lus
+      const unread = filteredThreads.filter((thread) => !thread.isRead).length;
+      setUnreadCount(unread);
+  
+      setLoadingSocialThreads(false);
+    });
+  };
+  
+  
   
   
   //RECUPERE LES SOCIAL CONVERSATION PAR NOM D UNIVERSITY ET CELLE QUI SONT PUBLIC - ANCIENNE VERSION QUI N AFFICHAIT PAS TOUT
+  /* DERNIER CODE A JOUR
   const fetchSocialThreads = async () => {
     setLoadingSocialThreads(true);
     const university = user.university || 'upenn'; // par défaut si user.university n'existe pas
@@ -259,6 +349,7 @@ const Dashboard_eleve_template: React.FC = () => {
       setLoadingSocialThreads(false);
     }
   };
+  */
   
   
   /*
@@ -404,11 +495,20 @@ const Dashboard_eleve_template: React.FC = () => {
   }, [isHistory]);
   */
 
-
+/*
   // Lance la récupération des Social Threads au chargement de la page
   useEffect(() => {
     fetchSocialThreads();
   }, []);
+  */
+
+
+  useEffect(() => {
+    const unsubscribe = fetchSocialThreads(); // Active l'écoute Firestore en temps réel
+  
+    return () => unsubscribe(); // Stoppe l'écoute quand le composant est démonté
+  }, [user.id, user.university]); // Déclenchement si user.id ou user.university change
+  
 
   
 

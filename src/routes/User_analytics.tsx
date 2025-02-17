@@ -7,6 +7,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../auth/firebase';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
+// Interfaces de données
 interface ConversationMessage {
   role: string;
   content: string;
@@ -106,58 +107,64 @@ interface ActiveUsersMetrics {
 
 const COLORS = ['#0088fe', '#00c49f', '#ffbb28', '#ff8042', '#aa336a', '#66aa00'];
 
+// Pour l'endpoint active users, on définit un modèle de requête
+interface ActiveUsersRequest {
+  since_date?: string; // Format "YYYY-MM-DD". Si absent, la date du jour est utilisée.
+}
+
 const UserAnalytics = () => {
-  // State for user search, conversation statistics, user statistics, and active users metrics
+  // États pour la recherche et l'affichage
   const [searchType, setSearchType] = useState<'uid' | 'name' | 'university'>('uid');
   const [uid, setUid] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>('');
+  
   const [userData, setUserData] = useState<UserData | null>(null);
   const [universityData, setUniversityData] = useState<UniversityUserCount | null>(null);
   const [conversationStats, setConversationStats] = useState<ConversationStatistics | null>(null);
   const [userStats, setUserStats] = useState<UserStatistics | null>(null);
   const [activeUsersStats, setActiveUsersStats] = useState<ActiveUsersMetrics | null>(null);
 
-  // Date inputs for each section
-  const [sinceDate, setSinceDate] = useState('');           // for conversation statistics
-  const [userSinceDate, setUserSinceDate] = useState('');       // for user statistics
-  const [activeUsersSinceDate, setActiveUsersSinceDate] = useState(''); // for active users metrics
+  // États pour les dates de filtrage
+  const [sinceDate, setSinceDate] = useState('');           // Pour Conversation Statistics
+  const [userSinceDate, setUserSinceDate] = useState('');     // Pour User Statistics
+  const [activeUsersSinceDate, setActiveUsersSinceDate] = useState(''); // Pour Active Users Metrics
 
   const theme = useTheme();
   const navigate = useNavigate();
   const { user, logout, chatIds, setPrimaryChatId } = useAuth();
-
   const apiUrlPrefix: string = config.server_url;
 
-  // Function to get uid by name
+  // Fonction pour récupérer le UID par nom depuis Firestore
   const getUidByName = async (name: string): Promise<string | null> => {
-    console.log('searching for user with name:', name);
+    console.log('Searching for user with name:', name);
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('name', '==', name));
     const querySnapshot = await getDocs(q);
-    console.log('query snapshot size:', querySnapshot.size);
+    console.log('Query snapshot size:', querySnapshot.size);
     if (querySnapshot.empty) {
-      console.warn('no user found with name:', name);
+      console.warn('No user found with name:', name);
       return null;
     }
     const docData = querySnapshot.docs[0].data();
-    console.log('user found:', querySnapshot.docs[0].id, docData);
+    console.log('User found:', querySnapshot.docs[0].id, docData);
     return querySnapshot.docs[0].id;
   };
 
-  // Fetch user data or university count based on search type
+  // Fonction de récupération des données utilisateur ou du compte universitaire
   const fetchUserData = async () => {
     if (!uid) return;
     setLoading(true);
     setError(null);
     setUserData(null);
     setUniversityData(null);
+    // Réinitialiser les autres états
     setConversationStats(null);
     setUserStats(null);
     setActiveUsersStats(null);
 
     if (searchType === 'university') {
-      console.log('search type is "university", fetching university user count for:', uid);
+      console.log('Search type "university", fetching university user count for:', uid);
       try {
         const response = await fetch(`${apiUrlPrefix}/analytics/university_user_count`, {
           method: 'POST',
@@ -166,15 +173,15 @@ const UserAnalytics = () => {
         });
         if (!response.ok) {
           const errData = await response.json();
-          setError(errData.detail || 'an error occurred');
+          setError(errData.detail || 'An error occurred');
           setLoading(false);
           return;
         }
         const data = await response.json();
-        console.log('university data retrieved:', data);
+        console.log('University data retrieved:', data);
         setUniversityData(data);
       } catch (err) {
-        setError('error fetching university data');
+        setError('Error fetching university data');
       }
       setLoading(false);
       return;
@@ -182,15 +189,15 @@ const UserAnalytics = () => {
 
     let searchUid = uid;
     if (searchType === 'name') {
-      console.log('search type is "name", resolving uid for name:', uid);
+      console.log('Search type "name", resolving UID for name:', uid);
       const resolvedUid = await getUidByName(uid);
       if (!resolvedUid) {
-        setError('user not found by name');
-        console.error('resolved uid is null for name:', uid);
+        setError('User not found by name');
+        console.error('Resolved UID is null for name:', uid);
         setLoading(false);
         return;
       }
-      console.log('resolved uid:', resolvedUid);
+      console.log('Resolved UID:', resolvedUid);
       searchUid = resolvedUid;
     }
 
@@ -202,22 +209,22 @@ const UserAnalytics = () => {
       });
       if (!response.ok) {
         const errData = await response.json();
-        setError(errData.detail || 'an error occurred');
+        setError(errData.detail || 'An error occurred');
         setLoading(false);
         return;
       }
       const data = await response.json();
       setUserData(data);
     } catch (err) {
-      setError('error fetching user data');
+      setError('Error fetching user data');
     }
     setLoading(false);
   };
 
-  // Fetch conversation statistics using the selected date
+  // Récupération des statistiques de conversation
   const fetchConversationStats = async () => {
     if (!sinceDate) {
-      setError('please select a date before fetching conversation statistics');
+      setError('Please select a date before fetching conversation statistics');
       return;
     }
     setLoading(true);
@@ -231,23 +238,23 @@ const UserAnalytics = () => {
       });
       if (!response.ok) {
         const errData = await response.json();
-        setError(errData.detail || 'an error occurred');
+        setError(errData.detail || 'An error occurred');
         setLoading(false);
         return;
       }
       const data = await response.json();
-      console.log('conversation statistics retrieved:', data);
+      console.log('Conversation statistics retrieved:', data);
       setConversationStats(data);
     } catch (err) {
-      setError('error fetching conversation statistics');
+      setError('Error fetching conversation statistics');
     }
     setLoading(false);
   };
 
-  // Fetch user statistics using the selected date
+  // Récupération des statistiques utilisateur
   const fetchUserStats = async () => {
     if (!userSinceDate) {
-      setError('please select a date before fetching user statistics');
+      setError('Please select a date before fetching user statistics');
       return;
     }
     setLoading(true);
@@ -261,23 +268,23 @@ const UserAnalytics = () => {
       });
       if (!response.ok) {
         const errData = await response.json();
-        setError(errData.detail || 'an error occurred');
+        setError(errData.detail || 'An error occurred');
         setLoading(false);
         return;
       }
       const data = await response.json();
-      console.log('user statistics retrieved:', data);
+      console.log('User statistics retrieved:', data);
       setUserStats(data);
     } catch (err) {
-      setError('error fetching user statistics');
+      setError('Error fetching user statistics');
     }
     setLoading(false);
   };
 
-  // Fetch active users metrics using the selected date
+  // Récupération des métriques d'Active Users stricts
   const fetchActiveUsers = async () => {
     if (!activeUsersSinceDate) {
-      setError('please select a date before fetching active users metrics');
+      setError('Please select a date before fetching active users metrics');
       return;
     }
     setLoading(true);
@@ -291,15 +298,15 @@ const UserAnalytics = () => {
       });
       if (!response.ok) {
         const errData = await response.json();
-        setError(errData.detail || 'an error occurred');
+        setError(errData.detail || 'An error occurred');
         setLoading(false);
         return;
       }
       const data = await response.json();
-      console.log('active users metrics retrieved:', data);
+      console.log('Active users metrics retrieved:', data);
       setActiveUsersStats(data);
     } catch (err) {
-      setError('error fetching active users metrics');
+      setError('Error fetching active users metrics');
     }
     setLoading(false);
   };
@@ -310,74 +317,241 @@ const UserAnalytics = () => {
     }
   };
 
-  // Prepare data for conversation statistics pie charts
+  // Préparation des données pour les graphiques de statistiques de conversation
   const privacyData = conversationStats
     ? Object.entries(conversationStats.privacy_distribution).map(([key, value]) => ({
         name: key,
-        value: value
+        value: value,
       }))
     : [];
   const topicData = conversationStats
     ? Object.entries(conversationStats.topic_distribution).map(([key, value]) => ({
         name: key,
-        value: value
+        value: value,
       }))
     : [];
   const nameData = conversationStats
     ? Object.entries(conversationStats.name_distribution).map(([key, value]) => ({
         name: key,
-        value: value
+        value: value,
       }))
     : [];
 
-  // Prepare data for user statistics pie charts (renamed to avoid conflict)
+  // Préparation des données pour les graphiques de statistiques utilisateur
   const universityChartData = userStats
     ? Object.entries(userStats.university_distribution).map(([key, value]) => ({
         name: key,
-        value: value
+        value: value,
       }))
     : [];
   const yearChartData = userStats
     ? Object.entries(userStats.year_distribution).map(([key, value]) => ({
         name: key,
-        value: value
+        value: value,
       }))
     : [];
   const clubStatusChartData = userStats
     ? Object.entries(userStats.registered_club_status_distribution).map(([key, value]) => ({
         name: key,
-        value: value
+        value: value,
       }))
     : [];
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>User Analytics</h1>
-      {/* --- User Search Section --- */}
+      <h1>User Analytics Dashboard</h1>
+      
+      {/* --- Section de Recherche Utilisateur (UID, Name, University) --- */}
       <div style={{ marginBottom: '20px' }}>
         <select
           value={searchType}
           onChange={(e) => setSearchType(e.target.value as 'uid' | 'name' | 'university')}
           style={{ padding: '10px', marginRight: '10px' }}
         >
-          <option value="uid">uid</option>
-          <option value="name">name</option>
-          <option value="university">university</option>
+          <option value="uid">UID</option>
+          <option value="name">Name</option>
+          <option value="university">University</option>
         </select>
         <input
           type="text"
-          placeholder="Enter a user uid, name, or university"
+          placeholder="Enter a user UID, name, or university"
           value={uid}
           onChange={(e) => setUid(e.target.value)}
           onKeyPress={handleKeyPress}
           style={{ padding: '10px', width: '300px', marginRight: '10px' }}
         />
         <button onClick={fetchUserData} style={{ padding: '10px', marginLeft: '10px' }}>
-          Send
+          Fetch User Data
         </button>
       </div>
 
-      {/* --- Conversation Statistics Section --- */}
+      {/* --- Affichage des Informations Utilisateur --- */}
+      {userData && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>User Information</h2>
+          <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '5px' }}>
+            <p><strong>UID:</strong> {userData.uid}</p>
+            <p><strong>Name:</strong> {userData.name}</p>
+            <p><strong>Year:</strong> {userData.year}</p>
+            <p><strong>University:</strong> {userData.university}</p>
+            <p><strong>Email:</strong> {userData.email}</p>
+            {/* Autres champs d'information peuvent être ajoutés ici */}
+          </div>
+        </div>
+      )}
+
+
+    {userData && (
+            <div style={{ marginTop: '20px' }}>
+                <h3>Academic Information</h3>
+                <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '5px' }}>
+                <p><strong>Faculty:</strong> {userData.faculty?.length ? userData.faculty.join(', ') : 'N/A'}</p>
+                <p><strong>Major:</strong> {userData.major?.length ? userData.major.join(', ') : 'N/A'}</p>
+                <p><strong>Minor:</strong> {userData.minor?.length ? userData.minor.join(', ') : 'N/A'}</p>
+                <p><strong>Academic Advisor:</strong> {userData.academic_advisor ?? 'N/A'}</p>
+                <p><strong>Registered Club Status:</strong> {userData.registered_club_status === 'yes' ? '✅ Yes' : '❌ No'}</p>
+                <p><strong>Registered Clubs:</strong> {userData.registered_clubs ?? 'None'}</p>
+                </div>
+            </div>
+            )}
+
+
+    {userData?.auth_info && (
+    <div style={{ marginTop: '20px' }}>
+        <h3>Authentication Info</h3>
+        <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '5px' }}>
+        <p><strong>Email:</strong> {userData.auth_info.email}</p>
+        <p><strong>Email Verified:</strong> {userData.auth_info.email_verified ? '✅ Yes' : '❌ No'}</p>
+        <p><strong>Phone Number:</strong> {userData.auth_info.phone_number || 'N/A'}</p>
+        <p><strong>Provider:</strong> {userData.auth_info.provider_id}</p>
+        <p><strong>Account Created:</strong> {userData.auth_info.created_at}</p>
+        <p><strong>Last Login:</strong> {userData.auth_info.last_login}</p>
+        </div>
+    </div>
+    )}
+
+
+    {userData?.profile_picture && (
+    <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <h3>Profile Picture</h3>
+        <img
+        src={userData.profile_picture}
+        alt="Profile"
+        style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover' }}
+        />
+    </div>
+    )}
+
+    {userData?.auth_info?.photo_url && (
+    <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <h3>Auth Provider Picture</h3>
+        <img
+        src={userData.auth_info.photo_url}
+        alt="Auth Profile"
+        style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover' }}
+        />
+    </div>
+    )}
+
+
+    {userData?.interests && userData.interests.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+            <h3>Interests</h3>
+            <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '5px' }}>
+            {userData.interests.map((interest, index) => (
+                <span
+                key={index}
+                style={{
+                    display: 'inline-block',
+                    background: '#0088fe',
+                    color: '#fff',
+                    padding: '5px 10px',
+                    borderRadius: '15px',
+                    margin: '5px',
+                }}
+                >
+                {interest}
+                </span>
+            ))}
+            </div>
+        </div>
+        )}
+
+
+
+    {userData?.chat_sessions && userData.chat_sessions.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+            <h3>Chat Sessions</h3>
+            {userData.chat_sessions.map((chat, index) => (
+            <div
+                key={index}
+                style={{
+                marginBottom: '10px',
+                padding: '10px',
+                border: '1px solid #ccc',
+                borderRadius: '5px',
+                backgroundColor: '#fafafa',
+                }}
+            >
+                <p><strong>Chat Name:</strong> {chat.name}</p>
+                <p><strong>Topic:</strong> {chat.topic}</p>
+                <p><strong>Thread Type:</strong> {chat.thread_type}</p>
+                <p><strong>Created At:</strong> {chat.created_at}</p>
+                <p><strong>Modified At:</strong> {chat.modified_at}</p>
+                <p>
+                <strong>Read By:</strong>{' '}
+                {chat.ReadBy && chat.ReadBy.length > 0 ? chat.ReadBy.join(', ') : 'No one'}
+                </p>
+            </div>
+            ))}
+        </div>
+        )}
+    
+
+
+      {/* --- Affichage des Conversations --- */}
+      {userData?.conversations && Object.keys(userData.conversations || {}).length > 0 ? (
+        <div style={{ marginTop: '20px' }}>
+            <h3>Conversations</h3>
+            {Object.keys(userData.conversations || {}).map((convId) => (
+            <div
+                key={convId}
+                style={{
+                marginBottom: '20px',
+                padding: '15px',
+                background: '#e8f5e9',
+                borderRadius: '5px',
+                border: '1px solid #c8e6c9',
+                }}
+            >
+                <h4>Conversation ID: {convId}</h4>
+                {userData.conversations?.[convId] && userData.conversations[convId].length > 0 ? (
+                userData.conversations[convId].map((msg, idx) => (
+                    <div
+                    key={idx}
+                    style={{
+                        marginBottom: '10px',
+                        padding: '10px',
+                        background: msg.role === 'user' ? '#e3f2fd' : '#fff9c4',
+                        borderRadius: '5px',
+                    }}
+                    >
+                    <p><strong>{msg.role}:</strong> {msg.content}</p>
+                    </div>
+                ))
+                ) : (
+                <p style={{ fontStyle: 'italic', color: '#888' }}>No messages available.</p>
+                )}
+            </div>
+            ))}
+        </div>
+        ) : (
+        <p style={{ fontStyle: 'italic', color: '#888' }}>No conversations available.</p>
+        )}
+
+
+
+      {/* --- Section Conversation Statistics --- */}
       <div style={{ marginBottom: '20px' }}>
         <input
           type="date"
@@ -389,37 +563,6 @@ const UserAnalytics = () => {
           Conversation Statistics
         </button>
       </div>
-
-      {/* --- User Statistics Section --- */}
-      <div style={{ marginBottom: '20px' }}>
-        <input
-          type="date"
-          value={userSinceDate}
-          onChange={(e) => setUserSinceDate(e.target.value)}
-          style={{ padding: '10px', marginRight: '10px' }}
-        />
-        <button onClick={fetchUserStats} style={{ padding: '10px' }}>
-          User Statistics
-        </button>
-      </div>
-
-      {/* --- Active Users Metrics Section --- */}
-      <div style={{ marginBottom: '20px' }}>
-        <input
-          type="date"
-          value={activeUsersSinceDate}
-          onChange={(e) => setActiveUsersSinceDate(e.target.value)}
-          style={{ padding: '10px', marginRight: '10px' }}
-        />
-        <button onClick={fetchActiveUsers} style={{ padding: '10px' }}>
-          Active Users Metrics
-        </button>
-      </div>
-
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {/* --- Display Conversation Statistics Dashboard --- */}
       {conversationStats && (
         <div style={{ marginTop: '40px' }}>
           <h2>Conversation Statistics (since {sinceDate})</h2>
@@ -432,16 +575,7 @@ const UserAnalytics = () => {
                 <h3>Privacy Distribution</h3>
                 <p style={{ fontStyle: 'italic' }}>Based on conversations since {sinceDate}</p>
                 <PieChart width={300} height={300}>
-                  <Pie
-                    data={privacyData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    label
-                  >
+                  <Pie data={privacyData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label>
                     {privacyData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -454,16 +588,7 @@ const UserAnalytics = () => {
                 <h3>Topic Distribution</h3>
                 <p style={{ fontStyle: 'italic' }}>Based on conversations since {sinceDate}</p>
                 <PieChart width={300} height={300}>
-                  <Pie
-                    data={topicData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#82ca9d"
-                    label
-                  >
+                  <Pie data={topicData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#82ca9d" label>
                     {topicData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -476,16 +601,7 @@ const UserAnalytics = () => {
                 <h3>Name Distribution</h3>
                 <p style={{ fontStyle: 'italic' }}>Based on conversations since {sinceDate}</p>
                 <PieChart width={300} height={300}>
-                  <Pie
-                    data={nameData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#ffc658"
-                    label
-                  >
+                  <Pie data={nameData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#ffc658" label>
                     {nameData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -499,7 +615,18 @@ const UserAnalytics = () => {
         </div>
       )}
 
-      {/* --- Display User Statistics Dashboard --- */}
+      {/* --- Section User Statistics --- */}
+      <div style={{ marginBottom: '20px' }}>
+        <input
+          type="date"
+          value={userSinceDate}
+          onChange={(e) => setUserSinceDate(e.target.value)}
+          style={{ padding: '10px', marginRight: '10px' }}
+        />
+        <button onClick={fetchUserStats} style={{ padding: '10px' }}>
+          User Statistics
+        </button>
+      </div>
       {userStats && (
         <div style={{ marginTop: '40px' }}>
           <h2>User Statistics (since {userSinceDate})</h2>
@@ -510,16 +637,7 @@ const UserAnalytics = () => {
                 <h3>University Distribution</h3>
                 <p style={{ fontStyle: 'italic' }}>Based on user data since {userSinceDate}</p>
                 <PieChart width={300} height={300}>
-                  <Pie
-                    data={universityChartData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#0088fe"
-                    label
-                  >
+                  <Pie data={universityChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#0088fe" label>
                     {universityChartData.map((entry, index) => (
                       <Cell key={`uni-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -532,16 +650,7 @@ const UserAnalytics = () => {
                 <h3>Year Distribution</h3>
                 <p style={{ fontStyle: 'italic' }}>Based on user data since {userSinceDate}</p>
                 <PieChart width={300} height={300}>
-                  <Pie
-                    data={yearChartData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#00c49f"
-                    label
-                  >
+                  <Pie data={yearChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#00c49f" label>
                     {yearChartData.map((entry, index) => (
                       <Cell key={`year-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -554,16 +663,7 @@ const UserAnalytics = () => {
                 <h3>Club Status Distribution</h3>
                 <p style={{ fontStyle: 'italic' }}>Based on user data since {userSinceDate}</p>
                 <PieChart width={300} height={300}>
-                  <Pie
-                    data={clubStatusChartData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#ff8042"
-                    label
-                  >
+                  <Pie data={clubStatusChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#ff8042" label>
                     {clubStatusChartData.map((entry, index) => (
                       <Cell key={`club-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -584,30 +684,61 @@ const UserAnalytics = () => {
         </div>
       )}
 
-      {/* --- Display Active Users Dashboard --- */}
+      {/* --- Section Active Users Metrics --- */}
+      <div style={{ marginBottom: '20px' }}>
+        <input
+          type="date"
+          value={activeUsersSinceDate}
+          onChange={(e) => setActiveUsersSinceDate(e.target.value)}
+          style={{ padding: '10px', marginRight: '10px' }}
+        />
+        <button onClick={fetchActiveUsers} style={{ padding: '10px' }}>
+          Active Users Metrics
+        </button>
+      </div>
       {activeUsersStats && (
         <div style={{ marginTop: '40px' }}>
           <h2>Active Users Metrics (since {activeUsersSinceDate})</h2>
           <div style={{ background: '#fff3e0', padding: '20px', borderRadius: '5px' }}>
             <h3 style={{ fontSize: '2em' }}>Daily Active Users (DAU): {activeUsersStats.dau}</h3>
-            <p style={{ fontStyle: 'italic' }}>Unique users active today</p>
+            <p style={{ fontStyle: 'italic' }}>
+              Unique users active every day since the reference date. For example, if you select today's date,
+              DAU corresponds to today's active users. If you select an earlier date, only users who have been active every day since that date are counted.
+            </p>
             <h3 style={{ fontSize: '2em' }}>Weekly Active Users (WAU): {activeUsersStats.wau}</h3>
-            <p style={{ fontStyle: 'italic' }}>Unique users active in the last 7 days</p>
+            <p style={{ fontStyle: 'italic' }}>
+              Unique users active at least once during a 7-day window starting from the reference date. (N/A if period is insufficient)
+            </p>
             <h3 style={{ fontSize: '2em' }}>Monthly Active Users (MAU): {activeUsersStats.mau}</h3>
-            <p style={{ fontStyle: 'italic' }}>Unique users active in the last 30 days</p>
+            <p style={{ fontStyle: 'italic' }}>
+              Unique users active at least once during a 30-day window starting from the reference date. (N/A if period is insufficient)
+            </p>
             <h3 style={{ fontSize: '2em' }}>Semesterly Active Users (SAU): {activeUsersStats.sau}</h3>
-            <p style={{ fontStyle: 'italic' }}>Unique users active in the last 180 days</p>
+            <p style={{ fontStyle: 'italic' }}>
+              Unique users active at least once during a 180-day window starting from the reference date. (N/A if period is insufficient)
+            </p>
             <h3 style={{ fontSize: '2em' }}>Returning Users: {activeUsersStats.returning_users}</h3>
-            <p style={{ fontStyle: 'italic' }}>Users active 30 days ago who returned in the last 7 days</p>
+            <p style={{ fontStyle: 'italic' }}>
+              Users active 30 days ago who returned in the last 7 days.
+            </p>
             <h3 style={{ fontSize: '2em' }}>Churn Rate: {activeUsersStats.churn_rate}%</h3>
-            <p style={{ fontStyle: 'italic' }}>Percentage of users who dropped off from last month</p>
-            <h3 style={{ fontSize: '2em' }}>Avg messages/student: {activeUsersStats.avg_sessions_per_user}</h3>
-            <p style={{ fontStyle: 'italic' }}>Average messages per user</p>
+            <p style={{ fontStyle: 'italic' }}>
+              Percentage of users who dropped off from last month.
+            </p>
+            <h3 style={{ fontSize: '2em' }}>Avg messages per user: {activeUsersStats.avg_sessions_per_user}</h3>
+            <p style={{ fontStyle: 'italic' }}>
+              Average number of messages per user since the reference date.
+            </p>
             <h3 style={{ fontSize: '2em' }}>Rolling Retention (14 days): {activeUsersStats.rolling_retention_14_days}%</h3>
-            <p style={{ fontStyle: 'italic' }}>Percentage of users returning after 14 days</p>
+            <p style={{ fontStyle: 'italic' }}>
+              Percentage of users returning after 14 days.
+            </p>
           </div>
         </div>
       )}
+
+      {loading && <p>Loading...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );
 };
