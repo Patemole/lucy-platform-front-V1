@@ -311,30 +311,34 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
       {!isChangingProfilePicture && (
         <>
           <div className="flex flex-col items-center mb-4">
-            {profilePictureUrl ? (
-              <img
-                src={profilePictureUrl}
-                alt="Profile"
-                className="w-24 h-24 rounded-full object-cover cursor-pointer"
-                onClick={() => setIsChangingProfilePicture(true)}
-              />
-            ) : (
-              <AccountCircleIcon
-                fontSize="inherit"
-                component="svg"
-                style={{
-                  color: '#9e9e9e',
-                  cursor: 'pointer',
-                  margin: '0 auto 0 16px',
-                  fontSize: '2.5rem',
-                }}
-                onClick={() => setIsChangingProfilePicture(true)}
-              />
-            )}
+            <div
+              className={`w-24 h-24 flex items-center justify-center rounded-full cursor-pointer overflow-hidden transition-all ${
+                profilePictureUrl ? "bg-transparent" : "bg-gray-200"
+              }`}
+              onClick={() => setIsChangingProfilePicture(true)}
+            >
+              {profilePictureUrl ? (
+                <img
+                  src={profilePictureUrl}
+                  alt="Profile"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <AccountCircleIcon
+                  fontSize="large"
+                  style={{
+                    color: '#9e9e9e',
+                    fontSize: '3rem', // Taille équilibrée avec l’image
+                  }}
+                />
+              )}
+            </div>
           </div>
           <h2 className="text-2xl font-semibold text-center mb-6">Student Profile</h2>
         </>
       )}
+
+
 
 
 

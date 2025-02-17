@@ -154,6 +154,16 @@ const Dashboard_eleve_template: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
 
+  useEffect(() => {
+    console.log("🔥 Re-render déclenché. État actuel :", {
+      unreadCount,
+      profilePicture,
+      onlineUsers,
+      isPrivate,
+    });
+  }, [unreadCount, profilePicture, onlineUsers, isPrivate]);
+  
+
   //Change the fake number of online student every 15 secondes
   useEffect(() => {
     const updateOnlineUsers = () => {
@@ -252,206 +262,6 @@ const Dashboard_eleve_template: React.FC = () => {
     setLoadingSocialThreads(false);
   });
 };
-
-  
-
-
-/*
-  const fetchSocialThreads = () => {
-    setLoadingSocialThreads(true);
-    const university = user.university || "upenn"; // Université par défaut
-  
-    const q = query(
-      collection(db, "chatsessions"),
-      orderBy("created_at", "desc"),
-      limit(330) // 🔥 S'assurer qu'on récupère assez de données
-    );
-  
-    return onSnapshot(q, (snapshot) => {
-      console.log(`📡 Firestore a renvoyé ${snapshot.docs.length} conversations`);
-  
-      const userId = user.id; // ID de l'utilisateur actuel
-  
-      const threads = snapshot.docs.map((doc) => ({
-        chat_id: doc.id,
-        name: doc.data().name,
-        created_at: doc.data().created_at,
-        topic: doc.data().topic || "Default",
-        thread_type: doc.data().thread_type || "Public",
-        university: doc.data().university || "Default",
-        isRead: (doc.data().ReadBy || []).includes(userId),
-      }));
-  
-      // 🔥 Filtrer après récupération, comme avant
-      const filteredThreads = threads.filter(
-        (thread) => thread.university === university && thread.thread_type === "Public" && thread.name !== "New Chat"
-      );
-  
-      console.log(`📌 Après filtrage, ${filteredThreads.length} conversations sont affichées`);
-  
-      setSocialThreads(filteredThreads);
-  
-      // 🔥 Calcul du nombre de messages non lus
-      const unread = filteredThreads.filter((thread) => !thread.isRead).length;
-      setUnreadCount(unread);
-  
-      setLoadingSocialThreads(false);
-    });
-  };
-  */
-  
-  
-  
-  //RECUPERE LES SOCIAL CONVERSATION PAR NOM D UNIVERSITY ET CELLE QUI SONT PUBLIC - ANCIENNE VERSION QUI N AFFICHAIT PAS TOUT
-  /* DERNIER CODE A JOUR
-  const fetchSocialThreads = async () => {
-    setLoadingSocialThreads(true);
-    const university = user.university || 'upenn'; // par défaut si user.university n'existe pas
-  
-    try {
-      const q = query(
-        collection(db, 'chatsessions'),
-        orderBy('created_at', 'desc'),
-        limit(330)
-      );
-      const querySnapshot = await getDocs(q);
-
-      const userId = user.id; // ID de l'utilisateur actuel
-  
-      // Transformation des threads depuis Firestore
-      const threads = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          chat_id: data.chat_id,
-          name: data.name,
-          created_at: data.created_at,
-          topic: data.topic || "Default",
-          thread_type: data.thread_type || "Public",
-          university: data.university || "Default",
-          isRead: (data.ReadBy || []).includes(userId), // Marque comme lu si userId est dans ReadBy
-          
-        };
-      });
-
-      // Filtrer les threads publics pour l'université actuelle
-      const filteredThreads = threads.filter(
-        (thread) => thread.university === university && thread.thread_type === 'Public' && thread.name != 'New Chat'
-      );
-
-      // Met à jour les threads sociaux avec les threads filtrés
-      setSocialThreads(filteredThreads);
-
-      // Calculer le nombre de conversations non lues parmi les threads filtrés
-      const unread = filteredThreads.filter((thread) => !thread.isRead).length;
-      setUnreadCount(unread); // Mettre à jour l'état du compteur
-
-
-    } catch (error) {
-      console.error('Erreur lors de la récupération des social threads :', error);
-    } finally {
-      setLoadingSocialThreads(false);
-    }
-  };
-  */
-  
-  
-  /*
-  const fetchSocialThreads = async (lastDoc: QueryDocumentSnapshot<DocumentData> | null = null) => {
-    setLoadingSocialThreads(true);
-    const university = user.university || "upenn"; // Valeur par défaut si non défini
-  
-    try {
-      let q = query(
-        collection(db, "chatsessions"),
-        where("university", "==", university), 
-        where("thread_type", "==", "Public"),  // 🔥 Ne récupère que les publics
-        orderBy("created_at", "desc"),
-        limit(50)
-      );
-  
-      if (lastDoc) {
-        q = query(q, startAfter(lastDoc)); // 🔥 Pagination si un dernier document existe
-      }
-  
-      const querySnapshot = await getDocs(q);
-      const userId = user.id; // ID de l'utilisateur actuel
-  
-      // Transformer les résultats Firestore
-      const threads = querySnapshot.docs
-        .map((doc) => {
-          const data = doc.data();
-          return {
-            chat_id: data.chat_id,
-            name: data.name,
-            created_at: data.created_at,
-            topic: data.topic || "Default",
-            thread_type: data.thread_type || "Public",
-            university: data.university || "Default",
-            isRead: Array.isArray(data.ReadBy) ? data.ReadBy.includes(userId) : false, // 🔥 Sécurisation du ReadBy
-          };
-        })
-        .filter((thread) => thread.name !== "New Chat"); // 🚨 Exclure "New Chat"
-  
-      // Ajoute les nouveaux threads aux existants (pagination)
-      setSocialThreads((prevThreads) => [...prevThreads, ...threads]);
-  
-      // Stocke le dernier document récupéré pour la pagination
-      if (querySnapshot.docs.length > 0) {
-        setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
-      }
-  
-      // Compte les conversations non lues
-      const unread = threads.filter((thread) => !thread.isRead).length;
-      setUnreadCount((prevCount) => prevCount + unread); // 🔥 Ajoute aux non lus sans écraser la valeur précédente
-  
-    } catch (error) {
-      console.error("Erreur lors de la récupération des social threads :", error);
-    } finally {
-      setLoadingSocialThreads(false);
-    }
-  };
-  */
-
-
-
-
-  /*
-  //RECUPERE LES SOCIAL CONVERSATION PAR NOM D UNIVERSITY ET CELLE QUI SONT PUBLIC 
-  //Recupere egalement pour l utilisateur en cours les threads qu il n a pas encore lu et les ajoute dans le thread comme ca on peut afficher ou pas
-  //le cercle montrant qu il a lu ou pas la conversation.  
-  const fetchSocialThreads = async () => {
-    const userRef = doc(db, 'users', user.id);
-    const userSnap = await getDoc(userRef);
-  
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      const unreadThreads = userData.unread_social_threads || []; // Threads non lus
-  
-      const q = query(
-        collection(db, 'chatsessions'),
-        orderBy('created_at', 'desc'),
-        limit(50)
-      );
-      const querySnapshot = await getDocs(q);
-  
-      const threads = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          chat_id: data.chat_id,
-          name: data.name,
-          created_at: data.created_at,
-          topic: data.topic || "Default",
-          thread_type: data.thread_type || "Public",
-          isRead: !unreadThreads.includes(data.chat_id), // Si non dans la liste, alors lu
-        };
-      });
-  
-      setSocialThreads(threads);
-    }
-  };
-  */
-
-
 
   const updateConversationPrivacy = (chatId: string, newThreadType: string) => {
     setConversations((prevConversations) =>
@@ -1925,7 +1735,14 @@ const handleConversationClick = async (chat_id: string) => {
           <Divider style={{ backgroundColor: 'lightgray',  }} />
 
           {/* Titre de l'état actuel */}
-          <div className="text-center text-black-500 font-semibold mt-5 mb-4 text-sm flex justify-center items-center">
+          <div 
+          className="text-center text-black-500 font-semibold mt-5 mb-2 flex justify-center items-center"
+          style={{
+                  fontSize: '0.95rem', // 🔥 Ajuste la taille (1rem = 16px, ici 1.25rem = 20px)
+                  fontWeight: '700', // 🔥 Rend le texte plus épais (700 = bold)
+                  marginBottom: '8px', // 🔥 Ajuste l’espacement en dessous
+                }}
+            >
             <span>
               {isHistory ? "Conversation History" : "Last Public Interactions"}
             </span>
@@ -1937,7 +1754,7 @@ const handleConversationClick = async (chat_id: string) => {
                   backgroundColor: 'red',
                   borderRadius: '8px',
                   padding: '2px 8px',
-                  fontSize: '0.75rem',
+                  fontSize: '0.8rem',
                   fontWeight: '500',
                   minWidth: '20px', // Taille minimale pour un affichage cohérent
                   height: '20px', // Hauteur constante pour garder l'alignement
@@ -1950,7 +1767,7 @@ const handleConversationClick = async (chat_id: string) => {
 
 
           {/* Conteneur défilant uniquement pour la liste */}
-          <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 10px' }}>
+          <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 5px' }}>
             {isHistory ? (
               <List>
                 {conversations.length > 0 ? (
@@ -1965,7 +1782,7 @@ const handleConversationClick = async (chat_id: string) => {
                       sx={{
                         position: 'relative',
                         borderRadius: '8px',
-                        margin: '5px 0',
+                        margin: '2px 0',
                         paddingRight: '40px',
                         backgroundColor:
                           activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
@@ -2006,8 +1823,8 @@ const handleConversationClick = async (chat_id: string) => {
                           width: '10px',
                           height: '10px',
                           borderRadius: '50%',
-                          marginRight: '8px',
-                          marginLeft: '8px',
+                          marginRight: '14px',
+                          //marginLeft: '1px',
                           flexShrink: 0,
                         }}
                       />
@@ -2023,6 +1840,50 @@ const handleConversationClick = async (chat_id: string) => {
                             textOverflow: 'ellipsis',
                           },
                         }}
+                        secondary={
+                          <Box
+                            sx={{
+                              display: 'flex', // 🔥 Permet d'afficher "Public/Private" et "Topic" côte à côte
+                              alignItems: 'center', // 🔥 Assure un alignement parfait
+                              gap: '8px', // 🔥 Espacement entre les deux rectangles
+                              marginTop: '2px',
+                            }}
+                          >
+                            {/* Badge Public / Private */}
+                            <Box
+                              sx={{
+                                fontSize: '0.7rem',
+                                fontWeight: 'bold',
+                                color: conversation.thread_type === 'Private' ? '#6F6F6F' : '#4A90E2',
+                                backgroundColor: conversation.thread_type === 'Private' ? '#F0F0F0' : '#E0F2FF',
+                                padding: '2px 6px',
+                                borderRadius: '5px',
+                                display: 'inline-block',
+                              }}
+                            >
+                              {conversation.thread_type === 'Private' ? 'Private' : 'Public'}
+                            </Box>
+                        
+                            {/* Badge Topic */}
+                            {conversation.topic && (
+                              <Box
+                                sx={{
+                                  fontSize: '0.7rem',
+                                  fontWeight: 'bold',
+                                  color: topicColors[conversation.topic] || topicColors["Default"], // Texte coloré
+                                  backgroundColor: `${(topicColors[conversation.topic] || topicColors["Default"])}20`, // Fond en version claire
+                                  padding: '2px 6px',
+                                  borderRadius: '5px',
+                                  display: 'inline-block',
+                                }}
+                              >
+                                {conversation.topic}
+                              </Box>
+                            )}
+                          </Box>
+                        }                        
+                        
+                        
                       />
                       <IconButton
                         edge="end"
@@ -2090,7 +1951,7 @@ const handleConversationClick = async (chat_id: string) => {
                         sx={{
                           position: 'relative',
                           borderRadius: '8px',
-                          margin: '1px 0',
+                          margin: '0.5px 0',
                           paddingRight: '20px',
                           backgroundColor:
                             activeChatId === thread.chat_id ? theme.palette.button.background : 'transparent',
@@ -2133,7 +1994,42 @@ const handleConversationClick = async (chat_id: string) => {
                         {/* Texte Principal et Secondaire */}
                         <ListItemText
                           primary={thread.name}
-                          secondary={`${formatDate(thread.created_at)} | ${topic}`}
+                          secondary={
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px', // 🔥 Espacement entre la date et le topic
+                                whiteSpace: 'nowrap', // 🔥 Empêche le retour à la ligne
+                                marginTop: '2px',
+                              }}
+                            >
+                              {/* Date */}
+                              <Typography
+                                variant="caption"
+                                sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}
+                              >
+                                {formatDate(thread.created_at).slice(-17)}
+                              </Typography>
+
+                              {/* Badge Topic */}
+                              {thread.topic && (
+                                <Box
+                                  sx={{
+                                    fontSize: '0.7rem',
+                                    fontWeight: 'bold',
+                                    color: topicColors[thread.topic] || topicColors["Default"], // Texte coloré
+                                    backgroundColor: `${(topicColors[thread.topic] || topicColors["Default"])}20`, // Fond clair basé sur la couleur du topic
+                                    padding: '2px 6px',
+                                    borderRadius: '5px',
+                                    display: 'inline-block',
+                                  }}
+                                >
+                                  {thread.topic}
+                                </Box>
+                              )}
+                            </Box>
+                          }
                           sx={{
                             maxWidth: 'calc(100% - 40px)', // Réduit la largeur du texte pour laisser de la place au cercle
                             flexShrink: 1, // Évite que le texte empiète sur le cercle
@@ -2147,13 +2043,8 @@ const handleConversationClick = async (chat_id: string) => {
                               textOverflow: 'ellipsis',
                             },
                           }}
-                          secondaryTypographyProps={{
-                            style: {
-                              fontSize: '0.75rem',
-                              color: theme.palette.text.secondary,
-                            },
-                          }}
                         />
+
                         {/* Cercle indiquant si la conversation est lue */}
                         <Box
                           sx={{
