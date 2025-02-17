@@ -210,50 +210,53 @@ const Dashboard_eleve_template: React.FC = () => {
 
 
 
-/*
+
   const fetchSocialThreads = () => {
-    setLoadingSocialThreads(true);
-    const university = user.university || "upenn"; // Université par défaut
-  
-    // 🔥 Écouter les changements en direct
-    const q = query(
-      collection(db, "chatsessions"),
-      where("thread_type", "==", "Public"), // Ne récupérer que les conversations publiques
-      where("university", "==", university), // Filtrer par université
-      orderBy("created_at", "desc")
+  setLoadingSocialThreads(true);
+  const university = user.university || "upenn"; // Université par défaut
+
+  // 🔥 Ne filtrer que par "university" dans Firestore
+  const q = query(
+    collection(db, "chatsessions"),
+    where("university", "==", university), // ✅ Filtrer uniquement par université
+    orderBy("created_at", "desc") // Trier du plus récent au plus ancien
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const userId = user.id; // ID de l'utilisateur actuel
+
+    // 🔥 Transformation des threads depuis Firestore
+    const threads = snapshot.docs.map((doc) => ({
+      chat_id: doc.id,
+      name: doc.data().name,
+      created_at: doc.data().created_at,
+      topic: doc.data().topic || "Default",
+      thread_type: doc.data().thread_type || "Public", // 🔥 Si `thread_type` est absent, on met "Public"
+      university: doc.data().university || "Default",
+      isRead: (doc.data().ReadBy || []).includes(userId),
+    }));
+
+    // 🔥 Appliquer le filtre `thread_type === "Public"` après récupération
+    const filteredThreads = threads.filter(
+      (thread) => thread.thread_type === "Public" && thread.name !== "New Chat"
     );
-  
-    return onSnapshot(q, (snapshot) => {
-      const userId = user.id; // ID de l'utilisateur actuel
-  
-      // Transformation des threads depuis Firestore
-      const threads = snapshot.docs
-        .map((doc) => ({
-          chat_id: doc.id,
-          name: doc.data().name,
-          created_at: doc.data().created_at,
-          topic: doc.data().topic || "Default",
-          thread_type: doc.data().thread_type || "Public",
-          university: doc.data().university || "Default",
-          isRead: (doc.data().ReadBy || []).includes(userId), // Vérifier si l'utilisateur a lu la conversation
-        }))
-        .filter((thread) => thread.name !== "New Chat"); // Exclure les threads vides
-  
-      // Mettre à jour l'état avec les nouvelles conversations publiques
-      setSocialThreads(threads);
-  
-      // Mise à jour du compteur de conversations non lues
-      const unread = threads.filter((thread) => !thread.isRead).length;
-      setUnreadCount(unread);
-  
-      setLoadingSocialThreads(false);
-    });
-  };
-  */
+
+    console.log(`📌 Après filtrage manuel, ${filteredThreads.length} conversations sont affichées`);
+
+    setSocialThreads(filteredThreads);
+
+    // 🔥 Mise à jour du compteur des messages non lus
+    const unread = filteredThreads.filter((thread) => !thread.isRead).length;
+    setUnreadCount(unread);
+
+    setLoadingSocialThreads(false);
+  });
+};
+
   
 
 
-
+/*
   const fetchSocialThreads = () => {
     setLoadingSocialThreads(true);
     const university = user.university || "upenn"; // Université par défaut
@@ -295,7 +298,7 @@ const Dashboard_eleve_template: React.FC = () => {
       setLoadingSocialThreads(false);
     });
   };
-  
+  */
   
   
   
