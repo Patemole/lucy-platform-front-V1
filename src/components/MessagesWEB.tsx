@@ -52,6 +52,8 @@ import remarkBreaks from 'remark-breaks';
 import './MessageWEBCSS.css';
 import { FiRefreshCw } from "react-icons/fi";
 
+
+
 HighchartsMore(Highcharts);
 
 export const Hoverable: React.FC<{
@@ -185,6 +187,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [showAllSteps, setShowAllSteps] = useState(false);
   const [isOtherSelected, setIsOtherSelected] = useState<boolean>(false);
+  const [showSourcesSidebar, setShowSourcesSidebar] = useState(false);
 
   // États pour la gestion des messages
   const [messages, setMessages] = useState<string[]>([]);
@@ -973,17 +976,18 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </>
             )}
 
-            {/* Gestion des documents cités */}
+            {/*
+            {/* Gestion des documents cités *
         {citedDocuments && citedDocuments.length > 0 && (
         <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""}`}>
-            {/* Divider above University Sources, visible only if Social Thread has elements */}
+            {/* Divider above University Sources, visible only if Social Thread has elements *
             {hasSocialThread && (
             <>
-                <hr className="my-4 border-gray-300 animate-fadeIn" /> {/* Animation ajoutée */}
+                <hr className="my-4 border-gray-300 animate-fadeIn" /> {/* Animation ajoutée *
             </>
             )}
 
-            {/* Title for Sources Section */}
+            {/* Title for Sources Section *
             <div 
             className="font-bold mb-2" 
             style={{ 
@@ -1009,7 +1013,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         sourceType={document.source_type as ValidSources}
                         iconSize={16}
                     />
-                    */}
+                    *
                     </div>
                     {document.document_name}
                 </div>
@@ -1034,6 +1038,91 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </div>
         </div>
         )}
+        */}
+        {citedDocuments && citedDocuments.length > 0 && (
+          <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""}`}>
+            
+            {/* Affichage de la première source en pleine largeur */}
+            <div 
+              className="full-width-source p-3 mb-2 rounded-lg flex items-center cursor-pointer"
+              style={{
+                backgroundColor: "#222",
+                color: "#fff",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}
+              onClick={() => handleSourceClick(citedDocuments[0].link)}
+            >
+              <div className="flex items-center">
+                <LanguageIcon sx={{ width: 24, height: 24, marginRight: 8 }} />
+                <span className="font-bold">{citedDocuments[0].document_name}</span>
+              </div>
+              <span className="text-gray-400">{new URL(citedDocuments[0].link).hostname}</span>
+            </div>
+
+            {/* Conteneur pour les autres sources */}
+            <div className="sources-grid mt-2 grid grid-cols-4 gap-2">
+              {citedDocuments.slice(1, 4).map((document, index) => (
+                <div 
+                  key={document.document_id}
+                  className="source-box p-3 rounded-lg cursor-pointer flex items-center"
+                  style={{
+                    backgroundColor: "#333",
+                    color: "#fff",
+                    borderRadius: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}
+                  onClick={() => handleSourceClick(document.link)}
+                >
+                  <div className="flex items-center">
+                    <LanguageIcon sx={{ width: 18, height: 18, marginRight: 6 }} />
+                    <span className="text-sm">{document.document_name}</span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Affichage du bouton "+X sources" si plus de 4 sources */}
+              {citedDocuments.length > 4 && (
+                <div 
+                  className="source-box p-3 rounded-lg cursor-pointer flex items-center justify-center"
+                  style={{
+                    backgroundColor: "#444",
+                    color: "#fff",
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    fontWeight: "bold"
+                  }}
+                  onClick={() => setShowSourcesSidebar(true)}
+                >
+                  +{citedDocuments.length - 4} sources
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+
+            {showSourcesSidebar && (
+              <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-end">
+                <div className="w-96 h-full bg-white p-4 overflow-y-auto">
+                  <button onClick={() => setShowSourcesSidebar(false)} className="mb-4 text-gray-600">Close</button>
+                  <h2 className="text-lg font-bold mb-3">All Sources</h2>
+                  <ul>
+                    {citedDocuments && citedDocuments.length > 0 && citedDocuments.map((document, index) => (
+                      <li key={document.document_id} className="p-2 border-b border-gray-300 cursor-pointer hover:bg-gray-100">
+                        <a href={document.link} target="_blank" rel="noopener noreferrer">{document.document_name}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+
 
 
             {/* Affichage des messages accumulés */}
