@@ -96,6 +96,9 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick, eve
 
   // fonction pour calculer le style de positionnement d'un événement
   const getEventPositionStyle = (event: EventStudentProfile) => {
+    if (!event.start || !event.end || !isValid(event.start) || !isValid(event.end)) {
+      return {}; // 🔥 Retourne un objet vide si la date est invalide (évite les erreurs)
+    }
     const startTotalMin = event.start.getHours() * 60 + event.start.getMinutes();
     const endTotalMin = event.end.getHours() * 60 + event.end.getMinutes();
     const startIndex = (startTotalMin - (GRID_START_HOUR * 60)) / SLOT_DURATION_MIN;
@@ -111,6 +114,7 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick, eve
 
   // filtrage des événements pour la semaine courante
   const eventsThisWeek = events.filter((event) => {
+    if (!event.start || !isValid(event.start)) return false; // 🔥 Ignore les événements sans date valide
     const eventDate = new Date(event.start).getTime();
     const weekStart = currentWeekStartDate.getTime();
     const weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000;
@@ -198,7 +202,9 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick, eve
               />
               {/* affichage des événements pour ce jour */}
               {eventsThisWeek.filter((event) => {
-                const eventDate = new Date(event.start);
+                //const eventDate = new Date(event.start);
+                const eventDate = event.start && isValid(event.start) ? new Date(event.start) : null;
+                if (!eventDate) return false; // 🔥 Ignore les événements sans date valide
                 return (
                   eventDate.getFullYear() === date.getFullYear() &&
                   eventDate.getMonth() === date.getMonth() &&
@@ -246,7 +252,8 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick, eve
                           {event.title}
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
+                          {event.start && isValid(event.start) ? format(event.start, 'HH:mm') : 'Unknown time'} - 
+                          {event.end && isValid(event.end) ? format(event.end, 'HH:mm') : 'Unknown time'}
                         </Typography>
                         <Box
                           sx={{

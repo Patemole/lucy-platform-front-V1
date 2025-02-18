@@ -3,7 +3,7 @@
 import React, { useState, useEffect, KeyboardEvent, useRef, useMemo } from 'react';
 import StopIcon from '@mui/icons-material/Stop';
 import { motion } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import {
   ThemeProvider, TextField, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Menu, MenuItem, Divider, IconButton, Snackbar, InputAdornment, Alert, CircularProgress,
@@ -20,7 +20,7 @@ import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, coll
 import logo_greg from '../student_face.png';
 import '../index.css';
 import { AIMessage } from '../components/MessagesWEB';
-import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY} from '../interfaces/interfaces_eleve';
+import { Message, StudentProfile, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY} from '../interfaces/interfaces_eleve';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
@@ -48,6 +48,11 @@ import PeopleIcon from '@mui/icons-material/People';
 import { format, isToday, isYesterday } from 'date-fns';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
+import { EventStudentProfile } from '../interfaces/interfaces_eleve';
+import EventDetailsSidebar from '../components/EventDetailsSidebar';
+import Calendar from '../components/Calendar_StudentProfile';
+import Kanban from '../components/Kanban_StudentProfile';
+import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
 
 
 
@@ -85,7 +90,7 @@ const topicColors: { [key: string]: string } = {
   "Events": "#E67E22", // Orange
   "Policies": "#2980B9", // Bleu
   "Housing": "#8E44AD", // Violet
-  "Courses": "#F39C12", // Jaune
+  "Courses": "#EAC117", // Jaune
   "Chitchat": "#7F8C8D", // Jaune
   "Default": "#7F8C8D" // Gris
 };
@@ -152,6 +157,78 @@ const Dashboard_eleve_template: React.FC = () => {
   const [isSocialThread, setIsSocialThread] = useState(false); // Permet de savoir si c'est un Social Thread
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [searchParams] = useSearchParams();
+  const chatIdFromUrl = searchParams.get("chat_id"); // 🔥 Récupère `chat_id` depuis l'URL
+  
+  const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'events'
+  const [eventDisplayMode, setEventDisplayMode] = useState('kanban'); // 'kanban' or 'calendar'
+  const [events, setEvents] = useState<EventStudentProfile[]>([]); // on charge les événements du backend ici
+  const [isCalendarView, setIsCalendarView] = useState(false); // état pour savoir si on est en vue calendar ou pas
+  const [selectedEvent, setSelectedEvent] = useState<EventStudentProfile | null>(null); // événement sélectionné lors d'un clic
+  const [sidebarOpen, setSidebarOpen] = useState(false); // si la sidebar est ouverte ou pas
+
+
+
+  // fonction pour envoyer les infos de l'utilisateur au backend et récupérer les événements
+  const fetchUserInfo = async () => {
+    if (!user) {
+      console.warn('User data is unavailable.');
+      return;
+    }
+  
+    const userInfo: StudentProfile = {
+      username: user.name || 'default_username',
+      university: user.university || 'University Name',
+      year: user.year || 'Null',
+      studentProfile: localStorage.getItem('student_profile') || 'Brief profile description',
+      interests: Array.isArray(user.interests) ? user.interests : ['No interests now'], //Adding interest to the student profile
+      registered_club_status: user.registered_club_status || 'No registered_club_status',
+      registered_clubs: user.registered_clubs || 'No registered_clubs',
+      major: Array.isArray(user.major) ? user.major : ['None_Default'],
+      minor: Array.isArray(user.minor) ? user.minor : ['None_Default'],
+      faculty: Array.isArray(user.faculty) ? user.faculty : ['None_Default'],
+      email: user.email || 'No email provided',
+      userId: user.id || 'No ID',
+      role: user.role || 'No role',
+      createdAt: user.createdAt || 'Unknown',
+      lastLogin: user.lastLogin || 'Unknown',
+      profilePicture: user.profilePicture || 'No profile picture',
+      name: user.name || 'default_username',
+      academic_advisor: user.academic_advisor || 'Unknown',
+    };
+  
+    console.log('Fetched user info:', userInfo);
+  
+    try {
+      const response = await sendUserInfoToBackend(userInfo);
+      if (response && response.events) {
+        setEvents(response.events);
+        console.log('Events successfully retrieved:', response.events);
+      } else {
+        console.warn('No events found in response.');
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchUserInfo();
+  }, [user]);
+
+
+  const handleEventClick = (event: EventStudentProfile) => {
+    setSelectedEvent(event);
+    setSidebarOpen(true);
+  };
+
+
+  useEffect(() => {
+    if (!chatIdFromUrl) return; // 🔥 Si `chatIdFromUrl` n'existe pas, ne fait rien
+  
+    handleConversationClick(chatIdFromUrl);
+  }, []); // 🔥 Exécuté une seule fois au chargement
+  
 
 
   useEffect(() => {
@@ -388,6 +465,12 @@ const Dashboard_eleve_template: React.FC = () => {
   
       return newIsHistory;
     });
+  };
+
+
+
+  const handleCloseSidebar = () => {
+    setSidebarOpen(false);
   };
   
 
@@ -1141,6 +1224,7 @@ const Dashboard_eleve_template: React.FC = () => {
 
 const handleNewConversation = async () => {
   console.log('NEW CONVERSATION');
+  setCurrentView('chat'); // 🔥 Revenir au chat après la création d'une conversation
 
   if (isLandingPageVisible) {
     console.log("Impossible de créer une nouvelle conversation, la landing page est visible.");
@@ -1267,6 +1351,7 @@ const handleNewConversation = async () => {
 
 
 const handleConversationClick = async (chat_id: string) => {
+  setCurrentView('chat'); // 🔥 Quand on clique sur une conversation, on revient sur le chat
   setPrimaryChatId(chat_id); // Met à jour le chat_id principal
   setActiveChatId(chat_id); // Définit la conversation active
   setRelatedQuestions([]);
@@ -1353,122 +1438,6 @@ const handleConversationClick = async (chat_id: string) => {
   }
 };
 
-
-
-
-  /*
-  //Permet de mettre a jour la conversation active quand on clique sur une une conversation deja presente dans l historique
-  const handleConversationClick = async (chat_id: string) => {
-    //localStorage.setItem('chat_id', chat_id);
-    setPrimaryChatId(chat_id); //Context API qui permet de mettre a jour le nouveau chat_id 
-    setActiveChatId(chat_id);
-
-    setRelatedQuestions([]);
-
-    try {
-      const chatHistory = await getChatHistory(chat_id);
-      setMessages(chatHistory);
-      setShowChat(true);
-    } catch (error) {
-      setPopup({
-        type: 'error',
-        message: 'Failed to fetch chat history. Please try again later.',
-      });
-    }
-  };
-  */
-
-
-  /*
-  //Fonction qui gere quand on clique sur une conversation
-  const handleConversationClick = async (chat_id: string) => {
-    setPrimaryChatId(chat_id); // Met à jour le chat_id principal
-    setActiveChatId(chat_id); // Définit la conversation active
-    setRelatedQuestions([]);
-  
-    try {
-
-      setSocialThreads((prevThreads) => {
-        const updatedThreads = prevThreads.map((thread) => {
-          if (thread.chat_id === chat_id && !thread.isRead) {
-            return { ...thread, isRead: true };
-          }
-          return thread;
-        });
-      
-        // Recalcul global du compteur d'éléments non lus
-        const newUnreadCount = updatedThreads.filter((thread) => !thread.isRead).length;
-        setUnreadCount(newUnreadCount);
-      
-        return updatedThreads;
-      });
-      
-
-
-      // Récupère l'historique des messages
-      const chatHistory = await getChatHistory(chat_id);
-      setMessages(chatHistory);
-      setShowChat(true);
-
-  
-      // Récupère les détails de la conversation pour vérifier si elle est Public ou Private
-      const chatRef = doc(db, 'chatsessions', chat_id);
-      const chatSnap = await getDoc(chatRef);
-  
-      if (chatSnap.exists()) {
-        const chatData = chatSnap.data();
-        // Vérifie et met à jour l'état isPrivate
-        if (chatData.thread_type) {
-          const isConversationPrivate = chatData.thread_type === 'Private';
-          setIsPrivate(isConversationPrivate);
-          console.log(`Conversation is now ${isConversationPrivate ? 'Private' : 'Public'}`);
-        } else {
-          console.warn('No thread_type field found in chat session document. Defaulting to Public.');
-          setIsPrivate(false); // Défaut à Public si thread_type est absent
-        }
-
-
-        // Ajoutez le code ici pour vérifier et mettre à jour `ReadBy`
-        const userId = user.id; // Récupère l'ID de l'utilisateur actuel
-        const readBy = chatData.ReadBy || []; // Liste des utilisateurs ayant lu la conversation
-
-
-        
-        if (!readBy.includes(userId)) {
-          console.log(`Ajout de l'utilisateur ${userId} à ReadBy pour la conversation ${chat_id}`);
-
-
-      
-          try {
-            // Met à jour Firestore pour inclure l'utilisateur dans ReadBy
-            //await updateDoc(chatRef, { ReadBy: [...readBy, userId] });
-            await updateDoc(chatRef, { ReadBy: Array.from(new Set([...readBy, userId])) });
-          
-            console.log('ReadBy mis à jour avec succès dans Firestore');
-          } catch (updateError) {
-            console.error('Erreur lors de la mise à jour de ReadBy dans Firestore :', updateError);
-          }
-        }
-
-
-      } else {
-        console.warn(`No chat session found with chat_id: ${chat_id}. Defaulting to Public.`);
-        setIsPrivate(false); // Défaut à Public si le document est introuvable
-      }
-
-
-    } catch (error) {
-      console.error('Error fetching chat history or thread_type:', error);
-      setPopup({
-        type: 'error',
-        message: 'Failed to fetch chat history. Please try again later.',
-      });
-      setIsPrivate(false); // Défaut à Public en cas d'erreur
-    }
-  };
-  */
-
-
   //permet d ouvir la sidebar (change l etat de ouvir/fermer)
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
@@ -1478,26 +1447,6 @@ const handleConversationClick = async (chat_id: string) => {
     setIframeSrc(link);
   };
 
-
-  /*
-  //Recupere les informations d un feedback pouce vers le bas et les envoie au backend
-  const handleSubmitWrongAnswerFeedback = async (feedback: string) => {
-    const uid = user.id || 'default_uid';
-    const chatId = chatIds[0] || 'default_chat_id';
-
-    await submitFeedbackWrongAnswer({
-      userId: uid,
-      chatId,
-      aiMessageContent: selectedAiMessage || 'default_ai_message',
-      humanMessageContent: selectedHumanMessage || 'default_human_message',
-      feedback,
-    });
-
-    setSnackbarOpen(true);
-    handleCloseWrongAnswerModal();
-  };
-
-  */
 
   const handleSubmitWrongAnswerFeedback = async (
     feedback: string,
@@ -1562,7 +1511,7 @@ const handleConversationClick = async (chat_id: string) => {
         <div className="blob blob-5"></div>
         <div className="frosted-glass"></div>
       </div>
-
+  
       <motion.div
         initial="initial"
         animate="animate"
@@ -1577,463 +1526,250 @@ const handleConversationClick = async (chat_id: string) => {
             position: 'fixed', // Fixe le conteneur
             top: 0,
             left: 0,
-            //width: '100vw', // Assure que le conteneur occupe toute la largeur
-            //height: '100vh', // Assure que le conteneur occupe toute la hauteur
             right: isSmallScreen && drawerOpen ? '20vw' : '0', // Laisse 20% de l'écran à droite si Drawer ouvert
             width: isSmallScreen && drawerOpen ? '80vw' : '100%', // Ajuste la largeur
             overflow: 'hidden', // Désactive le scroll interne
           }}
         >
-        <Drawer
-          variant={isSmallScreen ? "temporary" : "persistent"}
-          anchor="left"
-          open={drawerOpen}
-          onClose={isSmallScreen ? toggleDrawer : undefined}
-          PaperProps={{
-            style: {
-              width: isSmallScreen ? '80vw' : drawerWidth,
-              borderRadius: '0',
-              position: 'fixed',
-              height: '100%',
-              top: 0,
-              left: 0,
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              display: 'flex',
-              flexDirection: 'column',
-              borderRight: '1px solid rgba(255, 255, 255, 0.3)',
-            },
-          }}
-          ModalProps={{
-            keepMounted: true,
-            BackdropProps: {
+          <Drawer
+            variant={isSmallScreen ? "temporary" : "persistent"}
+            anchor="left"
+            open={drawerOpen}
+            onClose={isSmallScreen ? toggleDrawer : undefined}
+            PaperProps={{
               style: {
-                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                width: isSmallScreen ? '80vw' : drawerWidth,
+                borderRadius: '0',
+                position: 'fixed',
+                height: '100%',
+                top: 0,
+                left: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                display: 'flex',
+                flexDirection: 'column',
+                borderRight: '1px solid rgba(255, 255, 255, 0.3)',
               },
-            },
-          }}
-        >
-          {/* Header avec boutons de menu et nouvelle conversation */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
-            <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
-              <MenuIcon />
-            </IconButton>
-
-            <IconButton
-              onClick={() => {
-                if (!isLandingPageVisible) {
-                  handleNewConversation();
-                  if (isSmallScreen) toggleDrawer();
-                }
-              }}
-              sx={{
-                color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
-                cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
-              }}
-              disabled={isLandingPageVisible}
-            >
-              <MapsUgcRoundedIcon />
-            </IconButton>
-          </Box>
-
-          {/* Contenu fixe avant la liste */}
-          <List style={{ padding: '0 10px' }}>
-            {/* Profil avec fermeture automatique sur petits écrans */}
-            <ListItem
-              button
-              onClick={(event) => {
-                  //event.preventDefault(); // Empêche tout comportement par défaut
-                  //event.stopPropagation(); // Empêche la propagation de l’événement
-                  //setSnackbarMessage("Available very soon! :)"); // Définir le message
-                  //setSnackbarOpen(true); // Ouvrir le Snackbar
-                navigate(`/dashboard/calendar/student/${user?.id || 'defaultId'}`); // Naviguer vers la page Dashboard_Calendar
-                //if (isSmallScreen) toggleDrawer();
-              }}
-              sx={{
-                borderRadius: '8px',
-                backgroundColor: 'transparent',
-                mb: 1,
-                '&:hover': {
-                  backgroundColor: theme.palette.action.hover,
+            }}
+            ModalProps={{
+              keepMounted: true,
+              BackdropProps: {
+                style: {
+                  backgroundColor: 'rgba(0, 0, 0, 0.1)',
                 },
-                '@media (hover: hover) and (pointer: fine)': {
-                  '&:hover': {
-                    //backgroundColor: theme.palette.action.hover,
-                    backgroundColor: 'transparent',
-                  },
-                },
-              }}
-            >
-              <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
-                <DashboardIcon sx={{ fontSize: '22px' }} />
-              </ListItemIcon>
-              <ListItemText
-                primary="Your Events"
-                primaryTypographyProps={{
-                  style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
+              },
+            }}
+          >
+            {/* Header avec boutons de menu et nouvelle conversation */}
+            <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
+              <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
+                <MenuIcon />
+              </IconButton>
+  
+              <IconButton
+                onClick={() => {
+                  if (!isLandingPageVisible) {
+                    handleNewConversation();
+                    if (isSmallScreen) toggleDrawer();
+                  }
                 }}
-              />
-            </ListItem>
-
-            {/* Nouveau Bouton History/Social Thread */}
-            <ListItem
-              button
-              onClick={handleToggleHistory}
-              sx={{
-                borderRadius: '8px',
-                backgroundColor: 'transparent',
-                mb: 2,
-                '&:hover': {
-                  backgroundColor: theme.palette.action.hover,
-                },
-                '@media (hover: hover) and (pointer: fine)': {
+                sx={{
+                  color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
+                  cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
+                }}
+                disabled={isLandingPageVisible}
+              >
+                <MapsUgcRoundedIcon />
+              </IconButton>
+            </Box>
+  
+            {/* Contenu fixe avant la liste */}
+            <List style={{ padding: '0 10px' }}>
+              {/* Profil avec fermeture automatique sur petits écrans */}
+              <ListItem
+                button
+                onClick={(event) => {
+                  // navigate to the calendar page can be replaced with events view:
+                  //navigate(`/dashboard/calendar/student/${user?.id || 'defaultId'}`);
+                  setCurrentView('events');
+                  if (isSmallScreen) toggleDrawer();
+                }}
+                sx={{
+                  borderRadius: '8px',
+                  backgroundColor: 'transparent',
+                  mb: 1,
                   '&:hover': {
                     backgroundColor: theme.palette.action.hover,
                   },
-                },
-              }}
-            >
-              <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
-                {isHistory ? <PeopleIcon sx={{ fontSize: '22px' }}/> : <HistoryIcon sx={{ fontSize: '22px' }}/>}
-              </ListItemIcon>
-              <ListItemText
-                primary={
-                  <Box display="flex" alignItems="center">
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary }}
-                    >
-                      {isHistory ? "Social Thread" : "Conversation History"}
-                    </Typography>
-                    {/* Ajouter la vignette uniquement si c'est Social Thread */}
-                    {isHistory && unreadCount > 0 && (
-                      <Box
-                        sx={{
-                          backgroundColor: 'red',
-                          color: 'white',
-                          borderRadius: '8px',
-                          padding: '2px 6px',
-                          marginLeft: '8px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          minWidth: '20px', // Taille minimale pour la vignette
-                        }}
-                      >
-                        {unreadCount}
-                      </Box>
-                    )}
-                  </Box>
-                }
-              />
-            </ListItem>
-          </List>
-
-          <Divider style={{ backgroundColor: 'lightgray',  }} />
-
-          {/* Titre de l'état actuel */}
-          <div 
-          className="text-center text-black-500 font-semibold mt-5 mb-2 flex justify-center items-center"
-          style={{
-                  fontSize: '0.95rem', // 🔥 Ajuste la taille (1rem = 16px, ici 1.25rem = 20px)
-                  fontWeight: '700', // 🔥 Rend le texte plus épais (700 = bold)
-                  marginBottom: '8px', // 🔥 Ajuste l’espacement en dessous
-                }}
-            >
-            <span>
-              {isHistory ? "Conversation History" : "Last Public Interactions"}
-            </span>
-            {/* Ajouter la vignette uniquement si c'est Last Public Interactions */}
-            {!isHistory && unreadCount > 0 && (
-              <div
-                className="ml-2 flex items-center justify-center text-white"
-                style={{
-                  backgroundColor: 'red',
-                  borderRadius: '8px',
-                  padding: '2px 8px',
-                  fontSize: '0.8rem',
-                  fontWeight: '500',
-                  minWidth: '20px', // Taille minimale pour un affichage cohérent
-                  height: '20px', // Hauteur constante pour garder l'alignement
+                  '@media (hover: hover) and (pointer: fine)': {
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                    },
+                  },
                 }}
               >
-                {unreadCount}
-              </div>
-            )}
-          </div>
-
-
-          {/* Conteneur défilant uniquement pour la liste */}
-          <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 5px' }}>
-            {isHistory ? (
-              <List>
-                {conversations.length > 0 ? (
-                  conversations.map((conversation) => (
-                    <ListItem
-                      key={conversation.chat_id}
-                      button
-                      onClick={() => {
-                        handleConversationClick(conversation.chat_id);
-                        if (isSmallScreen) toggleDrawer();
-                      }}
-                      sx={{
-                        position: 'relative',
-                        borderRadius: '8px',
-                        margin: '2px 0',
-                        paddingRight: '40px',
-                        backgroundColor:
-                          activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
-                        '& .circle': {
-                          backgroundColor:
-                            activeChatId === conversation.chat_id
-                              ? conversation.thread_type === 'Private'
-                                ? '#6F6F6F' // Gris foncé pour conversation privée sélectionnée
-                                : '#4A90E2' // Bleu pour conversation publique sélectionnée
-                              : conversation.thread_type === 'Private'
-                              ? '#BDBDBD'
-                              : '#A9C2E8',
-                        },
-                        '@media (hover: hover) and (pointer: fine)': {
-                          '&:hover': {
-                            backgroundColor:
-                              activeChatId === conversation.chat_id
-                                ? theme.palette.button.background // Pas de changement pour une conversation sélectionnée
-                                : theme.palette.button.background,
-                            '& .circle': {
-                              backgroundColor:
-                                activeChatId === conversation.chat_id
-                                  ? conversation.thread_type === 'Private'
-                                    ? '#6F6F6F' // Pas de changement pour une conversation privée sélectionnée
-                                    : '#4A90E2' // Pas de changement pour une conversation publique sélectionnée
-                                  : conversation.thread_type === 'Private'
-                                  ? '#6F6F6F' // Gris clair pour hover privé non sélectionné
-                                  : '#4A90E2', // Bleu clair pour hover public non sélectionné
-                            },
-                          },
-                        },
-                      }}
-                    >
-                      {/* Cercle coloré indiquant le type de conversation */}
-                      <Box
-                        className="circle"
-                        sx={{
-                          width: '10px',
-                          height: '10px',
-                          borderRadius: '50%',
-                          marginRight: '14px',
-                          //marginLeft: '1px',
-                          flexShrink: 0,
-                        }}
-                      />
-
-                      <ListItemText
-                        primary={conversation.name}
-                        primaryTypographyProps={{
-                          style: {
-                            fontWeight: '500',
-                            fontSize: '0.875rem',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          },
-                        }}
-                        secondary={
-                          <Box
-                            sx={{
-                              display: 'flex', // 🔥 Permet d'afficher "Public/Private" et "Topic" côte à côte
-                              alignItems: 'center', // 🔥 Assure un alignement parfait
-                              gap: '8px', // 🔥 Espacement entre les deux rectangles
-                              marginTop: '2px',
-                            }}
-                          >
-                            {/* Badge Public / Private */}
-                            <Box
-                              sx={{
-                                fontSize: '0.7rem',
-                                fontWeight: 'bold',
-                                color: conversation.thread_type === 'Private' ? '#6F6F6F' : '#4A90E2',
-                                backgroundColor: conversation.thread_type === 'Private' ? '#F0F0F0' : '#E0F2FF',
-                                padding: '2px 6px',
-                                borderRadius: '5px',
-                                display: 'inline-block',
-                              }}
-                            >
-                              {conversation.thread_type === 'Private' ? 'Private' : 'Public'}
-                            </Box>
-                        
-                            {/* Badge Topic */}
-                            {conversation.topic && (
-                              <Box
-                                sx={{
-                                  fontSize: '0.7rem',
-                                  fontWeight: 'bold',
-                                  color: topicColors[conversation.topic] || topicColors["Default"], // Texte coloré
-                                  backgroundColor: `${(topicColors[conversation.topic] || topicColors["Default"])}20`, // Fond en version claire
-                                  padding: '2px 6px',
-                                  borderRadius: '5px',
-                                  display: 'inline-block',
-                                }}
-                              >
-                                {conversation.topic}
-                              </Box>
-                            )}
-                          </Box>
-                        }                        
-                        
-                        
-                      />
-                      <IconButton
-                        edge="end"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMenuOpen(e, conversation.chat_id);
-                        }}
-                        sx={{
-                          position: 'absolute',
-                          right: '8px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: theme.palette.text.primary,
-                          opacity: activeChatId === conversation.chat_id ? 1 : 0,
-                          pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
-                          '&:hover': {
-                            backgroundColor: 'transparent',
-                          },
-                          mr: '1px',
-                        }}
+                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
+                  <DashboardIcon sx={{ fontSize: '22px' }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Your Events"
+                  primaryTypographyProps={{
+                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
+                  }}
+                />
+              </ListItem>
+  
+              {/* Nouveau Bouton History/Social Thread */}
+              <ListItem
+                button
+                onClick={handleToggleHistory}
+                sx={{
+                  borderRadius: '8px',
+                  backgroundColor: 'transparent',
+                  mb: 2,
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                  '@media (hover: hover) and (pointer: fine)': {
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
+                  {isHistory ? <PeopleIcon sx={{ fontSize: '22px' }}/> : <HistoryIcon sx={{ fontSize: '22px' }}/>}
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    <Box display="flex" alignItems="center">
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary }}
                       >
-                        <MoreHorizIcon
-                          fontSize="small"
+                        {isHistory ? "Social Thread" : "Conversation History"}
+                      </Typography>
+                      {isHistory && unreadCount > 0 && (
+                        <Box
                           sx={{
-                            color: 'gray',
-                            fontSize: '20px',
+                            backgroundColor: 'red',
+                            color: 'white',
+                            borderRadius: '8px',
+                            padding: '2px 6px',
+                            marginLeft: '8px',
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            minWidth: '20px',
                           }}
-                        />
-                      </IconButton>
-                    </ListItem>
-                  ))
-                ) : (
-                  <Typography
-                    align="center"
-                    sx={{
-                      fontWeight: '500',
-                      fontSize: '0.875rem',
-                      color: theme.palette.text.secondary,
-                      marginTop: '30px',
-                    }}
-                  >
-                    You have no conversations yet
-                  </Typography>
-                )}
-              </List>
-            ) : (
-              <List>
-                {loadingSocialThreads ? (
-                  <Box display="flex" justifyContent="center" alignItems="center" p={2}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : socialThreads.length > 0 ? (
-                  socialThreads.map((thread) => {
-                    const topic = thread.topic || "Default"; // Fallback au topic "Upenn"
-                    const color = topicColors[topic] || topicColors["Default"]; // Couleur associée ou par défaut
-
-                    return (
+                        >
+                          {unreadCount}
+                        </Box>
+                      )}
+                    </Box>
+                  }
+                />
+              </ListItem>
+            </List>
+  
+            <Divider style={{ backgroundColor: 'lightgray' }} />
+  
+            {/* Titre de l'état actuel */}
+            <div 
+              className="text-center text-black-500 font-semibold mt-5 mb-2 flex justify-center items-center"
+              style={{
+                fontSize: '0.95rem',
+                fontWeight: '700',
+                marginBottom: '8px',
+              }}
+            >
+              <span>
+                {isHistory ? "Conversation History" : "Last Public Interactions"}
+              </span>
+              {!isHistory && unreadCount > 0 && (
+                <div
+                  className="ml-2 flex items-center justify-center text-white"
+                  style={{
+                    backgroundColor: 'red',
+                    borderRadius: '8px',
+                    padding: '2px 8px',
+                    fontSize: '0.8rem',
+                    fontWeight: '500',
+                    minWidth: '20px',
+                    height: '20px',
+                  }}
+                >
+                  {unreadCount}
+                </div>
+              )}
+            </div>
+  
+            {/* Conteneur défilant pour la liste */}
+            <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 5px' }}>
+              {isHistory ? (
+                <List>
+                  {conversations.length > 0 ? (
+                    conversations.map((conversation) => (
                       <ListItem
-                        key={thread.chat_id}
+                        key={conversation.chat_id}
                         button
                         onClick={() => {
-                          handleConversationClick(thread.chat_id);
+                          handleConversationClick(conversation.chat_id);
                           if (isSmallScreen) toggleDrawer();
                         }}
                         sx={{
                           position: 'relative',
                           borderRadius: '8px',
-                          margin: '0.5px 0',
-                          paddingRight: '20px',
+                          margin: '2px 0',
+                          paddingRight: '40px',
                           backgroundColor:
-                            activeChatId === thread.chat_id ? theme.palette.button.background : 'transparent',
-                          '& .MuiIconButton-root': {
-                            opacity: activeChatId === thread.chat_id ? 1 : 0,
-                            pointerEvents: activeChatId === thread.chat_id ? 'auto' : 'none',
-                          },
-                          '& .MuiTypography-root': {
-                            color:
-                              activeChatId === thread.chat_id
-                                ? theme.palette.text_human_message_historic
-                                : theme.palette.text.primary,
+                            activeChatId === conversation.chat_id ? theme.palette.button.background : 'transparent',
+                          '& .circle': {
+                            backgroundColor:
+                              activeChatId === conversation.chat_id
+                                ? conversation.thread_type === 'Private'
+                                  ? '#6F6F6F'
+                                  : '#4A90E2'
+                                : conversation.thread_type === 'Private'
+                                ? '#BDBDBD'
+                                : '#A9C2E8',
                           },
                           '@media (hover: hover) and (pointer: fine)': {
                             '&:hover': {
-                              backgroundColor: theme.palette.button.background,
-                              color: theme.palette.text_human_message_historic,
-                              '& .MuiIconButton-root': {
-                                opacity: 1,
-                                pointerEvents: 'auto',
+                              backgroundColor:
+                                activeChatId === conversation.chat_id
+                                  ? theme.palette.button.background
+                                  : theme.palette.button.background,
+                              '& .circle': {
+                                backgroundColor:
+                                  activeChatId === conversation.chat_id
+                                    ? conversation.thread_type === 'Private'
+                                      ? '#6F6F6F'
+                                      : '#4A90E2'
+                                    : conversation.thread_type === 'Private'
+                                    ? '#6F6F6F'
+                                    : '#4A90E2',
                               },
                             },
                           },
                         }}
                       >
-                        
-                        {/* Barre Colorée à gauche */}
+                        {/* Cercle coloré */}
                         <Box
+                          className="circle"
                           sx={{
-                            width: '8px', // Augmenter la largeur
-                            minWidth: '8px', // Empêche la largeur d'être réduite
-                            height: '38px', // Hauteur explicite pour tester
-                            //backgroundColor: color,
-                            backgroundColor: color,
-                            borderRadius: '3px',
-                            marginRight: '10px',
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            marginRight: '14px',
+                            flexShrink: 0,
                           }}
                         />
-
-                        {/* Texte Principal et Secondaire */}
                         <ListItemText
-                          primary={thread.name}
-                          secondary={
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px', // 🔥 Espacement entre la date et le topic
-                                whiteSpace: 'nowrap', // 🔥 Empêche le retour à la ligne
-                                marginTop: '2px',
-                              }}
-                            >
-                              {/* Date */}
-                              <Typography
-                                variant="caption"
-                                sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}
-                              >
-                                {formatDate(thread.created_at).slice(-17)}
-                              </Typography>
-
-                              {/* Badge Topic */}
-                              {thread.topic && (
-                                <Box
-                                  sx={{
-                                    fontSize: '0.7rem',
-                                    fontWeight: 'bold',
-                                    color: topicColors[thread.topic] || topicColors["Default"], // Texte coloré
-                                    backgroundColor: `${(topicColors[thread.topic] || topicColors["Default"])}20`, // Fond clair basé sur la couleur du topic
-                                    padding: '2px 6px',
-                                    borderRadius: '5px',
-                                    display: 'inline-block',
-                                  }}
-                                >
-                                  {thread.topic}
-                                </Box>
-                              )}
-                            </Box>
-                          }
-                          sx={{
-                            maxWidth: 'calc(100% - 40px)', // Réduit la largeur du texte pour laisser de la place au cercle
-                            flexShrink: 1, // Évite que le texte empiète sur le cercle
-                          }}
+                          primary={conversation.name}
                           primaryTypographyProps={{
                             style: {
                               fontWeight: '500',
@@ -2043,176 +1779,366 @@ const handleConversationClick = async (chat_id: string) => {
                               textOverflow: 'ellipsis',
                             },
                           }}
-                        />
-
-                        {/* Cercle indiquant si la conversation est lue */}
-                        <Box
+                          secondary={
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginTop: '2px',
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  fontSize: '0.7rem',
+                                  fontWeight: 'bold',
+                                  color: conversation.thread_type === 'Private' ? '#6F6F6F' : '#4A90E2',
+                                  backgroundColor: conversation.thread_type === 'Private' ? '#F0F0F0' : '#E0F2FF',
+                                  padding: '2px 6px',
+                                  borderRadius: '5px',
+                                  display: 'inline-block',
+                                }}
+                              >
+                                {conversation.thread_type === 'Private' ? 'Private' : 'Public'}
+                              </Box>
+                              {conversation.topic && (
+                                <Box
+                                  sx={{
+                                    fontSize: '0.7rem',
+                                    fontWeight: 'bold',
+                                    color: topicColors[conversation.topic] || topicColors["Default"],
+                                    backgroundColor: `${(topicColors[conversation.topic] || topicColors["Default"])}20`,
+                                    padding: '2px 6px',
+                                    borderRadius: '5px',
+                                    display: 'inline-block',
+                                  }}
+                                >
+                                  {conversation.topic}
+                                </Box>
+                              )}
+                            </Box>
+                          }
                           sx={{
-                            width: '7px', // Taille du cercle
-                            minWidth: '7px', // Empêche la largeur d'être réduite
-                            height: '7px',
-                            borderRadius: '50%', // Cercle parfait
-                            backgroundColor: thread.isRead ? 'transparent' : '#3155CC ', // Vert si non lu, transparent sinon
-                            transition: 'background-color 0.3s ease', // Transition douce
-                            //marginRight: '10px',
-                            marginLeft: 'auto', // Pousse le cercle complètement à droite
-                          marginRight: '3px', // Ajoute un léger espacement par rapport au bord
+                            maxWidth: 'calc(100% - 40px)',
+                            flexShrink: 1,
                           }}
                         />
+
+                        <IconButton
+                          edge="end"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMenuOpen(e, conversation.chat_id);
+                          }}
+                          sx={{
+                            position: 'absolute',
+                            right: '8px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: theme.palette.text.primary,
+                            opacity: activeChatId === conversation.chat_id ? 1 : 0,
+                            pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
+                            '&:hover': {
+                              backgroundColor: 'transparent',
+                            },
+                            mr: '1px',
+                          }}
+                        >
+                          <MoreHorizIcon
+                            fontSize="small"
+                            sx={{
+                              color: 'gray',
+                              fontSize: '20px',
+                            }}
+                          />
+                        </IconButton>
                       </ListItem>
-                    );
-                  })
-                ) : (
-                  <Typography
-                    align="center"
-                    sx={{
-                      fontWeight: '500',
-                      fontSize: '0.875rem',
-                      color: theme.palette.text.secondary,
-                      marginTop: '30px',
-                    }}
-                  >
-                    You have no social threads yet
-                  </Typography>
-                )}
-              </List>
-            )}
-          </Box>
-
-          {/* Menu contextuel */}
-          <Menu
-            anchorEl={menuAnchorEl}
-            open={Boolean(menuAnchorEl)}
-            onClose={handleMenuClose}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            PaperProps={{
-              sx: {
-                margin: '8px',
-                borderRadius: '16px',
-                boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
-                padding: '4px',
-              },
-            }}
-          >
-            <MenuItem
-              onClick={handleRename}
-              sx={{
-                padding: '8px',
-                '&:hover': {
-                  backgroundColor: theme.palette.action.hover,
-                },
-              }}
-            >
-              <EditIcon fontSize="small" sx={{ marginRight: '8px' }} />
-              <Typography
-                variant="body2"
-                sx={{
-                  fontSize: '0.75rem',
-                  fontWeight: '400',
-                }}
-              >
-                Rename
-              </Typography>
-            </MenuItem>
-
-            <MenuItem
-              onClick={handleDelete}
-              sx={{
-                padding: '8px',
-                color: 'red',
-                '&:hover': {
-                  backgroundColor: theme.palette.action.hover,
-                },
-              }}
-            >
-              <DeleteIcon fontSize="small" sx={{ marginRight: '8px' }} />
-              <Typography
-                variant="body2"
-                sx={{
-                  fontSize: '0.75rem',
-                  fontWeight: '400',
-                }}
-              >
-                Delete
-              </Typography>
-            </MenuItem>
-          </Menu>
-
-          {/* Section Profil pour petits écrans avec fermeture automatique */}
-          {isSmallScreen && (
-            <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
-              {profilePicture ? (
-                    <>
-                      {console.log('Rendering profile picture with URL:', profilePicture)}
-                      <img
-                        src={profilePicture}
-                        alt="Profile"
-                        style={{
-                          width: '55px', // Largeur personnalisée
-                          height: '55px', // Hauteur personnalisée
-                        }}
-                        className="rounded-full object-cover cursor-pointer"
-                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
-                      />
-                    </>
+                    ))
                   ) : (
-                    <>
-                      {console.log('Rendering default AccountCircleIcon')} 
-                      <AccountCircleIcon
-                        fontSize="inherit"
-                        component="svg"
-                        style={{
-                          color: '#9e9e9e',
-                          cursor: 'pointer',
-                          margin: '0 auto 0 16px',
-                          fontSize: '2.5rem',
-                        }}
-                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
-                      />
-                    </>
+                    <Typography
+                      align="center"
+                      sx={{
+                        fontWeight: '500',
+                        fontSize: '0.875rem',
+                        color: theme.palette.text.secondary,
+                        marginTop: '30px',
+                      }}
+                    >
+                      You have no conversations yet
+                    </Typography>
                   )}
-              <Menu
-                anchorEl={profileMenuAnchorEl}
-                open={Boolean(profileMenuAnchorEl)}
-                onClose={handleProfileMenuClose}
-                PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
-              >
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon>
-                    <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
-                        Log-out
-                      </Typography>
-                    }
-                  />
-                </MenuItem>
-              </Menu>
+                </List>
+              ) : (
+                <List>
+                  {loadingSocialThreads ? (
+                    <Box display="flex" justifyContent="center" alignItems="center" p={2}>
+                      <CircularProgress size={24} />
+                    </Box>
+                  ) : socialThreads.length > 0 ? (
+                    socialThreads.map((thread) => {
+                      const topic = thread.topic || "Default";
+                      const color = topicColors[topic] || topicColors["Default"];
+                      return (
+                        <ListItem
+                          key={thread.chat_id}
+                          button
+                          onClick={() => {
+                            handleConversationClick(thread.chat_id);
+                            if (isSmallScreen) toggleDrawer();
+                          }}
+                          sx={{
+                            position: 'relative',
+                            borderRadius: '8px',
+                            margin: '0.5px 0',
+                            paddingRight: '20px',
+                            backgroundColor:
+                              activeChatId === thread.chat_id ? theme.palette.button.background : 'transparent',
+                            '& .MuiIconButton-root': {
+                              opacity: activeChatId === thread.chat_id ? 1 : 0,
+                              pointerEvents: activeChatId === thread.chat_id ? 'auto' : 'none',
+                            },
+                            '& .MuiTypography-root': {
+                              color:
+                                activeChatId === thread.chat_id
+                                  ? theme.palette.text_human_message_historic
+                                  : theme.palette.text.primary,
+                            },
+                            '@media (hover: hover) and (pointer: fine)': {
+                              '&:hover': {
+                                backgroundColor: theme.palette.button.background,
+                                color: theme.palette.text_human_message_historic,
+                                '& .MuiIconButton-root': {
+                                  opacity: 1,
+                                  pointerEvents: 'auto',
+                                },
+                              },
+                            },
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: '8px',
+                              minWidth: '8px',
+                              height: '38px',
+                              backgroundColor: color,
+                              borderRadius: '3px',
+                              marginRight: '10px',
+                            }}
+                          />
+                          <ListItemText
+                            primary={thread.name}
+                            secondary={
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  whiteSpace: 'nowrap',
+                                  marginTop: '2px',
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}
+                                >
+                                  {formatDate(thread.created_at).slice(-17)}
+                                </Typography>
+                                {thread.topic && (
+                                  <Box
+                                    sx={{
+                                      fontSize: '0.7rem',
+                                      fontWeight: 'bold',
+                                      color: topicColors[thread.topic] || topicColors["Default"],
+                                      backgroundColor: `${(topicColors[thread.topic] || topicColors["Default"])}20`,
+                                      padding: '2px 6px',
+                                      borderRadius: '5px',
+                                      display: 'inline-block',
+                                    }}
+                                  >
+                                    {thread.topic}
+                                  </Box>
+                                )}
+                              </Box>
+                            }
+                            sx={{
+                              maxWidth: 'calc(100% - 40px)',
+                              flexShrink: 1,
+                            }}
+                            primaryTypographyProps={{
+                              style: {
+                                fontWeight: '500',
+                                fontSize: '0.850rem',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              },
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              width: '7px',
+                              minWidth: '7px',
+                              height: '7px',
+                              borderRadius: '50%',
+                              backgroundColor: thread.isRead ? 'transparent' : '#3155CC',
+                              transition: 'background-color 0.3s ease',
+                              marginLeft: 'auto',
+                              marginRight: '3px',
+                            }}
+                          />
+                        </ListItem>
+                      );
+                    })
+                  ) : (
+                    <Typography
+                      align="center"
+                      sx={{
+                        fontWeight: '500',
+                        fontSize: '0.875rem',
+                        color: theme.palette.text.secondary,
+                        marginTop: '30px',
+                      }}
+                    >
+                      You have no social threads yet
+                    </Typography>
+                  )}
+                </List>
+              )}
             </Box>
-          )}
-        </Drawer>
-
+  
+            {/* Menu contextuel */}
+            <Menu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              PaperProps={{
+                sx: {
+                  margin: '8px',
+                  borderRadius: '16px',
+                  boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+                  padding: '4px',
+                },
+              }}
+            >
+              <MenuItem
+                onClick={handleRename}
+                sx={{
+                  padding: '8px',
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                }}
+              >
+                <EditIcon fontSize="small" sx={{ marginRight: '8px' }} />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '0.75rem',
+                    fontWeight: '400',
+                  }}
+                >
+                  Rename
+                </Typography>
+              </MenuItem>
+  
+              <MenuItem
+                onClick={handleDelete}
+                sx={{
+                  padding: '8px',
+                  color: 'red',
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                }}
+              >
+                <DeleteIcon fontSize="small" sx={{ marginRight: '8px' }} />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '0.75rem',
+                    fontWeight: '400',
+                  }}
+                >
+                  Delete
+                </Typography>
+              </MenuItem>
+            </Menu>
+  
+            {/* Section Profil pour petits écrans */}
+            {isSmallScreen && (
+              <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
+                {profilePicture ? (
+                  <>
+                    {console.log('Rendering profile picture with URL:', profilePicture)}
+                    <img
+                      src={profilePicture}
+                      alt="Profile"
+                      style={{
+                        width: '55px',
+                        height: '55px',
+                      }}
+                      className="rounded-full object-cover cursor-pointer"
+                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                    />
+                  </>
+                ) : (
+                  <>
+                    {console.log('Rendering default AccountCircleIcon')}
+                    <AccountCircleIcon
+                      fontSize="inherit"
+                      component="svg"
+                      style={{
+                        color: '#9e9e9e',
+                        cursor: 'pointer',
+                        margin: '0 auto 0 16px',
+                        fontSize: '2.5rem',
+                      }}
+                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                    />
+                  </>
+                )}
+                <Menu
+                  anchorEl={profileMenuAnchorEl}
+                  open={Boolean(profileMenuAnchorEl)}
+                  onClose={handleProfileMenuClose}
+                  PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
+                >
+                  <MenuItem onClick={handleLogout}>
+                    <ListItemIcon>
+                      <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
+                          Log-out
+                        </Typography>
+                      }
+                    />
+                  </MenuItem>
+                </Menu>
+              </Box>
+            )}
+          </Drawer>
+  
           <div
-            className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60' : ''} ${
-              drawerOpen ? 'ml-60 pl-5' : 'pl-4'}
+            className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60 pl-5' : 'pl-4'} ${
               iframeSrc ? 'mr-[33vw]' : ''
             }`}
           >
             <div
-              className="relative p-4 flex items-center justify-between "
+              className="relative p-4 flex items-center justify-between"
               style={{ 
-                //backgroundColor: 'transparent', 
                 backgroundColor: isLandingPageVisible ? '#F0F4FC' : 'transparent',
-                borderColor: theme.palette.divider }}
+                borderColor: theme.palette.divider,
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 {!drawerOpen && (
@@ -2220,32 +2146,27 @@ const handleConversationClick = async (chat_id: string) => {
                     <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
                       <MenuIcon />
                     </IconButton>
-                    
-
                     {!isSmallScreen && !isLandingPageVisible && (
                       <IconButton
-                      onClick={handleNewConversation}
-                      sx={{
-                        color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
-                        cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
-                      }}
-                      disabled={isLandingPageVisible}
-                    >
-                      <MapsUgcRoundedIcon />
-                    </IconButton>
+                        onClick={handleNewConversation}
+                        sx={{
+                          color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
+                          cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
+                        }}
+                        disabled={isLandingPageVisible}
+                      >
+                        <MapsUgcRoundedIcon />
+                      </IconButton>
                     )}
                   </>
                 )}
-                
               </div>
               <img
-                        src={theme.logo}
-                        alt="University Logo"
-                        style={{ height: '40px', marginRight: '10px' }}
+                src={theme.logo}
+                alt="University Logo"
+                style={{ height: '40px', marginRight: '10px' }}
               />
-
-
-
+  
               {/* Vignette avec le nombre d'étudiants en ligne */}
               <div
                 style={{
@@ -2254,10 +2175,9 @@ const handleConversationClick = async (chat_id: string) => {
                   marginLeft: '0px',
                   padding: '5px 10px',
                   borderRadius: '15px',
-                  border: '1.3px solid #27AE60', // Bordure verte
-                  backgroundColor: 'transparent', // Fond transparent
-                  color: '#011F5B', // Texte vert
-                  //fontWeight: 'semi-bold',
+                  border: '1.3px solid #27AE60',
+                  backgroundColor: 'transparent',
+                  color: '#011F5B',
                   fontSize: '0.83rem',
                 }}
               >
@@ -2267,15 +2187,14 @@ const handleConversationClick = async (chat_id: string) => {
                     width: '8.5px',
                     height: '8.5px',
                     borderRadius: '50%',
-                    backgroundColor: '#27AE60', // Cercle vert
+                    backgroundColor: '#27AE60',
                     marginLeft: '6px',
                   }}
                 />
               </div>
-          
-
+  
               <div style={{ flexGrow: 1 }}></div>
-
+  
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 {isSmallScreen ? (
                   <>
@@ -2293,35 +2212,35 @@ const handleConversationClick = async (chat_id: string) => {
                 ) : (
                   <>
                     {profilePicture ? (
-                    <>
-                      {console.log('Rendering profile picture with URL:', profilePicture)}
-                      <img
-                        src={profilePicture}
-                        alt="Profile"
-                        style={{
-                          width: '55px', // Largeur personnalisée
-                          height: '55px', // Hauteur personnalisée
-                        }}
-                        className="rounded-full object-cover cursor-pointer"
-                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      {console.log('Rendering default AccountCircleIcon')} 
-                      <AccountCircleIcon
-                        fontSize="inherit"
-                        component="svg"
-                        style={{
-                          color: '#9e9e9e',
-                          cursor: 'pointer',
-                          margin: '0 auto 0 16px',
-                          fontSize: '2.5rem',
-                        }}
-                        onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
-                      />
-                    </>
-                  )}
+                      <>
+                        {console.log('Rendering profile picture with URL:', profilePicture)}
+                        <img
+                          src={profilePicture}
+                          alt="Profile"
+                          style={{
+                            width: '55px',
+                            height: '55px',
+                          }}
+                          className="rounded-full object-cover cursor-pointer"
+                          onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        {console.log('Rendering default AccountCircleIcon')}
+                        <AccountCircleIcon
+                          fontSize="inherit"
+                          component="svg"
+                          style={{
+                            color: '#9e9e9e',
+                            cursor: 'pointer',
+                            margin: '0 auto 0 16px',
+                            fontSize: '2.5rem',
+                          }}
+                          onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                        />
+                      </>
+                    )}
                     <Menu
                       anchorEl={profileMenuAnchorEl}
                       open={Boolean(profileMenuAnchorEl)}
@@ -2333,9 +2252,7 @@ const handleConversationClick = async (chat_id: string) => {
                         },
                       }}
                     >
-
-                      {/* Change the function to trigger here to show popup*/}
-                      <MenuItem onClick={handleDialogOpen}> 
+                      <MenuItem onClick={handleDialogOpen}>
                         <ListItemIcon>
                           <ProfileEdit fontSize="small" sx={{ color: '#011F5B' }} />
                         </ListItemIcon>
@@ -2347,8 +2264,6 @@ const handleConversationClick = async (chat_id: string) => {
                           }
                         />
                       </MenuItem>
-
-                      {/* Nouvelle option Parameters */}
                       <MenuItem onClick={handleParametersMenuClick}>
                         <ListItemIcon>
                           <SettingsIcon fontSize="small" sx={{ color: '#011F5B' }} />
@@ -2361,8 +2276,6 @@ const handleConversationClick = async (chat_id: string) => {
                           }
                         />
                       </MenuItem>
-
-                      {/* Option Log-out */}
                       <MenuItem onClick={handleLogout}>
                         <ListItemIcon>
                           <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
@@ -2376,8 +2289,6 @@ const handleConversationClick = async (chat_id: string) => {
                         />
                       </MenuItem>
                     </Menu>
-
-                    {/* Menu pour Parameters */}
                     <Menu
                       anchorEl={parametersMenuAnchorEl}
                       open={Boolean(parametersMenuAnchorEl)}
@@ -2390,19 +2301,17 @@ const handleConversationClick = async (chat_id: string) => {
                       }}
                       anchorOrigin={{
                         vertical: 'top',
-                        horizontal: 'right', // Origine à droite par rapport à l'élément déclencheur
+                        horizontal: 'right',
                       }}
                       transformOrigin={{
                         vertical: 'top',
-                        horizontal: 'left', // Position du menu à gauche
+                        horizontal: 'left',
                       }}
-                      // Optionnel : Ajouter un décalage pour éviter le chevauchement
                       sx={{
-                        mt: -1, // Marge supérieure
-                        ml: -18, // Déplacer légèrement vers la gauche
+                        mt: -1,
+                        ml: -18,
                       }}
                     >
-                      {/* Option Delete Account */}
                       <MenuItem onClick={handleDeleteAccount}>
                         <ListItemIcon>
                           <DeleteIcon fontSize="small" sx={{ color: '#F04261' }} />
@@ -2420,124 +2329,157 @@ const handleConversationClick = async (chat_id: string) => {
                 )}
               </div>
             </div>
-
-
-
-
+  
             {/* Content Area */}
-            {isLandingPageVisible ? (
-              // Utilisez un fragment React pour envelopper Spline et LandingPage
-              <>
-                <LandingPage onSend={handleSendMessageFromLandingPage} onPrivacyChange={handlePrivacyChange} updateThreadTypeLocally={updateThreadTypeLocally}/>
-              </>
-            ) : (
-              <div
-                className="flex-grow overflow-y-auto"
-                style={{ backgroundColor: 'transparent', paddingBottom: '100px' }}
-              >
+            {currentView === 'chat' ? (
+              isLandingPageVisible ? (
+                <>
+                  <LandingPage 
+                    onSend={handleSendMessageFromLandingPage} 
+                    onPrivacyChange={handlePrivacyChange} 
+                    updateThreadTypeLocally={updateThreadTypeLocally}
+                  />
+                </>
+              ) : (
                 <div
-                  className="flex flex-col space-y-2 p-4"
-                  ref={scrollableDivRef}
-                  onScroll={() => {
-                    const scrollDiv = scrollableDivRef.current;
-                    if (scrollDiv) {
-                      const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
-                      const atBottom = scrollTop + clientHeight >= scrollHeight - 5; // Marge de 100px
-                      setIsAtBottom(atBottom); // Met à jour l'état si l'utilisateur est en bas
-                      if (atBottom) setNewMessagesCount(0); // Réinitialise les nouveaux messages si en bas
-                    }
-                  }}
-                  style={{
-                    overflowY: 'auto', // Assure que le contenu est défilable
-                    maxHeight: '100%', // Limite la hauteur pour activer le défilement
-                  }}
+                  className="flex-grow overflow-y-auto"
+                  style={{ backgroundColor: 'transparent', paddingBottom: '100px' }}
                 >
-                  {messages.map((message, index) =>
-                    message.type === 'human' ? (
-                      <div
-                        key={message.id}
-                        className={`flex justify-end ${messageMarginX} ${index === 0 ? 'mt-8' : ''}`}
-                      >
-                        <div className="max-w-3/4 w-full text-right">
-                          <div className="flex items-center justify-end mb-1">
-                          </div>
-                          <div className="flex justify-end">
-                            <div
-                              style={{
-                                backgroundColor: theme.palette.button.background,
-                                padding: '8px',
-                                borderRadius: '12px',
-                                display: 'inline-block',
-                                textAlign: 'left',
-                                maxWidth: '75%',
-                                marginRight: '12px',
-                                fontSize: '1.05rem',
-                                color: theme.palette.text_human_message_historic,
-                              }}
-                            >
-                              {message.fileType ? (
-                                <embed
-                                  src={message.content}
-                                  type={
-                                    message.fileType === 'pdf' ? 'application/pdf' : 'video/mp4'
-                                  }
-                                  width="100%"
-                                  height="200px"
-                                />
-                              ) : (
-                                message.content
-                              )}
+                  <div
+                    className="flex flex-col space-y-2 p-4"
+                    ref={scrollableDivRef}
+                    onScroll={() => {
+                      const scrollDiv = scrollableDivRef.current;
+                      if (scrollDiv) {
+                        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
+                        const atBottom = scrollTop + clientHeight >= scrollHeight - 5;
+                        setIsAtBottom(atBottom);
+                        if (atBottom) setNewMessagesCount(0);
+                      }
+                    }}
+                    style={{
+                      overflowY: 'auto',
+                      maxHeight: '100%',
+                    }}
+                  >
+                    {messages.map((message, index) =>
+                      message.type === 'human' ? (
+                        <div
+                          key={message.id}
+                          className={`flex justify-end ${messageMarginX} ${index === 0 ? 'mt-8' : ''}`}
+                        >
+                          <div className="max-w-3/4 w-full text-right">
+                            <div className="flex items-center justify-end mb-1"></div>
+                            <div className="flex justify-end">
+                              <div
+                                style={{
+                                  backgroundColor: theme.palette.button.background,
+                                  padding: '8px',
+                                  borderRadius: '12px',
+                                  display: 'inline-block',
+                                  textAlign: 'left',
+                                  maxWidth: '75%',
+                                  marginRight: '12px',
+                                  fontSize: '1.05rem',
+                                  color: theme.palette.text_human_message_historic,
+                                }}
+                              >
+                                {message.fileType ? (
+                                  <embed
+                                    src={message.content}
+                                    type={message.fileType === 'pdf' ? 'application/pdf' : 'video/mp4'}
+                                    width="100%"
+                                    height="200px"
+                                  />
+                                ) : (
+                                  message.content
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div key={message.id} className={`flex justify-start ${messageMarginX}`}>
-                        <div className="max-w-3/4 w-full flex items-center">
-                        <AIMessage
-                          messageId={message.id}
-                          content={message.content}  // Utilisez displayedText si le content est vide
-                          personaName={message.personaName}
-                          citedDocuments={message.citedDocuments}
-                          isComplete={isComplete}
-                          hasDocs={!!message.citedDocuments?.length}
-                          handleFeedback={(feedbackType) => handleFeedbackClick(index)}
-                          handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
-                          handleSourceClick={handleSourceClick}
-                          images={message.images}
-                          takData={message.TAK}
-                          CourseData={message.COURSE}
-                          waitingMessages={message.waitingMessages}
-                          ReasoningSteps={message.id === lastAiMessageId ? message.ReasoningSteps : undefined} 
-                          chartData={message.CHART}
-                          drawerOpen={drawerOpen}
-                          handleSendTAKMessage={handleSendTAKMessage}
-                          handleSendCOURSEMessage={handleSendCOURSEMessage}
-                          isLoading={isStreaming && message.id === lastAiMessageId} // Utilise lastAiMessageId
-                          hasNewContent={hasNewContent}
-                          redditData= {message.REDDIT}
-                          instaData = {message.INSTA}
-                          youtubeData= {message.YOUTUBE}
-                          quoraData = {message.QUORA}
-                          errorData = {message.ERROR}
-                          confidenceScoreData = {message.CONFIDENCESCORE}
-                          instaclubData = {message.INSTA_CLUB}
-                          linkedinData = {message.LINKEDIN}
-                          insta2Data = {message.INSTA2}
-
-                          />
+                      ) : (
+                        <div key={message.id} className={`flex justify-start ${messageMarginX}`}>
+                          <div className="max-w-3/4 w-full flex items-center">
+                            <AIMessage
+                              messageId={message.id}
+                              content={message.content}
+                              personaName={message.personaName}
+                              citedDocuments={message.citedDocuments}
+                              isComplete={isComplete}
+                              hasDocs={!!message.citedDocuments?.length}
+                              handleFeedback={(feedbackType) => handleFeedbackClick(index)}
+                              handleWrongAnswerClick={() => handleWrongAnswerClick(index)}
+                              handleSourceClick={handleSourceClick}
+                              images={message.images}
+                              takData={message.TAK}
+                              CourseData={message.COURSE}
+                              waitingMessages={message.waitingMessages}
+                              ReasoningSteps={message.id === lastAiMessageId ? message.ReasoningSteps : undefined}
+                              chartData={message.CHART}
+                              drawerOpen={drawerOpen}
+                              handleSendTAKMessage={handleSendTAKMessage}
+                              handleSendCOURSEMessage={handleSendCOURSEMessage}
+                              isLoading={isStreaming && message.id === lastAiMessageId}
+                              hasNewContent={hasNewContent}
+                              redditData={message.REDDIT}
+                              instaData={message.INSTA}
+                              youtubeData={message.YOUTUBE}
+                              quoraData={message.QUORA}
+                              errorData={message.ERROR}
+                              confidenceScoreData={message.CONFIDENCESCORE}
+                              instaclubData={message.INSTA_CLUB}
+                              linkedinData={message.LINKEDIN}
+                              insta2Data={message.INSTA2}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )
-                  )}
-                  <div ref={endDivRef}></div>
+                      )
+                    )}
+                    <div ref={endDivRef}></div>
+                  </div>
                 </div>
+              )
+            ) : (
+              // events view
+              <div className="events-view p-4">
+                <div className="events-toggle flex justify-between mb-4">
+                  {/* Sur la vue Kanban, on affiche "Calendar" comme un titre cliquable */}
+                  {eventDisplayMode === 'kanban' ? (
+                    <Button
+                    variant="outlined"
+                    onClick={() => setEventDisplayMode('calendar')}
+                    sx={{ marginRight: '8px' }}
+                  >
+                    Calendar View
+                  </Button>
+                  ) : (
+                    // Sur la vue Calendar, on garde seulement "Kanban" en bouton et on supprime "Back to Chat"
+                    <Button
+                      variant="outlined"
+                      onClick={() => setEventDisplayMode('kanban')}
+                      sx={{ marginRight: '8px' }}
+                    >
+                      Kanban View
+                    </Button>
+                  )}
+                  
+                  {/* Supprimer le bouton "Back to Chat" en mode Calendar */}
+                  {eventDisplayMode !== 'calendar' && (
+                    <Button variant="outlined" onClick={() => setCurrentView('chat')}>
+                      back to chat
+                    </Button>
+                  )}
+                </div>
+
+                {eventDisplayMode === 'kanban' ? (
+                  <Kanban events={events} onEventClick={handleEventClick} />
+                ) : (
+                  <Calendar events={events} onEventClick={handleEventClick} />
+                )}
               </div>
             )}
-
-
-
-            
+  
             {relatedQuestions.length > 0 && (
               <div className="mt-4 px-8 flex justify-center">
                 <div className="flex flex-wrap gap-2 justify-center">
@@ -2562,180 +2504,161 @@ const handleConversationClick = async (chat_id: string) => {
                 </div>
               </div>
             )}
-
-
-            {/* Bouton pour défiler vers le bas */}
-            {!isAtBottom && !isLandingPageVisible && (
+  
+            {currentView === 'chat' && !isAtBottom && !isLandingPageVisible && (
               <button
                 onClick={scrollToBottom}
                 style={{
                   position: 'fixed',
-                  bottom: isSmallScreen ? '105px' : '85px', // Ajustez cette valeur en fonction de la hauteur de votre champ de saisi
-                  //left: '50%',
+                  bottom: isSmallScreen ? '105px' : '85px',
                   transform: 'translateX(-50%)',
                   left: drawerOpen ? `calc(${drawerWidth}px + 41.5%)` : '50%',
-                  //transition: 'left 0.3s', // Ajoutez une transition douce pour un effet fluide
-                  background: 'rgba(255, 255, 255, 0.2)', // Fond semi-transparent
-                  border: '1px solid rgba(255, 255, 255, 0.3)', // Bordure subtile
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
                   borderRadius: '50%',
-                  width: '30px', // Augmenté pour une meilleure visibilité
+                  width: '30px',
                   height: '30px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', // Ombre légère
-                  backdropFilter: 'blur(10px)', // Effet de flou
-                  WebkitBackdropFilter: 'blur(10px)', // Support pour Safari
-                  zIndex: 1000, // Assurez-vous que le bouton apparaît au-dessus des autres éléments
-                  transition: 'left 0.3s ease-in-out, background 0.3s ease-in-out, box-shadow 0.3s ease-in-out', // Transition fluide
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  zIndex: 1000,
+                  transition: 'left 0.3s ease-in-out, background 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
                 }}
-                aria-label="Scroll to bottom" // Accessibilité
+                aria-label="Scroll to bottom"
               >
-                <FaArrowDown size={12} color="#011F5B" /> {/* Icône avec la couleur spécifiée */}
+                <FaArrowDown size={12} color="#011F5B" />
               </button>
             )}
-
-            {/* Champ de saisie en bas */}
-            {/* Input Field */}
-            {(!hasTak || inputValue.trim() !== "") && ( 
-            <div
-            className="footer"
-            style={{
-              position: 'fixed',
-              backgroundColor: '#F0F4FC', // Couleur blanche avec une légère transparence
-              bottom: 0, // Le footer s'étend jusqu'en bas de la page
-              left: drawerOpen ? `${drawerWidth}px` : '0',
-              width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
-              //backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(50px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              borderTop: '1px solid rgba(255, 255, 255, 0.3)',
-              //display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingTop: isSmallScreen ? '10px' : '20px', // Moins de marge au-dessus sur petits écrans
-              paddingBottom: isSmallScreen ? '10px' : '20px', // Moins de marge en dessous sur petits écrans
-              zIndex: 2,
-              transition: 'left 0.3s, width 0.3s',
-              display: isLandingPageVisible ? 'none' : 'flex',
-            }}
-          >
-              <div style={{
-                  maxWidth: isSmallScreen ? '90%' : '800px', // Réduit à 90% pour petits écrans, max 800px pour grands écrans
-                  width: '100%',
-                  margin: '0 auto', // Centre horizontalement le champ
-                  padding: isSmallScreen ? '10px 0px 30px' : '0', // Ajoute une marge interne sur petits écrans
-                  position: 'relative',
-                }}>
+  
+            {currentView === 'chat' && (!hasTak || inputValue.trim() !== "") && (
+              <div
+                className="footer"
+                style={{
+                  position: 'fixed',
+                  backgroundColor: '#F0F4FC',
+                  bottom: 0,
+                  left: drawerOpen ? `${drawerWidth}px` : '0',
+                  width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
+                  backdropFilter: 'blur(50px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.3)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingTop: isSmallScreen ? '10px' : '20px',
+                  paddingBottom: isSmallScreen ? '10px' : '20px',
+                  zIndex: 2,
+                  transition: 'left 0.3s, width 0.3s',
+                  display: isLandingPageVisible ? 'none' : 'flex',
+                }}
+              >
+                <div
+                  style={{
+                    maxWidth: isSmallScreen ? '90%' : '800px',
+                    width: '100%',
+                    margin: '0 auto',
+                    padding: isSmallScreen ? '10px 0px 30px' : '0',
+                    position: 'relative',
+                  }}
+                >
                   <TextField
-                  fullWidth
-                  variant="outlined"
-                  multiline
-                  minRows={1} // Adjust `minRows` to change the minimum height of the TextField
-                  maxRows={6}
-                  //placeholder={isSmallScreen && drawerOpen ? "" : (isStreaming ? "Type your message..." : "Type your message...")}
-
-                  placeholder={isSmallScreen && drawerOpen
-                    ? ""
-                    : isSocialThread
-                      ? "Write a public message in this discussion..."
-                      : "Type your message..."
-                  }
-
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleInputKeyPressSocraticLangGraph}
-                  InputProps={{
-                    startAdornment: (
-                      !isSocialThread && (
-                        <InputAdornment position="start">
-                          <IconButton
-                            onClick={async () => {
-                              try {
-                                const newPrivacyState = !isPrivate; 
-                                setIsPrivate(newPrivacyState); 
-                      
-                                const currentThreadType = newPrivacyState ? 'Private' : 'Public';
-                                const chatSessionId = chatIds[0] || 'default_chat_id';
-                      
-                                // On récupère la référence du document dans chatsessions
-                                const docRef = doc(db, 'chatsessions', chatSessionId);
-                      
-                                // Mise à jour du champ thread_type
-                                await updateDoc(docRef, { thread_type: currentThreadType });
-                      
-                                console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
-                                // Mettre à jour localement le thread_type de la conversation active
-                                setConversations((prevConversations) =>
-                                  prevConversations.map((conv) =>
-                                    conv.chat_id === chatSessionId
-                                      ? { ...conv, thread_type: currentThreadType }
-                                      : conv
-                                  )
-                                );
-                              } catch (error) {
-                                console.error('Erreur lors de la mise à jour du thread_type :', error);
-                              }
-                            }}
-                            edge="start"
-                            aria-label={isPrivate ? "Set to Public" : "Set to Private"}
-                            sx={{
-                              backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5',
-                              color: isPrivate ? '#6F6F6F' : '#3155CC',
-                              borderRadius: '12px',
-                              padding: '4px 8px',
-                              marginRight: '8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              width: '80px',
-                              height: '30px',
-                              '&:hover': {
-                                backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
-                                color: isPrivate ? '#5A5A5A' : '#4A0B8A',
-                              },
-                            }}
-                            ref={(el) => {
-                              if (el) {
-                                console.log("Background color applied:", getComputedStyle(el).backgroundColor);
-                              }
-                            }}
-                          >
-                            {isPrivate ? (
-                              <>
-                                <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                                <Typography variant="caption" sx={{ color: '#000' }}>
-                                  Private
-                                </Typography>
-                              </>
-                            ) : (
-                              <>
-                                <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                                <Typography variant="caption" sx={{ color: '#3155CC' }}>
-                                  Public
-                                </Typography>
-                              </>
-                            )}
-                          </IconButton>
-                      
-                      </InputAdornment>
-                      )
-                    ),
-                    
+                    fullWidth
+                    variant="outlined"
+                    multiline
+                    minRows={1}
+                    maxRows={6}
+                    placeholder={
+                      isSmallScreen && drawerOpen
+                        ? ""
+                        : isSocialThread
+                        ? "Write a public message in this discussion..."
+                        : "Type your message..."
+                    }
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleInputKeyPressSocraticLangGraph}
+                    InputProps={{
+                      startAdornment: (
+                        !isSocialThread && (
+                          <InputAdornment position="start">
+                            <IconButton
+                              onClick={async () => {
+                                try {
+                                  const newPrivacyState = !isPrivate;
+                                  setIsPrivate(newPrivacyState);
+                                  const currentThreadType = newPrivacyState ? 'Private' : 'Public';
+                                  const chatSessionId = chatIds[0] || 'default_chat_id';
+                                  const docRef = doc(db, 'chatsessions', chatSessionId);
+                                  await updateDoc(docRef, { thread_type: currentThreadType });
+                                  console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
+                                  setConversations((prevConversations) =>
+                                    prevConversations.map((conv) =>
+                                      conv.chat_id === chatSessionId
+                                        ? { ...conv, thread_type: currentThreadType }
+                                        : conv
+                                    )
+                                  );
+                                } catch (error) {
+                                  console.error('Erreur lors de la mise à jour du thread_type :', error);
+                                }
+                              }}
+                              edge="start"
+                              aria-label={isPrivate ? "Set to Public" : "Set to Private"}
+                              sx={{
+                                backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5',
+                                color: isPrivate ? '#6F6F6F' : '#3155CC',
+                                borderRadius: '12px',
+                                padding: '4px 8px',
+                                marginRight: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                width: '80px',
+                                height: '30px',
+                                '&:hover': {
+                                  backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
+                                  color: isPrivate ? '#5A5A5A' : '#4A0B8A',
+                                },
+                              }}
+                              ref={(el) => {
+                                if (el) {
+                                  console.log("Background color applied:", getComputedStyle(el).backgroundColor);
+                                }
+                              }}
+                            >
+                              {isPrivate ? (
+                                <>
+                                  <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                                  <Typography variant="caption" sx={{ color: '#000' }}>
+                                    Private
+                                  </Typography>
+                                </>
+                              ) : (
+                                <>
+                                  <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                                  <Typography variant="caption" sx={{ color: '#3155CC' }}>
+                                    Public
+                                  </Typography>
+                                </>
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      ),
                       endAdornment: (
-                      <InputAdornment position="end">
+                        <InputAdornment position="end">
                           <IconButton
                             color="primary"
                             onClick={() => {
                               if (isStreaming) {
-                                // Stop the AI response
                                 setCancelConversation(true);
                                 setIsStreaming(false);
                                 cancelConversationRef.current = true;
                               } else {
-                                // Send the message
                                 handleSendMessageSocraticLangGraph(inputValue);
                               }
                             }}
@@ -2743,134 +2666,129 @@ const handleConversationClick = async (chat_id: string) => {
                             edge="end"
                           >
                             {isStreaming ? (
-                            <div
-                              style={{
-                                backgroundColor: theme.palette.error.main, // Couleur de fond pour StopIcon
-                                borderRadius: '50%', // Cercle parfait
-                                width: '30px', // Dimensions du bouton
-                                height: '30px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              <StopIcon
+                              <div
                                 style={{
-                                  color: '#fff', // Couleur blanche pour l'icône
-                                  fontSize: '20px', // Taille de l'icône
+                                  backgroundColor: theme.palette.error.main,
+                                  borderRadius: '50%',
+                                  width: '30px',
+                                  height: '30px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                 }}
-                              />
-                            </div>
-                          ) : (
-                            <div
-                              style={{
-                                backgroundColor: theme.palette.button_sign_in, // Couleur de fond pour ArrowForwardIcon
-                                borderRadius: '50%', // Cercle parfait
-                                width: '30px', // Dimensions du bouton
-                                height: '30px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              <ArrowForwardIcon
+                              >
+                                <StopIcon
+                                  style={{
+                                    color: '#fff',
+                                    fontSize: '20px',
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div
                                 style={{
-                                  color: '#fff', // Couleur blanche pour l'icône
-                                  fontSize: '20px', // Taille de l'icône
+                                  backgroundColor: theme.palette.button_sign_in,
+                                  borderRadius: '50%',
+                                  width: '30px',
+                                  height: '30px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                 }}
-                              />
-                            </div>
-                          )}
+                              >
+                                <ArrowForwardIcon
+                                  style={{
+                                    color: '#fff',
+                                    fontSize: '20px',
+                                  }}
+                                />
+                              </div>
+                            )}
                           </IconButton>
-                      </InputAdornment>
+                        </InputAdornment>
                       ),
                       style: {
-                      backgroundColor: '#F4F4F4',
-                      fontSize: '1rem',
-                      padding: '17px 8px', // Adjust `padding` to change the height of the TextField
-                      borderRadius: '20px',
-                      fontWeight: '500',
-                      color: theme.palette.text.primary, // Directly use the text color from the theme
-                      paddingRight: '20px', // Ensure space for the icon
-                      paddingLeft: '20px', // Ensure space for the icon
-                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Constant shadow around the field
-                      border: 'none', // Remove the border
-                      //paddingBottom: isSmallScreen ? '30px' : '', // Ajoute un espace en bas
-                      //paddingBottom: isSmallScreen ? '30px' : '17px', // Ajouter une marge plus importante sur petits écrans
+                        backgroundColor: '#F4F4F4',
+                        fontSize: '1rem',
+                        padding: '17px 8px',
+                        borderRadius: '20px',
+                        fontWeight: '500',
+                        color: theme.palette.text.primary,
+                        paddingRight: '20px',
+                        paddingLeft: '20px',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                        border: 'none',
                       },
-                  }}
-                  inputProps={{
+                    }}
+                    inputProps={{
                       style: { color: theme.palette.text.primary },
-                  }}
-                  sx={{
+                    }}
+                    sx={{
                       '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
+                        '& fieldset': {
                           border: 'none',
-                      },
-                      '&:hover fieldset': {
-                        boxShadow: messages.some((msg) => msg.TAK && msg.TAK.length > 0)
-                        ? "none" // Supprime l'ombre au hover si TAK est présent
-                        : "0 4px 8px rgba(0, 0, 0, 0.2)", // Ombre normale sinon
-                      },
+                        },
+                        '&:hover fieldset': {
+                          boxShadow: messages.some((msg) => msg.TAK && msg.TAK.length > 0)
+                            ? "none"
+                            : "0 4px 8px rgba(0, 0, 0, 0.2)",
+                        },
                       },
                       '& .MuiInputBase-input::placeholder': {
-                      color: '#6F6F6F', // Darker color for the placeholder
-                      opacity: 1,
-                      
+                        color: '#6F6F6F',
+                        opacity: 1,
                       },
-                  }}
+                    }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      marginTop: '6px', // Ajuste l'espacement sous le champ
-                      color: '#6F6F6F',
-                      textAlign: 'center', // Centre le texte
-                      fontSize: '0.6rem', // Réduit la taille du texte
-                      opacity: 0.8, // Légère transparence
-                    }}
-                  >
-                    Lucy can make mistakes. Look at the confidence score and consider checking important information.
-                  </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        marginTop: '6px',
+                        color: '#6F6F6F',
+                        textAlign: 'center',
+                        fontSize: '0.6rem',
+                        opacity: 0.8,
+                      }}
+                    >
+                      Lucy can make mistakes. Look at the confidence score and consider checking important information.
+                    </Typography>
+                  </div>
                 </div>
-              </div>
               </div>
             )}
           </div>
-            
-        </div>
-
-        <PopupWrongAnswer
-          open={modalOpen}
-          onClose={handleCloseWrongAnswerModal}
-          onSubmit={handleSubmitWrongAnswerFeedback}
-          aiMessageContent={selectedAiMessage}
-          humanMessageContent={selectedHumanMessage}
-        />
-
-        
-
-        {/* Render the StudentProfileDialog component */}
-        <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
-
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
-          onClose={() => setSnackbarOpen(false)}
-        >
-          <Alert
+  
+          <PopupWrongAnswer
+            open={modalOpen}
+            onClose={handleCloseWrongAnswerModal}
+            onSubmit={handleSubmitWrongAnswerFeedback}
+            aiMessageContent={selectedAiMessage}
+            humanMessageContent={selectedHumanMessage}
+          />
+  
+          {/* Render the StudentProfileDialog component */}
+          <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
+          <EventDetailsSidebar event={selectedEvent} open={sidebarOpen} onClose={handleCloseSidebar} />
+  
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={3000}
             onClose={() => setSnackbarOpen(false)}
-            severity="info" // Tu peux ajuster `info`, `warning`, `success`, etc.
-            sx={{ width: '100%', fontWeight: '500', fontSize: '0.875rem' }}
           >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
-
-      </motion.div>
-    </ThemeProvider>
+            <Alert
+              onClose={() => setSnackbarOpen(false)}
+              severity="info"
+              sx={{ width: '100%', fontWeight: '500', fontSize: '0.875rem' }}
+            >
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
+          </div>
+        </motion.div>
+      </ThemeProvider>
   );
+  
 };
 
 export default Dashboard_eleve_template;

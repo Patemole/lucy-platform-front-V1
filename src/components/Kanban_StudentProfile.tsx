@@ -29,22 +29,60 @@ const Kanban: React.FC<KanbanProps> = ({ events, onEventClick }) => {
     groupedEvents[day] = [];
   });
 
+  
   // regroupement des événements par jour (basé sur la date de début)
-  events.forEach((event) => {
-    if (!isValid(event.start) || !isValid(event.end)) {
-      console.error(`skipping event ${event.id} due to invalid time value`, event);
+  // Regroupement des événements par jour (basé sur la date de début)
+  /*
+events.forEach((event) => {
+  const eventDate = event.start instanceof Date && !isNaN(event.start.getTime()) ? event.start : null;
+  
+  if (!eventDate) {
+      console.warn(`Skipping event ${event.id} due to invalid or missing start date`, event);
       return;
-    }
-    const dayName = format(event.start, 'EEEE');
-    if (groupedEvents[dayName]) {
-      groupedEvents[dayName].push(event);
-    }
-  });
+  }
 
-  // tri des événements de chaque jour par heure de début
-  weekDays.forEach((day) => {
-    groupedEvents[day].sort((a, b) => a.start.getTime() - b.start.getTime());
+  const dayName = format(eventDate, 'EEEE');
+  if (groupedEvents[dayName]) {
+      groupedEvents[dayName].push(event);
+  }
+});
+*/
+
+events.forEach((event) => {
+  let dayName: string | null = null;
+
+  // 🔹 Si `start` est une date valide, on utilise son jour de la semaine
+  if (event.start instanceof Date && !isNaN(event.start.getTime())) {
+    dayName = format(event.start, 'EEEE');
+  }
+  // 🔹 Sinon, si `event.day` existe et est un nombre valide, on le convertit en nom du jour
+  else if (event.day) {
+    const dayNumber = parseInt(event.day);
+    if (!isNaN(dayNumber) && dayNumber >= 1 && dayNumber <= 31) {
+      const tempDate = new Date();
+      tempDate.setDate(dayNumber);
+      dayName = format(tempDate, 'EEEE');
+    }
+  }
+
+  if (dayName && groupedEvents[dayName]) {
+    groupedEvents[dayName].push(event);
+  }
+});
+
+
+console.log("Grouped Events:", groupedEvents);
+
+
+// Tri des événements de chaque jour par heure de début
+weekDays.forEach((day) => {
+  groupedEvents[day].sort((a, b) => {
+      const timeA = a.start instanceof Date && !isNaN(a.start.getTime()) ? a.start.getTime() : Number.MAX_VALUE;
+      const timeB = b.start instanceof Date && !isNaN(b.start.getTime()) ? b.start.getTime() : Number.MAX_VALUE;
+      return timeA - timeB;
   });
+});
+
 
   // configuration de la largeur des colonnes
   const columnWidth = 200;
@@ -136,8 +174,19 @@ const Kanban: React.FC<KanbanProps> = ({ events, onEventClick }) => {
                           {event.title}
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
+                          {event.start || event.end ? (
+                            <>
+                              {event.start ? format(event.start, 'HH:mm') : 'Unknown time'} - 
+                              {event.end ? format(event.end, 'HH:mm') : 'Unknown time'}
+                            </>
+                          ) : event.day ? (
+                            `Day ${event.day} - Unknown slot`
+                          ) : (
+                            'Unknown slot'
+                          )}
                         </Typography>
+
+
                         <Box
                           sx={{
                             marginTop: 1,
