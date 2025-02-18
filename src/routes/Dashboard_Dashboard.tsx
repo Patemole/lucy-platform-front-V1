@@ -111,7 +111,6 @@ const Dashboard_dashboard: React.FC = () => {
     setIsHistory((prev) => !prev);
   };
 
-
   // Fonction pour formater la date
   const formatDate = (timestamp: { toDate: () => Date }) => {
     const date = timestamp.toDate();

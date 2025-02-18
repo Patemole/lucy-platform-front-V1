@@ -223,6 +223,7 @@ const Dashboard_Calendar: React.FC = () => {
     fetchUserInfo();
   }, [user]);
 
+  
   const handleDialogOpen = () => setDialogOpen(true);
   const handleDialogClose = () => setDialogOpen(false);
 
@@ -307,21 +308,11 @@ const Dashboard_Calendar: React.FC = () => {
     }
   };
 
-  const handleConversationClick = async (chat_id: string) => {
-    setPrimaryChatId(chat_id);
-    setActiveChatId(chat_id);
-    setRelatedQuestions([]);
-    try {
-      const chatHistory = await getChatHistory(chat_id);
-      setMessages(chatHistory);
-      setShowChat(true);
-    } catch (error) {
-      setPopup({
-        type: 'error',
-        message: 'failed to fetch chat history. please try again later.',
-      });
-    }
+  const handleConversationClick = (chat_id: string) => {
+    // 🔥 Redirige vers la page du chat avec `chat_id` dans l'URL
+    navigate(`/dashboard/student/${user.id}?chat_id=${chat_id}`);
   };
+  
 
   const handleNewConversation = async () => {
     console.log('NEW CONVERSATION');
@@ -1325,10 +1316,10 @@ const Dashboard_Calendar: React.FC = () => {
               <div className="sticky top-0 z-20 mb-4 ml-5 flex items-center">
                 <div>
                   <Typography variant="h5" component="h1" style={{ fontWeight: 500 }}>
-                    {isCalendarView ? 'Calendar' : 'Kanban'}
+                    {isCalendarView ? 'Calendar' : 'Your Weekly Event'}
                   </Typography>
                   <Typography variant="subtitle2" component="h2" style={{ color: theme.palette.text.secondary }}>
-                    {isCalendarView ? 'Your schedule overview' : 'Your tasks overview'}
+                    {isCalendarView ? 'Your personnalized events based on your student profile' : 'Your personnalized events based on your student profile'}
                   </Typography>
                 </div>
               </div>

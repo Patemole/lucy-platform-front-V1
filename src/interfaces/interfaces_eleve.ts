@@ -119,10 +119,11 @@ export interface EventStudentProfile {
 */
 
 export interface EventStudentProfile {
-  id: string; // Ajouté : un identifiant unique (peut être l'index ou un hash basé sur le titre)
+  id: string;
   title: string;
-  start: Date; // Converti depuis `day`, `month`, `year`, et `start_time`
-  end: Date; // Converti depuis `day`, `month`, `year`, et `end_time`
+  start: Date | null;  // 🔥 Peut être `null`
+  end: Date | null;    // 🔥 Peut être `null`
+  day?: string;        // 🔥 Ajout de `day` en optionnel
   location: string;
   organizer: string;
   category: string;
@@ -131,6 +132,7 @@ export interface EventStudentProfile {
   tags: string[];
   banner: string;
 }
+
 
 
 
