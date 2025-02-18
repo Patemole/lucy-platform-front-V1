@@ -1479,6 +1479,7 @@ const handleConversationClick = async (chat_id: string) => {
     setSelectedAiMessage(currentMessage.content);
     setSelectedHumanMessage(previousMessage ? previousMessage.content : null);
     setModalOpen(true);
+    //setSnackbarOpen(true);
   };
 
   const handleFeedbackClick = async (index: number) => {
@@ -1486,6 +1487,7 @@ const handleConversationClick = async (chat_id: string) => {
     const previousMessage = index > 0 ? messages[index - 1] : null;
     const uid = user.id || 'default_uid';
     const chatId = chatIds[0] || 'default_chat_id';
+
 
     await submitFeedbackGoodAnswer({
       userId: uid,
@@ -2483,7 +2485,7 @@ const handleConversationClick = async (chat_id: string) => {
                         textTransform: "none",
                         fontWeight: "500",
                         fontSize: "0.9rem",
-                        padding: "8px 16px",
+                        padding: "2px 14px",
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
@@ -2497,22 +2499,6 @@ const handleConversationClick = async (chat_id: string) => {
                     </Button>
                   )}
 
-                  {/* Supprimer le bouton "Back to Chat" en mode Calendar */}
-                  {eventDisplayMode !== 'calendar' && (
-                    <Button
-                      variant="outlined"
-                      onClick={() => setCurrentView('chat')}
-                      sx={{
-                        borderRadius: "12px",
-                        textTransform: "none",
-                        fontWeight: "500",
-                        fontSize: "0.9rem",
-                        padding: "8px 16px",
-                      }}
-                    >
-                      Back to Chat
-                    </Button>
-                  )}
                 </div>
               
 
