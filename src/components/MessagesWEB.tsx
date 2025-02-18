@@ -1040,61 +1040,85 @@ export const AIMessage: React.FC<AIMessageProps> = ({
         )}
         */}
         {citedDocuments && citedDocuments.length > 0 && (
-          <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""}`}>
-            
-            {/* Affichage de la première source en pleine largeur */}
+          <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""} pb-4`}>
+
+            {/* ✅ Affichage de la première source sur toute la largeur */}
             <div 
-              className="full-width-source p-3 mb-2 rounded-lg flex items-center cursor-pointer"
+              className="full-width-source p-3 mb-3 rounded-lg flex items-center cursor-pointer"
               style={{
-                backgroundColor: "#222",
+                backgroundColor: "#3A3A3A",
                 color: "#fff",
                 borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between"
+                justifyContent: "space-between",
+                padding: "14px 18px",
               }}
               onClick={() => handleSourceClick(citedDocuments[0].link)}
             >
-              <div className="flex items-center">
-                <LanguageIcon sx={{ width: 24, height: 24, marginRight: 8 }} />
-                <span className="font-bold">{citedDocuments[0].document_name}</span>
+              <div className="flex items-center w-full">
+                <LanguageIcon sx={{ width: 22, height: 22, marginRight: 8 }} />
+                <span 
+                  className="font-bold truncate"
+                  style={{ 
+                    maxWidth: "80%", 
+                    whiteSpace: "nowrap", 
+                    overflow: "hidden", 
+                    textOverflow: "ellipsis" 
+                  }}
+                >
+                  {citedDocuments[0].document_name}
+                </span>
               </div>
-              <span className="text-gray-400">{new URL(citedDocuments[0].link).hostname}</span>
+              <span className="text-gray-300">{new URL(citedDocuments[0].link).hostname}</span>
             </div>
 
-            {/* Conteneur pour les autres sources */}
+            {/* ✅ Conteneur des autres sources en grille */}
             <div className="sources-grid mt-2 grid grid-cols-4 gap-2">
               {citedDocuments.slice(1, 4).map((document, index) => (
                 <div 
                   key={document.document_id}
-                  className="source-box p-3 rounded-lg cursor-pointer flex items-center"
+                  className="source-box p-2 rounded-lg cursor-pointer flex items-center"
                   style={{
-                    backgroundColor: "#333",
+                    backgroundColor: "#4A4A4A",
                     color: "#fff",
                     borderRadius: "8px",
+                    height: "50px",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between"
+                    justifyContent: "space-between",
+                    padding: "10px 12px",
                   }}
                   onClick={() => handleSourceClick(document.link)}
                 >
-                  <div className="flex items-center">
-                    <LanguageIcon sx={{ width: 18, height: 18, marginRight: 6 }} />
-                    <span className="text-sm">{document.document_name}</span>
+                  <div className="flex items-center w-full">
+                    <LanguageIcon sx={{ width: 16, height: 16, marginRight: 6 }} />
+                    <span 
+                      className="text-sm truncate"
+                      style={{ 
+                        maxWidth: "75%", 
+                        whiteSpace: "nowrap", 
+                        overflow: "hidden", 
+                        textOverflow: "ellipsis" 
+                      }}
+                    >
+                      {document.document_name}
+                    </span>
                   </div>
                 </div>
               ))}
 
-              {/* Affichage du bouton "+X sources" si plus de 4 sources */}
+              {/* ✅ Affichage du bouton "+X sources" si plus de 4 sources */}
               {citedDocuments.length > 4 && (
                 <div 
-                  className="source-box p-3 rounded-lg cursor-pointer flex items-center justify-center"
+                  className="source-box p-2 rounded-lg cursor-pointer flex items-center justify-center"
                   style={{
-                    backgroundColor: "#444",
+                    backgroundColor: "#5A5A5A",
                     color: "#fff",
                     borderRadius: "8px",
                     fontSize: "0.9rem",
-                    fontWeight: "bold"
+                    fontWeight: "bold",
+                    height: "50px",
                   }}
                   onClick={() => setShowSourcesSidebar(true)}
                 >
@@ -1104,6 +1128,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </div>
           </div>
         )}
+
 
 
             {showSourcesSidebar && (
