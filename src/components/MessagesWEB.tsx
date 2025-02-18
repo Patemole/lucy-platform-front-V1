@@ -1791,7 +1791,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   <FiCopy style={{ color: theme.palette.text.primary }} />
                 )}
               </Hoverable>
-              <Hoverable onClick={handleThumbUpClick} isActive={thumbsUpClicked}>
+              {/*<Hoverable onClick={handleThumbUpClick} isActive={thumbsUpClicked}>*/}
+              <Hoverable onClick={handleWrongAnswer} isActive={thumbsUpClicked}>
                 <FiThumbsUp
                   className={thumbsUpClicked ? "text-green-400 fill-current" : ""}
                   style={{ color: theme.palette.text.primary }}
