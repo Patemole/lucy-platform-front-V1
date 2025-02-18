@@ -53,6 +53,9 @@ import EventDetailsSidebar from '../components/EventDetailsSidebar';
 import Calendar from '../components/Calendar_StudentProfile';
 import Kanban from '../components/Kanban_StudentProfile';
 import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
+
 
 
 
@@ -2443,34 +2446,76 @@ const handleConversationClick = async (chat_id: string) => {
             ) : (
               // events view
               <div className="events-view p-4">
-                <div className="events-toggle flex justify-between mb-4">
-                  {/* Sur la vue Kanban, on affiche "Calendar" comme un titre cliquable */}
+                <div className="events-toggle flex justify-between mb-4 ml-5">
+                  {/* Sur la vue Kanban, afficher le bouton Calendar avec une icône 🗓 */}
                   {eventDisplayMode === 'kanban' ? (
                     <Button
-                    variant="outlined"
-                    onClick={() => setEventDisplayMode('calendar')}
-                    sx={{ marginRight: '8px' }}
-                  >
-                    Calendar View
-                  </Button>
-                  ) : (
-                    // Sur la vue Calendar, on garde seulement "Kanban" en bouton et on supprime "Back to Chat"
-                    <Button
-                      variant="outlined"
-                      onClick={() => setEventDisplayMode('kanban')}
-                      sx={{ marginRight: '8px' }}
+                      variant="contained"
+                      onClick={() => setEventDisplayMode('calendar')}
+                      sx={{
+                        backgroundColor: "#3155CC",
+                        color: "white",
+                        borderRadius: "12px",
+                        textTransform: "none",
+                        fontWeight: "500",
+                        fontSize: "0.9rem",
+                        padding: "2px 14px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        "&:hover": {
+                          backgroundColor: "#2448B3",
+                        },
+                      }}
                     >
+                      <CalendarMonthIcon fontSize="small" />
+                      Calendar View
+                    </Button>
+                  ) : (
+                    // Sur la vue Calendar, afficher le bouton Kanban avec une icône 📌
+                    <Button
+                      variant="contained"
+                      onClick={() => setEventDisplayMode('kanban')}
+                      sx={{
+                        backgroundColor: "#E67E22",
+                        color: "white",
+                        borderRadius: "12px",
+                        textTransform: "none",
+                        fontWeight: "500",
+                        fontSize: "0.9rem",
+                        padding: "8px 16px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        "&:hover": {
+                          backgroundColor: "#D46310",
+                        },
+                      }}
+                    >
+                      <ViewKanbanIcon fontSize="small" />
                       Kanban View
                     </Button>
                   )}
-                  
+
                   {/* Supprimer le bouton "Back to Chat" en mode Calendar */}
                   {eventDisplayMode !== 'calendar' && (
-                    <Button variant="outlined" onClick={() => setCurrentView('chat')}>
-                      back to chat
+                    <Button
+                      variant="outlined"
+                      onClick={() => setCurrentView('chat')}
+                      sx={{
+                        borderRadius: "12px",
+                        textTransform: "none",
+                        fontWeight: "500",
+                        fontSize: "0.9rem",
+                        padding: "8px 16px",
+                      }}
+                    >
+                      Back to Chat
                     </Button>
                   )}
                 </div>
+              
+
 
                 {eventDisplayMode === 'kanban' ? (
                   <Kanban events={events} onEventClick={handleEventClick} />
