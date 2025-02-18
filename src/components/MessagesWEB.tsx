@@ -1040,14 +1040,14 @@ export const AIMessage: React.FC<AIMessageProps> = ({
         )}
         */}
         {citedDocuments && citedDocuments.length > 0 && (
-          <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""} pb-4`}>
+          <div className={`mt-1 ${!isSmallScreen ? "ml-8" : ""} pb-6`}>
 
             {/* ✅ Affichage de la première source sur toute la largeur */}
             <div 
               className="full-width-source p-3 mb-3 rounded-lg flex items-center cursor-pointer"
               style={{
-                backgroundColor: "#3A3A3A",
-                color: "#fff",
+                backgroundColor: "#F5F5F5", // ✅ Gris très clair et lumineux
+                color: "#333",  // ✅ Texte sombre pour contraste
                 borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
@@ -1057,7 +1057,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
               onClick={() => handleSourceClick(citedDocuments[0].link)}
             >
               <div className="flex items-center w-full">
-                <LanguageIcon sx={{ width: 22, height: 22, marginRight: 8 }} />
+                <img 
+                  src={theme.logo} 
+                  alt="Source Logo"
+                  style={{ width: 22, height: 22, marginRight: 8 }}
+                />
                 <span 
                   className="font-bold truncate"
                   style={{ 
@@ -1070,7 +1074,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   {citedDocuments[0].document_name}
                 </span>
               </div>
-              <span className="text-gray-300">{new URL(citedDocuments[0].link).hostname}</span>
+              <span className="text-gray-600">{new URL(citedDocuments[0].link).hostname}</span>
             </div>
 
             {/* ✅ Conteneur des autres sources en grille */}
@@ -1080,8 +1084,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   key={document.document_id}
                   className="source-box p-2 rounded-lg cursor-pointer flex items-center"
                   style={{
-                    backgroundColor: "#4A4A4A",
-                    color: "#fff",
+                    backgroundColor: "#EAEAEA",  // ✅ Gris légèrement plus foncé pour différencier
+                    color: "#333",
                     borderRadius: "8px",
                     height: "50px",
                     display: "flex",
@@ -1092,7 +1096,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                   onClick={() => handleSourceClick(document.link)}
                 >
                   <div className="flex items-center w-full">
-                    <LanguageIcon sx={{ width: 16, height: 16, marginRight: 6 }} />
+                    <img 
+                      src={theme.logo} 
+                      alt="Source Logo"
+                      style={{ width: 16, height: 16, marginRight: 6 }}
+                    />
                     <span 
                       className="text-sm truncate"
                       style={{ 
@@ -1113,8 +1121,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                 <div 
                   className="source-box p-2 rounded-lg cursor-pointer flex items-center justify-center"
                   style={{
-                    backgroundColor: "#5A5A5A",
-                    color: "#fff",
+                    backgroundColor: "#DADADA",  // ✅ Encore plus foncé pour l'effet hiérarchique
+                    color: "#333",
                     borderRadius: "8px",
                     fontSize: "0.9rem",
                     fontWeight: "bold",
@@ -1128,6 +1136,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </div>
           </div>
         )}
+
 
 
 
