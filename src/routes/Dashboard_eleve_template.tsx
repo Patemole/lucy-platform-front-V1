@@ -1446,9 +1446,17 @@ const handleConversationClick = async (chat_id: string) => {
     setDrawerOpen(!drawerOpen);
   };
 
+  /*
   const handleSourceClick = (link: string) => {
     setIframeSrc(link);
   };
+  */
+
+
+  const handleSourceClick = (link: string) => {
+    window.open(link, "_blank", "noopener,noreferrer"); // Ouvre dans un nouvel onglet
+};
+
 
 
   const handleSubmitWrongAnswerFeedback = async (
