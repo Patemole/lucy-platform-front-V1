@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
+import Marquee from "react-fast-marquee"; // ✅ Importe la bibliothèque
 import {
   Button,
   Typography,
@@ -54,6 +55,30 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
 
   // Texte initial à taper
   const initialText = 'Ask Lucy...';
+
+
+  // Exemple de questions à défiler
+  const tickerQuestions = [
+    { question: "What are the event of the week?", topic: "Events" },
+    { question: "Are there study abroad opportunities?", topic: "Policies" },
+    { question: "How can I get involved in research?", topic: "Courses" },
+    { question: "What support services are available?", topic: "Housing" },
+    { question: "How do I apply for financial aid?", topic: "Financial Aids" },
+    { question: "What is the process to change my major?", topic: "Courses" },
+    { question: "Are there scholarships for current students?", topic: "Financial Aids" },
+  ];
+  
+  
+
+  const topicColors: { [key: string]: string } = {
+    "Financial Aids": "#27AE60", // Vert
+    "Events": "#E67E22", // Orange
+    "Policies": "#2980B9", // Bleu
+    "Housing": "#8E44AD", // Violet
+    "Courses": "#EAC117", // Jaune
+    "Chitchat": "#7F8C8D", // Jaune
+    "Default": "#7F8C8D" // Gris
+  };
 
   // Fonction pour envoyer le message
   const handleSend = () => {
@@ -319,6 +344,62 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
           allowFullScreen
         />
       )}
+
+      {/*
+      {/* Ticker des questions optimisé *
+      <div className="w-full bg-gray-100 py-2 mb-4 overflow-hidden">
+        <Marquee gradient={false} speed={40}>
+          {tickerQuestions.map((question, index) => (
+            <div
+              key={index}
+              className="mx-2 px-4 py-2 bg-white rounded-lg shadow-md text-sm text-blue-900 font-semibold cursor-pointer hover:bg-blue-100 transition"
+            >
+              {question}
+            </div>
+          ))}
+        </Marquee>
+      </div>
+      */}
+
+
+      {/* Ticker des questions optimisé avec topics et fond adouci */}
+      <div className="flex justify-center w-full mb-4">
+        <div className="max-w-5xl w-full bg-gray-100 py-2 px-4 rounded-lg">
+          <Marquee gradient={false} speed={40}>
+            {tickerQuestions.map((questionObj, index) => {
+              const topic = questionObj.topic || "Default"; // Assure un fallback si le topic est absent
+              const color = topicColors[topic] || topicColors["Default"];
+
+              return (
+                <div
+                  key={index}
+                  className="mx-2 flex items-center px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer hover:bg-gray-200 transition pb-1"
+                  style={{ backgroundColor: "##F7F9FC" }} // Fond plus doux
+                >
+                  {/* Rectangle du topic avec fond clair */}
+                  <div
+                    className="mr-2 px-3 py-1 rounded-lg text-xs font-bold"
+                    style={{
+                      color: color, // Texte coloré
+                      backgroundColor: `${color}20`, // Fond plus clair
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {topic}
+                  </div>
+
+                  {/* Question */}
+                  <span className="text-blue-900">{questionObj.question}</span>
+                </div>
+              );
+            })}
+          </Marquee>
+        </div>
+      </div>
+
+
+
+
 
       {/* Contenu principal de la landing page */}
       <Box
