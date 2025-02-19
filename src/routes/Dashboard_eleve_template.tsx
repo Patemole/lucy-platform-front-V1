@@ -55,6 +55,7 @@ import Kanban from '../components/Kanban_StudentProfile';
 import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
+import ChatIcon from '@mui/icons-material/Chat';
 
 
 
@@ -1600,38 +1601,82 @@ const handleConversationClick = async (chat_id: string) => {
             {/* Contenu fixe avant la liste */}
             <List style={{ padding: '0 10px' }}>
               {/* Profil avec fermeture automatique sur petits écrans */}
+              {/* Your Events */}
               <ListItem
                 button
                 onClick={(event) => {
-                  // navigate to the calendar page can be replaced with events view:
-                  //navigate(`/dashboard/calendar/student/${user?.id || 'defaultId'}`);
                   setCurrentView('events');
                   if (isSmallScreen) toggleDrawer();
                 }}
                 sx={{
                   borderRadius: '8px',
-                  backgroundColor: 'transparent',
+                  backgroundColor: currentView === 'events' ? theme.palette.button.background : 'transparent',
                   mb: 1,
                   '&:hover': {
                     backgroundColor: theme.palette.action.hover,
                   },
                   '@media (hover: hover) and (pointer: fine)': {
                     '&:hover': {
-                      backgroundColor: 'transparent',
+                      backgroundColor: theme.palette.action.hover,
                     },
                   },
                 }}
               >
-                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
+                <ListItemIcon sx={{ 
+                  color: currentView === 'events' ? theme.palette.primary.main : theme.palette.sidebar, 
+                  minWidth: '35px' 
+                }}>
                   <DashboardIcon sx={{ fontSize: '22px' }} />
                 </ListItemIcon>
                 <ListItemText
                   primary="Your Events"
                   primaryTypographyProps={{
-                    style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
+                    style: { 
+                      fontWeight: '500', 
+                      fontSize: '0.875rem', 
+                      color: currentView === 'events' ? theme.palette.primary.main : theme.palette.text.primary 
+                    },
                   }}
                 />
               </ListItem>
+
+
+              {/* AI Peer Advisor */}
+              <ListItem
+                button
+                onClick={() => {
+                  setCurrentView('chat');
+                  if (isSmallScreen) toggleDrawer();
+                }}
+                sx={{
+                  borderRadius: '8px',
+                  backgroundColor: currentView === 'chat' ? theme.palette.button.background : 'transparent',
+                  mb: 1,
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                  '@media (hover: hover) and (pointer: fine)': {
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
+                  <ChatIcon sx={{ fontSize: '22px' }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="AI Peer Advisor"
+                  primaryTypographyProps={{
+                    style: {
+                      fontWeight: '500',
+                      fontSize: '0.875rem',
+                      color: theme.palette.text.primary,
+                    },
+                  }}
+                />
+              </ListItem>
+
   
               {/* Nouveau Bouton History/Social Thread */}
               <ListItem
