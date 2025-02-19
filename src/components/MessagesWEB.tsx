@@ -51,6 +51,7 @@ import { ThreeDots } from 'react-loader-spinner';
 import remarkBreaks from 'remark-breaks';
 import './MessageWEBCSS.css';
 import { FiRefreshCw } from "react-icons/fi";
+import { FiMessageSquare } from "react-icons/fi";
 
 
 
@@ -1040,102 +1041,102 @@ export const AIMessage: React.FC<AIMessageProps> = ({
         )}
         */}
         {citedDocuments && citedDocuments.length > 0 && (
-          <div className={`mt-1 ${!isSmallScreen ? "ml-8" : ""} pb-6`}>
+  <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""} pb-6`}>
+    {/* university sources title with language icon */}
+    <div className="flex items-center mb-3">
+      <LanguageIcon sx={{ width: 20, height: 20, marginRight: 1 }} />
+      <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
+        Sources
+      </span>
+    </div>
 
-            {/* ✅ Affichage de la première source sur toute la largeur */}
-            <div 
-              className="full-width-source p-3 mb-3 rounded-lg flex items-center cursor-pointer"
+    {/* grid of sources (4 sources + counter if more) */}
+    <div
+      className="sources-grid mt-2 grid grid-cols-5 gap-2"
+      style={{ width: "100%" }}
+    >
+      {citedDocuments.slice(0, 4).map((document) => (
+        <div
+          key={document.document_id}
+          className="group p-2 rounded-lg cursor-pointer flex items-center shadow transition-shadow duration-200 ease-in-out hover:shadow-lg"
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.3)", // glass effect
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+            height: "45px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "10px 12px",
+            flex: "1", // ensures equal width for first 4 sources
+            minWidth: "0px",
+          }}
+          onClick={() => handleSourceClick(document.link)}
+        >
+          <div className="flex items-center w-full">
+            {/* larger theme.logo without affecting text */}
+            <div style={{ width: "24px", height: "24px", flexShrink: 0 }}>
+              <img
+                src={theme.logo}
+                alt="Source Logo"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  aspectRatio: "1/1",
+                  marginRight: "6px",
+                }}
+              />
+            </div>
+            <span
+              className="text-sm truncate group-hover:underline transition duration-200 ease-in-out"
               style={{
-                backgroundColor: "#F5F5F5", // ✅ Gris très clair et lumineux
-                color: "#333",  // ✅ Texte sombre pour contraste
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 18px",
+                maxWidth: "75%",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
-              onClick={() => handleSourceClick(citedDocuments[0].link)}
             >
-              <div className="flex items-center w-full">
-                <img 
-                  src={theme.logo} 
-                  alt="Source Logo"
-                  style={{ width: 22, height: 22, marginRight: 8 }}
-                />
-                <span 
-                  className="font-bold truncate"
-                  style={{ 
-                    maxWidth: "80%", 
-                    whiteSpace: "nowrap", 
-                    overflow: "hidden", 
-                    textOverflow: "ellipsis" 
-                  }}
-                >
-                  {citedDocuments[0].document_name}
-                </span>
-              </div>
-              <span className="text-gray-600">{new URL(citedDocuments[0].link).hostname}</span>
-            </div>
-
-            {/* ✅ Conteneur des autres sources en grille */}
-            <div className="sources-grid mt-2 grid grid-cols-4 gap-2">
-              {citedDocuments.slice(1, 4).map((document, index) => (
-                <div 
-                  key={document.document_id}
-                  className="source-box p-2 rounded-lg cursor-pointer flex items-center"
-                  style={{
-                    backgroundColor: "#EAEAEA",  // ✅ Gris légèrement plus foncé pour différencier
-                    color: "#333",
-                    borderRadius: "8px",
-                    height: "50px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px 12px",
-                  }}
-                  onClick={() => handleSourceClick(document.link)}
-                >
-                  <div className="flex items-center w-full">
-                    <img 
-                      src={theme.logo} 
-                      alt="Source Logo"
-                      style={{ width: 16, height: 16, marginRight: 6 }}
-                    />
-                    <span 
-                      className="text-sm truncate"
-                      style={{ 
-                        maxWidth: "75%", 
-                        whiteSpace: "nowrap", 
-                        overflow: "hidden", 
-                        textOverflow: "ellipsis" 
-                      }}
-                    >
-                      {document.document_name}
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-              {/* ✅ Affichage du bouton "+X sources" si plus de 4 sources */}
-              {citedDocuments.length > 4 && (
-                <div 
-                  className="source-box p-2 rounded-lg cursor-pointer flex items-center justify-center"
-                  style={{
-                    backgroundColor: "#DADADA",  // ✅ Encore plus foncé pour l'effet hiérarchique
-                    color: "#333",
-                    borderRadius: "8px",
-                    fontSize: "0.9rem",
-                    fontWeight: "bold",
-                    height: "50px",
-                  }}
-                  onClick={() => setShowSourcesSidebar(true)}
-                >
-                  +{citedDocuments.length - 4} sources
-                </div>
-              )}
-            </div>
+              {document.document_name}
+            </span>
           </div>
-        )}
+        </div>
+      ))}
+
+      {citedDocuments.length > 4 && (
+        <div
+          className="group p-2 rounded-lg cursor-pointer flex items-center justify-center shadow transition-shadow duration-200 ease-in-out hover:shadow-lg"
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.3)", // glass effect
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+            fontSize: "0.9rem",
+            fontWeight: "600",
+            color: "#555",
+            height: "45px",
+            minWidth: "80px",
+            width: "auto", // auto width for full text
+            textAlign: "center",
+            whiteSpace: "nowrap", // prevents text wrapping
+            padding: "0 12px",
+          }}
+          onClick={() => setShowSourcesSidebar(true)}
+        >
+          <span className="no-underline group-hover:underline transition duration-200 ease-in-out">
+            View {citedDocuments.length - 4}+
+          </span>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+
+
+
+
+
+
 
 
 
@@ -1153,6 +1154,18 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                     ))}
                   </ul>
                 </div>
+              </div>
+            )}
+
+
+
+            {/* ✅ Afficher "Answer" uniquement s'il y a des messages */}
+            {messages.length > 0 && (!takData || takData.length === 0) && (
+              <div className={`mt-0 ${!isSmallScreen ? "ml-8" : ""} pb-2 flex items-center`}>
+                <FiMessageSquare style={{ width: 20, height: 20, marginRight: 8, color: theme.palette.text.primary }} />
+                <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
+                  Answer
+                </span>
               </div>
             )}
 
