@@ -142,6 +142,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
     setInputValue(question);
   };
 
+  /*
   // Gestion du clic sur une question
   const handleQuestionClick = (question: string) => {
     onSend(question);
@@ -149,6 +150,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
     setActiveButton(null);
     setPlaceholderText('Ask Lucy...');
   };
+  */
+
+  const handleQuestionClick = (question: string) => {
+    //setPlaceholderText(question); // ✅ Met la question dans le placeholder
+    setInputValue(question); // ✅ Assure que l'input reste vide pour ne pas perturber la saisie
+  };
+  
 
   // Gestion du changement dans le champ de saisie
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -375,6 +383,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
                   key={index}
                   className="mx-2 flex items-center px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer hover:bg-gray-200 transition pb-1"
                   style={{ backgroundColor: "##F7F9FC" }} // Fond plus doux
+                  onClick={() => handleQuestionClick(questionObj.question)} // ✅ Met à jour seulement le placeholder
                 >
                   {/* Rectangle du topic avec fond clair */}
                   <div
