@@ -55,6 +55,7 @@ export const AuthProvider = ({ children }) => {
               role: userData.role || '',
               registered_club_status: userData.registered_club_status || '',
               registered_clubs: userData.registered_clubs || '',
+              onboardingComplete: userData.onboardingComplete || true, // 🔹 Ajout de la nouvelle variable
             });
             // Récupération des sessions de chat depuis Firestore
               const chatSessions = userData.chatsessions || [];

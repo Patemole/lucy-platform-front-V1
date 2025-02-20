@@ -58,6 +58,10 @@ import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
 import ChatIcon from '@mui/icons-material/Chat';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import  Popup1  from '../components/Popup_Onboarding_topic1';
+import  Popup2  from '../components/Popup_Onboarding_public2';
+import  Popup3  from '../components/Popup_Onboarding_events3';
+import  Popup4  from '../components/Popup_Onboarding_savelucy4';
 
 
 
@@ -106,7 +110,7 @@ const drawerWidth = 270;
 
 const Dashboard_eleve_template: React.FC = () => {
   const theme = useTheme();
-  const { user, logout, chatIds, addChatId, setPrimaryChatId } = useAuth();
+  const { user, logout, chatIds, addChatId, setPrimaryChatId, setUser } = useAuth();
   const navigate = useNavigate();
   const { popup, setPopup } = usePopup();
   const [showChat, setShowChat] = useState(false);
@@ -175,6 +179,45 @@ const Dashboard_eleve_template: React.FC = () => {
   const [peerAdvisorMenuAnchor, setPeerAdvisorMenuAnchor] = useState<null | HTMLElement>(null);
   const isPeerAdvisorMenuOpen = Boolean(peerAdvisorMenuAnchor);
   const [isPeerAdvisorOpen, setIsPeerAdvisorOpen] = useState(false);
+  const [currentPopup, setCurrentPopup] = useState(0); // 0 = pas de popup, 1 à 4 pour les popups
+
+
+
+  //To display popup with onboqrdingComplete is false
+  useEffect(() => {
+    if (user && user.onboardingComplete === false) {
+      setCurrentPopup(1); // Démarrer les popups si l'onboarding n'est pas terminé
+    }
+  }, [user]);
+
+
+  const handleNextPopup = () => {
+    setCurrentPopup((prev) => prev + 1);
+  };
+
+  
+  const handleFinishOnboarding = async () => {
+    if (!user) return;
+  
+    try {
+      const userRef = doc(db, "users", user.id);
+      await updateDoc(userRef, { onboardingComplete: true });
+  
+      // 🔥 Mise à jour de `user` dans `useAuth`
+      setUser((prevUser: any) => ({
+        ...(prevUser || {}),
+        onboardingComplete: true, // ✅ Marquer l'onboarding comme terminé
+      }));
+  
+      // Masquer les popups et afficher le dashboard
+      setCurrentPopup(0);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de onboardingComplete :", error);
+    }
+  };
+  
+  
+  
 
   const togglePeerAdvisorMenu = () => {
     setIsPeerAdvisorOpen((prev) => !prev);
@@ -1532,6 +1575,15 @@ const handleConversationClick = async (chat_id: string) => {
   const handleCloseWrongAnswerModal = () => {
     setModalOpen(false);
   };
+
+
+/*
+  // 🔥 Affichage des popups si nécessaire
+if (currentPopup === 1) return <Popup1 onNext={handleNextPopup} />;
+if (currentPopup === 2) return <Popup2 onNext={handleNextPopup} />;
+if (currentPopup === 3) return <Popup3 onNext={handleNextPopup} />;
+if (currentPopup === 4) return <Popup4 onFinish={handleFinishOnboarding} />;
+*/
 
 
   return (
@@ -2956,6 +3008,29 @@ const handleConversationClick = async (chat_id: string) => {
           {/* Render the StudentProfileDialog component */}
           <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
           <EventDetailsSidebar event={selectedEvent} open={sidebarOpen} onClose={handleCloseSidebar} />
+
+          {currentPopup > 0 && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.15)", // Assombrit légèrement l'arrière-plan
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 2000, // Au-dessus du reste
+            }}
+          >
+            {currentPopup === 1 && <Popup1 onNext={handleNextPopup} />}
+            {currentPopup === 2 && <Popup2 onNext={handleNextPopup} />}
+            {currentPopup === 3 && <Popup3 onNext={handleNextPopup} />}
+            {currentPopup === 4 && <Popup4 onFinish={handleFinishOnboarding} />}
+          </div>
+        )}
+
   
           <Snackbar
             open={snackbarOpen}
