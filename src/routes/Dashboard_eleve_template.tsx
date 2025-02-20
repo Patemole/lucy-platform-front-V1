@@ -56,6 +56,8 @@ import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
 import ChatIcon from '@mui/icons-material/Chat';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 
 
 
@@ -170,6 +172,24 @@ const Dashboard_eleve_template: React.FC = () => {
   const [isCalendarView, setIsCalendarView] = useState(false); // état pour savoir si on est en vue calendar ou pas
   const [selectedEvent, setSelectedEvent] = useState<EventStudentProfile | null>(null); // événement sélectionné lors d'un clic
   const [sidebarOpen, setSidebarOpen] = useState(false); // si la sidebar est ouverte ou pas
+  const [peerAdvisorMenuAnchor, setPeerAdvisorMenuAnchor] = useState<null | HTMLElement>(null);
+  const isPeerAdvisorMenuOpen = Boolean(peerAdvisorMenuAnchor);
+  const [isPeerAdvisorOpen, setIsPeerAdvisorOpen] = useState(false);
+
+  const togglePeerAdvisorMenu = () => {
+    setIsPeerAdvisorOpen((prev) => !prev);
+  };
+
+
+  const handlePeerAdvisorMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setPeerAdvisorMenuAnchor(event.currentTarget);
+  };
+
+  const handlePeerAdvisorMenuClose = () => {
+    setPeerAdvisorMenuAnchor(null);
+  };
+
+
 
 
 
@@ -1641,44 +1661,124 @@ const handleConversationClick = async (chat_id: string) => {
               </ListItem>
 
 
-              {/* AI Peer Advisor */}
-              <ListItem
-                button
-                onClick={() => {
-                  setCurrentView('chat');
-                  if (isSmallScreen) toggleDrawer();
-                }}
-                sx={{
-                  borderRadius: '8px',
-                  backgroundColor: currentView === 'chat' ? theme.palette.button.background : 'transparent',
-                  mb: 1,
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                  '@media (hover: hover) and (pointer: fine)': {
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.hover,
-                    },
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
-                  <ChatIcon sx={{ fontSize: '22px' }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary="AI Peer Advisor"
-                  primaryTypographyProps={{
-                    style: {
-                      fontWeight: '500',
-                      fontSize: '0.875rem',
-                      color: theme.palette.text.primary,
-                    },
-                  }}
-                />
-              </ListItem>
+                                {/* AI Peer Advisor (Accordion) */}
+                  <ListItem
+                    button
+                    onClick={togglePeerAdvisorMenu} // Gère l'ouverture/fermeture
+                    sx={{
+                      borderRadius: '8px',
+                      backgroundColor: 'transparent', // ✅ Supprime l'effet visuel de sélection
+                      mb: 1,
+                      '&:hover': {
+                        backgroundColor: theme.palette.action.hover,
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
+                      <ChatIcon sx={{ fontSize: '22px' }} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="AI Peer Advisor"
+                      primaryTypographyProps={{
+                        style: {
+                          fontWeight: '500',
+                          fontSize: '0.875rem',
+                          color: theme.palette.text.primary,
+                        },
+                      }}
+                    />
+                    <ExpandMoreIcon
+                      sx={{
+                        color: theme.palette.text.primary,
+                        fontSize: '20px',
+                        transform: isPeerAdvisorOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.3s ease',
+                      }}
+                    />
+                  </ListItem>
 
-  
-              {/* Nouveau Bouton History/Social Thread */}
+                  {/* Contenu du menu qui s'affiche sous AI Peer Advisor */}
+                  {isPeerAdvisorOpen && (
+                    <Box sx={{ pl: 4 }}>
+                      {/* Aller au chat */}
+                      <ListItem
+                        button
+                        onClick={() => setCurrentView('chat')}
+                        sx={{
+                          borderRadius: '8px',
+                          backgroundColor: currentView === 'chat' ? theme.palette.button.background : 'transparent',
+                          mb: 1,
+                          '&:hover': {
+                            backgroundColor: theme.palette.action.hover,
+                          },
+                        }}
+                      >
+                        <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
+                          <ChatBubbleOutlineIcon sx={{ fontSize: '22px' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Go to Chat"
+                          primaryTypographyProps={{
+                            style: { fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary },
+                          }}
+                        />
+                      </ListItem>
+
+                      {/* Toggle entre Social Thread / Conversation History */}
+                      <ListItem
+                        button
+                        onClick={handleToggleHistory}
+                        sx={{
+                          borderRadius: '8px',
+                          backgroundColor: 'transparent',
+                          mb: 2,
+                          '&:hover': {
+                            backgroundColor: theme.palette.action.hover,
+                          },
+                        }}
+                      >
+                        <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
+                          {isHistory ? <PeopleIcon sx={{ fontSize: '22px' }} /> : <HistoryIcon sx={{ fontSize: '22px' }} />}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Box display="flex" alignItems="center">
+                              <Typography
+                                variant="body2"
+                                sx={{ fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary }}
+                              >
+                                {isHistory ? "Social Thread" : "Conversation History"}
+                              </Typography>
+                              {isHistory && unreadCount > 0 && (
+                                <Box
+                                  sx={{
+                                    backgroundColor: 'red',
+                                    color: 'white',
+                                    borderRadius: '8px',
+                                    padding: '2px 6px',
+                                    marginLeft: '8px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '500',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    minWidth: '20px',
+                                  }}
+                                >
+                                  {unreadCount}
+                                </Box>
+                              )}
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    </Box>
+                  )}
+
+
+
+              {/*
+              {/* Nouveau Bouton History/Social Thread *
               <ListItem
                 button
                 onClick={handleToggleHistory}
@@ -1731,9 +1831,11 @@ const handleConversationClick = async (chat_id: string) => {
                   }
                 />
               </ListItem>
+              */}
             </List>
   
             <Divider style={{ backgroundColor: 'lightgray' }} />
+            
   
             {/* Titre de l'état actuel */}
             <div 
