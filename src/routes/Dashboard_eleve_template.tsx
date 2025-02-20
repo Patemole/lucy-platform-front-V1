@@ -1691,7 +1691,7 @@ const handleConversationClick = async (chat_id: string) => {
                       sx={{
                         color: theme.palette.text.primary,
                         fontSize: '20px',
-                        transform: isPeerAdvisorOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transform: isPeerAdvisorOpen ? 'rotate(360deg)' : 'rotate(270deg)',
                         transition: 'transform 0.3s ease',
                       }}
                     />
@@ -1699,7 +1699,7 @@ const handleConversationClick = async (chat_id: string) => {
 
                   {/* Contenu du menu qui s'affiche sous AI Peer Advisor */}
                   {isPeerAdvisorOpen && (
-                    <Box sx={{ pl: 4 }}>
+                    <Box sx={{ pl: 2 }}>
                       {/* Aller au chat */}
                       <ListItem
                         button
