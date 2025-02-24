@@ -12,6 +12,34 @@ import { CircularProgress } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Remove';
 
+import image1 from './image_profile/38.png';
+import image2 from './image_profile/42.png';
+import image3 from './image_profile/43.png';
+import image4 from './image_profile/44.png';
+import image5 from './image_profile/47.png';
+import image6 from './image_profile/48.png';
+import image7 from './image_profile/52.png';
+import image8 from './image_profile/57.png';
+import image9 from './image_profile/58.png';
+import image10 from './image_profile/61.png';
+import image11 from './image_profile/64.png';
+import image12 from './image_profile/66.png';
+import image13 from './image_profile/Avatar=4.png';
+import image14 from './image_profile/Avatar=8.png';
+import image15 from './image_profile/Avatar=9.png';
+import image16 from './image_profile/Avatar=10.png';
+import image17 from './image_profile/Avatar=12.png';
+import image18 from './image_profile/Avatar=13.png';
+import image19 from './image_profile/Avatar=23.png';
+import image20 from './image_profile/Avatar=25.png';
+import image21 from './image_profile/Avatar=26.png';
+import image22 from './image_profile/Avatar=28.png';
+import image23 from './image_profile/Avatar=32.png';
+import image24 from './image_profile/Avatar=33.png';
+import image25 from './image_profile/Avatar=34.png';
+import image26 from './image_profile/default_picture.png';
+
+
 // Extend the MUI theme to include `facultyOptions`
 declare module '@mui/material/styles' {
   interface Theme {
@@ -83,34 +111,33 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
 
         // Définissez ici les images par défaut (URLs publiques sur S3)
         setDefaultImages([
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/default_picture.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/38.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/42.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=9.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/47.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/48.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/52.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/57.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/58.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/61.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/64.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/66.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=10.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=12.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=13.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=23.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=25.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=26.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=28.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=32.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=33.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=34.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=4.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/Avatar=8.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/43.png',
-          'https://profile-images-app.s3.us-east-1.amazonaws.com/44.png',
           
-          // Ajoutez d'autres URLs si nécessaire
+          image1,
+          image2,
+          image3,
+          image4,
+          image5,
+          image6,
+          image7,
+          image8,
+          image9,
+          image10,
+          image11,
+          image12,
+          image13,
+          image14,
+          image15,
+          image16,
+          image17,
+          image18,
+          image19,
+          image20,
+          image21,
+          image22,
+          image23,
+          image24,
+          image25,
+          image26,
         ]);
       } catch (error) {
         console.error('Error fetching user data:', error);
