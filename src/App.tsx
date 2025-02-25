@@ -42,6 +42,7 @@ import { AuthProvider } from './auth/context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import config from './config';
 import NotFound from './routes/NotFound';
+import DataPrivacy from './routes/DataPrivacy';
 import StudentProfilePage from './routes/StudentProfilePage';
 
 const App: React.FC = () => {
@@ -83,6 +84,8 @@ const App: React.FC = () => {
                     <Route path="/overview" element={<TrustPage />} />
                     <Route path="/controls" element={<TrustControlPage />} />
                     <Route path="/dashboard/admin" element={<User_analytics />} />
+                    <Route path="/dataprivacy" element={<DataPrivacy />} />
+
 
                     <Route path="/" element={<PrivateRoute />}>
                         <Route path="/dashboard/student/:uid" element={<Dashboard_eleve_template />} />
