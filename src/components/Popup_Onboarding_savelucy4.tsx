@@ -90,7 +90,7 @@ const Popup4: React.FC<Popup4Props> = ({ onFinish, confettiOptions }) => {
 
         {/* Description */}
         <p className="mt-4 text-gray-700 text-lg px-4">
-          Meanwhile, save Lucy on your **laptop** or **phone**.
+          Meanwhile, save Lucy on your device.
         </p>
 
         {/* Two Images in a Row */}
