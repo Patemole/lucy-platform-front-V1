@@ -26,6 +26,8 @@ export default function LearningStyleSurvey() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = window.innerWidth <= 768;
+  const [cookieConsent, setCookieConsent] = useState(false);
+
 
   // Nouveau state pour les tags d'intérêts
   const availableInterests = [
@@ -162,6 +164,8 @@ export default function LearningStyleSurvey() {
     if (schools.some((s) => !s)) newErrors.schools = 'At least one school is required';
     if (!learnerType) newErrors.learnerType = 'Learner type is required';
     if (selectedInterests.length < 5) newErrors.interests = 'Please choose at least 5 interest tags';
+    if (!cookieConsent) newErrors.cookieConsent = 'You must accept the Cookie Policy to continue.';
+
 
     if (Object.keys(newErrors).length > 0) {
       console.log("[Step 2] Validation errors:", newErrors);
@@ -484,14 +488,43 @@ export default function LearningStyleSurvey() {
             </div>
           </div>
 
+          {/* Cookie Consent Checkbox */}
+          <div className="mb-6 flex items-center">
+            <input
+              type="checkbox"
+              id="cookieConsent"
+              checked={cookieConsent}
+              onChange={() => setCookieConsent(!cookieConsent)}
+              className="mr-2"
+            />
+            <label htmlFor="cookieConsent" className="text-sm text-gray-700">
+              I agree to the{" "}
+              <a
+                href="/documents/GDPR_Cookie_Policy_v1.0.0-0.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline hover:text-blue-700"
+              >
+                Cookie Policy
+              </a>
+            </label>
+          </div>
+
+          {/* Affichage de l'erreur si l'utilisateur ne coche pas la case */}
+          {errors.cookieConsent && <p className="text-xs text-red-600 mt-1">{errors.cookieConsent}</p>}
+
+
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full py-2 mt-1 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 disabled:opacity-50"
+            disabled={isLoading || !cookieConsent}
+            className={`w-full py-2 mt-1 text-white rounded-lg 
+              ${cookieConsent ? "bg-gray-800 hover:bg-gray-900" : "bg-gray-400 cursor-not-allowed"} 
+              focus:ring focus:ring-blue-300 disabled:opacity-50`}
           >
             {isLoading ? "Loading..." : "Create Your Profile"}
           </button>
+
 
           {/* Additional Text */}
           <p className="mt-4 text-xs text-center text-gray-500">

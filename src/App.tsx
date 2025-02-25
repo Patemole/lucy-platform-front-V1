@@ -43,6 +43,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import config from './config';
 import NotFound from './routes/NotFound';
 import DataPrivacy from './routes/DataPrivacy';
+import CookiePolicy from './routes/CookiePolicy';
+
 import StudentProfilePage from './routes/StudentProfilePage';
 
 const App: React.FC = () => {
@@ -85,6 +87,7 @@ const App: React.FC = () => {
                     <Route path="/controls" element={<TrustControlPage />} />
                     <Route path="/dashboard/admin" element={<User_analytics />} />
                     <Route path="/dataprivacy" element={<DataPrivacy />} />
+                    <Route path="/cookiepolicy" element={< CookiePolicy/>} />
 
 
                     <Route path="/" element={<PrivateRoute />}>
