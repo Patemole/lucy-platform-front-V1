@@ -1,5 +1,3 @@
-// src/auth/hooks/useAuth.js
-
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { signOut } from "firebase/auth";

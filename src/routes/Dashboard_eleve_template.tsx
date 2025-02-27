@@ -1,5 +1,3 @@
-// src/components/Dashboard_eleve_template.tsx
-
 import React, { useState, useEffect, KeyboardEvent, useRef, useMemo } from 'react';
 import StopIcon from '@mui/icons-material/Stop';
 import { motion } from 'framer-motion';
@@ -17,53 +15,50 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { v4 as uuidv4 } from 'uuid';
 import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs, where, startAfter, QueryDocumentSnapshot, DocumentData, onSnapshot} from 'firebase/firestore';
-import logo_greg from '../student_face.png';
 import '../index.css';
-import { AIMessage } from '../components/MessagesWEB';
+
+//Components imported
+import { AIMessage } from '../components/main_components/MessagesWEB';
+import { usePopup } from '../components/main_components/popup';
+import PopupWrongAnswer from '../components/main_components/PopupWrongAnswer';
+import LandingPage from '../components/main_components/LandingPageImprove'; // Import du composant LandingPage
+import StudentProfileDialog from '../components/main_components/StudentProfileDialog'; // Import the dialog component
+
+import  Popup1  from '../components/main_components/Popup_Onboarding_topic1';
+import  Popup2  from '../components/main_components/Popup_Onboarding_public2';
+import  Popup3  from '../components/main_components/Popup_Onboarding_events3';
+import  Popup4  from '../components/main_components/Popup_Onboarding_savelucy4';
+
+import EventDetailsSidebar from '../components/main_components/EventDetailsSidebar';
+import Calendar from '../components/main_components/Calendar_StudentProfile';
+import Kanban from '../components/main_components/Kanban_StudentProfile';
+
 import { Message, StudentProfile, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY} from '../interfaces/interfaces_eleve';
 import { db } from '../auth/firebase';
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
-import { handleAutoScroll } from '../components/utils';
-import { usePopup } from '../components/popup';
 import { useAuth } from '../auth/hooks/useAuth';
-import PopupWrongAnswer from '../components/PopupWrongAnswer';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
-import LandingPage from '../components/LandingPageImprove'; // Import du composant LandingPage
-import StudentProfileDialog from '../components/StudentProfileDialog'; // Import the dialog component
-import MoreVertIcon from '@mui/icons-material/MoreVert'; // Import de l'icône des trois petits points
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import ShareIcon from '@mui/icons-material/Share'; // Icône pour "Partager"
 import EditIcon from '@mui/icons-material/Edit'; // Icône pour "Renommer"
-import ArchiveIcon from '@mui/icons-material/Archive'; // Icône pour "Archiver"
 import DeleteIcon from '@mui/icons-material/Delete'; // Icône pour "Supprimer"
 import SettingsIcon from '@mui/icons-material/Settings';
 import './styles.css'; // Import du fichier CSS pour le gradient
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import debounce from 'lodash/debounce';
 import { FaArrowDown } from 'react-icons/fa'; // Import an arrow down icon
-import ForumIcon from '@mui/icons-material/Forum';
 import HistoryIcon from '@mui/icons-material/History';
 import PeopleIcon from '@mui/icons-material/People';
 import { format, isToday, isYesterday } from 'date-fns';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
 import { EventStudentProfile } from '../interfaces/interfaces_eleve';
-import EventDetailsSidebar from '../components/EventDetailsSidebar';
-import Calendar from '../components/Calendar_StudentProfile';
-import Kanban from '../components/Kanban_StudentProfile';
 import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
 import ChatIcon from '@mui/icons-material/Chat';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import  Popup1  from '../components/Popup_Onboarding_topic1';
-import  Popup2  from '../components/Popup_Onboarding_public2';
-import  Popup3  from '../components/Popup_Onboarding_events3';
-import  Popup4  from '../components/Popup_Onboarding_savelucy4';
-
-
 
 
 // Définir l'interface pour une conversation de thread social (social conversation)
@@ -84,16 +79,6 @@ interface Conversation {
   thread_type: string;
   topic?: string;
 }
-
-/*
-const topicColors: { [key: string]: string } = {
-  "Upenn": "#8E44AD",
-  "New Chat": "#E74C3C",
-  "Wharton": "#F1C40F",
-  "YouTube": "#2980B9",
-  "Default": "#7F8C8D"
-};
-*/
 
 const topicColors: { [key: string]: string } = {
   "Financial Aids": "#27AE60", // Vert
@@ -121,7 +106,6 @@ const Dashboard_eleve_template: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [betaViewOpen, setBetaViewOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>('');
   const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
@@ -134,9 +118,6 @@ const Dashboard_eleve_template: React.FC = () => {
   const [selectedAiMessage, setSelectedAiMessage] = useState<string | null>(null);
   const [selectedHumanMessage, setSelectedHumanMessage] = useState<string | null>(null);
   const [relatedQuestions, setRelatedQuestions] = useState<string[]>([]);
-  const [displayedText, setDisplayedText] = useState('');
-  const phraseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const wordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hasNewContent, setHasNewContent] = useState(false); 
   const [cancelConversation, setCancelConversation] = useState(false);
   const cancelConversationRef = useRef(false);
@@ -165,7 +146,6 @@ const Dashboard_eleve_template: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState<number>(0); //Count for number of conversation social thread dont opened
   const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
   const [isSocialThread, setIsSocialThread] = useState(false); // Permet de savoir si c'est un Social Thread
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [searchParams] = useSearchParams();
   const chatIdFromUrl = searchParams.get("chat_id"); // 🔥 Récupère `chat_id` depuis l'URL
@@ -177,7 +157,6 @@ const Dashboard_eleve_template: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<EventStudentProfile | null>(null); // événement sélectionné lors d'un clic
   const [sidebarOpen, setSidebarOpen] = useState(false); // si la sidebar est ouverte ou pas
   const [peerAdvisorMenuAnchor, setPeerAdvisorMenuAnchor] = useState<null | HTMLElement>(null);
-  const isPeerAdvisorMenuOpen = Boolean(peerAdvisorMenuAnchor);
   const [isPeerAdvisorOpen, setIsPeerAdvisorOpen] = useState(false);
   const [currentPopup, setCurrentPopup] = useState(0); // 0 = pas de popup, 1 à 4 pour les popups
 
@@ -215,9 +194,6 @@ const Dashboard_eleve_template: React.FC = () => {
       console.error("Erreur lors de la mise à jour de onboardingComplete :", error);
     }
   };
-  
-  
-  
 
   const togglePeerAdvisorMenu = () => {
     setIsPeerAdvisorOpen((prev) => !prev);
@@ -231,10 +207,6 @@ const Dashboard_eleve_template: React.FC = () => {
   const handlePeerAdvisorMenuClose = () => {
     setPeerAdvisorMenuAnchor(null);
   };
-
-
-
-
 
   // fonction pour envoyer les infos de l'utilisateur au backend et récupérer les événements
   const fetchUserInfo = async () => {
@@ -362,9 +334,6 @@ const Dashboard_eleve_template: React.FC = () => {
     );
   };
 
-
-
-
   const fetchSocialThreads = () => {
   setLoadingSocialThreads(true);
   const university = user.university || "upenn"; // Université par défaut
@@ -442,24 +411,6 @@ const Dashboard_eleve_template: React.FC = () => {
   }, [user?.id]);
 
 
-  /*
-  // Utilisez useEffect pour récupérer les social threads lorsque l'état change vers Social Thread
-  useEffect(() => {
-    if (!isHistory) {
-      fetchSocialThreads();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHistory]);
-  */
-
-/*
-  // Lance la récupération des Social Threads au chargement de la page
-  useEffect(() => {
-    fetchSocialThreads();
-  }, []);
-  */
-
-
   useEffect(() => {
     const unsubscribe = fetchSocialThreads(); // Active l'écoute Firestore en temps réel
   
@@ -516,13 +467,7 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
 
-  /*
-  // Fonction pour gérer le clic sur le bouton History/Social Thread
-  const handleToggleHistory = () => {
-    setIsHistory((prev) => !prev);
-  };
-  */
-
+ 
   const handleToggleHistory = () => {
     setIsHistory((prev) => {
       const newIsHistory = !prev;
@@ -534,13 +479,10 @@ const Dashboard_eleve_template: React.FC = () => {
     });
   };
 
-
-
   const handleCloseSidebar = () => {
     setSidebarOpen(false);
   };
   
-
 
   const lastAiMessageId = useMemo(() => {
     const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
@@ -786,49 +728,6 @@ const Dashboard_eleve_template: React.FC = () => {
   };
 
 
-   /*
-   // Fonction pour gérer les messages envoyés par le composant LandingPage
-   const handleSendMessageFromLandingPage = (message: string) => {
-    if (message.trim() !== '') {
-      const newMessage: Message = { id: Date.now(), type: 'human', content: message };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-      const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-      setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-      onSubmit([...messages, newMessage, loadingMessage], message);
-
-      setInputValue(''); // Effacer le champ de saisie après l'envoi
-
-      // Masquer la LandingPage après l'envoi d'un message
-      setIsLandingPageVisible(false);
-    }
-  };
-  */
-
-
-  //NOUVELLE FONCTION A IMPLEMENTER 
-  /*
-  const handleSendMessageFromLandingPage = (message: string) => {
-    if (message.trim() !== '') {
-      const newMessage: Message = { id: Date.now(), type: 'human', content: message };
-      const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-  
-      // Mettre à jour les messages localement
-      const newMessagesArray = [...messages, newMessage, loadingMessage];
-      setMessages(newMessagesArray);
-  
-      // Envoyer les messages au backend
-      onSubmit(newMessagesArray, message);
-  
-      // Réinitialiser l'input et masquer la Landing Page
-      setInputValue('');
-      setIsLandingPageVisible(false);
-    }
-  };
-  */
-
-
   //ANCIENNE FONCTION A MODIFIER AVEC LA LOGIQUE DE MODIFICATION DU TITLE FROM THE BACK OPENAI
   const handleSendMessageFromLandingPage = (message: string) => {
     console.log("handleSendMessageFromLandingPage called with message:", message);
@@ -848,56 +747,6 @@ const Dashboard_eleve_template: React.FC = () => {
   
       // Met à jour l'état des messages
       setMessages(newMessagesArray);
-  
-      /*
-      // Si c'est le premier message et qu'on a un activeChatId, on tente de renommer la conversation
-      if (wasEmpty && activeChatId) {
-        const firstMessageContent = message || 'Conversation history';
-        console.log("Attempting to rename conversation since it's the first message.");
-        console.log("Renaming conversation:", activeChatId, "to:", firstMessageContent);
-  
-        // Mettre à jour localement le nom de la conversation à "Updating..." pendant la mise à jour backend
-        setConversations((prevConversations) =>
-          prevConversations.map((conv) =>
-            conv.chat_id === activeChatId
-              ? { ...conv, name: 'Updating...' }
-              : conv
-          )
-        );
-  
-        const currentChatRef = doc(db, 'chatsessions', activeChatId);
-        getDoc(currentChatRef)
-          .then(currentChatSnap => {
-            if (currentChatSnap.exists()) {
-              console.log("Conversation document found. Attempting updateDoc...");
-              updateDoc(currentChatRef, { name: firstMessageContent })
-                .then(() => {
-                  console.log(`Conversation (${activeChatId}) renamed to "${firstMessageContent}" successfully.`);
-  
-                  // Une fois mis à jour en back, mettre à jour localement le nom final
-                  setConversations((prevConversations) =>
-                    prevConversations.map((conv) =>
-                      conv.chat_id === activeChatId
-                        ? { ...conv, name: firstMessageContent }
-                        : conv
-                    )
-                  );
-                })
-                .catch(error => {
-                  console.error(`Error renaming conversation (${activeChatId}):`, error);
-                });
-            } else {
-              console.warn(`No conversation found with chat_id: ${activeChatId}`);
-            }
-          })
-          .catch(error => {
-            console.error("Error getting doc for renaming chat:", error);
-          });
-      } else {
-        console.log("No rename triggered. Conditions not met.");
-        console.log("wasEmpty:", wasEmpty, "| activeChatId:", activeChatId);
-      }
-      */
   
       console.log("Calling onSubmit with newMessagesArray and message:", message);
       onSubmit(newMessagesArray, message);
@@ -1003,13 +852,6 @@ const Dashboard_eleve_template: React.FC = () => {
         console.log("This is the name of the current conversation", currentConversation?.name)
         console.log("This is the value of isfirstmessage", isFirstMessage)
         
-        /*
-        const isFirstMessage = (lastMessageIndex === -1); // Vérifie si l'historique est vide
-
-        console.log(`lastMessageIndex: ${lastMessageIndex}`);
-        console.log(`messageHistory.length: ${messageHistory.length}`);
-        console.log(`Is this the first message? ${lastMessageIndex === -1}`);
-        */
 
         for await (const packetBunch of sendMessageSocraticLangGraph({
             message: inputValue,
@@ -1327,17 +1169,6 @@ const handleNewConversation = async () => {
     ...prevConversations,
   ]);
 
-  /*
-  // Affiche une roue tournante pour l'ancienne conversation
-  setConversations((prevConversations) =>
-    prevConversations.map((conversation) =>
-      conversation.chat_id === oldChatId
-        ? { ...conversation, name: 'Updating...' }
-        : conversation
-    )
-  );
-  */
-
   // Tâches en arrière-plan
   if (user.id) {
     const userRef = doc(db, 'users', user.id);
@@ -1347,25 +1178,6 @@ const handleNewConversation = async () => {
       if (userSnap.exists()) {
         const userData = userSnap.data();
         const chatsessions = userData.chatsessions || [];
-
-        /*
-        // Renommer l'ancienne conversation
-        if (oldChatId) {
-          const oldChatRef = doc(db, 'chatsessions', oldChatId);
-          const oldChatSnap = await getDoc(oldChatRef);
-
-          if (oldChatSnap.exists()) {
-            try {
-              await updateDoc(oldChatRef, { name: firstMessageContent });
-              console.log(`Renommage de l'ancienne conversation (${oldChatId}) en "${firstMessageContent}"`);
-            } catch (error) {
-              console.error(`Erreur lors du renommage de l'ancienne conversation (${oldChatId}):`, error);
-            }
-          } else {
-            console.warn(`Aucune conversation trouvée avec chat_id: ${oldChatId}`);
-          }
-        }
-        */
 
         // Ajouter le nouvel ID de chat aux sessions
         chatsessions.push(newChatId);
@@ -1575,16 +1387,6 @@ const handleConversationClick = async (chat_id: string) => {
   const handleCloseWrongAnswerModal = () => {
     setModalOpen(false);
   };
-
-
-/*
-  // 🔥 Affichage des popups si nécessaire
-if (currentPopup === 1) return <Popup1 onNext={handleNextPopup} />;
-if (currentPopup === 2) return <Popup2 onNext={handleNextPopup} />;
-if (currentPopup === 3) return <Popup3 onNext={handleNextPopup} />;
-if (currentPopup === 4) return <Popup4 onFinish={handleFinishOnboarding} />;
-*/
-
 
   return (
     <ThemeProvider theme={theme}>
