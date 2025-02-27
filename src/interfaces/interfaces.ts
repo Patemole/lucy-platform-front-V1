@@ -30,22 +30,6 @@ export interface AnswerTAK {
     conversation_title: string; // A concise and descriptive title for the conversation
   }
 
-
-// Interface pour la structure de AnswerCourse
-/*
-export interface AnswerCourse {
-    document_id: string; // Identifiant du document du cours
-    title: string; // Titre du cours
-    Semester: string; // Semestre pendant lequel le cours est offert
-    Credit: string; // Crédit attribué au cours
-    Prerequisites: string; // Liste des prérequis pour le cours
-    Description: string; // Brève description du cours
-    Prospectus_link: string; // Lien vers le prospectus du cours
-    Syllabus_link: string; // Lien vers le syllabus du cours
-  }
-*/
-
-
 export interface CourseSlot {
     CourseID: string;
     TeacherName: string;       // Name of the professor
@@ -223,13 +207,6 @@ export interface AnswerERROR{
 export interface AnswerACCURACYSCORE{
   confidenceScore: string;
 }
-
-/*
-export type PopupSpec = {
-    type: 'success' | 'error';
-    message: string;
-  };
-*/
 
 // Define or update PopupSpec interface
 export interface PopupSpec {

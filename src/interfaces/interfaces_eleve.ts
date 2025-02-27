@@ -17,7 +17,6 @@ export interface AnswerWaiting {
   Sentence3: string;
 }
 
-
 // Interface pour la structure de answer_TAK
 export interface AnswerTAK {
   document_id: string;
@@ -28,20 +27,6 @@ export interface AnswerTAK {
     placeholder: string;
   }; // Spécifications supplémentaires, comme un champ de texte pour "Other"
 }
-
-// Interface pour la structure de AnswerCourse
-/*
-export interface AnswerCourse {
-  document_id: string; // Identifiant du document du cours
-  title: string; // Titre du cours
-  Semester: string; // Semestre pendant lequel le cours est offert
-  Credit: string; // Crédit attribué au cours
-  Prerequisites: string; // Liste des prérequis pour le cours
-  Description: string; // Brève description du cours
-  Prospectus_link: string; // Lien vers le prospectus du cours
-  Syllabus_link: string; // Lien vers le syllabus du cours
-}
-*/
 
 // Define the CourseSlot interface
 export interface CourseSlot {
@@ -105,19 +90,6 @@ export interface StudentProfile {
   registered_clubs?: string;
 }
 
-
-/*
-// type simplifié pour les événements (profil étudiant)
-export interface EventStudentProfile {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  code: string;
-  type: string;
-}
-*/
-
 export interface EventStudentProfile {
   id: string;
   title: string;
@@ -132,9 +104,6 @@ export interface EventStudentProfile {
   tags: string[];
   banner: string;
 }
-
-
-
 
 export interface Message {
     id: number;
@@ -160,33 +129,11 @@ export interface Message {
     INSTA2?: AnswerINSTA2[] | null;
   };
 
-
 export interface Course {
     id: string;
     name: string;
   };
 
-
-  /*
-export interface AnswerCHART {
-  chartType: 'line' | 'bar' | 'pie'; // Types de graphiques supportés
-  chartTitle: string; // Titre du graphique
-  xAxisTitle: string; // Titre de l'axe X
-  yAxisTitle: string; // Titre de l'axe Y
-  data: { label: string; x: number; y: number }[]; // Données pour les axes X et Y
-  }
-  */
-
-/*
-  // Définition de ChartData si ce n'est pas déjà fait
-export interface ChartData {
-  chartType: 'line' | 'bar' | 'pie';
-  chartTitle: string;
-  xAxisTitle: string;
-  yAxisTitle: string;
-  data: { label: string; x: number; y: number }[];
-}
-*/
 
 export interface AnswerREDDIT{
   comment: string;
@@ -264,12 +211,6 @@ export interface ChartData {
   }[];                                // Tableau de séries pour supporter des comparaisons
 }
 
-/*
-// Définition de AnswerCHART
-export interface AnswerCHART {
-  answer_chart: ChartData;
-}
-*/
 
 export interface AnswerCHART {
   answer_chart?: ChartData;
