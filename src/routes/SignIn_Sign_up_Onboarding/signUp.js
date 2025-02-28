@@ -185,7 +185,7 @@ export default function SignUp() {
         <p className="text-gray-500 text-center mb-8 text-sm">Welcome! Please fill in the details to get started.</p>
 
         <form onSubmit={handleSubmit} noValidate>
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="mb-6">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
               <input type="text" name="firstName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="First Name" />
