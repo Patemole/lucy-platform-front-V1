@@ -2084,7 +2084,7 @@ const handleConversationClick = async (chat_id: string) => {
   
             {/* Section Profil pour petits écrans */}
             {isSmallScreen && (
-              <Box style={{ padding: '16px', borderTop: `1px solid ${theme.palette.divider}` }}>
+              <Box style={{ padding: '10px', borderTop: `0px solid ${theme.palette.divider}` }}>
                 {profilePicture ? (
                   <>
                     {console.log('Rendering profile picture with URL:', profilePicture)}
@@ -2092,8 +2092,8 @@ const handleConversationClick = async (chat_id: string) => {
                       src={profilePicture}
                       alt="Profile"
                       style={{
-                        width: '55px',
-                        height: '55px',
+                        width: '50px',
+                        height: '50px',
                       }}
                       className="rounded-full object-cover cursor-pointer"
                       onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
@@ -2108,8 +2108,8 @@ const handleConversationClick = async (chat_id: string) => {
                       style={{
                         color: '#9e9e9e',
                         cursor: 'pointer',
-                        margin: '0 auto 0 16px',
-                        fontSize: '2.5rem',
+                        margin: '0 auto 0 10px',
+                        fontSize: '2.2rem',
                       }}
                       onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                     />
