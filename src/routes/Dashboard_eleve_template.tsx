@@ -2121,6 +2121,30 @@ const handleConversationClick = async (chat_id: string) => {
                   onClose={handleProfileMenuClose}
                   PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
                 >
+                  <MenuItem onClick={handleDialogOpen}>
+                        <ListItemIcon>
+                          <ProfileEdit fontSize="small" sx={{ color: '#011F5B' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
+                              Edit Profile
+                            </Typography>
+                          }
+                        />
+                      </MenuItem>
+                      <MenuItem onClick={handleParametersMenuClick}>
+                        <ListItemIcon>
+                          <SettingsIcon fontSize="small" sx={{ color: '#011F5B' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
+                              Parameters
+                            </Typography>
+                          }
+                        />
+                      </MenuItem>
                   <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
                       <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
@@ -2776,6 +2800,8 @@ const handleConversationClick = async (chat_id: string) => {
                       },
                     }}
                   />
+
+                  {/* 
                   <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                     <Typography
                       variant="caption"
@@ -2790,6 +2816,17 @@ const handleConversationClick = async (chat_id: string) => {
                       Lucy can make mistakes. Look at the confidence score and consider checking important information.
                     </Typography>
                   </div>
+                  */}
+                  <div className="flex justify-center w-full">
+                    <p
+                      //variant="caption"
+                      className="mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80 sm:mt-3 sm:mb-0"
+                    >
+                      Lucy can make mistakes. Look at the confidence score and consider checking important information.
+                    </p>
+                  </div>
+
+
                 </div>
               </div>
             )}
