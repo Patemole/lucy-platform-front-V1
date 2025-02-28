@@ -41,7 +41,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import HighchartsMore from 'highcharts/highcharts-more';
-import TrackPopup from './TrackPopup';
+import TrackPopup from './Popup/TrackPopup';
 import { ThreeDots } from 'react-loader-spinner';
 import remarkBreaks from 'remark-breaks';
 import './MessageWEBCSS.css';

@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
 import { useTheme } from '@mui/material/styles';
 import Confetti from 'react-confetti';
-import add_web from './add_webapp.png';
-import add_mobile from './add_mobile.jpeg';
+import add_web from '../onboarding_image/add_webapp.png';
+import add_mobile from '../onboarding_image/add_mobile.jpeg';
 
 interface Popup4Props {
   onFinish: () => void;
