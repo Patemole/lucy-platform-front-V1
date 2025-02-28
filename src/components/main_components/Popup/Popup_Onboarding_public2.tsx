@@ -110,38 +110,38 @@ const messageTypes = [
   { type: "Private", description: "Keep sensitive/personalized information private, just for you.", color: "#6F6F6F" }
 ];
 
-const unreadCount = 3; // example unread message count
+const unreadCount = 3;
 
 const Popup2: React.FC<Popup2Props> = ({ onNext }) => {
   return (
-    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-[90%] sm:max-w-[500px] h-auto sm:h-[450px]">
+    <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 p-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-xs sm:max-w-md md:max-w-lg">
         {/* title with notification badge */}
         <div className="flex items-center justify-center space-x-3">
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-lg sm:text-2xl font-bold">
             Meet <span className="text-purple-600">Social Thread</span>
           </h2>
           {unreadCount > 0 && (
-            <div className="bg-red-500 text-white rounded-md px-2 py-1 text-[0.85rem] font-medium flex justify-center items-center min-w-[24px] h-[24px]">
+            <div className="bg-red-500 text-white rounded-md px-2 py-1 text-xs sm:text-[0.85rem] font-medium flex justify-center items-center min-w-[24px] h-[24px]">
               {unreadCount}
             </div>
           )}
         </div>
 
         {/* public & private sections */}
-        <div className="mt-8 space-y-10">
+        <div className="mt-4 space-y-4 sm:space-y-6">
           {messageTypes.map(({ type, description, color }) => (
             <div key={type} className="text-left">
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-base sm:text-lg font-semibold">
                 {type === "Public" ? "On Public" : "On Private"}
               </h3>
-              <p className="text-gray-700">{description}</p>
+              <p className="text-gray-700 text-xs sm:text-sm">{description}</p>
               <div
-                className="flex items-center justify-center mt-3 rounded-md font-medium"
+                className="flex items-center justify-center mt-2 rounded-md font-medium"
                 style={{
                   backgroundColor: `${color}20`,
                   color: color,
-                  padding: "8px 14px",
+                  padding: "6px 12px",
                   width: "130px"
                 }}
               >
@@ -152,14 +152,10 @@ const Popup2: React.FC<Popup2Props> = ({ onNext }) => {
         </div>
 
         {/* next button */}
-        <div className="mt-8 flex justify-center">
+        <div className="mt-4">
           <button
             onClick={onNext}
-            className="bg-blue-500 text-white px-4 py-2 rounded text-lg transition duration-300 hover:bg-blue-600"
-            style={{
-              minWidth: "350px",
-              textAlign: "center"
-            }}
+            className="w-full bg-blue-500 text-white py-2 rounded-md text-sm sm:text-lg transition duration-300 hover:bg-blue-600"
           >
             Next (2/4)
           </button>
@@ -170,5 +166,6 @@ const Popup2: React.FC<Popup2Props> = ({ onNext }) => {
 };
 
 export default Popup2;
+
 
 
