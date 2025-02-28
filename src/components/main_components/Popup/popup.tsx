@@ -1,6 +1,6 @@
 
 import { useRef, useState } from "react";
-import { PopupSpec } from '../../interfaces/interfaces';
+import { PopupSpec } from '../../../interfaces/interfaces';
 
 
 export const Popup: React.FC<PopupSpec> = ({ message, type }) => (

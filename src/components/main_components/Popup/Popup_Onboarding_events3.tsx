@@ -1,7 +1,6 @@
 import React from "react";
 import { useTheme } from '@mui/material/styles';
-import eventKanban from './eventkanban.png';
-
+import eventKanban from '../onboarding_image/eventkanban.png';
 interface Popup3Props {
   onNext: () => void;
 }

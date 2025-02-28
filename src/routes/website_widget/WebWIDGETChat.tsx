@@ -19,9 +19,9 @@ import { doc, getDoc} from 'firebase/firestore';
 import '../../index.css';
 
 import { AIMessage } from '../../components/main_components/MessageWEBWIDGET';
-import { usePopup } from '../../components/main_components/popup';
-import PopupWrongAnswer from '../../components/main_components/PopupWrongAnswer';
-import PopupFeedback from '../../components/main_components/PopupFeedback';
+import { usePopup } from '../../components/main_components/Popup/popup';
+import PopupWrongAnswer from '../../components/main_components/Popup/PopupWrongAnswer';
+import PopupFeedback from '../../components/main_components/Popup/PopupFeedback';
 
 import { Message, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerERROR } from '../../interfaces/interfaces_eleve';
 import { db } from '../../auth/firebase';

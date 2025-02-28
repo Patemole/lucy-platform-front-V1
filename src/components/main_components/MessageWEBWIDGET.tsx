@@ -33,7 +33,7 @@ import { ValidSources } from "../sources";
 import lucy_face_logotest from "../../testlucy3.png";
 import certifiate_icon from "../../certifiate.png";
 import './MessageWEBWIDGETCSS.css';
-import TrackPopup from './TrackPopup';
+import TrackPopup from './Popup/TrackPopup';
 import { FeedbackType } from "../types";
 
 import { IconButton } from '@mui/material';

@@ -1,3 +1,5 @@
+
+/*
 import React from "react";
 
 interface Popup1Props {
@@ -40,7 +42,7 @@ const Popup1: React.FC<Popup1Props> = ({ onNext }) => {
           Ask Lucy anything about non-academic topics at your university!
         </p>
 
-        {/* Topics in two rows of three */}
+        {/* Topics in two rows of three *
         <div className="mt-2 flex flex-wrap justify-center gap-4">
           {topics.map((topic) => (
             <div
@@ -62,7 +64,7 @@ const Popup1: React.FC<Popup1Props> = ({ onNext }) => {
           ))}
         </div>
 
-        {/* More compact button */}
+        {/* More compact button *
         <div className="mt-3 flex justify-center">
           <button
             onClick={onNext}
@@ -81,5 +83,78 @@ const Popup1: React.FC<Popup1Props> = ({ onNext }) => {
 };
 
 export default Popup1;
+*/
+
+
+
+import React from "react";
+
+interface Popup1Props {
+  onNext: () => void;
+}
+
+const topicColors: { [key: string]: string } = {
+  "Financial Aid": "#27AE60", // Green
+  "Events": "#E67E22", // Orange
+  "Policies": "#2980B9", // Blue
+  "Housing": "#8E44AD", // Purple
+  "Courses": "#EAC117", // Yellow
+  "Chitchat": "#7F8C8D", // Gray
+  "Default": "#7F8C8D" // Default Gray
+};
+
+const topics = [
+  "Financial Aid",
+  "Events",
+  "Policies",
+  "Housing",
+  "Courses",
+  "Chitchat"
+];
+
+const Popup1: React.FC<Popup1Props> = ({ onNext }) => {
+  return (
+    <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 p-4">
+      <div 
+        className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-xs sm:max-w-md md:max-w-lg"
+      >
+        <h2 className="text-lg sm:text-2xl font-bold">Welcome to Lucy 🎉</h2>
+
+        <p className="mt-2 text-gray-700 text-sm sm:text-lg">
+          Ask Lucy anything about non-academic topics at your university!
+        </p>
+
+        {/* Topics en grille adaptable */}
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4">
+          {topics.map((topic) => (
+            <div
+              key={topic}
+              className="px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base font-medium rounded-md text-center"
+              style={{
+                color: topicColors[topic] || topicColors["Default"],
+                backgroundColor: `${topicColors[topic] || topicColors["Default"]}20`
+              }}
+            >
+              {topic}
+            </div>
+          ))}
+        </div>
+
+        {/* Bouton "Next" responsive */}
+        <div className="mt-4">
+          <button
+            onClick={onNext}
+            className="w-full bg-blue-500 text-white py-2 rounded-md text-base sm:text-lg transition duration-300 hover:bg-blue-600"
+          >
+            Next (1/4)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Popup1;
+
 
 
