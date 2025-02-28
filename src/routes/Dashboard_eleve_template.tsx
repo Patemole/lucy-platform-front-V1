@@ -1,7 +1,53 @@
 import React, { useState, useEffect, KeyboardEvent, useRef, useMemo } from 'react';
-import StopIcon from '@mui/icons-material/Stop';
 import { motion } from 'framer-motion';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
+
+//Firestore, Firebase
+import { db } from '../auth/firebase';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, where,onSnapshot} from 'firebase/firestore';
+
+//Use Auth for user info
+import { useAuth } from '../auth/hooks/useAuth';
+
+//Components used
+import { AIMessage } from '../components/main_components/MessagesWEB';
+import { usePopup } from '../components/main_components/popup';
+import PopupWrongAnswer from '../components/main_components/PopupWrongAnswer';
+import LandingPage from '../components/main_components/LandingPageImprove'; // Import du composant LandingPage
+import StudentProfileDialog from '../components/main_components/StudentProfileDialog'; // Import the dialog component
+import  Popup1  from '../components/main_components/Popup_Onboarding_topic1';
+import  Popup2  from '../components/main_components/Popup_Onboarding_public2';
+import  Popup3  from '../components/main_components/Popup_Onboarding_events3';
+import  Popup4  from '../components/main_components/Popup_Onboarding_savelucy4';
+import EventDetailsSidebar from '../components/main_components/EventDetailsSidebar';
+import Calendar from '../components/main_components/Calendar_StudentProfile';
+import Kanban from '../components/main_components/Kanban_StudentProfile';
+
+//API request for the backend
+import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
+import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
+import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
+
+//Interfaces
+import { Message, EventStudentProfile, SocialThread, Conversation, StudentProfile, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY} from '../interfaces/interfaces_eleve';
+import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
+ 
+//Mui Icons
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import EditIcon from '@mui/icons-material/Edit'; // Icône pour "Renommer"
+import DeleteIcon from '@mui/icons-material/Delete'; // Icône pour "Supprimer"
+import SettingsIcon from '@mui/icons-material/Settings';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import HistoryIcon from '@mui/icons-material/History';
+import PeopleIcon from '@mui/icons-material/People';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import LockIcon from '@mui/icons-material/Lock';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
+import ChatIcon from '@mui/icons-material/Chat';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import {
   ThemeProvider, TextField, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Menu, MenuItem, Divider, IconButton, Snackbar, InputAdornment, Alert, CircularProgress,
@@ -13,73 +59,17 @@ import ProfileEdit from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
-import { v4 as uuidv4 } from 'uuid';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, limit, getDocs, where, startAfter, QueryDocumentSnapshot, DocumentData, onSnapshot} from 'firebase/firestore';
+import StopIcon from '@mui/icons-material/Stop';
+
+//Other
+import { format, isToday, isYesterday } from 'date-fns';
+import { FaArrowDown } from 'react-icons/fa'; // Import an arrow down icon
+import debounce from 'lodash/debounce';
+import './styles.css'; // Import du fichier CSS pour le gradient
 import '../index.css';
 
-//Components imported
-import { AIMessage } from '../components/main_components/MessagesWEB';
-import { usePopup } from '../components/main_components/popup';
-import PopupWrongAnswer from '../components/main_components/PopupWrongAnswer';
-import LandingPage from '../components/main_components/LandingPageImprove'; // Import du composant LandingPage
-import StudentProfileDialog from '../components/main_components/StudentProfileDialog'; // Import the dialog component
 
-import  Popup1  from '../components/main_components/Popup_Onboarding_topic1';
-import  Popup2  from '../components/main_components/Popup_Onboarding_public2';
-import  Popup3  from '../components/main_components/Popup_Onboarding_events3';
-import  Popup4  from '../components/main_components/Popup_Onboarding_savelucy4';
-
-import EventDetailsSidebar from '../components/main_components/EventDetailsSidebar';
-import Calendar from '../components/main_components/Calendar_StudentProfile';
-import Kanban from '../components/main_components/Kanban_StudentProfile';
-
-import { Message, StudentProfile, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY} from '../interfaces/interfaces_eleve';
-import { db } from '../auth/firebase';
-import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
-import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../interfaces/interfaces';
-import { useAuth } from '../auth/hooks/useAuth';
-import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../api/feedback_wrong_answer';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import EditIcon from '@mui/icons-material/Edit'; // Icône pour "Renommer"
-import DeleteIcon from '@mui/icons-material/Delete'; // Icône pour "Supprimer"
-import SettingsIcon from '@mui/icons-material/Settings';
-import './styles.css'; // Import du fichier CSS pour le gradient
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import debounce from 'lodash/debounce';
-import { FaArrowDown } from 'react-icons/fa'; // Import an arrow down icon
-import HistoryIcon from '@mui/icons-material/History';
-import PeopleIcon from '@mui/icons-material/People';
-import { format, isToday, isYesterday } from 'date-fns';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import LockIcon from '@mui/icons-material/Lock';
-import { EventStudentProfile } from '../interfaces/interfaces_eleve';
-import { sendUserInfoToBackend } from '../api/calendar-event-studentProfile';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
-import ChatIcon from '@mui/icons-material/Chat';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-
-
-// Définir l'interface pour une conversation de thread social (social conversation)
-interface SocialThread {
-  chat_id: string;
-  name: string;
-  created_at: any; // ou un type plus précis comme firebase.Timestamp
-  topic?: string;
-  university?: string;
-  thread_type?: string;
-  isRead?: boolean; // Ajout de la propriété isRead
-}
-
-// Definis l interface pour une conversation mais de l historique pas de social conversation
-interface Conversation {
-  chat_id: string;
-  name: string;
-  thread_type: string;
-  topic?: string;
-}
-
+//For Topic of the conversations
 const topicColors: { [key: string]: string } = {
   "Financial Aids": "#27AE60", // Vert
   "Events": "#E67E22", // Orange
@@ -132,13 +122,11 @@ const Dashboard_eleve_template: React.FC = () => {
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-   // État pour gérer le basculement entre History et Social Thread
   const [isHistory, setIsHistory] = useState(true);
   const [parametersMenuAnchorEl, setParametersMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [userScrollingManually, setUserScrollingManually] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
-  // État pour stocker les conversations sociales
   const [socialThreads, setSocialThreads] = useState<SocialThread[]>([]);
   const [loadingSocialThreads, setLoadingSocialThreads] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false); // false = Public, true = Private
@@ -149,7 +137,6 @@ const Dashboard_eleve_template: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [searchParams] = useSearchParams();
   const chatIdFromUrl = searchParams.get("chat_id"); // 🔥 Récupère `chat_id` depuis l'URL
-  
   const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'events'
   const [eventDisplayMode, setEventDisplayMode] = useState('kanban'); // 'kanban' or 'calendar'
   const [events, setEvents] = useState<EventStudentProfile[]>([]); // on charge les événements du backend ici
@@ -161,6 +148,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [currentPopup, setCurrentPopup] = useState(0); // 0 = pas de popup, 1 à 4 pour les popups
 
 
+//--------------USEEFFECT----------------//
 
   //To display popup with onboqrdingComplete is false
   useEffect(() => {
@@ -169,11 +157,148 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    fetchUserInfo();
+  }, [user]);
+
+  useEffect(() => {
+    if (!chatIdFromUrl) return; // 🔥 Si `chatIdFromUrl` n'existe pas, ne fait rien
+  
+    handleConversationClick(chatIdFromUrl);
+  }, []); // 🔥 Exécuté une seule fois au chargement
+
+
+  useEffect(() => {
+    console.log("🔥 Re-render déclenché. État actuel :", {
+      unreadCount,
+      profilePicture,
+      onlineUsers,
+      isPrivate,
+    });
+  }, [unreadCount, profilePicture, onlineUsers, isPrivate]);
+  
+
+  //Change the fake number of online student every 15 secondes
+  useEffect(() => {
+    const updateOnlineUsers = () => {
+      setOnlineUsers((prev) => {
+        let variation = Math.floor(Math.random() * 7) - 3; // Variation entre -3 et +3
+        let newCount = prev + variation;
+  
+        if (newCount < 10) newCount = 10;
+        if (newCount > 50) newCount = 50;
+  
+        return newCount;
+      });
+  
+      const nextUpdate = Math.floor(Math.random() * 60000) + 1000; // Entre 1s et 60s
+      setTimeout(updateOnlineUsers, nextUpdate);
+    };
+  
+    const initialTimeout = setTimeout(updateOnlineUsers, Math.floor(Math.random() * 60000) + 1000);
+    return () => clearTimeout(initialTimeout);
+  }, []);
+
+
+  useEffect(() => {
+    console.log("isPrivate changed to:", isPrivate);
+  }, [isPrivate]);
+
+
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      if (!user?.id) return;
+  
+      try {
+        const userRef = doc(db, 'users', user.id);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setProfilePicture(userData.profile_picture || null); // Met à jour avec l'URL ou null
+          console.log('Fetched profile picture:', userData.profile_picture || 'No profile picture found');
+        } else {
+          console.warn('User document does not exist.');
+        }
+      } catch (error) {
+        console.error('Error fetching profile picture:', error);
+      }
+    };
+  
+    fetchProfilePicture();
+  }, [user?.id]);
+
+
+  useEffect(() => {
+    const unsubscribe = fetchSocialThreads(); // Active l'écoute Firestore en temps réel
+  
+    return () => unsubscribe(); // Stoppe l'écoute quand le composant est démonté
+  }, [user.id, user.university]); // Déclenchement si user.id ou user.university change
+  
+
+
+  useEffect(() => {
+    const handleScroll = debounce(() => {
+      const scrollDiv = scrollableDivRef.current;
+      if (scrollDiv) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 100; // Adjust threshold as needed
+        setIsAtBottom(atBottom);
+        if (atBottom) setNewMessagesCount(0);
+      }
+    }, 100); // Delay of 100ms
+  
+    const scrollDiv = scrollableDivRef.current;
+    scrollDiv?.addEventListener('scroll', handleScroll);
+  
+    return () => scrollDiv?.removeEventListener('scroll', handleScroll);
+  }, []);
+
+
+  // Autoscroll logic based on isAtBottom
+  useEffect(() => {
+    if (isAtBottom) {
+      scrollToBottom();
+    } else {
+      setNewMessagesCount((prevCount) => prevCount + 1);
+    }
+  }, [messages, isAtBottom]); // Depend on messages and isAtBottom
+
+
+  //permet d afficher les anciennes conversations dans la sidebar
+  useEffect(() => {
+    fetchCourseOptionsAndChatSessions();
+  }, [user.id]);
+
+
+  //permet d aller chercher le dernier chatid on chargerement de la page pour afficher la derniere conversation
+  useEffect(() => { 
+    const loadMessagesFromLocalStorageChatId = async () => {
+      //const storedChatId = localStorage.getItem('chat_id');
+      const storedChatId = chatIds[0] || 'default_chat_id';
+      if (storedChatId) await handleConversationClick(storedChatId);
+    };
+    loadMessagesFromLocalStorageChatId();
+  }, []);
+
+
+  //permet d afficher ou non la landing page en fonction si il y a deja des messages
+  useEffect(() => {
+    if (messages.length > 0) {
+      setIsLandingPageVisible(false);
+    } else {
+      setIsLandingPageVisible(true);
+    }
+  }, [messages]);
+
+
+
+  //--------------FUNCTIONS----------------//
+
 
   const handleNextPopup = () => {
     setCurrentPopup((prev) => prev + 1);
   };
-
   
   const handleFinishOnboarding = async () => {
     if (!user) return;
@@ -199,14 +324,16 @@ const Dashboard_eleve_template: React.FC = () => {
     setIsPeerAdvisorOpen((prev) => !prev);
   };
 
-
+/*
   const handlePeerAdvisorMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setPeerAdvisorMenuAnchor(event.currentTarget);
   };
-
+  */
+/*
   const handlePeerAdvisorMenuClose = () => {
     setPeerAdvisorMenuAnchor(null);
   };
+  */
 
   // fonction pour envoyer les infos de l'utilisateur au backend et récupérer les événements
   const fetchUserInfo = async () => {
@@ -251,9 +378,7 @@ const Dashboard_eleve_template: React.FC = () => {
     }
   };
   
-  useEffect(() => {
-    fetchUserInfo();
-  }, [user]);
+  
 
 
   const handleEventClick = (event: EventStudentProfile) => {
@@ -261,55 +386,11 @@ const Dashboard_eleve_template: React.FC = () => {
     setSidebarOpen(true);
   };
 
-
-  useEffect(() => {
-    if (!chatIdFromUrl) return; // 🔥 Si `chatIdFromUrl` n'existe pas, ne fait rien
-  
-    handleConversationClick(chatIdFromUrl);
-  }, []); // 🔥 Exécuté une seule fois au chargement
-  
-
-
-  useEffect(() => {
-    console.log("🔥 Re-render déclenché. État actuel :", {
-      unreadCount,
-      profilePicture,
-      onlineUsers,
-      isPrivate,
-    });
-  }, [unreadCount, profilePicture, onlineUsers, isPrivate]);
-  
-
-  //Change the fake number of online student every 15 secondes
-  useEffect(() => {
-    const updateOnlineUsers = () => {
-      setOnlineUsers((prev) => {
-        let variation = Math.floor(Math.random() * 7) - 3; // Variation entre -3 et +3
-        let newCount = prev + variation;
-  
-        if (newCount < 10) newCount = 10;
-        if (newCount > 50) newCount = 50;
-  
-        return newCount;
-      });
-  
-      const nextUpdate = Math.floor(Math.random() * 60000) + 1000; // Entre 1s et 60s
-      setTimeout(updateOnlineUsers, nextUpdate);
-    };
-  
-    const initialTimeout = setTimeout(updateOnlineUsers, Math.floor(Math.random() * 60000) + 1000);
-    return () => clearTimeout(initialTimeout);
-  }, []);
-
-
-  useEffect(() => {
-    console.log("isPrivate changed to:", isPrivate);
-  }, [isPrivate]);
-
-
+/*
   const togglePrivacy = () => {
     setIsPrivate((prev) => !prev);
   };
+  */
 
   // Fonction pour formater la date
   const formatDate = (timestamp: { toDate: () => Date }) => {
@@ -376,6 +457,7 @@ const Dashboard_eleve_template: React.FC = () => {
   });
 };
 
+/*
   const updateConversationPrivacy = (chatId: string, newThreadType: string) => {
     setConversations((prevConversations) =>
       prevConversations.map((conv) =>
@@ -385,67 +467,10 @@ const Dashboard_eleve_template: React.FC = () => {
       )
     );
   };
+  */
 
 
-  useEffect(() => {
-    const fetchProfilePicture = async () => {
-      if (!user?.id) return;
   
-      try {
-        const userRef = doc(db, 'users', user.id);
-        const userSnap = await getDoc(userRef);
-  
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setProfilePicture(userData.profile_picture || null); // Met à jour avec l'URL ou null
-          console.log('Fetched profile picture:', userData.profile_picture || 'No profile picture found');
-        } else {
-          console.warn('User document does not exist.');
-        }
-      } catch (error) {
-        console.error('Error fetching profile picture:', error);
-      }
-    };
-  
-    fetchProfilePicture();
-  }, [user?.id]);
-
-
-  useEffect(() => {
-    const unsubscribe = fetchSocialThreads(); // Active l'écoute Firestore en temps réel
-  
-    return () => unsubscribe(); // Stoppe l'écoute quand le composant est démonté
-  }, [user.id, user.university]); // Déclenchement si user.id ou user.university change
-  
-
-  
-
-  useEffect(() => {
-    const handleScroll = debounce(() => {
-      const scrollDiv = scrollableDivRef.current;
-      if (scrollDiv) {
-        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
-        const atBottom = scrollTop + clientHeight >= scrollHeight - 100; // Adjust threshold as needed
-        setIsAtBottom(atBottom);
-        if (atBottom) setNewMessagesCount(0);
-      }
-    }, 100); // Delay of 100ms
-  
-    const scrollDiv = scrollableDivRef.current;
-    scrollDiv?.addEventListener('scroll', handleScroll);
-  
-    return () => scrollDiv?.removeEventListener('scroll', handleScroll);
-  }, []);
-
-
-  // Autoscroll logic based on isAtBottom
-  useEffect(() => {
-    if (isAtBottom) {
-      scrollToBottom();
-    } else {
-      setNewMessagesCount((prevCount) => prevCount + 1);
-    }
-  }, [messages, isAtBottom]); // Depend on messages and isAtBottom
 
 
   const scrollToBottom = () => {
@@ -653,35 +678,6 @@ const Dashboard_eleve_template: React.FC = () => {
       }
     }
   };
-
-  //permet d afficher les anciennes conversations dans la sidebar
-  useEffect(() => {
-    fetchCourseOptionsAndChatSessions();
-  }, [user.id]);
-
-
-
-
-
-  //permet d aller chercher le dernier chatid on chargerement de la page pour afficher la derniere conversation
-  useEffect(() => { 
-    const loadMessagesFromLocalStorageChatId = async () => {
-      //const storedChatId = localStorage.getItem('chat_id');
-      const storedChatId = chatIds[0] || 'default_chat_id';
-      if (storedChatId) await handleConversationClick(storedChatId);
-    };
-    loadMessagesFromLocalStorageChatId();
-  }, []);
-
-
-  //permet d afficher ou non la landing page en fonction si il y a deja des messages
-  useEffect(() => {
-    if (messages.length > 0) {
-      setIsLandingPageVisible(false);
-    } else {
-      setIsLandingPageVisible(true);
-    }
-  }, [messages]);
 
   //gere l ouverture du menu de log-out
   const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {

@@ -100,14 +100,14 @@ export default function SignUp() {
 
     const data = new FormData(event.currentTarget);
     const firstName = data.get('firstName');
-    const lastName = data.get('lastName');
+    //const lastName = data.get('lastName');
     const email = data.get('email');
     const password = data.get('password');
     const newErrors = {};
 
     // Validation des champs
     if (!firstName) newErrors.firstName = 'First name is required';
-    if (!lastName) newErrors.lastName = 'Last name is required';
+    //if (!lastName) newErrors.lastName = 'Last name is required';
     if (!email) newErrors.email = 'Email is required';
     else if (!isAllowedEmail(email, subdomain)) newErrors.email = getErrorMessage(subdomain);
     if (!password) newErrors.password = 'Password is required';
@@ -129,7 +129,8 @@ export default function SignUp() {
       console.log("[Step 4] Storing user data in Firestore");
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
-        name: `${firstName} ${lastName}`,
+        //name: `${firstName} ${lastName}`,
+        name: firstName,
         email,
         university: subdomain,
         role: subdomain === 'admin' ? "admin" : "student",
@@ -139,7 +140,7 @@ export default function SignUp() {
       console.log("[Step 5] Updating context with user data");
       login({
         id: user.uid,
-        name: `${firstName} ${lastName}`,
+        name: firstName,
         email,
         university: subdomain,
         role: subdomain === 'admin' ? "admin" : "student",
@@ -191,12 +192,15 @@ export default function SignUp() {
               {errors.firstName && <p className="text-xs text-red-600 mt-1">{errors.firstName}</p>}
             </div>
 
+            {/*
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Last Name</label>
               <input type="text" name="lastName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Last Name" />
               {errors.lastName && <p className="text-xs text-red-600 mt-1">{errors.lastName}</p>}
             </div>
+            */}
           </div>
+            
 
           <div className="mb-6">
             <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
