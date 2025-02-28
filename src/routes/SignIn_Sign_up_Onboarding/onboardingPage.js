@@ -10,6 +10,7 @@ import Avatar from '@mui/material/Avatar';
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
+import { useMediaQuery } from 'react-responsive';
 
 export default function LearningStyleSurvey() {
   const { user, login, setPrimaryChatId, chatIds, isAuth, loading } = useAuth();
@@ -25,8 +26,12 @@ export default function LearningStyleSurvey() {
   const [advisor, setAdvisor] = useState('');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const isMobile = window.innerWidth <= 768;
+  //const isMobile = window.innerWidth <= 768;
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   const [cookieConsent, setCookieConsent] = useState(false);
+  
+
 
 
   // Nouveau state pour les tags d'intérêts
@@ -306,7 +311,9 @@ export default function LearningStyleSurvey() {
           {/* Combined Section: Year and Academic Advisor */}
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-4">What is your current year?*</label>
+              <label className="block text-sm font-medium text-gray-700 mb-4">
+              {isMobile ? "Your year*":"What is your current year?*"} 
+              </label >
               <select
                 value={learnerType}
                 onChange={handleLearnerTypeChange}
@@ -315,7 +322,7 @@ export default function LearningStyleSurvey() {
                   backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCI2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
                 }}
               >
-                <option value="" disabled>Select your year</option>
+                <option value="" disabled>Current year</option>
                 <option value="Freshman">Freshman (1st year)</option>
                 <option value="Sophomore">Sophomore (2nd year)</option>
                 <option value="Junior">Junior (3rd year)</option>
@@ -326,7 +333,10 @@ export default function LearningStyleSurvey() {
               {errors.learnerType && <p className="text-xs text-red-600 mt-1">{errors.learnerType}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-4">Academic Advisor (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-4">
+                {isMobile ? "Academic Advisor":"Academic Advisor (Optional)"} 
+              </label>
+              
               <input
                 type="text"
                 value={advisor}
