@@ -76,7 +76,7 @@ interface Popup3Props {
 const Popup3: React.FC<Popup3Props> = ({ onNext }) => {
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-xs sm:max-w-md md:max-w-lg">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-[500px] h-[450px]">
         {/* Titre */}
         <h2 className="text-lg sm:text-2xl font-bold">Centralized Calendar 📆</h2>
 
@@ -110,6 +110,7 @@ const Popup3: React.FC<Popup3Props> = ({ onNext }) => {
 };
 
 export default Popup3;
+
 
 
 

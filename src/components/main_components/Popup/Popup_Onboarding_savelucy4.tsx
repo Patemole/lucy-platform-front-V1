@@ -121,7 +121,6 @@ export default Popup4;
 
 */
 
-
 import React, { useState, useRef } from "react";
 import Confetti from 'react-confetti';
 import add_web from '../onboarding_image/add_webapp.png';
@@ -178,7 +177,7 @@ const Popup4: React.FC<Popup4Props> = ({ onFinish, confettiOptions }) => {
           Meanwhile, save Lucy on your device.
         </p>
 
-        {/* Two Images in a Row */}
+        {/* Images en ligne */}
         <div className="mt-4 flex justify-center gap-6">
           {/* Web App Image */}
           <div className="flex flex-col items-center">
@@ -201,7 +200,7 @@ const Popup4: React.FC<Popup4Props> = ({ onFinish, confettiOptions }) => {
           </div>
         </div>
 
-        {/* Finish Button */}
+        {/* Bouton Finish */}
         <div className="mt-6 flex justify-center">
           <button 
             ref={buttonRef}
@@ -217,5 +216,3 @@ const Popup4: React.FC<Popup4Props> = ({ onFinish, confettiOptions }) => {
 };
 
 export default Popup4;
-
-
