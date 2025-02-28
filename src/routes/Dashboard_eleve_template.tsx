@@ -15,7 +15,7 @@ import { AIMessage } from '../components/main_components/MessagesWEB';
 import { usePopup } from '../components/main_components/Popup/popup';
 import PopupWrongAnswer from '../components/main_components/Popup/PopupWrongAnswer';
 import LandingPage from '../components/main_components/LandingPageImprove'; // Import du composant LandingPage
-import StudentProfileDialog from '../components/main_components/StudentProfileDialog'; // Import the dialog component
+import StudentProfileDialog from '../components/main_components/Popup/StudentProfileDialog'; // Import the dialog component
 import  Popup1  from '../components/main_components/Popup/Popup_Onboarding_topic1';
 import  Popup2  from '../components/main_components/Popup/Popup_Onboarding_public2';
 import  Popup3  from '../components/main_components/Popup/Popup_Onboarding_events3';

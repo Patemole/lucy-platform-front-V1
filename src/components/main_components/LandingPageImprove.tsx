@@ -361,7 +361,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
 
 
       {/* Ticker des questions optimisé avec topics et fond adouci */}
-      <div className="flex justify-center w-full mb-4">
+      <div className="hidden sm:flex justify-center w-full mb-4">
+
         <div className="max-w-5xl w-full bg-gray-100 py-2 px-4 rounded-lg">
           <Marquee gradient={false} speed={40}>
             {tickerQuestions.map((questionObj, index) => {

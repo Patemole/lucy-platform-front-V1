@@ -1,3 +1,5 @@
+
+/*
 import React from "react";
 import { useTheme } from '@mui/material/styles';
 import eventKanban from '../onboarding_image/eventkanban.png';
@@ -17,16 +19,16 @@ const Popup3: React.FC<Popup3Props> = ({ onNext }) => {
           maxWidth: "90%", // Ensures responsiveness
         }}
       >
-        {/* Title */}
+        {/* Title *
         <h2 className="text-2xl font-bold">Centralized Calendar 📆</h2>
 
-        {/* Description */}
+        {/* Description *
         <p className="mt-4 text-gray-700 text-lg px-4">
           No more endless newsletters. 
           Lucy recommends personalized events based on your profile.
         </p>
 
-        {/* Kanban Image Illustration */}
+        {/* Kanban Image Illustration *
         <div className="mt-4 flex justify-center">
           <img 
             src={eventKanban} 
@@ -40,7 +42,7 @@ const Popup3: React.FC<Popup3Props> = ({ onNext }) => {
           />
         </div>
 
-        {/* Next Button */}
+        {/* Next Button *
         <div className="mt-6 flex justify-center">
           <button
             onClick={onNext}
@@ -49,6 +51,57 @@ const Popup3: React.FC<Popup3Props> = ({ onNext }) => {
               minWidth: "350px", // Prevents it from being too long
               textAlign: "center", // Ensures the text stays centered
             }}
+          >
+            Next (3/4)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Popup3;
+*/
+
+
+
+
+import React from "react";
+import eventKanban from '../onboarding_image/eventkanban.png';
+
+interface Popup3Props {
+  onNext: () => void;
+}
+
+const Popup3: React.FC<Popup3Props> = ({ onNext }) => {
+  return (
+    <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 p-4">
+      <div 
+        className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-xs sm:max-w-md md:max-w-lg"
+      >
+        {/* Title */}
+        <h2 className="text-lg sm:text-2xl font-bold">Centralized Calendar 📆</h2>
+
+        {/* Description */}
+        <p className="mt-3 text-gray-700 text-sm sm:text-lg">
+          No more endless newsletters. <br />
+          Lucy recommends personalized events based on your profile.
+        </p>
+
+        {/* Kanban Image Illustration */}
+        <div className="mt-4 flex justify-center">
+          <img 
+            src={eventKanban} 
+            alt="Kanban View Example" 
+            className="w-full max-w-[250px] sm:max-w-[310px] rounded-lg shadow-md"
+          />
+        </div>
+
+        {/* Next Button */}
+        <div className="mt-6">
+          <button
+            onClick={onNext}
+            className="w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded-md text-base sm:text-lg transition duration-300 hover:bg-blue-600"
           >
             Next (3/4)
           </button>
