@@ -5,6 +5,25 @@ export interface AnswerDocument {
     source_type: string;
 }
 
+
+export interface SocialThread {
+  chat_id: string;
+  name: string;
+  created_at: any; // ou un type plus précis comme firebase.Timestamp
+  topic?: string;
+  university?: string;
+  thread_type?: string;
+  isRead?: boolean; // Ajout de la propriété isRead
+}
+
+export interface Conversation {
+  chat_id: string;
+  name: string;
+  thread_type: string;
+  topic?: string;
+}
+
+
 export interface AnswerImage {
   image_id: string;
   image_url: string;
