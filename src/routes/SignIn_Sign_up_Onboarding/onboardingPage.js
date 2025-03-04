@@ -11,6 +11,9 @@ import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import { useMediaQuery } from 'react-responsive';
+import { sendWelcomeEmail } from '../../api/auth_and_onboarding';
+
+
 
 export default function LearningStyleSurvey() {
   const { user, login, setPrimaryChatId, chatIds, isAuth, loading } = useAuth();
@@ -213,7 +216,10 @@ export default function LearningStyleSurvey() {
 
         setPrimaryChatId(chatId);
 
-        console.log("[Step 6] Updating auth context with user data");
+        console.log("[Step 6] Sending welcome email via backend API");
+        await sendWelcomeEmail(userData.email, userData.name)
+
+        console.log("[Step 7] Updating auth context with user data");
         login({
           id: user.id,
           name: userData.name,

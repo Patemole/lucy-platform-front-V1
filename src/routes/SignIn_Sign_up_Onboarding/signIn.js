@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { setPersistence, browserLocalPersistence, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../auth/firebase';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useTheme } from '@mui/material/styles';
@@ -9,6 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import lucyLogo from '../../logo_lucy.png';
 import { motion } from 'framer-motion'; // Framer Motion for animations
 import config from '../../config';
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 
 
 const allowedDomains = {
@@ -130,13 +131,13 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
     try {
       await setPersistence(auth, browserLocalPersistence);
-      //const result = await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
 
       // Optional: Fetch additional user data or validation here
       console.log("Sign-in successful, redirecting...");
       
       // Navigate immediately after successful sign-in
-      //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
+      navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
     } catch (error) {
       const newErrors = {};
       if (error.code === 'auth/user-not-found') {
@@ -177,10 +178,27 @@ const SignIn = ({ handleToggleThemeMode }) => {
       </div>
 
       <div className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4">
-        <h2 className="text-xl font-semibold text-center mb-4">Sign in to your account</h2>
-        <p className="text-gray-500 text-center mb-8 text-sm">
-          Access your personalized dashboard by signing in below.
+        <h2 className="text-xl font-semibold text-center mb-4">Sign In to your account</h2>
+        <p className="text-gray-500 text-center mb-5 text-sm">
+          Sign In with your university credentials.
         </p>
+
+        {/* Bouton SSO */}
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300"
+        >
+          <AccountBalanceIcon sx={{ fontSize: 20 }} /> {/* Icône université */}
+          <span className="font-medium">Sign In with SSO</span>
+        </button>
+
+        {/* Séparateur avec "OR" */}
+        <div className="flex items-center my-6">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="mx-4 text-gray-500 text-xs font-semibold">OR</span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
+
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-6">
@@ -225,7 +243,13 @@ const SignIn = ({ handleToggleThemeMode }) => {
             )}
           </button>
 
-          <p className="mt-8 text-xs text-center text-gray-600">
+          <p className="mt-6 text-xs text-center text-gray-600">
+            <a href="/auth/reset-password" className="text-blue-600 hover:underline">
+              Forgot your password?
+            </a>
+          </p>
+
+          <p className="mt-2 text-xs text-center text-gray-600">
             Don't have an account?{' '}
             <a href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} className="text-blue-600 hover:underline">
               Sign up now!

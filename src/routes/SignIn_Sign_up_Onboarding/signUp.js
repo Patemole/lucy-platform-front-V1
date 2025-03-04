@@ -8,6 +8,7 @@ import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
 import lucyLogo from '../../logo_lucy.png';
 import config from '../../config';
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 
 const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
 
@@ -182,7 +183,23 @@ export default function SignUp() {
 
       <div className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4">
         <h2 className="text-xl font-semibold text-center mb-4">Create your account</h2>
-        <p className="text-gray-500 text-center mb-8 text-sm">Welcome! Please fill in the details to get started.</p>
+        <p className="text-gray-500 text-center mb-8 text-sm">Welcome! Sign-up with your university credentials.</p>
+
+        {/* Bouton SSO */}
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300"
+        >
+          <AccountBalanceIcon sx={{ fontSize: 20 }} /> {/* Icône université */}
+          <span className="font-medium">Sign Up with SSO</span>
+        </button>
+
+        {/* Séparateur avec "OR" */}
+        <div className="flex items-center my-6">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="mx-4 text-gray-500 text-xs font-semibold">OR</span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-6">
