@@ -96,6 +96,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false); // Tracks spinner in button
+  const subdomain = config.subdomain;
 
 
 
@@ -253,15 +254,19 @@ const SignIn = ({ handleToggleThemeMode }) => {
           <span className="font-medium">Sign In with SSO</span>
         </button>
 
+
         {/* Séparateur avec "OR" */}
+        {subdomain !== 'holyfamily' && (
         <div className="flex items-center my-6">
           <div className="flex-grow border-t border-gray-300"></div>
           <span className="mx-4 text-gray-500 text-xs font-semibold">OR</span>
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
+        )}
 
 
         <form onSubmit={handleSubmit} noValidate>
+        {subdomain !== 'holyfamily' && (
           <div className="mb-6">
             <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
             <input
@@ -274,7 +279,9 @@ const SignIn = ({ handleToggleThemeMode }) => {
             />
             {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
           </div>
+        )}
 
+          {subdomain !== 'holyfamily' && (
           <div className="mb-6">
             <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
             <input
@@ -287,7 +294,10 @@ const SignIn = ({ handleToggleThemeMode }) => {
             />
             {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
           </div>
+          )}
 
+
+          {subdomain !== 'holyfamily' && (
           <button
             type="submit"
             disabled={isLoading}
@@ -303,14 +313,17 @@ const SignIn = ({ handleToggleThemeMode }) => {
               'Sign In'
             )}
           </button>
+          )}
 
+          {subdomain !== 'holyfamily' && (
           <p className="mt-6 text-xs text-center text-gray-600">
             <a href="/auth/reset-password" className="text-blue-600 hover:underline">
               Forgot your password?
             </a>
           </p>
+          )}
 
-          <p className="mt-2 text-xs text-center text-gray-600">
+          <p className="mt-5 text-xs text-center text-gray-600">
             Don't have an account?{' '}
             <a href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} className="text-blue-600 hover:underline">
               Sign up now!

@@ -97,6 +97,7 @@ export default function SignUp() {
   const auth = getAuth(); // Récupère directement l'instance Firebase Auth
 
 
+  console.log("subdomain is ", subdomain);
 
 
 
@@ -279,17 +280,20 @@ export default function SignUp() {
           <span className="font-medium">Sign Up with SSO</span>
         </button>
 
+        
         {/* Séparateur avec "OR" */}
+        {subdomain !== 'holyfamily' && (
         <div className="flex items-center my-6">
           <div className="flex-grow border-t border-gray-300"></div>
           <span className="mx-4 text-gray-500 text-xs font-semibold">OR</span>
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
+        )}
 
       
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-6">
-          {subdomain === 'holyfamily' && (
+          {subdomain !== 'holyfamily' && (
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
               <input type="text" name="firstName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="First Name" />
@@ -306,7 +310,7 @@ export default function SignUp() {
             */}
           </div>
             
-          {subdomain === 'holyfamily' && (
+          {subdomain !== 'holyfamily' && (
           <div className="mb-6">
             <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
             <input type="email" name="email" onBlur={handleEmailBlur} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Email address" />
@@ -315,7 +319,8 @@ export default function SignUp() {
           </div>
           )}
           
-          {subdomain === 'holyfamily' && (
+          
+          {subdomain !== 'holyfamily' && (
           <div className="mb-6">
             <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
             <input type="password" name="password" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Password" />
@@ -323,7 +328,7 @@ export default function SignUp() {
           </div>
           )}
 
-          {subdomain === 'holyfamily' && (
+          {subdomain !== 'holyfamily' && (
           <button type="submit" disabled={isLoading} className="w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300">
             {isLoading ? <span>Loading...</span> : <span>Continue &rarr;</span>}
           </button>
