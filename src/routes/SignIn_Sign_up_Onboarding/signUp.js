@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createUserWithEmailAndPassword, OAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, OAuthProvider, signInWithPopup, getAuth } from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
 import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../auth/hooks/useAuth';
@@ -9,7 +9,6 @@ import Avatar from '@mui/material/Avatar';
 import lucyLogo from '../../logo_lucy.png';
 import config from '../../config';
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-
 
 
 const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
@@ -95,6 +94,7 @@ export default function SignUp() {
   const subdomain = config.subdomain;
   const courseId = location.pathname.split('/sign-up/')[1] || '';
   const provider = new OAuthProvider("oidc.holyfamily"); // 🔥 Utiliser le Provider ID configuré dans Firebase
+  const auth = getAuth(); // Récupère directement l'instance Firebase Auth
 
 
 
@@ -112,6 +112,8 @@ async function signInWithSSO() {
 
     // 🔥 Construire dynamiquement le provider Firebase
     const providerId = `oidc.${university}`;
+    console.error("the oidc is", providerId);
+
     const provider = new OAuthProvider(providerId);
 
     // 🔥 Démarrer l'authentification avec Firebase
@@ -268,13 +270,16 @@ async function signInWithSSO() {
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
 
+      
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-6">
+          {subdomain === 'holyfamily' && (
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
               <input type="text" name="firstName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="First Name" />
               {errors.firstName && <p className="text-xs text-red-600 mt-1">{errors.firstName}</p>}
             </div>
+          )}
 
             {/*
             <div>
@@ -285,24 +290,29 @@ async function signInWithSSO() {
             */}
           </div>
             
-
+          {subdomain === 'holyfamily' && (
           <div className="mb-6">
             <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
             <input type="email" name="email" onBlur={handleEmailBlur} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Email address" />
             {emailError && <p className="text-xs text-red-600 mt-1">{emailError}</p>}
             {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
           </div>
-
+          )}
+          
+          {subdomain === 'holyfamily' && (
           <div className="mb-6">
             <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
             <input type="password" name="password" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Password" />
             {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
           </div>
+          )}
 
+          {subdomain === 'holyfamily' && (
           <button type="submit" disabled={isLoading} className="w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300">
             {isLoading ? <span>Loading...</span> : <span>Continue &rarr;</span>}
           </button>
-
+          )}
+        
           <p className="mt-8 text-xs text-center text-gray-600">Already have an account? <a href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} className="text-blue-600 hover:underline">Sign in</a></p>
 
           <div className="mt-8 flex items-center justify-center">
