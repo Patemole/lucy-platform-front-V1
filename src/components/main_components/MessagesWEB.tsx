@@ -50,6 +50,7 @@ import { FiMessageSquare } from "react-icons/fi";
 import { ListItemText } from "@mui/material";
 import { Box,Drawer, Typography, ListItem, List } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import Tooltip from "@mui/material/Tooltip";
 
 
 
@@ -726,6 +727,9 @@ useEffect(() => {
                   }}
                 />
               </div>
+
+              {/* Ajout de Tooltip autour du titre du document */}
+              <Tooltip title={document.document_name} arrow>
               <span
                 className="text-sm truncate group-hover:underline transition duration-200 ease-in-out"
                 style={{
@@ -737,6 +741,7 @@ useEffect(() => {
               >
                 {document.document_name}
               </span>
+              </Tooltip>
             </div>
           </div>
         ))}
@@ -1246,72 +1251,7 @@ useEffect(() => {
             </>
             )}
 
-            {/*
-            {/* Gestion des documents cités *
-        {citedDocuments && citedDocuments.length > 0 && (
-        <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""}`}>
-            {/* Divider above University Sources, visible only if Social Thread has elements *
-            {hasSocialThread && (
-            <>
-                <hr className="my-4 border-gray-300 animate-fadeIn" /> {/* Animation ajoutée *
-            </>
-            )}
-
-            {/* Title for Sources Section *
-            <div 
-            className="font-bold mb-2" 
-            style={{ 
-                color: theme.palette.text.primary, 
-                fontSize: '15px' // Ajustez la taille de texte si nécessaire
-            }}
-            >
-            University Sources
-            </div>
-            <div className="flex flex-wrap gap-2">
-            {citedDocuments.map((document, ind) => {
-                const display = (
-                <div
-                    className="max-w-350 text-ellipsis flex text-sm border border-border py-1 px-2 rounded mb-2" // Correction : Suppression du double "flex" et maintien de mb-2
-                    style={{ color: theme.palette.text.primary }}
-                >
-                    <div className="mr-1 my-auto">
-                    <LanguageIcon
-                        sx={{ width: 16, height: 16}}
-                    />
-                    {/*}
-                    <SourceIcon
-                        sourceType={document.source_type as ValidSources}
-                        iconSize={16}
-                    />
-                    *
-                    </div>
-                    {document.document_name}
-                </div>
-                );
-
-                return document.link ? (
-                <a
-                    key={document.document_id}
-                    href={document.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="cursor-pointer hover:bg-hover"
-                >
-                    {display}
-                </a>
-                ) : (
-                <div key={document.document_id} className="cursor-default">
-                    {display}
-                </div>
-                );
-            })}
-            </div>
-        </div>
-        )}
-        */}
-        
-
-
+      
             {/* ✅ Afficher "Answer" uniquement s'il y a des messages */}
             {messages.length > 0 && (!takData || takData.length === 0) && (
               <div className={`mt-0 ${!isSmallScreen ? "ml-8" : ""} pb-2 flex items-center`}>
@@ -1321,95 +1261,6 @@ useEffect(() => {
                 </span>
               </div>
             )}
-
-
-
-            {/*
-            {/* Affichage des messages accumulés *
-            <div className="mobile-fullScreen-container">
-              {!takData || takData.length === 0 ? (
-                messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`w-message-xs 2xl:w-message-sm 3xl:w-message-default break-words ${
-                      !isSmallScreen ? "ml-8" : ""
-                    } text-left sm:text-justify leading-snug`} // Hauteur de ligne par défaut ajustée
-                    style={{ color: theme.palette.text.primary }}
-                  >
-                    <ReactMarkdown
-                      className="max-w-full" // Applique les styles par défaut pour une typographie élégante
-                      remarkPlugins={[remarkGfm, remarkBreaks]} // Ajout de remarkBreaks pour gérer les sauts de ligne
-                      components={{
-                        // Gestion des paragraphes
-                        p: ({ node, ...props }) => (
-                          <p
-                            className={`m-0 mb-md-gap leading-loose`} // Ajuste marges et hauteur des lignes
-                            {...props}
-                          />
-                        ),
-                        // Gestion du texte en gras
-                        strong: ({ node, ...props }) => <strong className={`inline-block mt-4 font-semibold text-gray-800`} {...props} />,
-                        
-                        // Gestion des liens
-                        a: ({ node, ...props }) => (
-                          <a
-                            {...props}
-                            className="text-blue-500 hover:text-blue-700 underline" // Styles élégants pour les liens
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          />
-                        ),
-                        // Gestion des listes à puces
-                        ul: ({ node, ...props }) => (
-                          <ul className="list-disc ml-4 mb-md-gap leading-snug" {...props} />
-                        ),
-                        // Gestion des listes numérotées
-                        ol: ({ node, ...props }) => (
-                          <ol className="list-decimal ml-4 mb-lg-gap leading-loose" {...props} />
-                        ),
-                        // Gestion des éléments de liste
-                        li: ({ node, ...props }) => (
-                          <li className="mb-sm-gap leading-snug" {...props} />
-                        ),
-                        // Gestion des blocs de code
-                        code: ({ node, className, children, ...props }) => {
-                          const match = /language-(\w+)/.exec(className || "");
-                          return match ? (
-                            <SyntaxHighlighter
-                              language={match[1]}
-                              PreTag="div"
-                              {...props}
-                            >
-                              {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className="bg-gray-100 text-red-500 px-1 rounded" {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                        // Gestion des sauts de ligne
-                        br: () => <br className="mb-sm-gap leading-extra-tight" />,
-                        // Gestion des titres
-                        h1: ({ node, ...props }) => (
-                          <h1 className="text-2xl font-bold mt-lg-gap mb-md-gap leading-tight" {...props} />
-                        ),
-                        h2: ({ node, ...props }) => (
-                          <h2 className="text-xl font-semibold mt-md-gap mb-sm-gap leading-snug" {...props} />
-                        ),
-                        h3: ({ node, ...props }) => (
-                          <h3 className="text-lg font-medium mt-sm-gap mb-sm-gap leading-snug" {...props} />
-                        ),
-                      }}
-                    >
-                      {msg.replace(/\n/g, "  \n")} 
-                    </ReactMarkdown>
-                  </div>
-                ))
-              ) : null}
-            </div>
-            */}
-
 
             {/* Affichage des messages accumulés */}
             <div className="mobile-fullScreen-container">
