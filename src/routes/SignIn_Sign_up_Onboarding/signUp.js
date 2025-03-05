@@ -111,7 +111,7 @@ async function signInWithSSO() {
     }
 
     // 🔥 Construire dynamiquement le provider Firebase
-    const providerId = 'oidc.${university}';
+    const providerId = `oidc.${university}`;
     const provider = new OAuthProvider(providerId);
 
     // 🔥 Démarrer l'authentification avec Firebase
@@ -145,11 +145,11 @@ async function signInWithSSO() {
       });
 
       // 🔥 Rediriger vers onboarding avec navigate()
-      navigate('/onboarding/learningStyleSurvey');
+      navigate(`/onboarding/learningStyleSurvey`);
     } else {
       // 🔥 Utilisateur existant → Récupérer ses infos et rediriger vers le dashboard
       login(userSnap.data());
-      navigate('/dashboard/student/${user.uid}'); // 🔥 Correction ici, on met le vrai UID
+      navigate(`/dashboard/student/${user.uid}`); // 🔥 Correction ici, on met le vrai UID
     }
   } catch (error) {
     console.error("Erreur lors de la connexion SSO :", error);
