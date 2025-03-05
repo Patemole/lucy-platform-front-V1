@@ -16,6 +16,7 @@ import { usePopup } from '../components/main_components/Popup/popup';
 import PopupWrongAnswer from '../components/main_components/Popup/PopupWrongAnswer';
 import LandingPage from '../components/main_components/LandingPageImprove'; // Import du composant LandingPage
 import StudentProfileDialog from '../components/main_components/Popup/StudentProfileDialog'; // Import the dialog component
+import  PopupEventSoonAvailable  from '../components/main_components/Popup/PopupEventSoonAvailable';
 import  Popup1  from '../components/main_components/Popup/Popup_Onboarding_topic1';
 import  Popup2  from '../components/main_components/Popup/Popup_Onboarding_public2';
 import  Popup3  from '../components/main_components/Popup/Popup_Onboarding_events3';
@@ -23,6 +24,7 @@ import  Popup4  from '../components/main_components/Popup/Popup_Onboarding_savel
 import EventDetailsSidebar from '../components/main_components/EventDetailsSidebar';
 import Calendar from '../components/main_components/Calendar_StudentProfile';
 import Kanban from '../components/main_components/Kanban_StudentProfile';
+import config from '../config';
 
 //API request for the backend
 import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../api/chat';
@@ -67,6 +69,7 @@ import { FaArrowDown } from 'react-icons/fa'; // Import an arrow down icon
 import debounce from 'lodash/debounce';
 import './styles.css'; // Import du fichier CSS pour le gradient
 import '../index.css';
+import PopupSoonAvailable from '../components/main_components/Popup/PopupEventSoonAvailable';
 
 
 //For Topic of the conversations
@@ -146,6 +149,8 @@ const Dashboard_eleve_template: React.FC = () => {
   const [peerAdvisorMenuAnchor, setPeerAdvisorMenuAnchor] = useState<null | HTMLElement>(null);
   const [isPeerAdvisorOpen, setIsPeerAdvisorOpen] = useState(false);
   const [currentPopup, setCurrentPopup] = useState(0); // 0 = pas de popup, 1 à 4 pour les popups
+  const subdomain = config.subdomain;
+  const [openModal, setOpenModal] = useState(false);
 
 
 //--------------USEEFFECT----------------//
@@ -1506,10 +1511,20 @@ const handleConversationClick = async (chat_id: string) => {
               {/* Your Events */}
               <ListItem
                 button
+                onClick={() => {
+                  if (subdomain== 'holyfamily') {
+                    setOpenModal(true); // Affiche la popup si Holy Family
+                  } else {
+                    setCurrentView("events");
+                    if (isSmallScreen) toggleDrawer();
+                  }
+                }}
+                /*
                 onClick={(event) => {
                   setCurrentView('events');
                   if (isSmallScreen) toggleDrawer();
                 }}
+                */
                 sx={{
                   borderRadius: '8px',
                   backgroundColor: currentView === 'events' ? theme.palette.button.background : 'transparent',
@@ -2875,6 +2890,9 @@ const handleConversationClick = async (chat_id: string) => {
           {/* Render the StudentProfileDialog component */}
           <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
           <EventDetailsSidebar event={selectedEvent} open={sidebarOpen} onClose={handleCloseSidebar} />
+
+          {/* Affichage de la popup si nécessaire */}
+          {openModal && <PopupEventSoonAvailable onClose={() => setOpenModal(false)} />}
 
           {currentPopup > 0 && (
           <div
