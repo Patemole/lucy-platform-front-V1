@@ -1,14 +1,16 @@
 import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, OAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
 import lucyLogo from '../../logo_lucy.png';
 import config from '../../config';
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+
+
 
 const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
 
@@ -92,6 +94,70 @@ export default function SignUp() {
   const [emailError, setEmailError] = React.useState('');
   const subdomain = config.subdomain;
   const courseId = location.pathname.split('/sign-up/')[1] || '';
+  const provider = new OAuthProvider("oidc.holyfamily"); // 🔥 Utiliser le Provider ID configuré dans Firebase
+
+
+
+
+
+async function signInWithSSO() {
+  try {
+    // 🔥 Récupérer le sous-domaine (université)
+    const university = config.subdomain;
+
+    if (!university) {
+      console.error("Erreur : Université non reconnue.");
+      return;
+    }
+
+    // 🔥 Construire dynamiquement le provider Firebase
+    const providerId = 'oidc.${university}';
+    const provider = new OAuthProvider(providerId);
+
+    // 🔥 Démarrer l'authentification avec Firebase
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    console.log("Utilisateur connecté via SSO :", user.email);
+
+    // 🔥 Vérifier si l'utilisateur existe déjà dans Firestore
+    const userRef = doc(db, "users", user.uid); // 🔥 Utilisation du ⁠ uid ⁠ au lieu de l'email
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      // 🚀 Nouvel utilisateur → Création du compte Firestore et redirection vers onboarding
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName || "",
+        university,
+        onboardingComplete: false,
+        createdAt: new Date(),
+      });
+
+      // 🔥 Mettre à jour le contexte utilisateur avec useAuth
+      login({
+        id: user.uid,
+        name: user.displayName || "",
+        email: user.email,
+        university,
+        onboardingComplete: false,
+      });
+
+      // 🔥 Rediriger vers onboarding avec navigate()
+      navigate('/onboarding/learningStyleSurvey');
+    } else {
+      // 🔥 Utilisateur existant → Récupérer ses infos et rediriger vers le dashboard
+      login(userSnap.data());
+      navigate('/dashboard/student/${user.uid}'); // 🔥 Correction ici, on met le vrai UID
+    }
+  } catch (error) {
+    console.error("Erreur lors de la connexion SSO :", error);
+  }
+}
+
+
+  
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -188,6 +254,7 @@ export default function SignUp() {
         {/* Bouton SSO */}
         <button
           type="button"
+          onClick={signInWithSSO}
           className="w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300"
         >
           <AccountBalanceIcon sx={{ fontSize: 20 }} /> {/* Icône université */}
