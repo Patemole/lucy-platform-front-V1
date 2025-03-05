@@ -6,7 +6,7 @@ interface PopupEventSoonAvailableProps {
 
 const PopupEventSoonAvailable: React.FC<PopupEventSoonAvailableProps> = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50">
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-xs sm:max-w-md md:max-w-lg">
         {/* Titre */}
         <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
@@ -15,7 +15,7 @@ const PopupEventSoonAvailable: React.FC<PopupEventSoonAvailableProps> = ({ onClo
 
         {/* Message */}
         <p className="text-gray-700 text-sm sm:text-base mt-4">
-          This feature will be available soon for Holy Family University.
+          This feature will be available soon for HolyFamily University.
         </p>
 
         {/* Bouton Fermer */}
