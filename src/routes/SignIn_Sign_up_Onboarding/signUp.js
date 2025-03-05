@@ -100,66 +100,82 @@ export default function SignUp() {
 
 
 
-async function signInWithSSO() {
-  try {
-    // 🔥 Récupérer le sous-domaine (université)
-    const university = config.subdomain;
-
-    if (!university) {
-      console.error("Erreur : Université non reconnue.");
-      return;
-    }
-
-    // 🔥 Construire dynamiquement le provider Firebase
-    const providerId = `oidc.${university}`;
-    console.error("the oidc is", providerId);
-
-    const provider = new OAuthProvider(providerId);
-
-    // 🔥 Démarrer l'authentification avec Firebase
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    console.log("Utilisateur connecté via SSO :", user.email);
-
-    // 🔥 Vérifier si l'utilisateur existe déjà dans Firestore
-    const userRef = doc(db, "users", user.uid); // 🔥 Utilisation du ⁠ uid ⁠ au lieu de l'email
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      // 🚀 Nouvel utilisateur → Création du compte Firestore et redirection vers onboarding
-      await setDoc(userRef, {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || "",
-        university,
-        onboardingComplete: false,
-        createdAt: new Date(),
-      });
-
-      // 🔥 Mettre à jour le contexte utilisateur avec useAuth
-      login({
-        id: user.uid,
-        name: user.displayName || "",
-        email: user.email,
-        university,
-        onboardingComplete: false,
-      });
-
-      // 🔥 Rediriger vers onboarding avec navigate()
-      navigate(`/onboarding/learningStyleSurvey`);
-    } else {
-      // 🔥 Utilisateur existant → Récupérer ses infos et rediriger vers le dashboard
-      login(userSnap.data());
-      navigate(`/dashboard/student/${user.uid}`); // 🔥 Correction ici, on met le vrai UID
-    }
-  } catch (error) {
-    console.error("Erreur lors de la connexion SSO :", error);
-  }
-}
-
-
+  async function signInWithSSO() {
+    try {
+      console.log("🚀 Début du processus de connexion SSO...");
   
+      // 🔥 Récupérer le sous-domaine (université)
+      const university = config.subdomain;
+      console.log("🔍 Université détectée :", university);
+  
+      if (!university) {
+        console.error("❌ Erreur : Université non reconnue.");
+        return;
+      }
+  
+      // 🔥 Construire dynamiquement le provider Firebase
+      const providerId = `oidc.${university}`;
+      console.log("🛠️ Construction du provider Firebase avec OIDC :", providerId);
+  
+      const provider = new OAuthProvider(providerId);
+  
+      console.log("🔄 Début de l'authentification avec Firebase...");
+  
+      // 🔥 Démarrer l'authentification avec Firebase
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+  
+      console.log("✅ Utilisateur connecté via SSO :", user.email, " | UID :", user.uid);
+  
+      // 🔥 Vérifier si l'utilisateur existe déjà dans Firestore
+      const userRef = doc(db, "users", user.uid);
+      console.log("📡 Vérification de l'existence de l'utilisateur dans Firestore...");
+  
+      const userSnap = await getDoc(userRef);
+  
+      if (!userSnap.exists()) {
+        console.log("🆕 Nouvel utilisateur détecté. Création d'un compte Firestore...");
+  
+        // 🚀 Nouvel utilisateur → Création du compte Firestore et redirection vers onboarding
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || "",
+          university,
+          onboardingComplete: false,
+          createdAt: new Date(),
+        });
+  
+        console.log("✅ Compte Firestore créé avec succès.");
+  
+        // 🔥 Mettre à jour le contexte utilisateur avec useAuth
+        login({
+          id: user.uid,
+          name: user.displayName || "",
+          email: user.email,
+          university,
+          onboardingComplete: false,
+        });
+  
+        console.log("🔄 Redirection vers l'onboarding...");
+        navigate(`/onboarding/learningStyleSurvey`);
+      } else {
+        console.log("🔄 Utilisateur existant trouvé dans Firestore. Récupération des données...");
+  
+        // 🔥 Utilisateur existant → Récupérer ses infos et rediriger vers le dashboard
+        const userData = userSnap.data();
+        console.log("✅ Données utilisateur Firestore :", userData);
+  
+        login(userData);
+        console.log("🔄 Redirection vers le dashboard...");
+        navigate(`/dashboard/student/${user.uid}`);
+      }
+    } catch (error) {
+      console.error("❌ Erreur lors de la connexion SSO :", error);
+    }
+  }
+  
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
