@@ -178,6 +178,7 @@ const Dashboard_eleve_template: React.FC = () => {
   }, [unreadCount, profilePicture, onlineUsers, isPrivate]);
   
 
+  /*
   //Change the fake number of online student every 15 secondes
   useEffect(() => {
     const updateOnlineUsers = () => {
@@ -197,6 +198,37 @@ const Dashboard_eleve_template: React.FC = () => {
   
     const initialTimeout = setTimeout(updateOnlineUsers, Math.floor(Math.random() * 60000) + 1000);
     return () => clearTimeout(initialTimeout);
+  }, []);
+  */
+
+
+  useEffect(() => {
+    console.log("🔄 Setting up Firestore listener for onlineUsers...");
+  
+    // Reference to Firestore document
+    const docRef = doc(db, "stats", "onlineUsers");
+  
+    // Subscribe to real-time updates
+    const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        console.log("📡 Firestore update detected:", data);
+  
+        if (typeof data.count === "number") {
+          setOnlineUsers(data.count); // Update state when Firestore changes
+          console.log('✅ Online users updated: ${data.count}');
+        }
+      } else {
+        console.warn("⚠️ Firestore document 'onlineUsers' not found. Setting default value.");
+        setOnlineUsers(20); // Default value if Firestore document does not exist
+      }
+    });
+  
+    // Cleanup function to unsubscribe when component unmounts
+    return () => {
+      console.log("🚫 Unsubscribing from Firestore listener.");
+      unsubscribe();
+    };
   }, []);
 
 
