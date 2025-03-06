@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { setPersistence, browserLocalPersistence, signInWithEmailAndPassword, OAuthProvider, signInWithPopup  } from 'firebase/auth';
+import { setPersistence, browserLocalPersistence, signInWithEmailAndPassword, OAuthProvider, signInWithPopup, getAuth  } from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
@@ -97,34 +97,46 @@ const SignIn = ({ handleToggleThemeMode }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false); // Tracks spinner in button
   const subdomain = config.subdomain;
+  const auth = getAuth(); // Récupère directement l'instance Firebase Auth
 
 
 
   async function signInWithSSO() {
     try {
+      console.log("🚀 Début du processus de connexion SSO...");
+  
       // 🔥 Récupérer le sous-domaine (université)
       const university = config.subdomain;
+      console.log("🔍 Université détectée :", university);
   
       if (!university) {
-        console.error("Erreur : Université non reconnue.");
+        console.error("❌ Erreur : Université non reconnue.");
         return;
       }
   
       // 🔥 Construire dynamiquement le provider Firebase
-      const providerId = 'oidc.${university}';
+      const providerId = `oidc.${university}`;
+      console.log("🛠️ Construction du provider Firebase avec OIDC :", providerId);
+  
       const provider = new OAuthProvider(providerId);
+  
+      console.log("🔄 Début de l'authentification avec Firebase...");
   
       // 🔥 Démarrer l'authentification avec Firebase
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
   
-      console.log("Utilisateur connecté via SSO :", user.email);
+      console.log("✅ Utilisateur connecté via SSO :", user.email, " | UID :", user.uid);
   
       // 🔥 Vérifier si l'utilisateur existe déjà dans Firestore
-      const userRef = doc(db, "users", user.uid); // 🔥 Utilisation du ⁠ uid ⁠ au lieu de l'email
+      const userRef = doc(db, "users", user.uid);
+      console.log("📡 Vérification de l'existence de l'utilisateur dans Firestore...");
+  
       const userSnap = await getDoc(userRef);
   
       if (!userSnap.exists()) {
+        console.log("🆕 Nouvel utilisateur détecté. Création d'un compte Firestore...");
+  
         // 🚀 Nouvel utilisateur → Création du compte Firestore et redirection vers onboarding
         await setDoc(userRef, {
           uid: user.uid,
@@ -135,6 +147,8 @@ const SignIn = ({ handleToggleThemeMode }) => {
           createdAt: new Date(),
         });
   
+        console.log("✅ Compte Firestore créé avec succès.");
+  
         // 🔥 Mettre à jour le contexte utilisateur avec useAuth
         login({
           id: user.uid,
@@ -144,18 +158,23 @@ const SignIn = ({ handleToggleThemeMode }) => {
           onboardingComplete: false,
         });
   
-        // 🔥 Rediriger vers onboarding avec navigate()
-        navigate('/onboarding/learningStyleSurvey');
+        console.log("🔄 Redirection vers l'onboarding...");
+        navigate(`/onboarding/learningStyleSurvey`);
       } else {
+        console.log("🔄 Utilisateur existant trouvé dans Firestore. Récupération des données...");
+  
         // 🔥 Utilisateur existant → Récupérer ses infos et rediriger vers le dashboard
-        login(userSnap.data());
-        navigate('/dashboard/student/${user.uid}'); // 🔥 Correction ici, on met le vrai UID
+        const userData = userSnap.data();
+        console.log("✅ Données utilisateur Firestore :", userData);
+  
+        login(userData);
+        console.log("🔄 Redirection vers le dashboard...");
+        navigate(`/dashboard/student/${user.uid}`);
       }
     } catch (error) {
-      console.error("Erreur lors de la connexion SSO :", error);
+      console.error("❌ Erreur lors de la connexion SSO :", error);
     }
   }
-
   
   // Redirect if user is already authenticated
   useEffect(() => {
