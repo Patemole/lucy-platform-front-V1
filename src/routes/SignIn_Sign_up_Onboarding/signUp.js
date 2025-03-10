@@ -179,7 +179,7 @@ export default function SignUp() {
   
         login(userData);
         console.log("🔄 Redirection vers le dashboard...");
-        navigate(`/dashboard/student/${useData.uid}`);
+        navigate(`/dashboard/student/${userData.uid}`);
       }
     } catch (error) {
       console.error("❌ Erreur lors de la connexion SSO :", error);
