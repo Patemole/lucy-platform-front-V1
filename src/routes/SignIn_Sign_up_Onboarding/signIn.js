@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { setPersistence, browserLocalPersistence, signInWithEmailAndPassword, OAuthProvider, signInWithPopup} from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
 import { useAuth } from '../../auth/hooks/useAuth';
-import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
 import CircularProgress from '@mui/material/CircularProgress';

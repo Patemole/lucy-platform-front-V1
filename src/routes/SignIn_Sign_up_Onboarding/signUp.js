@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createUserWithEmailAndPassword, OAuthProvider, signInWithPopup} from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
-import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
@@ -154,7 +154,7 @@ export default function SignUp() {
           displayName: user.displayName || "",
           university,
           onboardingComplete: false,
-          createdAt: new Date(),
+          createdAt: serverTimestamp(),
         });
   
         console.log("✅ Compte Firestore créé avec succès.");
