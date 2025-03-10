@@ -144,7 +144,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
           displayName: user.displayName || "",
           university,
           onboardingComplete: false,
-          createdAt: new Date(),
+          createdAt: serverTimestamp(),
         });
   
         console.log("✅ Compte Firestore créé avec succès.");
@@ -171,7 +171,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
         console.log("🔄 Redirection vers le dashboard...");
         //navigate(`/dashboard/student/${user.uid}`);
         //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
-        navigate(`/dashboard/student/${result.user.uid || 'defaultId'}`, { replace: true });
+        navigate(`/dashboard/student/${userData.uid || 'defaultId'}`, { replace: true });
 
       }
     } catch (error) {
