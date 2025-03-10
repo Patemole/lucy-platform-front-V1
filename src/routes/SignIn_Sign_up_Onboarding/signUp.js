@@ -84,6 +84,7 @@ const getErrorMessage = (subdomain) => {
 };
 
 export default function SignUp() {
+  const { isAuth, loading, user } = useAuth();
   const theme = useTheme();
   const { login } = useAuth(); // Utiliser la fonction `login` du contexte
   const navigate = useNavigate();
@@ -99,6 +100,14 @@ export default function SignUp() {
 
   console.log("subdomain is ", subdomain);
 
+
+   // Redirect if user is already authenticated
+   useEffect(() => {
+    if (!loading && isAuth && user) {
+      console.log("User authenticated, redirecting...");
+      navigate(`/dashboard/student/${user?.id || 'defaultId'}`, { replace: true });
+    }
+  }, [loading, isAuth, user, navigate]);
 
 
   async function signInWithSSO() {
