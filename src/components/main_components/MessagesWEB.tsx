@@ -1398,7 +1398,13 @@ useEffect(() => {
 
           {/* VERSION AVEC LE TOOLTIP*/}
           {confidenceScoreData && confidenceScoreData.length > 0 && (
-            <Tooltip title="Ce score représente le niveau de confiance du modèle dans cette réponse. Plus il est élevé, plus la réponse est fiable.">
+            //<Tooltip title="This score represents the level of confidence of the answer based on the sources available.\n The higher the value, the more reliable the response.">
+            <Tooltip title={
+              <>
+                This score represents the level of confidence of the answer based on the sources available.<br />
+                The higher the value, the more reliable the response.
+              </>
+            }>
               <div
                 className={`mt-4 flex items-center ${!isSmallScreen ? "ml-8" : ""} gap-2 cursor-pointer`}
                 style={{

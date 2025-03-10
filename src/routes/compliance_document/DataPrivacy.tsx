@@ -5,7 +5,8 @@ const DataPrivacy: React.FC = () => {
     <div style={{ padding: "20px" }}>
       <h1>Data Privacy</h1>
       <iframe
-        src="/documents/privacy_policy.pdf"
+        //src="/documents/privacy_policy.pdf"
+        src="/documents/2025.03.08_Privacy_Policy.pdf"  
         width="100%"
         height="600px"
         style={{ border: "none" }}
