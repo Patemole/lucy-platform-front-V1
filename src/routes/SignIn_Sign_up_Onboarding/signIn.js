@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { setPersistence, browserLocalPersistence, signInWithEmailAndPassword, OAuthProvider, signInWithPopup, getAuth  } from 'firebase/auth';
+import { setPersistence, browserLocalPersistence, signInWithEmailAndPassword, OAuthProvider, signInWithPopup} from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
@@ -97,7 +97,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false); // Tracks spinner in button
   const subdomain = config.subdomain;
-  const auth = getAuth(); // Récupère directement l'instance Firebase Auth
+  //const auth = getAuth(); // Récupère directement l'instance Firebase Auth
 
 
 
@@ -169,7 +169,10 @@ const SignIn = ({ handleToggleThemeMode }) => {
   
         login(userData);
         console.log("🔄 Redirection vers le dashboard...");
-        navigate(`/dashboard/student/${user.uid}`);
+        //navigate(`/dashboard/student/${user.uid}`);
+        //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
+        navigate(`/dashboard/student/${result.user.uid || 'defaultId'}`, { replace: true });
+
       }
     } catch (error) {
       console.error("❌ Erreur lors de la connexion SSO :", error);
@@ -180,7 +183,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
   useEffect(() => {
     if (!loading && isAuth && user) {
       console.log("User authenticated, redirecting...");
-      navigate(`/dashboard/${user?.role || 'defaultRole'}/${user?.id || 'defaultId'}`, { replace: true });
+      navigate(`/dashboard/student/${user?.id || 'defaultId'}`, { replace: true });
     }
   }, [loading, isAuth, user, navigate]);
   
@@ -217,7 +220,8 @@ const SignIn = ({ handleToggleThemeMode }) => {
       console.log("Sign-in successful, redirecting...");
       
       // Navigate immediately after successful sign-in
-      navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
+      //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
+      navigate(`/dashboard/student/${result.user.uid || 'defaultId'}`, { replace: true });
     } catch (error) {
       const newErrors = {};
       if (error.code === 'auth/user-not-found') {
