@@ -1364,7 +1364,7 @@ useEffect(() => {
             </div>
           )}
 
-
+          {/* VERSION QUI FONCTIONNE MAIS SANS LE TOOLTIP
           {confidenceScoreData && confidenceScoreData.length > 0 && (
             <div
               className={`mt-4 flex items-center ${
@@ -1394,6 +1394,40 @@ useEffect(() => {
               </span>
             </div>
           )}
+          */}
+
+          {/* VERSION AVEC LE TOOLTIP*/}
+          {confidenceScoreData && confidenceScoreData.length > 0 && (
+            <Tooltip title="Ce score représente le niveau de confiance du modèle dans cette réponse. Plus il est élevé, plus la réponse est fiable.">
+              <div
+                className={`mt-4 flex items-center ${!isSmallScreen ? "ml-8" : ""} gap-2 cursor-pointer`}
+                style={{
+                  fontSize: "0.90rem",
+                  color: theme.palette.text.primary,
+                }}
+              >
+                {/* Cercle de couleur */}
+                <div
+                  className="w-6 h-6 rounded-full"
+                  style={{
+                    width: "14px",
+                    height: "14px",
+                    backgroundColor:
+                      parseFloat(confidenceScoreData[0].confidenceScore) >= 80
+                        ? "#3DD957"
+                        : parseFloat(confidenceScoreData[0].confidenceScore) >= 30
+                        ? "#F97315"
+                        : "#EF4361",
+                  }}
+                ></div>
+
+                {/* Texte + Pourcentage */}
+                <span style={{ fontWeight: 600 }}>Confidence score</span>
+                <span>{confidenceScoreData[0].confidenceScore}%</span>
+              </div>
+            </Tooltip>
+          )}
+
             
 
 
