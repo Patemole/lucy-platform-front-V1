@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createUserWithEmailAndPassword, OAuthProvider, signInWithPopup, getAuth } from 'firebase/auth';
+import { createUserWithEmailAndPassword, OAuthProvider, signInWithPopup} from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
 import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../auth/hooks/useAuth';
@@ -93,8 +93,8 @@ export default function SignUp() {
   const [emailError, setEmailError] = React.useState('');
   const subdomain = config.subdomain;
   const courseId = location.pathname.split('/sign-up/')[1] || '';
-  const provider = new OAuthProvider("oidc.holyfamily"); // 🔥 Utiliser le Provider ID configuré dans Firebase
-  const auth = getAuth(); // Récupère directement l'instance Firebase Auth
+  //const provider = new OAuthProvider("oidc.holyfamily"); // 🔥 Utiliser le Provider ID configuré dans Firebase
+  //const auth = getAuth(); // Récupère directement l'instance Firebase Auth
 
 
   console.log("subdomain is ", subdomain);

@@ -94,6 +94,8 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+
+  
   
   // Fonction pour définir le chat_id principal
   const setPrimaryChatId = (newChatId) => {
