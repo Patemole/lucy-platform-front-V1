@@ -102,6 +102,7 @@ export default function SignUp() {
   console.log("subdomain is ", subdomain);
 
 
+  /*
    // Redirect if user is already authenticated
    useEffect(() => {
     if (!loading && isAuth && user) {
@@ -109,7 +110,7 @@ export default function SignUp() {
       navigate(`/dashboard/student/${user?.id || 'defaultId'}`, { replace: true });
     }
   }, [loading, isAuth, user, navigate]);
-
+*/
 
   async function signInWithSSO() {
     try {

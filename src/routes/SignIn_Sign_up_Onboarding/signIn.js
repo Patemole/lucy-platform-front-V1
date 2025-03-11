@@ -167,10 +167,20 @@ const SignIn = ({ handleToggleThemeMode }) => {
         const userData = userSnap.data();
         console.log("✅ Données utilisateur Firestore :", userData);
   
-        login(userData);
+        //login(userData);
+        login({
+          id: userData.uid, // Assure la cohérence avec le SSO
+          name: userData.displayName || "",
+          email: userData.email,
+          university: userData.university,
+          onboardingComplete: userData.onboardingComplete,
+        });
+
+        console.log("Sign-in successful in SSO, redirecting...");
         console.log("🔄 Redirection vers le dashboard...");
         //navigate(`/dashboard/student/${user.uid}`);
         //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
+        console.log("valeur de userdatauid", userData.uid)
         navigate(`/dashboard/student/${userData.uid || 'defaultId'}`, { replace: true });
 
       }
@@ -182,10 +192,13 @@ const SignIn = ({ handleToggleThemeMode }) => {
   // Redirect if user is already authenticated
   useEffect(() => {
     if (!loading && isAuth && user) {
-      console.log("User authenticated, redirecting...");
+      console.log("User authenticated via useeffect, redirecting...");
+      console.log("user.id est", user?.id || 'defaultId')
       navigate(`/dashboard/student/${user?.id || 'defaultId'}`, { replace: true });
     }
   }, [loading, isAuth, user, navigate]);
+
+
   
 
   const handleSubmit = async (event) => {
@@ -217,7 +230,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
       const result = await signInWithEmailAndPassword(auth, email, password);
 
       // Optional: Fetch additional user data or validation here
-      console.log("Sign-in successful, redirecting...");
+      console.log("Sign-in successful in manual, redirecting...");
       
       // Navigate immediately after successful sign-in
       //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
