@@ -1534,6 +1534,7 @@ const handleConversationClick = async (chat_id: string) => {
                   >
                     <MenuItem onClick={() => {
                       handleDialogOpen();
+                      handleProfileMenuClose(); // 🔥 Ferme le menu après le clic
                       setTimeout(toggleDrawer, 50); // Ajout pour fermer la sidebar sur mobile
                     }}>
                     
@@ -1542,7 +1543,11 @@ const handleConversationClick = async (chat_id: string) => {
                       </ListItemIcon>
                       <ListItemText primary="Edit Profile" />
                     </MenuItem>
-                    <MenuItem onClick={handleParametersMenuClick}>
+                    <MenuItem onClick={(event) => {
+                      handleParametersMenuClick(event);
+                      handleProfileMenuClose(); // 🔥 Ferme le menu après le clic
+                    }}>
+
                       <ListItemIcon>
                         <SettingsIcon fontSize="small" sx={{ color: '#011F5B' }} />
                       </ListItemIcon>
@@ -2751,7 +2756,7 @@ const handleConversationClick = async (chat_id: string) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   paddingTop: isSmallScreen ? '10px' : '20px',
-                  paddingBottom: isSmallScreen ? '10px' : '20px',
+                  paddingBottom: isSmallScreen ? '4px' : '20px', //avant 10 pour petit ecrqn
                   zIndex: 2,
                   transition: 'left 0.3s, width 0.3s',
                   display: isLandingPageVisible ? 'none' : 'flex',
