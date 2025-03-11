@@ -1604,7 +1604,8 @@ const handleConversationClick = async (chat_id: string) => {
                     setOpenModal(true); // Affiche la popup si Holy Family
                   } else {
                     setCurrentView("events");
-                    if (isSmallScreen) toggleDrawer();
+                    //if (isSmallScreen) toggleDrawer();
+                    if (isSmallScreen) setTimeout(toggleDrawer, 50);
                   }
                 }}
                 /*
