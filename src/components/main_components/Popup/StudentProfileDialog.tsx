@@ -1094,9 +1094,11 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
       onClick={handleOverlayClick}
     >
-      <div className="bg-white w-full max-w-2xl mx-4 p-6 rounded-lg shadow-lg relative"
-        style={{ maxHeight: 'calc(100vh - 40px)' }} // limite la popup à la hauteur de l'écran avec une marge
-        >
+      <div className="bg-white w-full max-w-2xl mx-4 p-6 rounded-lg shadow-lg relative flex flex-col"
+    style={{ maxHeight: 'calc(100vh - 40px)' }} 
+    >
+        <div className="overflow-y-auto px-4" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+
         
         <div className="flex flex-col h-full">
         {/* header fixe */}
@@ -1474,6 +1476,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
           )
         )}
       </div>
+    </div>
     </div>
     </div>
   ) : null;
