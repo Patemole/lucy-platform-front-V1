@@ -1094,10 +1094,16 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
       onClick={handleOverlayClick}
     >
-      <div className="bg-white w-full max-w-2xl mx-4 p-8 rounded-lg shadow-lg relative max-h-[80vh] overflow-y-auto">
+      <div className="bg-white w-full max-w-2xl mx-4 p-6 rounded-lg shadow-lg relative"
+        style={{ maxHeight: 'calc(100vh - 40px)' }} // limite la popup à la hauteur de l'écran avec une marge
+        >
+        
+        <div className="flex flex-col h-full">
+        {/* header fixe */}
+        <header className="mb-4">
         {!isChangingProfilePicture && (
           <>
-            <div className="flex flex-col items-center mb-4">
+            <div className="flex flex-col items-center">
               <div
                 className={`w-24 h-24 flex items-center justify-center rounded-full cursor-pointer overflow-hidden transition-all ${profilePictureUrl ? "bg-transparent" : "bg-gray-200"}`}
                 onClick={() => setIsChangingProfilePicture(true)}
@@ -1122,6 +1128,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
             <h2 className="text-2xl font-semibold text-center mb-6">student profile</h2>
           </>
         )}
+        </header>
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -1467,6 +1474,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
           )
         )}
       </div>
+    </div>
     </div>
   ) : null;
 };
