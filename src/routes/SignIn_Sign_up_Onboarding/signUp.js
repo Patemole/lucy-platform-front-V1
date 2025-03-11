@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createUserWithEmailAndPassword, OAuthProvider, signInWithPopup} from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
