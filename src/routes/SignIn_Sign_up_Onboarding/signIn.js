@@ -143,7 +143,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
         await setDoc(userRef, {
           uid: user.uid,
           email: user.email,
-          displayName: user.displayName || "",
+          name: user.displayName || "",
           university,
           onboardingComplete: false,
           createdAt: serverTimestamp(),

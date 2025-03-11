@@ -154,7 +154,7 @@ export default function SignUp() {
         await setDoc(userRef, {
           uid: user.uid,
           email: user.email,
-          displayName: user.displayName || "",
+          name: user.displayName || "",
           university,
           onboardingComplete: false,
           createdAt: serverTimestamp(),
