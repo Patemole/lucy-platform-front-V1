@@ -243,7 +243,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
     : allButtons;
 
   // Questions mappées à chaque bouton
-  /*
+  
   const questionsMap: { [key: string]: string[] } = {
     'Academic Info': [
       'What are the most popular majors or programs?',
@@ -276,7 +276,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
       'How does the financial aid package compare year-to-year?',
     ],
   };
-  */
+  
 /*
   const questionsMap: { [key: string]: string[] } = {
     'Academic Info': [
@@ -550,6 +550,42 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
             },
           }}
         />
+        {/* Afficher les inspirations sous le placeholder sur petit écran */}
+        {isSmallScreen && (
+          <Box mt={2}>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: "#011F5B", mb: 1, textAlign: "center" }}>
+              Need inspiration?
+            </Typography>
+            {Object.entries(questionsMap).map(([category, questions]) => (
+              <Box key={category} sx={{ mb: 2 }}>
+                <Typography variant="body2" fontWeight="bold" sx={{ color: "#011F5B", mb: 1 }}>
+                  {category}
+                </Typography>
+                <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1}>
+                  {questions.slice(0, 2).map((question, index) => ( // On affiche 2 questions max par catégorie
+                    <Typography
+                      key={index}
+                      onClick={() => handleQuestionClick(question)}
+                      sx={{
+                        cursor: "pointer",
+                        fontSize: "0.85rem",
+                        fontWeight: "500",
+                        padding: "8px 12px",
+                        borderRadius: "12px",
+                        color: "#1565D8",
+                        backgroundColor: "#E3F2FD",
+                        '&:hover': { backgroundColor: "#BBDEFB" },
+                      }}
+                    >
+                      {question}
+                    </Typography>
+                  ))}
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )}
+
       </Box>
     </Box>
   );
