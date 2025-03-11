@@ -1091,21 +1091,24 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
 
   return open ? (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      onClick={handleOverlayClick}
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-hidden" // 🔥 Empêche le scroll en arrière-plan
+    onClick={handleOverlayClick}
+  >
+    <div 
+      className="bg-white w-full max-w-2xl mx-4 p-6 rounded-lg shadow-lg relative flex flex-col"
+      style={{ maxHeight: '90vh', width: '90%' }} // 🔥 Limite bien la hauteur de la popup
     >
-      <div className="bg-white w-full max-w-2xl mx-4 p-6 rounded-lg shadow-lg relative flex flex-col"
-    style={{ maxHeight: 'calc(100vh - 40px)' }} 
-    >
-        <div className="overflow-y-auto px-4" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+      {/* Conteneur scrollable */}
+      <div 
+        className="overflow-y-auto px-4 flex-grow" // 🔥 Ajout de flex-grow pour occuper l’espace disponible et scroller
+        style={{ maxHeight: '80vh' }}
+      >
 
-        
-        <div className="flex flex-col h-full">
-        {/* header fixe */}
+        {/* Header fixe */}
         <header className="mb-4">
-        {!isChangingProfilePicture && (
-          <>
-            <div className="flex flex-col items-center">
+          {!isChangingProfilePicture && (
+            <>
+              <div className="flex flex-col items-center">
               <div
                 className={`w-24 h-24 flex items-center justify-center rounded-full cursor-pointer overflow-hidden transition-all ${profilePictureUrl ? "bg-transparent" : "bg-gray-200"}`}
                 onClick={() => setIsChangingProfilePicture(true)}
@@ -1478,7 +1481,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
       </div>
     </div>
     </div>
-    </div>
+   
   ) : null;
 };
 
