@@ -42,6 +42,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
   const [isHoveringQuestions, setIsHoveringQuestions] = useState(false);
   //const [showCursor, setShowCursor] = useState(true);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
 
   // État pour la confidentialité (Public/Private)
   //const [isPrivate, setIsPrivate] = React.useState(false); // Par défaut, en mode Public
@@ -550,41 +552,65 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
             },
           }}
         />
+
         {/* Afficher les inspirations sous le placeholder sur petit écran */}
         {isSmallScreen && (
           <Box mt={2}>
             <Typography variant="subtitle1" fontWeight="bold" sx={{ color: "#011F5B", mb: 1, textAlign: "center" }}>
               Need inspiration?
             </Typography>
-            {Object.entries(questionsMap).map(([category, questions]) => (
-              <Box key={category} sx={{ mb: 2 }}>
-                <Typography variant="body2" fontWeight="bold" sx={{ color: "#011F5B", mb: 1 }}>
+
+            {/* Affichage des catégories */}
+            <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1}>
+              {Object.keys(questionsMap).map((category) => (
+                <Typography
+                  key={category}
+                  onClick={() => setSelectedCategory(selectedCategory === category ? null : category)} // Toggle de la catégorie
+                  sx={{
+                    cursor: "pointer",
+                    fontSize: "0.9rem",
+                    fontWeight: "500",
+                    padding: "8px 12px",
+                    borderRadius: "12px",
+                    color: selectedCategory === category ? "#FFFFFF" : "#1565D8",
+                    backgroundColor: selectedCategory === category ? "#1565D8" : "#E3F2FD",
+                    '&:hover': { backgroundColor: selectedCategory === category ? "#115293" : "#BBDEFB" },
+                  }}
+                >
                   {category}
                 </Typography>
-                <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1}>
-                  {questions.slice(0, 2).map((question, index) => ( // On affiche 2 questions max par catégorie
-                    <Typography
-                      key={index}
-                      onClick={() => handleQuestionClick(question)}
-                      sx={{
-                        cursor: "pointer",
-                        fontSize: "0.85rem",
-                        fontWeight: "500",
-                        padding: "8px 12px",
-                        borderRadius: "12px",
-                        color: "#1565D8",
-                        backgroundColor: "#E3F2FD",
-                        '&:hover': { backgroundColor: "#BBDEFB" },
-                      }}
-                    >
-                      {question}
-                    </Typography>
-                  ))}
-                </Box>
+              ))}
+            </Box>
+
+            {/* Affichage des questions si une catégorie est sélectionnée */}
+            {selectedCategory && (
+              <Box mt={2}>
+                {questionsMap[selectedCategory].map((question, index) => (
+                  <Typography
+                    key={index}
+                    onClick={() => handleQuestionClick(question)}
+                    sx={{
+                      cursor: "pointer",
+                      fontSize: "0.85rem",
+                      fontWeight: "500",
+                      padding: "8px 12px",
+                      borderRadius: "8px",
+                      color: "#1565D8",
+                      backgroundColor: "#E3F2FD",
+                      '&:hover': { backgroundColor: "#BBDEFB" },
+                      display: "block",
+                      textAlign: "center",
+                      mt: 1,
+                    }}
+                  >
+                    {question}
+                  </Typography>
+                ))}
               </Box>
-            ))}
+            )}
           </Box>
         )}
+
 
       </Box>
     </Box>
