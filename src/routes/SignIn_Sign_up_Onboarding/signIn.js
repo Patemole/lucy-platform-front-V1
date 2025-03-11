@@ -97,6 +97,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false); // Tracks spinner in button
   const subdomain = config.subdomain;
+  const [shouldRedirect, setShouldRedirect] = useState(true); // Par défaut, on redirige
   //const auth = getAuth(); // Récupère directement l'instance Firebase Auth
 
 
@@ -104,6 +105,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
   async function signInWithSSO() {
     try {
       console.log("🚀 Début du processus de connexion SSO...");
+      setShouldRedirect(false); // Désactive temporairement le useEffect
   
       // 🔥 Récupérer le sous-domaine (université)
       const university = config.subdomain;
@@ -183,6 +185,11 @@ const SignIn = ({ handleToggleThemeMode }) => {
         console.log("valeur de userdatauid", userData.uid)
         navigate(`/dashboard/student/${userData.uid || 'defaultId'}`, { replace: true });
 
+        // 🔥 Réactive la redirection après un court délai pour éviter qu'elle reste bloquée
+        setTimeout(() => {
+          setShouldRedirect(true);
+        }, 100); // Petit délai pour s'assurer que l'état se met bien à jour
+
       }
     } catch (error) {
       console.error("❌ Erreur lors de la connexion SSO :", error);
@@ -191,12 +198,12 @@ const SignIn = ({ handleToggleThemeMode }) => {
   
   // Redirect if user is already authenticated
   useEffect(() => {
-    if (!loading && isAuth && user) {
+    if (!loading && isAuth && user && shouldRedirect) {
       console.log("User authenticated via useeffect, redirecting...");
       console.log("user.id est", user?.id || 'defaultId')
       navigate(`/dashboard/student/${user?.id || 'defaultId'}`, { replace: true });
     }
-  }, [loading, isAuth, user, navigate]);
+  }, [loading, isAuth, user, shouldRedirect, navigate]);
 
 
   
