@@ -2217,7 +2217,7 @@ const handleConversationClick = async (chat_id: string) => {
               </MenuItem>
             </Menu>
   
-            {/* Section Profil pour petits écrans */}
+            {/* Section Profil pour petits écrans 
             {isSmallScreen && (
               <Box style={{ padding: '10px', borderTop: `0px solid ${theme.palette.divider}` }}>
                 {profilePicture ? (
@@ -2295,6 +2295,7 @@ const handleConversationClick = async (chat_id: string) => {
                 </Menu>
               </Box>
             )}
+            */}
           </Drawer>
   
           <div
