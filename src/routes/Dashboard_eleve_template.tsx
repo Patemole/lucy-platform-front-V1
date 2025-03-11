@@ -1611,6 +1611,7 @@ const handleConversationClick = async (chat_id: string) => {
                 onClick={() => {
                   if (subdomain== 'holyfamily') {
                     setOpenModal(true); // Affiche la popup si Holy Family
+                    if (isSmallScreen) setTimeout(toggleDrawer, 50);
                   } else {
                     setCurrentView("events");
                     //if (isSmallScreen) toggleDrawer();
