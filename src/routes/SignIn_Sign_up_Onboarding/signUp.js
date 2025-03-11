@@ -95,6 +95,7 @@ export default function SignUp() {
   const [emailError, setEmailError] = React.useState('');
   const subdomain = config.subdomain;
   const courseId = location.pathname.split('/sign-up/')[1] || '';
+  const [shouldRedirect, setShouldRedirect] = useState(true); // Par défaut, on redirige
   //const provider = new OAuthProvider("oidc.holyfamily"); // 🔥 Utiliser le Provider ID configuré dans Firebase
   //const auth = getAuth(); // Récupère directement l'instance Firebase Auth
 
@@ -102,19 +103,20 @@ export default function SignUp() {
   console.log("subdomain is ", subdomain);
 
 
-  /*
+  
    // Redirect if user is already authenticated
    useEffect(() => {
-    if (!loading && isAuth && user) {
+    if (!loading && isAuth && user && shouldRedirect ) {
       console.log("User authenticated, redirecting...");
       navigate(`/dashboard/student/${user?.id || 'defaultId'}`, { replace: true });
     }
-  }, [loading, isAuth, user, navigate]);
-*/
+  }, [loading, isAuth, user, shouldRedirect, navigate]);
+
 
   async function signInWithSSO() {
     try {
       console.log("🚀 Début du processus de connexion SSO...");
+      setShouldRedirect(false); // Désactive temporairement le useEffect
   
       // 🔥 Récupérer le sous-domaine (université)
       const university = config.subdomain;
@@ -181,6 +183,12 @@ export default function SignUp() {
         login(userData);
         console.log("🔄 Redirection vers le dashboard...");
         navigate(`/dashboard/student/${userData.uid}`);
+
+        // 🔥 Réactive la redirection après un court délai pour éviter qu'elle reste bloquée
+        setTimeout(() => {
+          setShouldRedirect(true);
+        }, 100); // Petit délai pour s'assurer que l'état se met bien à jour
+
       }
     } catch (error) {
       console.error("❌ Erreur lors de la connexion SSO :", error);
