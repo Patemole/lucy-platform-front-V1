@@ -2445,7 +2445,13 @@ const handleConversationClick = async (chat_id: string) => {
                           }
                         />
                       </MenuItem>
-                      <MenuItem onClick={handleParametersMenuClick}>
+                      
+                      <MenuItem onClick={(event) => {
+                      handleParametersMenuClick(event);
+                      handleProfileMenuClose(); // 🔥 Ferme le menu après le clic
+                    }}>
+
+                      
                         <ListItemIcon>
                           <SettingsIcon fontSize="small" sx={{ color: '#011F5B' }} />
                         </ListItemIcon>
