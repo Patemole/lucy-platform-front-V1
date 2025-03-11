@@ -2756,7 +2756,7 @@ const handleConversationClick = async (chat_id: string) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   paddingTop: isSmallScreen ? '10px' : '20px',
-                  paddingBottom: isSmallScreen ? '4px' : '20px', //avant 10 pour petit ecrqn
+                  paddingBottom: isSmallScreen ? '1px' : '20px', //avant 10 pour petit ecrqn
                   zIndex: 2,
                   transition: 'left 0.3s, width 0.3s',
                   display: isLandingPageVisible ? 'none' : 'flex',
