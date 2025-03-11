@@ -556,9 +556,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
         {/* Afficher les inspirations sous le placeholder sur petit écran */}
         {isSmallScreen && (
           <Box mt={2}>
+            {/*
             <Typography variant="subtitle1" fontWeight="bold" sx={{ color: "#011F5B", mb: 1, textAlign: "center" }}>
               Need inspiration?
             </Typography>
+            */}
 
             {/* Affichage des catégories */}
             <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1}>
