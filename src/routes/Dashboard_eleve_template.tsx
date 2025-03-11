@@ -2957,12 +2957,12 @@ const handleConversationClick = async (chat_id: string) => {
                   */}
                   <div className="flex justify-center w-full">
                     <p
-                      //variant="caption"
-                      className="mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80 sm:mt-3 sm:mb-0"
+                      className="hidden sm:block mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80 sm:mt-3 sm:mb-0"
                     >
                       Lucy can make mistakes. Look at the confidence score and consider checking important information.
                     </p>
                   </div>
+
 
 
                 </div>
