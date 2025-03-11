@@ -180,7 +180,14 @@ export default function SignUp() {
         const userData = userSnap.data();
         console.log("✅ Données utilisateur Firestore :", userData);
   
-        login(userData);
+        //login(userData);
+        login({
+          id: userData.uid, // Assure la cohérence avec le SSO
+          name: userData.displayName || "",
+          email: userData.email,
+          university: userData.university,
+          onboardingComplete: userData.onboardingComplete,
+        });
         console.log("🔄 Redirection vers le dashboard...");
         navigate(`/dashboard/student/${userData.uid}`);
 
