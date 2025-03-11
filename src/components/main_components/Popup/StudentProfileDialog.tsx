@@ -1095,7 +1095,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
     onClick={handleOverlayClick}
   >
     <div 
-      className="bg-white w-full max-w-2xl mx-4 p-6 rounded-lg shadow-lg relative flex flex-col"
+      className="bg-white w-full max-w-2xl mx-4 p-6 rounded-lg shadow-lg relative flex flex-col overflow-x-hidden"
       style={{ maxHeight: '90vh', width: '90%' }} // 🔥 Limite bien la hauteur de la popup
     >
       {/* Conteneur scrollable */}
