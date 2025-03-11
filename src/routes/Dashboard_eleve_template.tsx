@@ -51,6 +51,8 @@ import ChatIcon from '@mui/icons-material/Chat';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+
 import {
   ThemeProvider, TextField, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Menu, MenuItem, Divider, IconButton, Snackbar, InputAdornment, Alert, CircularProgress,
 } from '@mui/material';
@@ -1471,6 +1473,7 @@ const handleConversationClick = async (chat_id: string) => {
                 display: 'flex',
                 flexDirection: 'column',
                 borderRight: '1px solid rgba(255, 255, 255, 0.3)',
+                zIndex: 49, // Ajout de cette ligne pour que le Drawer soit sous les popups
               },
             }}
             ModalProps={{
@@ -1485,7 +1488,8 @@ const handleConversationClick = async (chat_id: string) => {
             {/* Header avec boutons de menu et nouvelle conversation */}
             <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
               <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
-                <MenuIcon />
+                
+                {drawerOpen ? <KeyboardDoubleArrowLeftIcon /> : <MenuIcon />}
               </IconButton>
   
               <IconButton
