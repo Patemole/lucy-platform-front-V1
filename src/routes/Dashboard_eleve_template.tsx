@@ -1532,7 +1532,11 @@ const handleConversationClick = async (chat_id: string) => {
                     onClose={handleProfileMenuClose}
                     PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
                   >
-                    <MenuItem onClick={handleDialogOpen}>
+                    <MenuItem onClick={() => {
+                      handleDialogOpen();
+                      setTimeout(toggleDrawer, 50); // Ajout pour fermer la sidebar sur mobile
+                    }}>
+                    
                       <ListItemIcon>
                         <ProfileEdit fontSize="small" sx={{ color: '#011F5B' }} />
                       </ListItemIcon>
