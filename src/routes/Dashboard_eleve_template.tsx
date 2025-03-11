@@ -1499,6 +1499,79 @@ const handleConversationClick = async (chat_id: string) => {
                 {drawerOpen ? <KeyboardDoubleArrowLeftIcon /> : <MenuIcon />}
               </IconButton>
   
+              {isSmallScreen ? (
+                // Affichage du menu Profil au lieu de l'icône Nouvelle Conversation sur mobile
+                <Box style={{ padding: '10px', borderTop: `0px solid ${theme.palette.divider}` }}>
+                  {profilePicture ? (
+                    <img
+                      src={profilePicture}
+                      alt="Profile"
+                      style={{
+                        width: '50px',
+                        height: '50px',
+                      }}
+                      className="rounded-full object-cover cursor-pointer"
+                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                    />
+                  ) : (
+                    <AccountCircleIcon
+                      fontSize="inherit"
+                      component="svg"
+                      style={{
+                        color: '#9e9e9e',
+                        cursor: 'pointer',
+                        margin: '0 auto 0 10px',
+                        fontSize: '2.2rem',
+                      }}
+                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                    />
+                  )}
+                  <Menu
+                    anchorEl={profileMenuAnchorEl}
+                    open={Boolean(profileMenuAnchorEl)}
+                    onClose={handleProfileMenuClose}
+                    PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
+                  >
+                    <MenuItem onClick={handleDialogOpen}>
+                      <ListItemIcon>
+                        <ProfileEdit fontSize="small" sx={{ color: '#011F5B' }} />
+                      </ListItemIcon>
+                      <ListItemText primary="Edit Profile" />
+                    </MenuItem>
+                    <MenuItem onClick={handleParametersMenuClick}>
+                      <ListItemIcon>
+                        <SettingsIcon fontSize="small" sx={{ color: '#011F5B' }} />
+                      </ListItemIcon>
+                      <ListItemText primary="Parameters" />
+                    </MenuItem>
+                    <MenuItem onClick={handleLogout}>
+                      <ListItemIcon>
+                        <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
+                      </ListItemIcon>
+                      <ListItemText primary="Log-out" />
+                    </MenuItem>
+                  </Menu>
+                </Box>
+              ) : (
+                // Affichage du bouton Nouvelle Conversation sur grand écran
+                <IconButton
+                  onClick={() => {
+                    if (!isLandingPageVisible) {
+                      handleNewConversation();
+                      if (isSmallScreen) toggleDrawer();
+                    }
+                  }}
+                  sx={{
+                    color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
+                    cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
+                  }}
+                  disabled={isLandingPageVisible}
+                >
+                  <MapsUgcRoundedIcon />
+                </IconButton>
+              )}
+
+              {/*
               <IconButton
                 onClick={() => {
                   if (!isLandingPageVisible) {
@@ -1514,7 +1587,11 @@ const handleConversationClick = async (chat_id: string) => {
               >
                 <MapsUgcRoundedIcon />
               </IconButton>
+              */}
+
+
             </Box>
+            
   
             {/* Contenu fixe avant la liste */}
             <List style={{ padding: '0 10px' }}>
