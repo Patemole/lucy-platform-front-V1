@@ -98,7 +98,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(true);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -123,6 +123,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const endDivRef = useRef<HTMLDivElement>(null);
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
+  const [drawerOpen, setDrawerOpen] = useState(!isSmallScreen);
   const [isLandingPageVisible, setIsLandingPageVisible] = useState(messages.length === 0);
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
@@ -156,6 +157,12 @@ const Dashboard_eleve_template: React.FC = () => {
 
 
 //--------------USEEFFECT----------------//
+
+//To close the sidebqr if the user is diminue the size of the screen to close the sidebar
+useEffect(() => {
+  setDrawerOpen(!isSmallScreen);
+}, [isSmallScreen]);
+
 
   //To display popup with onboqrdingComplete is false
   useEffect(() => {
