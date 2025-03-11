@@ -2273,7 +2273,8 @@ const handleConversationClick = async (chat_id: string) => {
                   fontSize: '0.83rem',
                 }}
               >
-                {onlineUsers} online users
+                {/*{onlineUsers} online users*/}
+                {onlineUsers} {isSmallScreen ? "online" : "online users"}
                 <div
                   style={{
                     width: '8.5px',
