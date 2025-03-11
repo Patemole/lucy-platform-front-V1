@@ -1094,7 +1094,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
       onClick={handleOverlayClick}
     >
-      <div className="bg-white w-full max-w-2xl mx-4 p-8 rounded-lg shadow-lg relative">
+      <div className="bg-white w-full max-w-2xl mx-4 p-8 rounded-lg shadow-lg relative max-h-[80vh] overflow-y-auto">
         {!isChangingProfilePicture && (
           <>
             <div className="flex flex-col items-center mb-4">
