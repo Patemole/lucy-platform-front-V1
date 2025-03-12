@@ -2748,7 +2748,119 @@ const handleConversationClick = async (chat_id: string) => {
               </button>
             )}
   
-            {currentView === 'chat' && (!hasTak || inputValue.trim() !== "") && (
+            {currentView === 'chat' && !isLandingPageVisible && (!hasTak || inputValue.trim() !== "") && (
+
+                <div
+                  className="fixed bottom-0 left-0 w-full bg-white shadow-lg flex flex-col items-center"
+                  style={{
+                    borderTopLeftRadius: '20px',
+                    borderTopRightRadius: '20px',
+                    padding: '12px',
+                    minHeight: '80px', // Hauteur de base
+                    //maxHeight: '250px', // Hauteur max pour éviter un débordement
+                    maxHeight: inputValue.length > 0 ? '300px' : '150px',
+                    overflow: 'hidden',
+                    transition: 'height 0.2s ease-in-out',
+                  }}
+                >
+                  {/* Champ de saisie qui s'agrandit avec le texte */}
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    multiline
+                    minRows={1}
+                    maxRows={6} // Augmente la hauteur max
+                    placeholder="Écris ton message..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    InputProps={{
+                      style: {
+                        backgroundColor: '#F4F4F4',
+                        borderRadius: '15px',
+                        padding: '10px 15px',
+                        fontSize: '1rem',
+                        fontWeight: '500',
+                        border: 'none',
+                      },
+                    }}
+                    inputProps={{ style: { color: '#333' } }}
+                    sx={{
+                      width: '100%',
+                      maxWidth: '600px',
+                      transition: 'height 0.2s ease-in-out',
+                    }}
+                  />
+
+                  {/* Conteneur des boutons Public/Private et Envoi */}
+                  <div
+                    className="w-full flex items-center justify-between"
+                    style={{
+                      maxWidth: '600px',
+                      marginTop: '10px',
+                      display: 'flex',
+                    }}
+                  >
+                    {/* Bouton Public */}
+                    <button
+                      className={`flex-1 py-2 rounded-full text-sm font-medium ${
+                        !isPrivate ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                      }`}
+                      style={{
+                        padding: '10px 15px',
+                        borderRadius: '12px',
+                        fontWeight: 'bold',
+                        width: '45%',
+                        textAlign: 'center',
+                      }}
+                      onClick={() => setIsPrivate(false)}
+                    >
+                      Public
+                    </button>
+
+                    {/* Bouton Private */}
+                    <button
+                      className={`flex-1 py-2 rounded-full text-sm font-medium ${
+                        isPrivate ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                      }`}
+                      style={{
+                        padding: '10px 15px',
+                        borderRadius: '12px',
+                        fontWeight: 'bold',
+                        width: '45%',
+                        textAlign: 'center',
+                      }}
+                      onClick={() => setIsPrivate(true)}
+                    >
+                      Private
+                    </button>
+
+                    {/* Bouton Envoi */}
+                    <button
+                      className="bg-blue-500 text-white rounded-full flex items-center justify-center"
+                      onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
+                      style={{
+                        width: '45px',
+                        height: '45px',
+                        marginLeft: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <ArrowForwardIcon />
+                    </button>
+                  </div>
+
+                  {/* Espace réservé pour future phrase */}
+                  <div style={{ minHeight: '20px' }}></div>
+                </div>
+              )}
+
+
+
+
+
+              {/*
               <div
                 className="footer"
                 style={{
@@ -2970,8 +3082,8 @@ const handleConversationClick = async (chat_id: string) => {
                       Lucy can make mistakes. Look at the confidence score and consider checking important information.
                     </Typography>
                   </div>
-                  */}
-                  <div className="flex justify-center w-full">
+                  *
+                 className="flex justify-center w-full">
                     <p
                       className="hidden sm:block mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80 sm:mt-3 sm:mb-0"
                     >
@@ -2982,8 +3094,12 @@ const handleConversationClick = async (chat_id: string) => {
 
 
                 </div>
+              
               </div>
+              
             )}
+              */}
+              
           </div>
   
           <PopupWrongAnswer
