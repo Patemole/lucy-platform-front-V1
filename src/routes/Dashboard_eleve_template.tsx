@@ -2747,7 +2747,354 @@ const handleConversationClick = async (chat_id: string) => {
                 <FaArrowDown size={12} color="#011F5B" />
               </button>
             )}
-  
+            
+
+            {currentView === 'chat' && !isLandingPageVisible && (!hasTak || inputValue.trim() !== "") && (
+            <>
+              {isSmallScreen ? (
+                // VERSION MOBILE AVEC MODIFICATIONS
+                <div
+                  className="fixed bottom-0 left-0 w-full flex flex-col items-center"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.6)', // effet glace avec semi-transparence
+                    backdropFilter: 'blur(50px)',
+                    WebkitBackdropFilter: 'blur(50px)',
+                    borderTopLeftRadius: '20px',
+                    borderTopRightRadius: '20px',
+                    padding: '12px',
+                    minHeight: '80px',
+                    maxHeight: inputValue.length > 0 ? '300px' : '150px',
+                    overflow: 'hidden',
+                    transition: 'max-height 0.2s ease-in-out',
+                    zIndex: 2,
+                  }}
+                >
+                  {/* Champ de saisie avec placeholder "Ask Lucy..." */}
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    multiline
+                    minRows={1}
+                    maxRows={6}
+                    placeholder="Ask Lucy..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    InputProps={{
+                      style: {
+                        backgroundColor: 'rgba(255,255,255,0.6)', // même fond que le container pour homogénéité
+                        borderRadius: '15px',
+                        padding: '10px 15px',
+                        fontSize: '1rem',
+                        fontWeight: '500',
+                        border: 'none',
+                      },
+                    }}
+                    inputProps={{ style: { color: '#333' } }}
+                    sx={{
+                      width: '100%',
+                      maxWidth: '600px',
+                      transition: 'height 0.2s ease-in-out',
+                      '& fieldset': { border: 'none' },
+                    }}
+                  />
+
+                  {/* Conteneur des boutons Public/Private et du bouton d'envoi */}
+                  <div
+                    className="w-full flex items-center justify-start"
+                    style={{
+                      maxWidth: '600px',
+                      marginTop: '10px',
+                      gap: '10px',
+                    }}
+                  >
+                    {/* Bouton Public (petit, icône + texte en gris foncé) */}
+                    <button
+                      className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
+                      style={{
+                        backgroundColor: !isPrivate ? '#D6DDF5' : '#E0E0E0',
+                        color: '#6F6F6F', // texte en gris foncé
+                        borderRadius: '12px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                      onClick={() => setIsPrivate(false)}
+                    >
+                      <LockOpenIcon fontSize="small" style={{ color: '#6F6F6F' }} /> Public
+                    </button>
+
+                    {/* Bouton Private (petit, icône + texte en gris foncé) */}
+                    <button
+                      className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
+                      style={{
+                        backgroundColor: isPrivate ? '#F0F0F0' : '#E0E0E0',
+                        color: '#6F6F6F',
+                        borderRadius: '12px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                      onClick={() => setIsPrivate(true)}
+                    >
+                      <LockIcon fontSize="small" style={{ color: '#6F6F6F' }} /> Private
+                    </button>
+
+                    {/* Bouton d'envoi (cercle, de la même taille que sur desktop) */}
+                    <button
+                      className="rounded-full flex items-center justify-center"
+                      onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        marginLeft: 'auto', // positionné à droite
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: isStreaming ? '#F04261' : theme.palette.button_sign_in,
+                      }}
+                    >
+                      {isStreaming ? (
+                        <StopIcon style={{ color: '#fff', fontSize: '16px' }} />
+                      ) : (
+                        <ArrowForwardIcon style={{ color: '#fff', fontSize: '16px' }} />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Phrase d'information sous le champ de saisie */}
+                  <div className="flex justify-center w-full">
+                    <p
+                      className="mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80"
+                    >
+                      Lucy can make mistakes. Look at the confidence score and consider checking important information.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                // VERSION DESKTOP : exactement identique à l'ancien code
+                <div
+                  className="footer"
+                  style={{
+                    position: 'fixed',
+                    backgroundColor: '#F0F4FC',
+                    bottom: 0,
+                    left: drawerOpen ? `${drawerWidth}px` : '0',
+                    width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
+                    backdropFilter: 'blur(50px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.3)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: isSmallScreen ? '10px' : '20px',
+                    paddingBottom: isSmallScreen ? '1px' : '20px',
+                    zIndex: 2,
+                    transition: 'left 0.3s, width 0.3s',
+                    display: isLandingPageVisible ? 'none' : 'flex',
+                  }}
+                >
+                  <div
+                    style={{
+                      maxWidth: isSmallScreen ? '90%' : '800px',
+                      width: '100%',
+                      margin: '0 auto',
+                      padding: isSmallScreen ? '10px 0px 30px' : '0',
+                      position: 'relative',
+                    }}
+                  >
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      multiline
+                      minRows={1}
+                      maxRows={6}
+                      placeholder={
+                        isSmallScreen && drawerOpen
+                          ? ""
+                          : isSocialThread
+                          ? "Write a public message in this discussion..."
+                          : "Type your message..."
+                      }
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={handleInputKeyPressSocraticLangGraph}
+                      InputProps={{
+                        startAdornment: (
+                          !isSocialThread && (
+                            <InputAdornment position="start">
+                              <IconButton
+                                onClick={async () => {
+                                  try {
+                                    const newPrivacyState = !isPrivate;
+                                    setIsPrivate(newPrivacyState);
+                                    const currentThreadType = newPrivacyState ? 'Private' : 'Public';
+                                    const chatSessionId = chatIds[0] || 'default_chat_id';
+                                    const docRef = doc(db, 'chatsessions', chatSessionId);
+                                    await updateDoc(docRef, { thread_type: currentThreadType });
+                                    console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
+                                    setConversations((prevConversations) =>
+                                      prevConversations.map((conv) =>
+                                        conv.chat_id === chatSessionId
+                                          ? { ...conv, thread_type: currentThreadType }
+                                          : conv
+                                      )
+                                    );
+                                  } catch (error) {
+                                    console.error('Erreur lors de la mise à jour du thread_type :', error);
+                                  }
+                                }}
+                                edge="start"
+                                aria-label={isPrivate ? "Set to Public" : "Set to Private"}
+                                sx={{
+                                  backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5',
+                                  color: isPrivate ? '#6F6F6F' : '#3155CC',
+                                  borderRadius: '12px',
+                                  padding: '4px 8px',
+                                  marginRight: '8px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  cursor: 'pointer',
+                                  width: '80px',
+                                  height: '30px',
+                                  '&:hover': {
+                                    backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
+                                    color: isPrivate ? '#5A5A5A' : '#4A0B8A',
+                                  },
+                                }}
+                                ref={(el) => {
+                                  if (el) {
+                                    console.log("Background color applied:", getComputedStyle(el).backgroundColor);
+                                  }
+                                }}
+                              >
+                                {isPrivate ? (
+                                  <>
+                                    <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                                    <Typography variant="caption" sx={{ color: '#000' }}>
+                                      Private
+                                    </Typography>
+                                  </>
+                                ) : (
+                                  <>
+                                    <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
+                                    <Typography variant="caption" sx={{ color: '#3155CC' }}>
+                                      Public
+                                    </Typography>
+                                  </>
+                                )}
+                              </IconButton>
+                            </InputAdornment>
+                          )
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              color="primary"
+                              onClick={() => {
+                                if (isStreaming) {
+                                  setCancelConversation(true);
+                                  setIsStreaming(false);
+                                  cancelConversationRef.current = true;
+                                } else {
+                                  handleSendMessageSocraticLangGraph(inputValue);
+                                }
+                              }}
+                              aria-label={isStreaming ? "Stop response" : "Send message"}
+                              edge="end"
+                            >
+                              {isStreaming ? (
+                                <div
+                                  style={{
+                                    backgroundColor: theme.palette.error.main,
+                                    borderRadius: '50%',
+                                    width: '30px',
+                                    height: '30px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  <StopIcon
+                                    style={{
+                                      color: '#fff',
+                                      fontSize: '20px',
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div
+                                  style={{
+                                    backgroundColor: theme.palette.button_sign_in,
+                                    borderRadius: '50%',
+                                    width: '30px',
+                                    height: '30px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  <ArrowForwardIcon
+                                    style={{
+                                      color: '#fff',
+                                      fontSize: '20px',
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                        style: {
+                          backgroundColor: '#F4F4F4',
+                          fontSize: '1rem',
+                          padding: '17px 8px',
+                          borderRadius: '20px',
+                          fontWeight: '500',
+                          color: theme.palette.text.primary,
+                          paddingRight: '20px',
+                          paddingLeft: '20px',
+                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                          border: 'none',
+                        },
+                      }}
+                      inputProps={{
+                        style: { color: theme.palette.text.primary },
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { border: 'none' },
+                          '&:hover fieldset': {
+                            boxShadow: messages.some((msg) => msg.TAK && msg.TAK.length > 0)
+                              ? "none"
+                              : "0 4px 8px rgba(0, 0, 0, 0.2)",
+                          },
+                        },
+                        '& .MuiInputBase-input::placeholder': {
+                          color: '#6F6F6F',
+                          opacity: 1,
+                        },
+                      }}
+                    />
+
+                    <div className="flex justify-center w-full">
+                      <p
+                        className="hidden sm:block mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80 sm:mt-3 sm:mb-0"
+                      >
+                        Lucy can make mistakes. Look at the confidence score and consider checking important information.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+
+
+
+            {/*
             {currentView === 'chat' && !isLandingPageVisible && (!hasTak || inputValue.trim() !== "") && (
 
 
@@ -2766,7 +3113,7 @@ const handleConversationClick = async (chat_id: string) => {
                     justifyContent: 'center',
                   }}
                 >
-                  {/* Champ de saisie dynamique */}
+                  {/* Champ de saisie dynamique *
                   <TextField
                     fullWidth
                     variant="outlined"
@@ -2795,7 +3142,7 @@ const handleConversationClick = async (chat_id: string) => {
                     }}
                   />
 
-                  {/* Conteneur des boutons Public/Private et Envoi (uniquement sur mobile) */}
+                  {/* Conteneur des boutons Public/Private et Envoi (uniquement sur mobile) *
                   {isSmallScreen ? (
                     <div
                       className="w-full flex items-center justify-between"
@@ -2806,7 +3153,7 @@ const handleConversationClick = async (chat_id: string) => {
                         gap: '10px',
                       }}
                     >
-                      {/* Bouton Public */}
+                      {/* Bouton Public *
                       <button
                         className="py-2 px-4 rounded-full flex items-center text-sm font-medium"
                         style={{
@@ -2827,7 +3174,7 @@ const handleConversationClick = async (chat_id: string) => {
                         <LockOpenIcon fontSize="small" /> Public
                       </button>
 
-                      {/* Bouton Private */}
+                      {/* Bouton Private *
                       <button
                         className="py-2 px-4 rounded-full flex items-center text-sm font-medium"
                         style={{
@@ -2848,7 +3195,7 @@ const handleConversationClick = async (chat_id: string) => {
                         <LockIcon fontSize="small" /> Private
                       </button>
 
-                      {/* Bouton Envoi */}
+                      {/* Bouton Envoi *
                       <button
                         className="rounded-full flex items-center justify-center"
                         onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
@@ -2899,7 +3246,7 @@ const handleConversationClick = async (chat_id: string) => {
                           position: 'relative',
                         }}
                       >
-                        {/* Champ de saisie */}
+                        {/* Champ de saisie *
                         <TextField
                           fullWidth
                           variant="outlined"
@@ -2934,10 +3281,11 @@ const handleConversationClick = async (chat_id: string) => {
                     </div>
                   )}
 
-                  {/* Espace réservé pour future phrase */}
+                  {/* Espace réservé pour future phrase *
                   <div style={{ minHeight: '20px' }}></div>
                 </div>
               )}
+              */}
 
 
 
