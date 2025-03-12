@@ -2535,7 +2535,8 @@ const handleConversationClick = async (chat_id: string) => {
                   style={{ backgroundColor: 'transparent', paddingBottom: '100px' }}
                 >
                   <div
-                    className="flex flex-col space-y-2 p-4"
+                    //className="flex flex-col space-y-2 p-4"
+                    className={`flex flex-col space-y-2 ${isSmallScreen ? 'px-2 py-4' : 'p-4'}`}
                     ref={scrollableDivRef}
                     onScroll={() => {
                       const scrollDiv = scrollableDivRef.current;
@@ -2830,7 +2831,8 @@ const handleConversationClick = async (chat_id: string) => {
                       className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
                       style={{
                         backgroundColor: isPrivate ? '#F0F0F0' : '#E0E0E0',
-                        color: isPrivate ? '#6F6F6F' : '#3155CC',
+                        //color: isPrivate ? '#6F6F6F' : '#3155CC',
+                        color: '#6F6F6F',
                         borderRadius: '12px',
                         fontWeight: 'bold',
                         display: 'flex',
