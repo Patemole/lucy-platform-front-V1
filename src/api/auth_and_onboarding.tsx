@@ -11,9 +11,20 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
             },
             body: JSON.stringify({
                 to: email,
-                subject: 'Welcome on Lucy 🎉',
-                html: `<p>Heyy ${name || "Student"},</p><p>Welcome on <strong>Lucy</strong> ! We are glad to have you on board!</p>`,
-            }),
+                subject: 'Welcome to Lucy! 🎉',
+                html: `
+                  <p>Hi ${name || "there"}!</p>
+              
+                  <p>We're thrilled to have you join <strong>Lucy</strong>, your personalized AI peer advisor designed to simplify your university journey.</p>
+              
+                  <p>With Lucy, you can effortlessly access tailored course recommendations, explore campus opportunities, and receive support whenever you need it.</p>
+              
+                  <p>Ready to get started? Log in now and experience smarter university life!</p>
+              
+                  <p>Cheers,<br>
+                  The Lucy Team 🚀</p>
+                `,
+              }),              
         });
 
         if (!response.ok) {
