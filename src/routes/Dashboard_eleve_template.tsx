@@ -2536,7 +2536,7 @@ const handleConversationClick = async (chat_id: string) => {
                 >
                   <div
                     //className="flex flex-col space-y-2 p-4"
-                    className={`flex flex-col space-y-2 ${isSmallScreen ? 'px-2 py-4' : 'p-4'}`}
+                    className={`flex flex-col space-y-2 ${isSmallScreen ? 'px-1 py-4' : 'p-4'}`}
                     ref={scrollableDivRef}
                     onScroll={() => {
                       const scrollDiv = scrollableDivRef.current;
@@ -2841,7 +2841,8 @@ const handleConversationClick = async (chat_id: string) => {
                       }}
                       onClick={() => setIsPrivate(true)}
                     >
-                      <LockIcon fontSize="small" style={{ color: isPrivate ? '#6F6F6F' : '#3155CC' }} /> Private
+                      {/*<LockIcon fontSize="small" style={{ color: isPrivate ? '#6F6F6F' : '#3155CC' }} /> Private*/}
+                      <LockIcon fontSize="small" style={{ color: '#6F6F6F' }} /> Private
                     </button>
 
                     {/* Bouton d'envoi (cercle identique à celui de desktop, mais avec flèche vers le haut) */}

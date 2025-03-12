@@ -11,8 +11,8 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
             },
             body: JSON.stringify({
                 to: email,
-                subject: 'Bienvenue sur Lucy 🎉',
-                html: `<p>Bonjour ${name || "Étudiant"},</p><p>Bienvenue sur <strong>Lucy</strong> ! Nous sommes ravis de vous accueillir.</p>`,
+                subject: 'Welcome on Lucy 🎉',
+                html: `<p>Heyy ${name || "Student"},</p><p>Welcome on <strong>Lucy</strong> ! We are glad to have you on board!</p>`,
             }),
         });
 

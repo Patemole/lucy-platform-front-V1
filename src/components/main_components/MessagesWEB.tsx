@@ -504,7 +504,8 @@ useEffect(() => {
   (insta2Data && insta2Data.length > 0);
 
   return (
-    <div className="py-5 px-5 flex -mr-6 w-full relative">
+    //<div className="py-5 px-5 flex -mr-6 w-full relative">
+    <div className={`py-5 ${isSmallScreen ? "px-2" : "px-5"} flex -mr-6 w-full relative`}>
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
