@@ -2750,32 +2750,35 @@ const handleConversationClick = async (chat_id: string) => {
   
             {currentView === 'chat' && !isLandingPageVisible && (!hasTak || inputValue.trim() !== "") && (
 
+
                 <div
-                  className="fixed bottom-0 left-0 w-full bg-white shadow-lg flex flex-col items-center"
+                  className="fixed bottom-0 left-0 w-full shadow-lg flex flex-col items-center"
                   style={{
-                    borderTopLeftRadius: '20px',
-                    borderTopRightRadius: '20px',
+                    backgroundColor: isSmallScreen ? 'white' : '#F0F4FC', // Fond blanc sur mobile, ancien fond sur desktop
+                    borderTopLeftRadius: isSmallScreen ? '20px' : '0px',
+                    borderTopRightRadius: isSmallScreen ? '20px' : '0px',
                     padding: '12px',
-                    minHeight: '80px', // Hauteur de base
-                    //maxHeight: '250px', // Hauteur max pour éviter un débordement
-                    maxHeight: inputValue.length > 0 ? '300px' : '150px',
+                    minHeight: '80px', 
+                    maxHeight: inputValue.length > 0 ? '300px' : '150px', 
                     overflow: 'hidden',
-                    transition: 'height 0.2s ease-in-out',
+                    transition: 'max-height 0.2s ease-in-out',
+                    display: 'flex',
+                    justifyContent: 'center',
                   }}
                 >
-                  {/* Champ de saisie qui s'agrandit avec le texte */}
+                  {/* Champ de saisie dynamique */}
                   <TextField
                     fullWidth
                     variant="outlined"
                     multiline
                     minRows={1}
-                    maxRows={6} // Augmente la hauteur max
-                    placeholder="Écris ton message..."
+                    maxRows={6}
+                    placeholder=" " // Cache le placeholder
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     InputProps={{
                       style: {
-                        backgroundColor: '#F4F4F4',
+                        backgroundColor: isSmallScreen ? 'white' : '#F4F4F4', // Fond identique au reste
                         borderRadius: '15px',
                         padding: '10px 15px',
                         fontSize: '1rem',
@@ -2788,73 +2791,154 @@ const handleConversationClick = async (chat_id: string) => {
                       width: '100%',
                       maxWidth: '600px',
                       transition: 'height 0.2s ease-in-out',
+                      '& fieldset': { border: 'none' }, // Supprime les contours
                     }}
                   />
 
-                  {/* Conteneur des boutons Public/Private et Envoi */}
-                  <div
-                    className="w-full flex items-center justify-between"
-                    style={{
-                      maxWidth: '600px',
-                      marginTop: '10px',
-                      display: 'flex',
-                    }}
-                  >
-                    {/* Bouton Public */}
-                    <button
-                      className={`flex-1 py-2 rounded-full text-sm font-medium ${
-                        !isPrivate ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
-                      }`}
+                  {/* Conteneur des boutons Public/Private et Envoi (uniquement sur mobile) */}
+                  {isSmallScreen ? (
+                    <div
+                      className="w-full flex items-center justify-between"
                       style={{
-                        padding: '10px 15px',
-                        borderRadius: '12px',
-                        fontWeight: 'bold',
-                        width: '45%',
-                        textAlign: 'center',
-                      }}
-                      onClick={() => setIsPrivate(false)}
-                    >
-                      Public
-                    </button>
-
-                    {/* Bouton Private */}
-                    <button
-                      className={`flex-1 py-2 rounded-full text-sm font-medium ${
-                        isPrivate ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
-                      }`}
-                      style={{
-                        padding: '10px 15px',
-                        borderRadius: '12px',
-                        fontWeight: 'bold',
-                        width: '45%',
-                        textAlign: 'center',
-                      }}
-                      onClick={() => setIsPrivate(true)}
-                    >
-                      Private
-                    </button>
-
-                    {/* Bouton Envoi */}
-                    <button
-                      className="bg-blue-500 text-white rounded-full flex items-center justify-center"
-                      onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
-                      style={{
-                        width: '45px',
-                        height: '45px',
-                        marginLeft: '10px',
+                        maxWidth: '600px',
+                        marginTop: '10px',
                         display: 'flex',
+                        gap: '10px',
+                      }}
+                    >
+                      {/* Bouton Public */}
+                      <button
+                        className="py-2 px-4 rounded-full flex items-center text-sm font-medium"
+                        style={{
+                          backgroundColor: !isPrivate ? '#D6DDF5' : '#E0E0E0', // Fond bleu clair si public
+                          color: !isPrivate ? '#3155CC' : '#6F6F6F', // Texte bleu si public
+                          borderRadius: '12px',
+                          fontWeight: 'bold',
+                          textAlign: 'center',
+                          flex: 1,
+                          maxWidth: '120px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                        }}
+                        onClick={() => setIsPrivate(false)}
+                      >
+                        <LockOpenIcon fontSize="small" /> Public
+                      </button>
+
+                      {/* Bouton Private */}
+                      <button
+                        className="py-2 px-4 rounded-full flex items-center text-sm font-medium"
+                        style={{
+                          backgroundColor: isPrivate ? '#F0F0F0' : '#E0E0E0', // Fond gris si private
+                          color: isPrivate ? '#6F6F6F' : '#3155CC', // Texte gris si private
+                          borderRadius: '12px',
+                          fontWeight: 'bold',
+                          textAlign: 'center',
+                          flex: 1,
+                          maxWidth: '120px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                        }}
+                        onClick={() => setIsPrivate(true)}
+                      >
+                        <LockIcon fontSize="small" /> Private
+                      </button>
+
+                      {/* Bouton Envoi */}
+                      <button
+                        className="rounded-full flex items-center justify-center"
+                        onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
+                        style={{
+                          width: '45px',
+                          height: '45px',
+                          marginLeft: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: isStreaming ? '#F04261' : '#3155CC', // Rouge si envoi, bleu sinon
+                        }}
+                      >
+                        {isStreaming ? (
+                          <StopIcon style={{ color: 'white', fontSize: '20px' }} />
+                        ) : (
+                          <ArrowForwardIcon style={{ color: 'white', fontSize: '20px' }} />
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    // Design pour grand écran (repris du code commenté)
+                    <div
+                      className="footer"
+                      style={{
+                        position: 'fixed',
+                        backgroundColor: '#F0F4FC',
+                        bottom: 0,
+                        left: drawerOpen ? `${drawerWidth}px` : '0',
+                        width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(12px)',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.3)',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        paddingTop: '20px',
+                        paddingBottom: '20px',
+                        zIndex: 2,
+                        transition: 'left 0.3s, width 0.3s',
+                        display: isLandingPageVisible ? 'none' : 'flex',
                       }}
                     >
-                      <ArrowForwardIcon />
-                    </button>
-                  </div>
+                      <div
+                        style={{
+                          maxWidth: '800px',
+                          width: '100%',
+                          margin: '0 auto',
+                          position: 'relative',
+                        }}
+                      >
+                        {/* Champ de saisie */}
+                        <TextField
+                          fullWidth
+                          variant="outlined"
+                          multiline
+                          minRows={1}
+                          maxRows={6}
+                          placeholder="Ask Lucy..."
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                          onKeyPress={handleInputKeyPressSocraticLangGraph}
+                          InputProps={{
+                            style: {
+                              backgroundColor: '#F4F4F4',
+                              fontSize: '1rem',
+                              padding: '17px 8px',
+                              borderRadius: '20px',
+                              fontWeight: '500',
+                              color: theme.palette.text.primary,
+                              paddingRight: '20px',
+                              paddingLeft: '20px',
+                              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                              border: 'none',
+                            },
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': { border: 'none' },
+                            },
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Espace réservé pour future phrase */}
                   <div style={{ minHeight: '20px' }}></div>
                 </div>
               )}
+
 
 
 
