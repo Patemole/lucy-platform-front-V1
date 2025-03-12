@@ -52,6 +52,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 
 import {
   ThemeProvider, TextField, Button, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Menu, MenuItem, Divider, IconButton, Snackbar, InputAdornment, Alert, CircularProgress,
@@ -2807,12 +2808,12 @@ const handleConversationClick = async (chat_id: string) => {
                       gap: '10px',
                     }}
                   >
-                    {/* Bouton Public (petit, icône + texte en gris foncé) */}
+                    {/* Bouton Public */}
                     <button
                       className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
                       style={{
-                        backgroundColor: !isPrivate ? '#D6DDF5' : '#E0E0E0',
-                        color: '#6F6F6F', // texte en gris foncé
+                        backgroundColor: !isPrivate ? '#D6DDF5' : '#E0E0E0', // pour public, fond light-blue (#D6DDF5)
+                        color: !isPrivate ? '#3155CC' : '#6F6F6F', // et texte en bleu (#3155CC)
                         borderRadius: '12px',
                         fontWeight: 'bold',
                         display: 'flex',
@@ -2821,15 +2822,15 @@ const handleConversationClick = async (chat_id: string) => {
                       }}
                       onClick={() => setIsPrivate(false)}
                     >
-                      <LockOpenIcon fontSize="small" style={{ color: '#6F6F6F' }} /> Public
+                      <LockOpenIcon fontSize="small" style={{ color: !isPrivate ? '#3155CC' : '#6F6F6F' }} /> Public
                     </button>
 
-                    {/* Bouton Private (petit, icône + texte en gris foncé) */}
+                    {/* Bouton Private */}
                     <button
                       className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
                       style={{
                         backgroundColor: isPrivate ? '#F0F0F0' : '#E0E0E0',
-                        color: '#6F6F6F',
+                        color: isPrivate ? '#6F6F6F' : '#3155CC',
                         borderRadius: '12px',
                         fontWeight: 'bold',
                         display: 'flex',
@@ -2838,10 +2839,10 @@ const handleConversationClick = async (chat_id: string) => {
                       }}
                       onClick={() => setIsPrivate(true)}
                     >
-                      <LockIcon fontSize="small" style={{ color: '#6F6F6F' }} /> Private
+                      <LockIcon fontSize="small" style={{ color: isPrivate ? '#6F6F6F' : '#3155CC' }} /> Private
                     </button>
 
-                    {/* Bouton d'envoi (cercle, de la même taille que sur desktop) */}
+                    {/* Bouton d'envoi (cercle identique à celui de desktop, mais avec flèche vers le haut) */}
                     <button
                       className="rounded-full flex items-center justify-center"
                       onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
@@ -2858,17 +2859,15 @@ const handleConversationClick = async (chat_id: string) => {
                       {isStreaming ? (
                         <StopIcon style={{ color: '#fff', fontSize: '16px' }} />
                       ) : (
-                        <ArrowForwardIcon style={{ color: '#fff', fontSize: '16px' }} />
+                        <ArrowUpwardIcon style={{ color: '#fff', fontSize: '16px' }} />
                       )}
                     </button>
                   </div>
 
-                  {/* Phrase d'information sous le champ de saisie */}
+                  {/* Phrase d'information sous le champ de saisie (version mobile courte) */}
                   <div className="flex justify-center w-full">
-                    <p
-                      className="mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80"
-                    >
-                      Lucy can make mistakes. Look at the confidence score and consider checking important information.
+                    <p className="mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80">
+                      Lucy can make mistake. Consider checking important information.
                     </p>
                   </div>
                 </div>
@@ -3090,6 +3089,7 @@ const handleConversationClick = async (chat_id: string) => {
               )}
             </>
           )}
+
 
 
 
