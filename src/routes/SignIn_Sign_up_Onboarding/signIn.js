@@ -127,6 +127,14 @@ const SignIn = ({ handleToggleThemeMode }) => {
       // 🔥 Démarrer l'authentification avec Firebase
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      // 👉 Ajoute ton code exactement ici :
+      const credential = OAuthProvider.credentialFromResult(result);
+      const idToken = credential.idToken;
+      const payload = JSON.parse(atob(idToken.split('.')[1]));
+      console.log("📝 Payload complet du provider OIDC :", payload);
+      console.log("🔑 Identifiant (sub) du provider SSO :", payload.sub);
+      // Fin de l'ajout 👈
   
       console.log("✅ Utilisateur connecté via SSO :", user.email, " | UID :", user.uid);
   
