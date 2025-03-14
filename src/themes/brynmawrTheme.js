@@ -7,7 +7,7 @@ const brynMawrTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#007A33', // Bryn Mawr Green
+      main: '#FFC72C', // Bryn Mawr Green #FFC72C #007A33
     },
     sidebar: '#007A33',
     secondary: {
