@@ -22,6 +22,9 @@ import LockIcon from '@mui/icons-material/Lock';
 import { doc, updateDoc} from 'firebase/firestore';
 import { db } from '../../auth/firebase';
 import { useAuth } from '../../auth/hooks/useAuth';
+import config from '../../config';
+
+
 
 interface LandingPageProps {
   onSend: (message: string) => void;
@@ -43,6 +46,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
   //const [showCursor, setShowCursor] = useState(true);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const subdomain = config.subdomain;
 
 
   // État pour la confidentialité (Public/Private)
@@ -400,9 +404,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
       </div>
 
 
-
-
-
+      
+  
       {/* Contenu principal de la landing page */}
       <Box
         ref={containerRef}
@@ -552,6 +555,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
             },
           }}
         />
+
+        {/* Affichage conditionnel pour Holy Family seulement */}
+      {subdomain === 'holyfamily' && (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            mb: isSmallScreen ? 2 : 4,
+            mt: isSmallScreen ? 1 : 3,
+          }}
+        >
+          <Typography
+            sx={{
+              bgcolor: '#ffffff',
+              color: '#000000',
+              px: isSmallScreen ? 2 : 4,
+              py: isSmallScreen ? 1 : 1.5,
+              borderRadius: '16px',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+              textAlign: 'center',
+              fontSize: isSmallScreen ? '0.75rem' : '0.875rem',
+              fontWeight: '500'
+            }}
+          >
+            Lucy Game: 7 days left to be the top user and win 2 plane tickets to Miami 🏖️
+          </Typography>
+        </Box>
+        )}
 
         {/* Afficher les inspirations sous le placeholder sur petit écran */}
         {isSmallScreen && (
