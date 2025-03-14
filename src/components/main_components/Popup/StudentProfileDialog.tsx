@@ -1221,7 +1221,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                       className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
                     />
                     {errors.firstName && (
-                      <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+                      <p role="alert" aria-live="assertive" className="text-red-500 text-xs mt-1">{errors.firstName}</p>
                     )}
                   </div>
 
@@ -1244,7 +1244,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                       <option value="Grad 2">grad 2 (6th year)</option>
                     </select>
                     {errors.year && (
-                      <p className="text-red-500 text-xs mt-1">{errors.year}</p>
+                      <p role="alert" aria-live="assertive" className="text-red-500 text-xs mt-1">{errors.year}</p>
                     )}
                   </div>
                 </div>
@@ -1258,7 +1258,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                     className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
                   />
                   {errors.academicAdvisor && (
-                    <p className="text-red-500 text-xs mt-1">{errors.academicAdvisor}</p>
+                    <p role="alert" aria-live="assertive" className="text-red-500 text-xs mt-1">{errors.academicAdvisor}</p>
                   )}
                 </div>
 
@@ -1311,7 +1311,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                         </button>
                       )}
                       {errors.faculty && (
-                        <p className="text-red-500 text-xs mt-1">{errors.faculty}</p>
+                        <p role="alert" aria-live="assertive" className="text-red-500 text-xs mt-1">{errors.faculty}</p>
                       )}
                     </div>
                   ))}
@@ -1357,7 +1357,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                         </button>
                       )}
                       {errors.major && (
-                        <p className="text-red-500 text-xs mt-1">{errors.major}</p>
+                        <p role="alert" aria-live="assertive" className="text-red-500 text-xs mt-1">{errors.major}</p>
                       )}
                     </div>
                   ))}
@@ -1401,7 +1401,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                         </button>
                       )}
                       {errors.minor && (
-                        <p className="text-red-500 text-xs mt-1">{errors.minor}</p>
+                        <p role="alert" aria-live="assertive" className="text-red-500 text-xs mt-1">{errors.minor}</p>
                       )}
                     </div>
                   ))}
@@ -1455,7 +1455,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                     className="inline-block w-auto max-w-xs px-2 py-1 border border-gray-300 rounded-full text-sm text-gray-700 focus:outline-none focus:ring focus:ring-blue-100"
                   />
                 </div>
-                {errors.interests && <p className="text-xs text-red-600 mt-1">{errors.interests}</p>}
+                {errors.interests && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.interests}</p>}
               </div>
 
               <div className="flex justify-end mt-6 space-x-3">
