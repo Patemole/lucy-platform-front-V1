@@ -26,6 +26,7 @@ import {pennStateTheme,  pennStateDarkTheme } from './pennStateTheme';
 import {ccpTheme,  ccpDarkTheme } from './ccpTheme';
 import {adminTheme,  adminDarkTheme } from './adminTheme';
 import { hofstraDarkTheme, hofstraTheme } from './hofstraTheme';
+import { brynMawrDarkTheme, brynMawrTheme } from './brynmawrTheme';
 
 // Function to get the theme based on subdomain and selected mode
 const getTheme = (subdomain, themeMode) => {
@@ -79,6 +80,9 @@ const getTheme = (subdomain, themeMode) => {
 
     case 'berkeley':
           return themeMode == 'dark' ? berkeleyDarkTheme : berkeleyTheme;
+
+      case 'brynmawr':
+          return themeMode == 'dark' ? brynMawrDarkTheme : brynMawrTheme;
   
 
     case 'admin':
