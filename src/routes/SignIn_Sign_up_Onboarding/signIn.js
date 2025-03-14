@@ -328,7 +328,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
               placeholder="Email address"
             />
-            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+            {errors.email && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.email}</p>}
           </div>
         )}
 
@@ -343,7 +343,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
               placeholder="Password"
             />
-            {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+            {errors.password && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.password}</p>}
           </div>
           )}
 

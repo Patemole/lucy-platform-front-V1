@@ -349,7 +349,7 @@ export default function SignUp() {
             <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
             <input type="email" name="email" onBlur={handleEmailBlur} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Email address" />
             {emailError && <p className="text-xs text-red-600 mt-1">{emailError}</p>}
-            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+            {errors.email && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.email}</p>}
           </div>
           )}
           
@@ -358,7 +358,7 @@ export default function SignUp() {
           <div className="mb-6">
             <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
             <input type="password" name="password" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Password" />
-            {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+            {errors.password && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.password}</p>}
           </div>
           )}
 

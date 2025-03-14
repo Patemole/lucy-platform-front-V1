@@ -311,7 +311,7 @@ export default function LearningStyleSurvey() {
                 )}
               </div>
             ))}
-            {errors.schools && <p className="text-xs text-red-600 mt-1">{errors.schools}</p>}
+            {errors.schools && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.schools}</p>}
           </div>
 
           {/* Combined Section: Year and Academic Advisor */}
@@ -336,7 +336,7 @@ export default function LearningStyleSurvey() {
                 <option value="Grad 1">Grad 1 (5th year)</option>
                 <option value="Grad 2">Grad 2 (6th year)</option>
               </select>
-              {errors.learnerType && <p className="text-xs text-red-600 mt-1">{errors.learnerType}</p>}
+              {errors.learnerType && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.learnerType}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-4">
@@ -374,7 +374,7 @@ export default function LearningStyleSurvey() {
                 </button>
               ))}
             </div>
-            {errors.interests && <p className="text-xs text-red-600 mt-1">{errors.interests}</p>}
+            {errors.interests && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.interests}</p>}
           </div>
 
           {/* Section Club Registration */}
@@ -527,7 +527,7 @@ export default function LearningStyleSurvey() {
           </div>
 
           {/* Affichage de l'erreur si l'utilisateur ne coche pas la case */}
-          {errors.cookieConsent && <p className="text-xs text-red-600 mt-1">{errors.cookieConsent}</p>}
+          {errors.cookieConsent && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.cookieConsent}</p>}
 
 
           {/* Submit Button */}
