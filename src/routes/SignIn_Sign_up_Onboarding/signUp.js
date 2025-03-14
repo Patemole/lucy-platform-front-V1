@@ -329,8 +329,8 @@ export default function SignUp() {
           <div className="mb-6">
           {subdomain !== 'holyfamily' && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
-              <input type="text" name="firstName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="First Name" />
+              <label htmlFor="firstname" className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
+              <input id="firstname" type="text" name="firstName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="First Name" />
               {errors.firstName && <p className="text-xs text-red-600 mt-1">{errors.firstName}</p>}
             </div>
           )}
@@ -346,8 +346,8 @@ export default function SignUp() {
             
           {subdomain !== 'holyfamily' && (
           <div className="mb-6">
-            <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
-            <input type="email" name="email" onBlur={handleEmailBlur} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Email address" />
+            <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+            <input id="email" type="email" name="email" onBlur={handleEmailBlur} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Email address" />
             {emailError && <p className="text-xs text-red-600 mt-1">{emailError}</p>}
             {errors.email && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.email}</p>}
           </div>
@@ -356,8 +356,8 @@ export default function SignUp() {
           
           {subdomain !== 'holyfamily' && (
           <div className="mb-6">
-            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
-            <input type="password" name="password" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Password" />
+            <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <input id="password" type="password" name="password" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Password" />
             {errors.password && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.password}</p>}
           </div>
           )}

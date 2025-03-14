@@ -2394,6 +2394,14 @@ const handleConversationClick = async (chat_id: string) => {
                   </>
                 ) : (
                   <>
+                    <IconButton
+                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                      aria-label="Open profile menu"
+                      aria-haspopup="true"
+                      aria-controls={profileMenuAnchorEl ? 'profile-menu' : undefined}
+                      aria-expanded={Boolean(profileMenuAnchorEl)}
+                      sx={{ padding: 0, marginLeft: '5px' }}
+                    >
                     {profilePicture ? (
                       <>
                         {console.log('Rendering profile picture with URL:', profilePicture)}
@@ -2405,7 +2413,7 @@ const handleConversationClick = async (chat_id: string) => {
                             height: '55px',
                           }}
                           className="rounded-full object-cover cursor-pointer"
-                          onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
+                          //onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                         />
                       </>
                     ) : (
@@ -2424,6 +2432,7 @@ const handleConversationClick = async (chat_id: string) => {
                         />
                       </>
                     )}
+                    </IconButton>
                     <Menu
                       anchorEl={profileMenuAnchorEl}
                       open={Boolean(profileMenuAnchorEl)}
@@ -2811,6 +2820,7 @@ const handleConversationClick = async (chat_id: string) => {
                   >
                     {/* Bouton Public */}
                     <button
+                      aria-label="Set conversation to public"
                       className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
                       style={{
                         backgroundColor: !isPrivate ? '#D6DDF5' : '#E0E0E0', // pour public, fond light-blue (#D6DDF5)
@@ -2828,6 +2838,7 @@ const handleConversationClick = async (chat_id: string) => {
 
                     {/* Bouton Private */}
                     <button
+                      aria-label="Set conversation to private"
                       className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
                       style={{
                         backgroundColor: isPrivate ? '#F0F0F0' : '#E0E0E0',

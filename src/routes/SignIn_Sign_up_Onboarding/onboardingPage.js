@@ -317,10 +317,11 @@ export default function LearningStyleSurvey() {
           {/* Combined Section: Year and Academic Advisor */}
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-4">
+              <label htmlFor="currentyear" className="block text-sm font-medium text-gray-700 mb-4">
               {isMobile ? "Your year*":"What is your current year?*"} 
               </label >
               <select
+                id="currentyear"
                 value={learnerType}
                 onChange={handleLearnerTypeChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm appearance-none bg-white bg-no-repeat bg-right pr-10 focus:ring focus:ring-blue-100 focus:border-blue-500"
@@ -339,11 +340,12 @@ export default function LearningStyleSurvey() {
               {errors.learnerType && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.learnerType}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-4">
+              <label htmlFor="academicAdvisor" className="block text-sm font-medium text-gray-700 mb-4">
                 {isMobile ? "Academic Advisor":"Academic Advisor (Optional)"} 
               </label>
               
               <input
+                id="academicAdvisor"
                 type="text"
                 value={advisor}
                 onChange={handleAdvisorChange}
@@ -379,7 +381,7 @@ export default function LearningStyleSurvey() {
 
           {/* Section Club Registration */}
           <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700 mb-4">
+            <label htmlFor="registeredYes" className="block text-sm font-medium text-gray-700 mb-4">
               Are you registered to some clubs yet? (to know more about your interests)*
             </label>
             <div className="flex items-center space-x-4">
@@ -393,7 +395,7 @@ export default function LearningStyleSurvey() {
                   onChange={handleRegisteredClubStatusChange}
                   className="mr-1"
                 />
-                <label htmlFor="registeredYes" className="text-sm text-gray-700">Yes</label>
+                <label htmlFor="registeredNo" className="text-sm text-gray-700">Yes</label>
               </div>
               <div className="flex items-center">
                 <input
