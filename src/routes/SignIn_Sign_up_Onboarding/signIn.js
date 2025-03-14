@@ -319,9 +319,10 @@ const SignIn = ({ handleToggleThemeMode }) => {
         <form onSubmit={handleSubmit} noValidate>
         {subdomain !== 'holyfamily' && (
           <div className="mb-6">
-            <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+            <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
             <input
               type="email"
+              id="email"
               name="email"
               value={email} // Bind to state
               onChange={(e) => setEmail(e.target.value)} // x state
@@ -334,9 +335,10 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
           {subdomain !== 'holyfamily' && (
           <div className="mb-6">
-            <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">Password</label>
             <input
               type="password"
+              id="password"
               name="password"
               value={password} // Bind to state
               onChange={(e) => setPassword(e.target.value)} // Update state
