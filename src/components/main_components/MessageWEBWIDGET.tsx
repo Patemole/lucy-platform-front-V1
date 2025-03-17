@@ -28,8 +28,8 @@ import {
   AnswerERROR,
 
 } from "../../interfaces/interfaces";
-import { SourceIcon } from "../icons/SourceIcon";
-import { ValidSources } from "../sources";
+//import { SourceIcon } from "../icons/SourceIcon";
+//import { ValidSources } from "../sources";
 import lucy_face_logotest from "../../testlucy3.png";
 import certifiate_icon from "../../certifiate.png";
 import './MessageWEBWIDGETCSS.css';
@@ -983,16 +983,18 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                 <div
                     className="max-w-350 text-ellipsis flex text-sm border border-border py-1 px-2 rounded mb-2" // Correction : Suppression du double "flex" et maintien de mb-2
                     style={{ color: theme.palette.text.primary }}
-                >
+                >   {/*
                     <div className="mr-1 my-auto">
                     <SourceIcon
                         sourceType={document.source_type as ValidSources}
                         iconSize={16}
                     />
                     </div>
+                    */}
                     {document.document_name}
                 </div>
                 );
+                
 
                 return document.link ? (
                 <a
