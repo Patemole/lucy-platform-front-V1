@@ -9,7 +9,7 @@ const brynMawrTheme = createTheme({
     primary: {
       main: '#FFC72C', // Bryn Mawr Gree007A33
     },
-    sidebar: '#007A33',
+    sidebar: '#FFC72C',
     secondary: {
       main: '#FFC72C', // Bryn Mawr Gold
     },
@@ -21,15 +21,15 @@ const brynMawrTheme = createTheme({
       primary: '#333333',
     },
     text_human_message_historic: '#000000',
-    send_button_message: '#007A33',
-    button_sign_in: '#007A33',
+    send_button_message: '#FFC72C',
+    button_sign_in: '#FFC72C',
     hover_button: '#005922',
     hover_button_with_button_background: '#CDE9D9',
     button_text_sign_in: '#ffffff',
-    sign_up_link: '#007A33',
+    sign_up_link: '#FFC72C',
     button: {
       background: '#E8F6EF',
-      text: '#007A33',
+      text: '#FFC72C',
     },
   },
   typography: {
