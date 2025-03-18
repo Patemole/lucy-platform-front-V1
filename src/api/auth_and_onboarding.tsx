@@ -37,3 +37,28 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
         console.error('Erreur lors de l\'envoi de l\'email:', error);
     }
 };
+
+
+export const scrapeLinkedInProfile = async (linkedinUrl: string) => {
+    try {
+        const response = await fetch(`${apiUrlPrefix}/chat/linkedin_scraping`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: linkedinUrl }) 
+        });
+
+        if (!response.ok) {
+            const errorJson = await response.json();
+            throw new Error(`Erreur lors du scraping LinkedIn : ${errorJson.detail || response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Données scrappées depuis LinkedIn :', data);
+        return data;
+    } catch (error) {
+        console.error('Erreur lors du scraping LinkedIn:', error);
+        return null;
+    }
+};
