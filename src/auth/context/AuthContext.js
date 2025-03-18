@@ -50,6 +50,8 @@ export const AuthProvider = ({ children }) => {
               registered_club_status: userData.registered_club_status || '',
               registered_clubs: userData.registered_clubs || '',
               onboardingComplete: userData.onboardingComplete || true, // 🔹 Ajout de la nouvelle variable
+              linkedin_url: userData.linkedin_url || '',  // ✅ Ajout de l'URL LinkedIn
+              linkedin_profile: userData.linkedin_profile || {}, // ✅ Ajout des données LinkedIn récupérées
             });
             // Récupération des sessions de chat depuis Firestore
               const chatSessions = userData.chatsessions || [];

@@ -390,7 +390,7 @@ useEffect(() => {
     }
   
     const userInfo: StudentProfile = {
-      username: user.name || 'default_username',
+      username: user.name || 'default_username_username_fetch_info',
       university: user.university || 'University Name',
       year: user.year || 'Null',
       studentProfile: localStorage.getItem('student_profile') || 'Brief profile description',
@@ -406,7 +406,7 @@ useEffect(() => {
       createdAt: user.createdAt || 'Unknown',
       lastLogin: user.lastLogin || 'Unknown',
       profilePicture: user.profilePicture || 'No profile picture',
-      name: user.name || 'default_username',
+      name: user.name || 'default_username_name_fetch_info',
       academic_advisor: user.academic_advisor || 'Unknown',
     };
   
@@ -869,7 +869,7 @@ useEffect(() => {
     try {
         const chatSessionId = chatIds[0] || 'default_chat_id';
         const courseId = 'default_course_id';
-        const username = user.name || 'default_username';
+        const username = user.name || 'default_username_OnSubmitFunction';
         const university = user.university || 'University Name';
         const year = user.year || 'Null';
         const interests = Array.isArray(user.interests) ? user.interests : ['No interest']; //Adding new interest into Lucy

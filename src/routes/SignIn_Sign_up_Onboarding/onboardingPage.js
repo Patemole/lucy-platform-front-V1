@@ -11,7 +11,8 @@ import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import { useMediaQuery } from 'react-responsive';
-import { sendWelcomeEmail } from '../../api/auth_and_onboarding';
+import { sendWelcomeEmail, scrapeLinkedInProfile } from '../../api/auth_and_onboarding';
+
 
 
 
@@ -31,6 +32,7 @@ export default function LearningStyleSurvey() {
   const [isLoading, setIsLoading] = useState(false);
   //const isMobile = window.innerWidth <= 768;
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  const [linkedinUrl, setLinkedinUrl] = useState('');
 
   const [cookieConsent, setCookieConsent] = useState(false);
   
@@ -191,6 +193,7 @@ export default function LearningStyleSurvey() {
           major: majors,
           minor: minors,
           interests: selectedInterests,
+          linkedin_url: linkedinUrl || null,  // Enregistre l'URL si renseignée
           registered_club_status: registeredClubStatus,
           registered_clubs: registeredClubs,
           onboardingComplete: false, // 🔹 L'utilisateur n'a pas encore vu les popups
@@ -199,6 +202,19 @@ export default function LearningStyleSurvey() {
         console.log("[Step 4] Retrieving user data");
         const userSnap = await getDoc(userRef);
         const userData = userSnap.data();
+
+        // Scraping LinkedIn si une URL est fournie
+        let linkedinData = null;
+        if (linkedinUrl) {
+            console.log("[Step 5] Scraping LinkedIn profile");
+            linkedinData = await scrapeLinkedInProfile(linkedinUrl);
+            if (linkedinData) {
+                console.log("Données LinkedIn récupérées:", linkedinData);
+
+                // Mise à jour Firestore avec les données scrappées
+                await updateDoc(userRef, { linkedin_profile: linkedinData });
+            }
+        }
 
         console.log("[Step 5] Creating a new chat session");
         let chatId = uuidv4();
@@ -234,6 +250,8 @@ export default function LearningStyleSurvey() {
           interests: selectedInterests,
           registered_club_status: registeredClubStatus,
           registered_clubs: registeredClubs,
+          linkedin_url: linkedinUrl || null,
+          linkedin_profile: linkedinData || null,
           onboardingComplete: false, // 🔹 L'utilisateur n'a pas encore vu les popups
         });
 
@@ -379,7 +397,23 @@ export default function LearningStyleSurvey() {
             {errors.interests && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.interests}</p>}
           </div>
 
-          {/* Section Club Registration */}
+          {/* Section LinkedIn Profile */}
+          <div className="mb-8">
+            <label htmlFor="linkedinUrl" className="block text-sm font-medium text-gray-700 mb-4">
+              {isMobile ? "LinkedIn Profile URL" : "Enter your LinkedIn Profile URL"}
+            </label>
+            <input
+              id="linkedinUrl"
+              type="url"
+              value={linkedinUrl}
+              onChange={(e) => setLinkedinUrl(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+              placeholder="https://www.linkedin.com/in/your-profile"
+            />
+          </div>
+
+          {/*
+          {/* Section Club Registration 
           <div className="mb-8">
             <label htmlFor="registeredYes" className="block text-sm font-medium text-gray-700 mb-4">
               Are you registered to some clubs yet? (to know more about your interests)*
@@ -422,6 +456,7 @@ export default function LearningStyleSurvey() {
               </div>
             )}
           </div>
+          */}
 
           {/* Section Major and Minor */}
           <div className="grid grid-cols-2 gap-8 mb-8">
