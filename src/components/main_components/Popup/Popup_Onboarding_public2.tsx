@@ -118,9 +118,9 @@ const Popup2: React.FC<Popup2Props> = ({ onNext }) => {
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-xs sm:max-w-md md:max-w-lg">
         {/* title with notification badge */}
         <div className="flex items-center justify-center space-x-3">
-          <h2 className="text-lg sm:text-2xl font-bold">
+          <h1 id="popup2-title" className="text-lg sm:text-2xl font-bold">
             Meet <span className="text-purple-600">Social Thread</span>
-          </h2>
+          </h1>
           {unreadCount > 0 && (
             <div className="bg-red-500 text-white rounded-md px-2 py-1 text-xs sm:text-[0.85rem] font-medium flex justify-center items-center min-w-[24px] h-[24px]">
               {unreadCount}
@@ -155,7 +155,7 @@ const Popup2: React.FC<Popup2Props> = ({ onNext }) => {
         <div className="mt-4">
           <button
             onClick={onNext}
-            className="w-full bg-blue-500 text-white py-2 rounded-md text-sm sm:text-lg transition duration-300 hover:bg-blue-600"
+            className="w-full bg-blue-700 text-white py-2 rounded-md text-sm sm:text-lg transition duration-300 hover:bg-blue-800"
           >
             Next (2/4)
           </button>

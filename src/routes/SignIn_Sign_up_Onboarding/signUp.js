@@ -299,7 +299,7 @@ export default function SignUp() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
 
-      <header className="absolute top-4 left-4 flex items-center" aria-label="University branding">
+      <header aria-label="University branding" className="absolute top-4 left-4">
         <img src={theme.logo} alt="University Logo" className="h-12" />
       </header>
 

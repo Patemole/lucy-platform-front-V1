@@ -1574,6 +1574,7 @@ const handleConversationClick = async (chat_id: string) => {
                       if (isSmallScreen) toggleDrawer();
                     }
                   }}
+                  aria-label="New conversation"
                   sx={{
                     color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                     cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
@@ -1590,29 +1591,39 @@ const handleConversationClick = async (chat_id: string) => {
             
   
             {/* Contenu fixe avant la liste */}
-            <List style={{ padding: '0 10px' }}>
+            <nav aria-label="Sidebar Navigation">
+            
+            <List component="ul" style={{ padding: '0 10px' }}>
               {/* Profil avec fermeture automatique sur petits écrans */}
               {/* Your Events */}
               <ListItem
-                button
                 component="li"
+                tabIndex={0}
                 onClick={() => {
                   if (subdomain== 'holyfamily') {
                     setOpenModal(true); // Affiche la popup si Holy Family
                     if (isSmallScreen) setTimeout(toggleDrawer, 50);
                   } else {
                     setCurrentView("events");
-                    //if (isSmallScreen) toggleDrawer();
+                    
                     if (isSmallScreen) setTimeout(toggleDrawer, 50);
                   }
                 }}
-                /*
-                onClick={(event) => {
-                  setCurrentView('events');
-                  if (isSmallScreen) toggleDrawer();
+                onKeyDown={(e) => {
+                           if (e.key === 'Enter' || e.key === ' ') {
+                             e.preventDefault();
+                             // déclenche la même action que l'onClick
+                             if (subdomain === 'holyfamily') {
+                               setOpenModal(true);
+                               if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                             } else {
+                               setCurrentView("events");
+                               if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                             }
+                           }
                 }}
-                */
                 sx={{
+                  cursor: 'pointer',
                   borderRadius: '8px',
                   backgroundColor: currentView === 'events' ? theme.palette.button.background : 'transparent',
                   mb: 1,
@@ -1632,6 +1643,7 @@ const handleConversationClick = async (chat_id: string) => {
                 }}>
                   <DashboardIcon sx={{ fontSize: '22px' }} />
                 </ListItemIcon>
+
                 <ListItemText
                   primary="Your Events"
                   primaryTypographyProps={{
@@ -1643,14 +1655,22 @@ const handleConversationClick = async (chat_id: string) => {
                   }}
                 />
               </ListItem>
+              
 
 
                                 {/* AI Peer Advisor (Accordion) */}
                   <ListItem
-                    button
                     component="li"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        togglePeerAdvisorMenu();
+                      }
+                    }}
                     onClick={togglePeerAdvisorMenu} // Gère l'ouverture/fermeture
                     sx={{
+                      cursor: 'pointer',
                       borderRadius: '8px',
                       backgroundColor: 'transparent', // ✅ Supprime l'effet visuel de sélection
                       mb: 1,
@@ -1687,10 +1707,18 @@ const handleConversationClick = async (chat_id: string) => {
                     <Box sx={{ pl: 2 }}>
                       {/* Aller au chat */}
                       <ListItem
-                        button
                         component="li"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setCurrentView('chat');
+                          }
+                        }}
                         onClick={() => setCurrentView('chat')}
                         sx={{
+                          
+                          cursor: 'pointer',
                           borderRadius: '8px',
                           backgroundColor: currentView === 'chat' ? theme.palette.button.background : 'transparent',
                           mb: 1,
@@ -1712,10 +1740,17 @@ const handleConversationClick = async (chat_id: string) => {
 
                       {/* Toggle entre Social Thread / Conversation History */}
                       <ListItem
-                        button
                         component="li"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleToggleHistory();
+                          }
+                        }}
                         onClick={handleToggleHistory}
                         sx={{
+                          cursor: 'pointer',
                           borderRadius: '8px',
                           backgroundColor: 'transparent',
                           mb: 2,
@@ -1762,6 +1797,7 @@ const handleConversationClick = async (chat_id: string) => {
                     </Box>
                   )}
             </List>
+            </nav>
   
             <Divider style={{ backgroundColor: 'lightgray' }} />
             
@@ -1800,18 +1836,20 @@ const handleConversationClick = async (chat_id: string) => {
             {/* Conteneur défilant pour la liste */}
             <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 5px' }}>
               {isHistory ? (
+                <nav aria-label="Conversations list">
                 <List component="ul">
                   {conversations.length > 0 ? (
                     conversations.map((conversation) => (
                       <ListItem
                         key={conversation.chat_id}
                         component="li"
-                        button
+                        tabIndex={0}
                         onClick={() => {
                           handleConversationClick(conversation.chat_id);
                           if (isSmallScreen) toggleDrawer();
                         }}
                         sx={{
+                          cursor: 'pointer',
                           position: 'relative',
                           borderRadius: '8px',
                           margin: '2px 0',
@@ -1960,7 +1998,9 @@ const handleConversationClick = async (chat_id: string) => {
                     </Typography>
                   )}
                 </List>
+                </nav>
               ) : (
+                <nav aria-label="Social Thread list">
                 <List component="ul">
                   {loadingSocialThreads ? (
                     <Box display="flex" justifyContent="center" alignItems="center" p={2}>
@@ -1974,7 +2014,7 @@ const handleConversationClick = async (chat_id: string) => {
                         <ListItem
                           key={thread.chat_id}
                           component="li"
-                          button
+                          tabIndex={0}
                           onClick={() => {
                             handleConversationClick(thread.chat_id);
                             if (isSmallScreen) toggleDrawer();
@@ -2096,6 +2136,7 @@ const handleConversationClick = async (chat_id: string) => {
                     </Typography>
                   )}
                 </List>
+                </nav>
               )}
             </Box>
   
@@ -2189,6 +2230,7 @@ const handleConversationClick = async (chat_id: string) => {
                     {!isSmallScreen && !isLandingPageVisible && (
                       <IconButton
                         onClick={handleNewConversation}
+                        aria-label="New conversation"
                         sx={{
                           color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                           cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
@@ -2219,6 +2261,7 @@ const handleConversationClick = async (chat_id: string) => {
               */}
   
               {/* Vignette avec le nombre d'étudiants en ligne */}
+              <section aria-label="Online users">
               <div
                 style={{
                   display: 'flex',
@@ -2244,6 +2287,7 @@ const handleConversationClick = async (chat_id: string) => {
                   }}
                 />
               </div>
+              </section>
   
               <div style={{ flexGrow: 1 }}></div>
   
@@ -2252,6 +2296,7 @@ const handleConversationClick = async (chat_id: string) => {
                   <>
                     <IconButton
                       onClick={handleNewConversation}
+                      aria-label="New conversation"
                       sx={{
                         color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                         cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',

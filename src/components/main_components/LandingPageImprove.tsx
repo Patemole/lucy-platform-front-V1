@@ -334,6 +334,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
     >
       {/* Arrière-plan Spline - affiché uniquement sur les grands écrans */}
       {isLargeScreen && (
+        <section aria-label="3D background" aria-hidden="true" role="presentation">
         <iframe
           src="https://my.spline.design/aiassistanthoverandclickinteraction-afdf94418f2cc3f7f17a6aad54796013/"
           style={{
@@ -347,6 +348,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
           title="Spline Scene"
           allowFullScreen
         />
+        </section>
       )}
 
       {/*
