@@ -39,6 +39,7 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
 };
 
 
+
 export const scrapeLinkedInProfile = async (linkedinUrl: string) => {
     try {
         const response = await fetch(`${apiUrlPrefix}/chat/linkedin_scraping`, {

@@ -274,12 +274,12 @@ export default function LearningStyleSurvey() {
       transition={{ duration: 0.5 }}
       className="flex items-center justify-center min-h-screen bg-gray-100"
     >
-      <div className="absolute top-4 left-4">
+      <header className="absolute top-4 left-4" aria-label="University branding">
         <img src={theme.logo} alt="University Logo" className="h-12" />
-      </div>
+      </header>
 
-      <div className="w-full max-w-2xl bg-white rounded-xl shadow-md p-10 mx-4">
-        <h2 className="text-xl font-semibold text-center mb-4">Tell us about yourself</h2>
+      <main className="w-full max-w-2xl bg-white rounded-xl shadow-md p-10 mx-4" role="main">
+        <h1 className="text-xl font-semibold text-center mb-4">Tell us about yourself</h1>
         <p className="text-gray-500 text-center mb-8 text-sm">
           {isMobile ? "Please fill in the details below." : "To start your journey, please fill in the details below."}
         </p>
@@ -304,7 +304,14 @@ export default function LearningStyleSurvey() {
             </div>
             {schools.map((school, index) => (
               <div key={index} className="relative mb-4">
+                <label
+                 htmlFor={`school-${index}`}
+                 className="block text-sm font-medium text-gray-700"
+               >
+                 School #{index + 1}
+               </label>
                 <select
+                  id={`school-${index}`}
                   value={school}
                   onChange={(e) => handleSchoolChange(index, e)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm appearance-none bg-white bg-no-repeat bg-right pr-10 focus:ring focus:ring-blue-100 focus:border-blue-500"
@@ -479,7 +486,11 @@ export default function LearningStyleSurvey() {
               </div>
               {majors.map((major, index) => (
                 <div key={index} className="relative mb-4">
+                  <label htmlFor={`major-${index}`} className="sr-only">
+                    Major #{index + 1}
+                  </label>
                   <input
+                    id={`major-${index}`}
                     type="text"
                     value={major}
                     onChange={(e) => handleMajorChange(index, e)}
@@ -519,7 +530,11 @@ export default function LearningStyleSurvey() {
               </div>
               {minors.map((minor, index) => (
                 <div key={index} className="relative mb-4">
+                  <label htmlFor={`minor-${index}`} className="sr-only">
+                    Minor #{index + 1}
+                  </label>
                   <input
+                    id={`minor-${index}`}
                     type="text"
                     value={minor}
                     onChange={(e) => handleMinorChange(index, e)}
@@ -586,11 +601,11 @@ export default function LearningStyleSurvey() {
 
           {/* Footer */}
           <div className="mt-8 flex items-center justify-center">
-            <p className="text-xs text-gray-400 mr-2">Powered by Lucy</p>
+            <p className="text-xs text-gray-600 mr-2">Powered by Lucy</p>
             <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
           </div>
         </form>
-      </div>
+      </main>
     </motion.div>
   );
 }

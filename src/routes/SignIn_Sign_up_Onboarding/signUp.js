@@ -298,12 +298,13 @@ export default function SignUp() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="absolute top-4 left-4 flex items-center">
-        <img src={theme.logo} alt="University Logo" className="h-12" />
-      </div>
 
-      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4">
-        <h2 className="text-xl font-semibold text-center mb-4">Create your account</h2>
+      <header className="absolute top-4 left-4 flex items-center" aria-label="University branding">
+        <img src={theme.logo} alt="University Logo" className="h-12" />
+      </header>
+
+      <main className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4" role="main">
+        <h1 className="text-xl font-semibold text-center mb-4">Create your account</h1>
         <p className="text-gray-500 text-center mb-8 text-sm">Welcome! Sign-up with your university credentials.</p>
 
         {/* Bouton SSO */}
@@ -370,10 +371,10 @@ export default function SignUp() {
           </button>
           )}
         
-          <p className="mt-8 text-xs text-center text-gray-600">Already have an account? <a href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} className="text-blue-600 hover:underline">Sign in</a></p>
+          <p className="mt-8 text-xs text-center text-gray-600">Already have an account? <a href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} className="text-blue-600 underline hover:underline">Sign in</a></p>
 
           <div className="mt-8 flex items-center justify-center">
-            <p className="text-xs text-gray-400 mr-2">Powered by Lucy</p>
+            <p className="text-xs text-gray-600 mr-2">Powered by Lucy</p>
             <Avatar
               src={lucyLogo}
               alt="Lucy Logo"
@@ -381,7 +382,7 @@ export default function SignUp() {
             />
           </div>
         </form>
-      </div>
+      </main>
     </div>
   );
 }
