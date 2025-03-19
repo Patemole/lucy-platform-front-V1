@@ -505,7 +505,11 @@ useEffect(() => {
 
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">
-    <div className={`py-5 ${isSmallScreen ? "px-1" : "px-5"} flex -mr-6 w-full relative`}>
+    <main
+      role="main"
+      aria-label="AI conversation content"
+      className={`py-5 ${isSmallScreen ? "px-1" : "px-5"} flex -mr-6 w-full relative`}
+     >
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
@@ -560,28 +564,32 @@ useEffect(() => {
                         // Mode "expand" : affichage vertical de toutes les étapes jusqu'à `currentStepIndex`
                         <ol className="ml-3">
                             {displayedReasoningSteps.slice(0, currentStepIndex + 1).map((step, index) => (
-                                <div key={step.step} className="flex items-center mb-2">
-                                    <li
-                                        className="flex items-center justify-between rounded-full px-4 py-1"
-                                        style={{
-                                            backgroundColor: isResponseReceived ? '#E0E3E6' : '#D6DDF5',
-                                            color: isResponseReceived ? '#7F8285' : '#3155CC',
-                                            fontSize: '0.875rem',
-                                            fontWeight: 'bold',
-                                            maxWidth: 'fit-content',
-                                            flex: 1,
-                                        }}
-                                    >
-                                        <span className="mr-2">{step.step}.</span>
-                                        <span>{step.description}</span>
-                                    </li>
-                                    {/* Affiche l'icône de réduction uniquement pour la première étape en mode "expand" */}
-                                    {index === 0 && (
-                                        <IconButton onClick={() => setShowAllSteps(false)} style={{ marginLeft: '10px' }}>
-                                            <ExpandLessIcon />
-                                        </IconButton>
-                                    )}
-                                </div>
+                                <li key={step.step} className="flex items-center mb-2">
+                                             <div
+                                               className="flex items-center justify-between rounded-full px-4 py-1"
+                                               style={{
+                                                 backgroundColor: isResponseReceived ? '#E0E3E6' : '#D6DDF5',
+                                                 color: isResponseReceived ? '#7F8285' : '#3155CC',
+                                                 fontSize: '0.875rem',
+                                                 fontWeight: 'bold',
+                                                 maxWidth: 'fit-content',
+                                                 flex: 1,
+                                               }}
+                                             >
+                                               <span className="mr-2">{step.step}.</span>
+                                               <span>{step.description}</span>
+                                             </div>
+                                             {index === 0 && (
+                                               <IconButton
+                                                 aria-label="Collapse reasoning steps"
+                                                 onClick={() => setShowAllSteps(false)}
+                                                 style={{ marginLeft: '10px' }}
+                                               >
+                                                 <ExpandLessIcon />
+                                               </IconButton>
+                                             )}
+                                          </li>
+
                             ))}
                         </ol>
                     ) : (
@@ -604,7 +612,7 @@ useEffect(() => {
                                         <span className="mr-2">{displayedReasoningSteps[currentStepIndex]?.step}.</span>
                                         <span>{displayedReasoningSteps[currentStepIndex]?.description}</span>
                                     </li>
-                                    <IconButton onClick={() => setShowAllSteps(true)} style={{ marginLeft: '10px' }}>
+                                    <IconButton aria-label="Expand reasoning steps" onClick={() => setShowAllSteps(true)} style={{ marginLeft: '10px' }}>
                                         <ExpandMoreIcon />
                                     </IconButton>
                                 </>
@@ -626,7 +634,7 @@ useEffect(() => {
                                         <span>Reasoning Steps</span>
                                     </div>
                                     {/* Icône pour expander même lorsque "Reasoning Steps" est affiché */}
-                                    <IconButton onClick={() => setShowAllSteps(true)} style={{ marginLeft: '10px' }}>
+                                    <IconButton aria-label="Expand reasoning steps" onClick={() => setShowAllSteps(true)} style={{ marginLeft: '10px' }}>
                                         <ExpandMoreIcon />
                                     </IconButton>
                                 </>
@@ -697,9 +705,10 @@ useEffect(() => {
         style={{ width: "100%" }}
       >
         {citedDocuments?.slice(0, 4).map((document) => (
-          <div
+          <a
             key={document.document_id}
             className="group p-2 rounded-lg cursor-pointer flex items-center shadow transition-shadow duration-200 ease-in-out hover:shadow-lg"
+            href="#"
             style={{
               backgroundColor: "rgba(255, 255, 255, 0.3)",
               backdropFilter: "blur(12px)",
@@ -712,6 +721,7 @@ useEffect(() => {
               flex: "1",
               minWidth: "0px",
             }}
+            aria-label={`Open source: ${document.document_name}`}
             onClick={() => handleSourceClick(document.link)}
           >
             <div className="flex items-center w-full">
@@ -744,7 +754,7 @@ useEffect(() => {
               </span>
               </Tooltip>
             </div>
-          </div>
+          </a>
         ))}
 
         {citedDocuments && citedDocuments.length > 4 && (
@@ -2071,7 +2081,7 @@ useEffect(() => {
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
