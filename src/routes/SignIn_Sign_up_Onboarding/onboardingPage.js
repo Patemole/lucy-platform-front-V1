@@ -393,7 +393,7 @@ export default function LearningStyleSurvey() {
                   onClick={() => toggleInterest(interest)}
                   className={`px-3 py-1 rounded-full text-sm border ${
                     selectedInterests.includes(interest)
-                      ? 'bg-blue-500 text-white border-blue-500'
+                      ? 'bg-blue-700 text-white border-blue-700'
                       : 'bg-white text-gray-700 border-gray-300'
                   }`}
                 >
@@ -563,6 +563,12 @@ export default function LearningStyleSurvey() {
               id="cookieConsent"
               checked={cookieConsent}
               onChange={() => setCookieConsent(!cookieConsent)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  setCookieConsent(!cookieConsent);
+                }
+              }}
               className="mr-2"
             />
             <label htmlFor="cookieConsent" className="text-sm text-gray-700">
@@ -571,7 +577,7 @@ export default function LearningStyleSurvey() {
                 href="/documents/GDPR_Cookie_Policy_v1.0.0-0.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-500 underline hover:text-blue-700"
+                className="text-blue-700 underline hover:text-blue-900"
               >
                 Cookie Policy
               </a>
@@ -596,7 +602,7 @@ export default function LearningStyleSurvey() {
 
           {/* Additional Text */}
           <p className="mt-4 text-xs text-center text-gray-500">
-            By signing up, you agree to our <a href="#" className="underline text-blue-500 hover:text-blue-700">Terms of Service</a> and <a href="https://trust-ressources.s3.us-east-1.amazonaws.com/Privacy+Policy+-+My+Lucy+Corp+-+2024+-+11%3A11%3A24.pdf" target="_blank" rel="noopener noreferrer" className="underline text-blue-500 hover:text-blue-700">Privacy Policy</a>. You also admit that you are beautiful.
+            By signing up, you agree to our <a href="#" className="underline text-blue-700 hover:text-blue-900">Terms of Service</a> and <a href="https://trust-ressources.s3.us-east-1.amazonaws.com/Privacy+Policy+-+My+Lucy+Corp+-+2024+-+11%3A11%3A24.pdf" target="_blank" rel="noopener noreferrer" className="underline text-blue-700 hover:text-blue-900">Privacy Policy</a>. You also admit that you are beautiful.
           </p>
 
           {/* Footer */}

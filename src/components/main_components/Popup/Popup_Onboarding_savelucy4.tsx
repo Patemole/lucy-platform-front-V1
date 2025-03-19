@@ -170,10 +170,10 @@ const Popup4: React.FC<Popup4Props> = ({ onFinish, confettiOptions }) => {
       )}
       <div className="bg-white p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-[500px] h-[450px]">
         {/* Title */}
-        <h2 className="text-2xl font-bold">Mobile App is Coming Soon 📲</h2>
+        <h1 id="popup1-title" className="text-2xl font-bold">Mobile App is Coming Soon 📲</h1>
 
         {/* Description */}
-        <p className="mt-4 text-gray-700 text-lg px-4">
+        <p id="popup4-desc" className="mt-4 text-gray-700 text-lg px-4">
           Meanwhile, save Lucy on your device.
         </p>
 

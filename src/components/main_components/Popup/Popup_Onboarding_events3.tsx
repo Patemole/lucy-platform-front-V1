@@ -78,10 +78,10 @@ const Popup3: React.FC<Popup3Props> = ({ onNext }) => {
     <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 p-4">
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-[500px] h-[450px]">
         {/* Titre */}
-        <h2 className="text-lg sm:text-2xl font-bold">Centralized Calendar 📆</h2>
+        <h1 id="popup3-title" className="text-lg sm:text-2xl font-bold">Centralized Calendar 📆</h1>
 
         {/* Description */}
-        <p className="mt-3 text-gray-700 text-sm sm:text-lg">
+        <p id="popup3-desc" className="mt-3 text-gray-700 text-sm sm:text-lg">
           No more endless newsletters. <br />
           Lucy recommends personalized events based on your profile.
         </p>
@@ -99,7 +99,7 @@ const Popup3: React.FC<Popup3Props> = ({ onNext }) => {
         <div className="mt-6">
           <button
             onClick={onNext}
-            className="w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded-md text-base sm:text-lg transition duration-300 hover:bg-blue-600"
+            className="w-full sm:w-auto bg-blue-700 text-white px-4 py-2 rounded-md text-base sm:text-lg transition duration-300 hover:bg-blue-800"
           >
             Next (3/4)
           </button>
