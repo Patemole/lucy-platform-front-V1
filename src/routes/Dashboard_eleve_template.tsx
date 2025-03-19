@@ -1836,7 +1836,16 @@ const handleConversationClick = async (chat_id: string) => {
             {/* Conteneur défilant pour la liste */}
             <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 5px' }}>
               {isHistory ? (
-                <nav aria-label="Conversations list">
+                <nav aria-label="Conversations list"
+                onKeyDown={(e: React.KeyboardEvent) => {
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      // Déplace le focus vers l’élément principal (assure-toi qu'il a un id et est focusable)
+                      document.getElementById('chat-section')?.focus();
+                    }
+                  }}
+                >
+                
                 <List component="ul">
                   {conversations.length > 0 ? (
                     conversations.map((conversation) => (
@@ -2455,7 +2464,8 @@ const handleConversationClick = async (chat_id: string) => {
                   />
                 </>
               ) : (
-                <div
+                <section
+                  aria-label="Chat content"
                   className="flex-grow overflow-y-auto"
                   style={{ backgroundColor: 'transparent', paddingBottom: '100px' }}
                 >
@@ -2553,11 +2563,12 @@ const handleConversationClick = async (chat_id: string) => {
                     )}
                     <div ref={endDivRef}></div>
                   </div>
-                </div>
+                </section>
               )
             ) : (
               // events view
-              <div className="events-view p-4">
+              
+              <section className="events-view p-4" aria-label="Events view">
                 <div className="events-toggle flex justify-between mb-4 ml-5">
                   {/* Sur la vue Kanban, afficher le bouton Calendar avec une icône 🗓 */}
                   {eventDisplayMode === 'kanban' ? (
@@ -2618,11 +2629,11 @@ const handleConversationClick = async (chat_id: string) => {
                 ) : (
                   <Calendar events={events} onEventClick={handleEventClick} />
                 )}
-              </div>
+              </section>
             )}
   
             {relatedQuestions.length > 0 && (
-              <div className="mt-4 px-8 flex justify-center">
+              <section className="mt-4 px-8 flex justify-center" aria-label="Related questions">
                 <div className="flex flex-wrap gap-2 justify-center">
                   {relatedQuestions.slice(0, 3).map((question, index) => (
                     <Button
@@ -2643,7 +2654,7 @@ const handleConversationClick = async (chat_id: string) => {
                     </Button>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
   
             {currentView === 'chat' && !isAtBottom && !isLandingPageVisible && (
@@ -2697,7 +2708,7 @@ const handleConversationClick = async (chat_id: string) => {
                   }}
                 >
                   {/* Champ de saisie avec placeholder "Ask Lucy..." */}
-                  <section aria-label="Chat section">
+                  <section id="chat-section" aria-label="Chat section">
                   <TextField
                     fullWidth
                     variant="outlined"
@@ -2805,7 +2816,9 @@ const handleConversationClick = async (chat_id: string) => {
                 </div>
               ) : (
                 // VERSION DESKTOP : exactement identique à l'ancien code
-                <div
+                <footer
+                  role="contentinfo"
+                  aria-label="Chat input footer"
                   className="footer"
                   style={{
                     position: 'fixed',
@@ -3019,7 +3032,7 @@ const handleConversationClick = async (chat_id: string) => {
                       </p>
                     </div>
                   </div>
-                </div>
+                </footer>
               )}
             </>
           )}
