@@ -1495,13 +1495,14 @@ const handleConversationClick = async (chat_id: string) => {
           >
             {/* Header avec boutons de menu et nouvelle conversation */}
             <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
-              <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
+              <IconButton aria-label="Open menu" onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
                 
                 {drawerOpen ? <KeyboardDoubleArrowLeftIcon /> : <MenuIcon />}
               </IconButton>
   
               {isSmallScreen ? (
-                // Affichage du menu Profil au lieu de l'icône Nouvelle Conversation sur mobile
+                <nav aria-label="Mobile profile menu">
+                
                 <Box style={{ padding: '10px', borderTop: `0px solid ${theme.palette.divider}` }}>
                   {profilePicture ? (
                     <img
@@ -1562,8 +1563,10 @@ const handleConversationClick = async (chat_id: string) => {
                     </MenuItem>
                   </Menu>
                 </Box>
+                </nav>
+                
               ) : (
-                // Affichage du bouton Nouvelle Conversation sur grand écran
+                
                 <IconButton
                   onClick={() => {
                     if (!isLandingPageVisible) {
@@ -1578,29 +1581,12 @@ const handleConversationClick = async (chat_id: string) => {
                   disabled={isLandingPageVisible}
                 >
                   <MapsUgcRoundedIcon />
+                  
                 </IconButton>
+                
               )}
-
-              {/*
-              <IconButton
-                onClick={() => {
-                  if (!isLandingPageVisible) {
-                    handleNewConversation();
-                    if (isSmallScreen) toggleDrawer();
-                  }
-                }}
-                sx={{
-                  color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
-                  cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
-                }}
-                disabled={isLandingPageVisible}
-              >
-                <MapsUgcRoundedIcon />
-              </IconButton>
-              */}
-
-
             </Box>
+            
             
   
             {/* Contenu fixe avant la liste */}
@@ -1609,6 +1595,7 @@ const handleConversationClick = async (chat_id: string) => {
               {/* Your Events */}
               <ListItem
                 button
+                component="li"
                 onClick={() => {
                   if (subdomain== 'holyfamily') {
                     setOpenModal(true); // Affiche la popup si Holy Family
@@ -1661,6 +1648,7 @@ const handleConversationClick = async (chat_id: string) => {
                                 {/* AI Peer Advisor (Accordion) */}
                   <ListItem
                     button
+                    component="li"
                     onClick={togglePeerAdvisorMenu} // Gère l'ouverture/fermeture
                     sx={{
                       borderRadius: '8px',
@@ -1700,6 +1688,7 @@ const handleConversationClick = async (chat_id: string) => {
                       {/* Aller au chat */}
                       <ListItem
                         button
+                        component="li"
                         onClick={() => setCurrentView('chat')}
                         sx={{
                           borderRadius: '8px',
@@ -1724,6 +1713,7 @@ const handleConversationClick = async (chat_id: string) => {
                       {/* Toggle entre Social Thread / Conversation History */}
                       <ListItem
                         button
+                        component="li"
                         onClick={handleToggleHistory}
                         sx={{
                           borderRadius: '8px',
@@ -1771,70 +1761,12 @@ const handleConversationClick = async (chat_id: string) => {
                       </ListItem>
                     </Box>
                   )}
-
-
-
-              {/*
-              {/* Nouveau Bouton History/Social Thread *
-              <ListItem
-                button
-                onClick={handleToggleHistory}
-                sx={{
-                  borderRadius: '8px',
-                  backgroundColor: 'transparent',
-                  mb: 2,
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                  '@media (hover: hover) and (pointer: fine)': {
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.hover,
-                    },
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ color: theme.palette.sidebar, minWidth: '35px' }}>
-                  {isHistory ? <PeopleIcon sx={{ fontSize: '22px' }}/> : <HistoryIcon sx={{ fontSize: '22px' }}/>}
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center">
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: '500', fontSize: '0.875rem', color: theme.palette.text.primary }}
-                      >
-                        {isHistory ? "Social Thread" : "Conversation History"}
-                      </Typography>
-                      {isHistory && unreadCount > 0 && (
-                        <Box
-                          sx={{
-                            backgroundColor: 'red',
-                            color: 'white',
-                            borderRadius: '8px',
-                            padding: '2px 6px',
-                            marginLeft: '8px',
-                            fontSize: '0.75rem',
-                            fontWeight: '500',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minWidth: '20px',
-                          }}
-                        >
-                          {unreadCount}
-                        </Box>
-                      )}
-                    </Box>
-                  }
-                />
-              </ListItem>
-              */}
             </List>
   
             <Divider style={{ backgroundColor: 'lightgray' }} />
             
   
-            {/* Titre de l'état actuel */}
+          <section aria-label={isHistory ? "Conversation History" : "Last Public Interactions"}>
             <div 
               className="text-center text-black-500 font-semibold mt-5 mb-2 flex justify-center items-center"
               style={{
@@ -1863,15 +1795,17 @@ const handleConversationClick = async (chat_id: string) => {
                 </div>
               )}
             </div>
+          </section>
   
             {/* Conteneur défilant pour la liste */}
             <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 5px' }}>
               {isHistory ? (
-                <List>
+                <List component="ul">
                   {conversations.length > 0 ? (
                     conversations.map((conversation) => (
                       <ListItem
                         key={conversation.chat_id}
+                        component="li"
                         button
                         onClick={() => {
                           handleConversationClick(conversation.chat_id);
@@ -1983,6 +1917,7 @@ const handleConversationClick = async (chat_id: string) => {
 
                         <IconButton
                           edge="end"
+                          aria-label="More options"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleMenuOpen(e, conversation.chat_id);
@@ -2026,7 +1961,7 @@ const handleConversationClick = async (chat_id: string) => {
                   )}
                 </List>
               ) : (
-                <List>
+                <List component="ul">
                   {loadingSocialThreads ? (
                     <Box display="flex" justifyContent="center" alignItems="center" p={2}>
                       <CircularProgress size={24} />
@@ -2038,6 +1973,7 @@ const handleConversationClick = async (chat_id: string) => {
                       return (
                         <ListItem
                           key={thread.chat_id}
+                          component="li"
                           button
                           onClick={() => {
                             handleConversationClick(thread.chat_id);
@@ -2186,6 +2122,7 @@ const handleConversationClick = async (chat_id: string) => {
               }}
             >
               <MenuItem
+                aria-label="Rename Conversation"
                 onClick={handleRename}
                 sx={{
                   padding: '8px',
@@ -2207,6 +2144,7 @@ const handleConversationClick = async (chat_id: string) => {
               </MenuItem>
   
               <MenuItem
+                aria-label="Delete conversation"
                 onClick={handleDelete}
                 sx={{
                   padding: '8px',
@@ -2228,86 +2166,6 @@ const handleConversationClick = async (chat_id: string) => {
                 </Typography>
               </MenuItem>
             </Menu>
-  
-            {/* Section Profil pour petits écrans 
-            {isSmallScreen && (
-              <Box style={{ padding: '10px', borderTop: `0px solid ${theme.palette.divider}` }}>
-                {profilePicture ? (
-                  <>
-                    {console.log('Rendering profile picture with URL:', profilePicture)}
-                    <img
-                      src={profilePicture}
-                      alt="Profile"
-                      style={{
-                        width: '50px',
-                        height: '50px',
-                      }}
-                      className="rounded-full object-cover cursor-pointer"
-                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
-                    />
-                  </>
-                ) : (
-                  <>
-                    {console.log('Rendering default AccountCircleIcon')}
-                    <AccountCircleIcon
-                      fontSize="inherit"
-                      component="svg"
-                      style={{
-                        color: '#9e9e9e',
-                        cursor: 'pointer',
-                        margin: '0 auto 0 10px',
-                        fontSize: '2.2rem',
-                      }}
-                      onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
-                    />
-                  </>
-                )}
-                <Menu
-                  anchorEl={profileMenuAnchorEl}
-                  open={Boolean(profileMenuAnchorEl)}
-                  onClose={handleProfileMenuClose}
-                  PaperProps={{ style: { borderRadius: '12px', backgroundColor: theme.palette.background.paper } }}
-                >
-                  <MenuItem onClick={handleDialogOpen}>
-                        <ListItemIcon>
-                          <ProfileEdit fontSize="small" sx={{ color: '#011F5B' }} />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
-                              Edit Profile
-                            </Typography>
-                          }
-                        />
-                      </MenuItem>
-                      <MenuItem onClick={handleParametersMenuClick}>
-                        <ListItemIcon>
-                          <SettingsIcon fontSize="small" sx={{ color: '#011F5B' }} />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
-                              Parameters
-                            </Typography>
-                          }
-                        />
-                      </MenuItem>
-                  <MenuItem onClick={handleLogout}>
-                    <ListItemIcon>
-                      <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
-                          Log-out
-                        </Typography>
-                      }
-                    />
-                  </MenuItem>
-                </Menu>
-              </Box>
-            )}
-            */}
           </Drawer>
   
           <div
@@ -2325,7 +2183,7 @@ const handleConversationClick = async (chat_id: string) => {
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 {!drawerOpen && (
                   <>
-                    <IconButton onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
+                    <IconButton aria-label="Open menu" onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
                       <MenuIcon />
                     </IconButton>
                     {!isSmallScreen && !isLandingPageVisible && (
@@ -2343,11 +2201,22 @@ const handleConversationClick = async (chat_id: string) => {
                   </>
                 )}
               </div>
+
+              <header aria-label="University logo header">
+                <img 
+                  src={theme.logo} 
+                  alt="University Logo" 
+                  style={{ height: '40px', marginRight: '10px' }} 
+                  />
+              </header>
+              
+              {/*
               <img
                 src={theme.logo}
                 alt="University Logo"
                 style={{ height: '40px', marginRight: '10px' }}
               />
+              */}
   
               {/* Vignette avec le nombre d'étudiants en ligne */}
               <div
@@ -2394,6 +2263,7 @@ const handleConversationClick = async (chat_id: string) => {
                   </>
                 ) : (
                   <>
+                    <nav aria-label="Profile menu">
                     <IconButton
                       onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                       aria-label="Open profile menu"
@@ -2523,6 +2393,7 @@ const handleConversationClick = async (chat_id: string) => {
                         />
                       </MenuItem>
                     </Menu>
+                    </nav>
                   </>
                 )}
               </div>
@@ -2781,6 +2652,7 @@ const handleConversationClick = async (chat_id: string) => {
                   }}
                 >
                   {/* Champ de saisie avec placeholder "Ask Lucy..." */}
+                  <section aria-label="Chat section">
                   <TextField
                     fullWidth
                     variant="outlined"
@@ -2808,6 +2680,7 @@ const handleConversationClick = async (chat_id: string) => {
                       '& fieldset': { border: 'none' },
                     }}
                   />
+                  </section>
 
                   {/* Conteneur des boutons Public/Private et du bouton d'envoi */}
                   <div
@@ -2916,6 +2789,7 @@ const handleConversationClick = async (chat_id: string) => {
                       position: 'relative',
                     }}
                   >
+                    <section aria-label="Chat input section">
                     <TextField
                       fullWidth
                       variant="outlined"
@@ -3090,6 +2964,7 @@ const handleConversationClick = async (chat_id: string) => {
                         },
                       }}
                     />
+                    </section>
 
                     <div className="flex justify-center w-full">
                       <p
@@ -3103,448 +2978,6 @@ const handleConversationClick = async (chat_id: string) => {
               )}
             </>
           )}
-
-
-
-
-
-            {/*
-            {currentView === 'chat' && !isLandingPageVisible && (!hasTak || inputValue.trim() !== "") && (
-
-
-                <div
-                  className="fixed bottom-0 left-0 w-full shadow-lg flex flex-col items-center"
-                  style={{
-                    backgroundColor: isSmallScreen ? 'white' : '#F0F4FC', // Fond blanc sur mobile, ancien fond sur desktop
-                    borderTopLeftRadius: isSmallScreen ? '20px' : '0px',
-                    borderTopRightRadius: isSmallScreen ? '20px' : '0px',
-                    padding: '12px',
-                    minHeight: '80px', 
-                    maxHeight: inputValue.length > 0 ? '300px' : '150px', 
-                    overflow: 'hidden',
-                    transition: 'max-height 0.2s ease-in-out',
-                    display: 'flex',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {/* Champ de saisie dynamique *
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    multiline
-                    minRows={1}
-                    maxRows={6}
-                    placeholder=" " // Cache le placeholder
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    InputProps={{
-                      style: {
-                        backgroundColor: isSmallScreen ? 'white' : '#F4F4F4', // Fond identique au reste
-                        borderRadius: '15px',
-                        padding: '10px 15px',
-                        fontSize: '1rem',
-                        fontWeight: '500',
-                        border: 'none',
-                      },
-                    }}
-                    inputProps={{ style: { color: '#333' } }}
-                    sx={{
-                      width: '100%',
-                      maxWidth: '600px',
-                      transition: 'height 0.2s ease-in-out',
-                      '& fieldset': { border: 'none' }, // Supprime les contours
-                    }}
-                  />
-
-                  {/* Conteneur des boutons Public/Private et Envoi (uniquement sur mobile) *
-                  {isSmallScreen ? (
-                    <div
-                      className="w-full flex items-center justify-between"
-                      style={{
-                        maxWidth: '600px',
-                        marginTop: '10px',
-                        display: 'flex',
-                        gap: '10px',
-                      }}
-                    >
-                      {/* Bouton Public *
-                      <button
-                        className="py-2 px-4 rounded-full flex items-center text-sm font-medium"
-                        style={{
-                          backgroundColor: !isPrivate ? '#D6DDF5' : '#E0E0E0', // Fond bleu clair si public
-                          color: !isPrivate ? '#3155CC' : '#6F6F6F', // Texte bleu si public
-                          borderRadius: '12px',
-                          fontWeight: 'bold',
-                          textAlign: 'center',
-                          flex: 1,
-                          maxWidth: '120px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '5px',
-                        }}
-                        onClick={() => setIsPrivate(false)}
-                      >
-                        <LockOpenIcon fontSize="small" /> Public
-                      </button>
-
-                      {/* Bouton Private *
-                      <button
-                        className="py-2 px-4 rounded-full flex items-center text-sm font-medium"
-                        style={{
-                          backgroundColor: isPrivate ? '#F0F0F0' : '#E0E0E0', // Fond gris si private
-                          color: isPrivate ? '#6F6F6F' : '#3155CC', // Texte gris si private
-                          borderRadius: '12px',
-                          fontWeight: 'bold',
-                          textAlign: 'center',
-                          flex: 1,
-                          maxWidth: '120px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '5px',
-                        }}
-                        onClick={() => setIsPrivate(true)}
-                      >
-                        <LockIcon fontSize="small" /> Private
-                      </button>
-
-                      {/* Bouton Envoi *
-                      <button
-                        className="rounded-full flex items-center justify-center"
-                        onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
-                        style={{
-                          width: '45px',
-                          height: '45px',
-                          marginLeft: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: isStreaming ? '#F04261' : '#3155CC', // Rouge si envoi, bleu sinon
-                        }}
-                      >
-                        {isStreaming ? (
-                          <StopIcon style={{ color: 'white', fontSize: '20px' }} />
-                        ) : (
-                          <ArrowForwardIcon style={{ color: 'white', fontSize: '20px' }} />
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    // Design pour grand écran (repris du code commenté)
-                    <div
-                      className="footer"
-                      style={{
-                        position: 'fixed',
-                        backgroundColor: '#F0F4FC',
-                        bottom: 0,
-                        left: drawerOpen ? `${drawerWidth}px` : '0',
-                        width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
-                        backdropFilter: 'blur(50px)',
-                        WebkitBackdropFilter: 'blur(12px)',
-                        borderTop: '1px solid rgba(255, 255, 255, 0.3)',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        paddingTop: '20px',
-                        paddingBottom: '20px',
-                        zIndex: 2,
-                        transition: 'left 0.3s, width 0.3s',
-                        display: isLandingPageVisible ? 'none' : 'flex',
-                      }}
-                    >
-                      <div
-                        style={{
-                          maxWidth: '800px',
-                          width: '100%',
-                          margin: '0 auto',
-                          position: 'relative',
-                        }}
-                      >
-                        {/* Champ de saisie *
-                        <TextField
-                          fullWidth
-                          variant="outlined"
-                          multiline
-                          minRows={1}
-                          maxRows={6}
-                          placeholder="Ask Lucy..."
-                          value={inputValue}
-                          onChange={(e) => setInputValue(e.target.value)}
-                          onKeyPress={handleInputKeyPressSocraticLangGraph}
-                          InputProps={{
-                            style: {
-                              backgroundColor: '#F4F4F4',
-                              fontSize: '1rem',
-                              padding: '17px 8px',
-                              borderRadius: '20px',
-                              fontWeight: '500',
-                              color: theme.palette.text.primary,
-                              paddingRight: '20px',
-                              paddingLeft: '20px',
-                              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                              border: 'none',
-                            },
-                          }}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': { border: 'none' },
-                            },
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Espace réservé pour future phrase *
-                  <div style={{ minHeight: '20px' }}></div>
-                </div>
-              )}
-              */}
-
-
-
-
-
-
-              {/*
-              <div
-                className="footer"
-                style={{
-                  position: 'fixed',
-                  backgroundColor: '#F0F4FC',
-                  bottom: 0,
-                  left: drawerOpen ? `${drawerWidth}px` : '0',
-                  width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
-                  backdropFilter: 'blur(50px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.3)',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingTop: isSmallScreen ? '10px' : '20px',
-                  paddingBottom: isSmallScreen ? '1px' : '20px', //avant 10 pour petit ecrqn
-                  zIndex: 2,
-                  transition: 'left 0.3s, width 0.3s',
-                  display: isLandingPageVisible ? 'none' : 'flex',
-                }}
-              >
-                <div
-                  style={{
-                    maxWidth: isSmallScreen ? '90%' : '800px',
-                    width: '100%',
-                    margin: '0 auto',
-                    padding: isSmallScreen ? '10px 0px 30px' : '0',
-                    position: 'relative',
-                  }}
-                >
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    multiline
-                    minRows={1}
-                    maxRows={6}
-                    placeholder={
-                      isSmallScreen && drawerOpen
-                        ? ""
-                        : isSocialThread
-                        ? "Write a public message in this discussion..."
-                        : "Type your message..."
-                    }
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleInputKeyPressSocraticLangGraph}
-                    InputProps={{
-                      startAdornment: (
-                        !isSocialThread && (
-                          <InputAdornment position="start">
-                            <IconButton
-                              onClick={async () => {
-                                try {
-                                  const newPrivacyState = !isPrivate;
-                                  setIsPrivate(newPrivacyState);
-                                  const currentThreadType = newPrivacyState ? 'Private' : 'Public';
-                                  const chatSessionId = chatIds[0] || 'default_chat_id';
-                                  const docRef = doc(db, 'chatsessions', chatSessionId);
-                                  await updateDoc(docRef, { thread_type: currentThreadType });
-                                  console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
-                                  setConversations((prevConversations) =>
-                                    prevConversations.map((conv) =>
-                                      conv.chat_id === chatSessionId
-                                        ? { ...conv, thread_type: currentThreadType }
-                                        : conv
-                                    )
-                                  );
-                                } catch (error) {
-                                  console.error('Erreur lors de la mise à jour du thread_type :', error);
-                                }
-                              }}
-                              edge="start"
-                              aria-label={isPrivate ? "Set to Public" : "Set to Private"}
-                              sx={{
-                                backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5',
-                                color: isPrivate ? '#6F6F6F' : '#3155CC',
-                                borderRadius: '12px',
-                                padding: '4px 8px',
-                                marginRight: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                width: '80px',
-                                height: '30px',
-                                '&:hover': {
-                                  backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
-                                  color: isPrivate ? '#5A5A5A' : '#4A0B8A',
-                                },
-                              }}
-                              ref={(el) => {
-                                if (el) {
-                                  console.log("Background color applied:", getComputedStyle(el).backgroundColor);
-                                }
-                              }}
-                            >
-                              {isPrivate ? (
-                                <>
-                                  <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                                  <Typography variant="caption" sx={{ color: '#000' }}>
-                                    Private
-                                  </Typography>
-                                </>
-                              ) : (
-                                <>
-                                  <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                                  <Typography variant="caption" sx={{ color: '#3155CC' }}>
-                                    Public
-                                  </Typography>
-                                </>
-                              )}
-                            </IconButton>
-                          </InputAdornment>
-                        )
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            color="primary"
-                            onClick={() => {
-                              if (isStreaming) {
-                                setCancelConversation(true);
-                                setIsStreaming(false);
-                                cancelConversationRef.current = true;
-                              } else {
-                                handleSendMessageSocraticLangGraph(inputValue);
-                              }
-                            }}
-                            aria-label={isStreaming ? "Stop response" : "Send message"}
-                            edge="end"
-                          >
-                            {isStreaming ? (
-                              <div
-                                style={{
-                                  backgroundColor: theme.palette.error.main,
-                                  borderRadius: '50%',
-                                  width: '30px',
-                                  height: '30px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <StopIcon
-                                  style={{
-                                    color: '#fff',
-                                    fontSize: '20px',
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                style={{
-                                  backgroundColor: theme.palette.button_sign_in,
-                                  borderRadius: '50%',
-                                  width: '30px',
-                                  height: '30px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <ArrowForwardIcon
-                                  style={{
-                                    color: '#fff',
-                                    fontSize: '20px',
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                      style: {
-                        backgroundColor: '#F4F4F4',
-                        fontSize: '1rem',
-                        padding: '17px 8px',
-                        borderRadius: '20px',
-                        fontWeight: '500',
-                        color: theme.palette.text.primary,
-                        paddingRight: '20px',
-                        paddingLeft: '20px',
-                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                        border: 'none',
-                      },
-                    }}
-                    inputProps={{
-                      style: { color: theme.palette.text.primary },
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          border: 'none',
-                        },
-                        '&:hover fieldset': {
-                          boxShadow: messages.some((msg) => msg.TAK && msg.TAK.length > 0)
-                            ? "none"
-                            : "0 4px 8px rgba(0, 0, 0, 0.2)",
-                        },
-                      },
-                      '& .MuiInputBase-input::placeholder': {
-                        color: '#6F6F6F',
-                        opacity: 1,
-                      },
-                    }}
-                  />
-
-                  {/* 
-                  <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        marginTop: '6px',
-                        color: '#6F6F6F',
-                        textAlign: 'center',
-                        fontSize: '0.6rem',
-                        opacity: 0.8,
-                      }}
-                    >
-                      Lucy can make mistakes. Look at the confidence score and consider checking important information.
-                    </Typography>
-                  </div>
-                  *
-                 className="flex justify-center w-full">
-                    <p
-                      className="hidden sm:block mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80 sm:mt-3 sm:mb-0"
-                    >
-                      Lucy can make mistakes. Look at the confidence score and consider checking important information.
-                    </p>
-                  </div>
-
-
-
-                </div>
-              
-              </div>
-              
-            )}
-              */}
               
           </div>
   

@@ -367,7 +367,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
 
 
       {/* Ticker des questions optimisé avec topics et fond adouci */}
-      <div className="hidden sm:flex justify-center w-full mb-4">
+      <section aria-label="Sample questions ticker" className="hidden sm:flex justify-center w-full mb-4">
 
         <div className="max-w-5xl w-full bg-gray-100 py-2 px-4 rounded-lg">
           <Marquee gradient={false} speed={40}>
@@ -376,14 +376,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
               const color = topicColors[topic] || topicColors["Default"];
 
               return (
-                <div
+                <button
                   key={index}
+                  type="button"
                   className="mx-2 flex items-center px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer hover:bg-gray-200 transition pb-1"
                   style={{ backgroundColor: "##F7F9FC" }} // Fond plus doux
                   onClick={() => handleQuestionClick(questionObj.question)} // ✅ Met à jour seulement le placeholder
                 >
                   {/* Rectangle du topic avec fond clair */}
-                  <div
+                  <span
                     className="mr-2 px-3 py-1 rounded-lg text-xs font-bold"
                     style={{
                       color: color, // Texte coloré
@@ -392,22 +393,23 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
                     }}
                   >
                     {topic}
-                  </div>
+                  </span>
 
                   {/* Question */}
                   <span className="text-blue-900">{questionObj.question}</span>
-                </div>
+                </button>
               );
             })}
           </Marquee>
         </div>
-      </div>
+      </section>
 
 
       
   
       {/* Contenu principal de la landing page */}
       <Box
+        component="main"
         ref={containerRef}
         width="100%"
         maxWidth="800px"
@@ -522,7 +524,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
               ),
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={handleSend}>
+                <IconButton onClick={handleSend} aria-label="Send message">
                   <ArrowForwardIcon style={{ color: '#011F5B', fontSize: '1.5rem' }} />
                 </IconButton>
               </InputAdornment>

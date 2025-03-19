@@ -287,12 +287,15 @@ const SignIn = ({ handleToggleThemeMode }) => {
       transition={{ duration: 0.5 }}
       className="flex items-center justify-center min-h-screen bg-gray-100"
     >
-      <div className="absolute top-4 left-4">
-        <img src={theme.logo} alt="University Logo" className="h-12" />
-      </div>
 
-      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4">
-        <h2 className="text-xl font-semibold text-center mb-4">Sign In to your account</h2>
+      {/* header landmark */}
+      <header aria-label="University branding" className="absolute top-4 left-4">
+        <img src={theme.logo} alt="University Logo" className="h-12" />
+      </header>
+  
+
+      <main className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4" role="main">
+        <h1 className="text-xl font-semibold text-center mb-4">Sign In to your account</h1>
         <p className="text-gray-500 text-center mb-5 text-sm">
           Sign In with your university credentials.
         </p>
@@ -372,7 +375,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
           {subdomain !== 'holyfamily' && (
           <p className="mt-6 text-xs text-center text-gray-600">
-            <a href="/auth/reset-password" className="text-blue-600 hover:underline">
+            <a href="/auth/reset-password" className="text-blue-600 underline hover:underline">
               Forgot your password?
             </a>
           </p>
@@ -380,17 +383,17 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
           <p className="mt-5 text-xs text-center text-gray-600">
             Don't have an account?{' '}
-            <a href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} className="text-blue-600 hover:underline">
+            <a href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} className="text-blue-600 underline hover:underline">
               Sign up now!
             </a>
           </p>
 
           <div className="mt-8 flex items-center justify-center">
-            <p className="text-xs text-gray-400 mr-2">Powered by Lucy</p>
+            <p className="text-xs text-gray-600 mr-2">Powered by Lucy</p>
             <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
           </div>
         </form>
-      </div>
+      </main>
     </motion.div>
   );
 };
