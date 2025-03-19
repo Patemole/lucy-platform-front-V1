@@ -1852,6 +1852,7 @@ const handleConversationClick = async (chat_id: string) => {
                       <ListItem
                         key={conversation.chat_id}
                         component="li"
+                        role="button"
                         tabIndex={0}
                         onClick={() => {
                           handleConversationClick(conversation.chat_id);
@@ -2023,6 +2024,7 @@ const handleConversationClick = async (chat_id: string) => {
                         <ListItem
                           key={thread.chat_id}
                           component="li"
+                          role="button"
                           tabIndex={0}
                           onClick={() => {
                             handleConversationClick(thread.chat_id);
@@ -2149,6 +2151,9 @@ const handleConversationClick = async (chat_id: string) => {
               )}
             </Box>
   
+
+
+
             {/* Menu contextuel */}
             <Menu
               anchorEl={menuAnchorEl}
