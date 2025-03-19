@@ -93,7 +93,7 @@ weekDays.forEach((day) => {
 
   return (
     // conteneur extérieur avec overflow-x et overflow-y activés pour permettre un scroll horizontal et vertical
-    <Box sx={{ width: '100vw', overflowX: 'auto', overflowY: 'auto' }}>
+    <Box role="region" aria-label="Kanban events board" tabIndex={0}sx={{ width: '100vw', overflowX: 'auto', overflowY: 'auto' }}>
       <Box
         sx={{
           display: 'flex',
