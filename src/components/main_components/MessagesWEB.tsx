@@ -505,7 +505,7 @@ useEffect(() => {
 
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">
-    <main
+    <section
       role="main"
       aria-label="AI conversation content"
       className={`py-5 ${isSmallScreen ? "px-1" : "px-5"} flex -mr-6 w-full relative`}
@@ -2081,7 +2081,7 @@ useEffect(() => {
           )}
         </div>
       </div>
-    </main>
+    </section>
   );
 };
 

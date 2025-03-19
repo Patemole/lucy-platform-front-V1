@@ -165,7 +165,7 @@ const Calendar = forwardRef<CalendarHandles, CalendarProps>(({ onEventClick, eve
       </div>
 
       {/* corps du calendrier avec défilement vertical */}
-      <div style={{ flexGrow: 1, overflowY: 'auto' }}>
+      <div style={{ flexGrow: 1, overflowY: 'auto' }} role="region" aria-label="Calendar content" tabIndex={0}>
         <div className="grid" style={{ gridTemplateColumns: '60px repeat(7, 1fr)' }}>
           {/* colonne des horaires */}
           <div className="flex flex-col">
