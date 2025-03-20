@@ -193,6 +193,7 @@ export const saveMessageAIToBackend = async ({
     university: string
 }) => {
     try {
+        console.log("Entering saveMessageAIToBackend with message:", message);
         const response = await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
             method: 'POST',
             headers: {
