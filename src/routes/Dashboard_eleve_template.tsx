@@ -1853,7 +1853,6 @@ const handleConversationClick = async (chat_id: string) => {
             <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 5px' }}>
               {isHistory ? (
                 <nav aria-label="Conversations list"
-                tabIndex={0}
                 onKeyDown={(e: React.KeyboardEvent) => {
                     if (e.key === 'Escape') {
                       e.preventDefault();
