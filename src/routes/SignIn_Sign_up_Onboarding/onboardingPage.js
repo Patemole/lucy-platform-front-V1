@@ -197,6 +197,7 @@ export default function LearningStyleSurvey() {
           registered_club_status: registeredClubStatus,
           registered_clubs: registeredClubs,
           onboardingComplete: false, // 🔹 L'utilisateur n'a pas encore vu les popups
+          onboardingMessageSent: false, //Lucy n a pas encore envoye le premier message
         });
 
         console.log("[Step 4] Retrieving user data");
@@ -253,6 +254,7 @@ export default function LearningStyleSurvey() {
           linkedin_url: linkedinUrl || null,
           linkedin_profile: linkedinData || null,
           onboardingComplete: false, // 🔹 L'utilisateur n'a pas encore vu les popups
+          onboardingMessageSent: false, //Lucy n a pas encore envoye le premier message
         });
 
         console.log("[Step 7] Redirecting to student dashboard");

@@ -23,6 +23,8 @@ export interface SendMessageRequest {
     year: string;
     faculty: string[];
     isFirstMessage: boolean;
+    user?: any;
+    isOnboardingMessage?: boolean;
 }
 
 
@@ -75,6 +77,9 @@ export async function* sendMessageSocraticLangGraph({
     year,
     faculty,
     isFirstMessage, 
+    user,
+    isOnboardingMessage,
+
 }: SendMessageRequest,
     signal?: AbortSignal)
 
@@ -98,6 +103,9 @@ export async function* sendMessageSocraticLangGraph({
             year: year,
             faculty: faculty,
             is_first_message: isFirstMessage, // Ajoute isFirstMessage au payload
+            user: user,
+            isOnboardingMessage: isOnboardingMessage,
+
             //is_first_message: true, // Ajoute isFirstMessage au payload
         }),
         signal: signal, // Passez le signal ici

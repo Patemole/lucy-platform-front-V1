@@ -91,6 +91,9 @@ export async function* handleStream<T extends NonEmptyObject>(
     let isTitleAndCategory = false;
     let TitleAndCategoryBuffer = "";
 
+    let isOnboardingMessage = false;
+    let OnboardingMessageBuffer = "";
+
     
 
     let previousPartialChunk: string | null = null;
@@ -345,6 +348,20 @@ export async function* handleStream<T extends NonEmptyObject>(
                 }
                 TitleAndCategoryBuffer = "";
                 isTitleAndCategory = false;
+            }
+
+
+            if (isOnboardingMessage && OnboardingMessageBuffer) {
+                try {
+                    console.log("Tentative de parsing du OnboardingMessage JSON final:", OnboardingMessageBuffer);
+                    const onboardingmessagejson = JSON.parse(OnboardingMessageBuffer); // Convertir le waiting final en JSON
+                    console.log("error JSON émis à la fin du flux:", onboardingmessagejson);
+                    yield onboardingmessagejson;
+                } catch (err) {
+                    console.error("Erreur lors du parsing du OnboardingMessage JSON à la fin du flux:", err);
+                }
+                OnboardingMessageBuffer = "";
+                isOnboardingMessage = false;
             }
 
             break;
@@ -823,6 +840,28 @@ export async function* handleStream<T extends NonEmptyObject>(
                     TitleAndCategoryBuffer = "";
                 } catch (err) {
                     console.error("Erreur lors du parsing de TitleAndCategory JSON:", err);
+                }
+            }
+            continue;
+        }
+
+
+        if (decodedValue.includes("<ONBOARDING_MESSAGE>")) {
+            console.log("1) Détection de <ONBOARDING_MESSAGE> dans le chunk:", decodedValue);
+            isOnboardingMessage = true;
+            OnboardingMessageBuffer = decodedValue.split("<ONBOARDING_MESSAGE>")[1].split("<ONBOARDING_MESSAGE_END>")[0]; // Extract content between tags
+            console.log("2) Début d'accumulation de isOnboardingMessage JSON, buffer actuel:", OnboardingMessageBuffer);
+
+            if (decodedValue.includes("<ONBOARDING_MESSAGE_END>")) {
+                try {
+                    console.log("3) Détection de <ONBOARDING_MESSAGE_END> dans le même chunk.");
+                    const isonboardingmessageJson = JSON.parse(OnboardingMessageBuffer);
+                    console.log("4) isOnboardingMessage JSON reçue et convertie:", isonboardingmessageJson);
+                    yield isonboardingmessageJson;
+                    isOnboardingMessage = false;
+                    OnboardingMessageBuffer = "";
+                } catch (err) {
+                    console.error("Erreur lors du parsing de isOnboardingMessage JSON:", err);
                 }
             }
             continue;
