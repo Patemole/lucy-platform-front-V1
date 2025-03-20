@@ -308,7 +308,6 @@ export default function LearningStyleSurvey() {
                  htmlFor={`school-${index}`}
                  className="block text-sm font-medium text-gray-700"
                >
-                 School #{index + 1}
                </label>
                 <select
                   id={`school-${index}`}
