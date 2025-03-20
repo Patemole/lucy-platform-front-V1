@@ -1138,7 +1138,10 @@ useEffect(() => {
         }
 
         // Save AI message to backend if conversation is still active
+        // Vérifier l'état de cancelConversationRef.current avant d'appeler la fonction
+        console.log("cancelConversationRef.current:", cancelConversationRef.current);
         if (!cancelConversationRef.current) {
+            console.log("Conversation active -> Envoi du message AI au backend");
             await saveMessageAIToBackend({
                 message: answer,
                 chatSessionId: chatSessionId,
@@ -1149,7 +1152,9 @@ useEffect(() => {
                 input_message: inputValue,
                 university: university,
             });
-        }
+        } else {
+          console.log("Conversation annulée -> Le message AI ne sera pas envoyé");
+      }
     } catch (e: any) {
         if (e.name === 'AbortError') {
           console.log('Requête interrompue par l’utilisateur.');
