@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }) => {
               onboardingComplete: userData.onboardingComplete || true, // 🔹 Ajout de la nouvelle variable
               linkedin_url: userData.linkedin_url || '',  // ✅ Ajout de l'URL LinkedIn
               linkedin_profile: userData.linkedin_profile || {}, // ✅ Ajout des données LinkedIn récupérées
+              onboardingMessageSent: userData.onboardingMessageSent || true, // 🔹 Ajout de la nouvelle variable
             });
             // Récupération des sessions de chat depuis Firestore
               const chatSessions = userData.chatsessions || [];

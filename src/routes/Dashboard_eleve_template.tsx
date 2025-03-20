@@ -155,6 +155,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [currentPopup, setCurrentPopup] = useState(0); // 0 = pas de popup, 1 à 4 pour les popups
   const subdomain = config.subdomain;
   const [openModal, setOpenModal] = useState(false);
+  const [hasSentOnboarding, setHasSentOnboarding] = useState(false);
 
 
 //--------------USEEFFECT----------------//
@@ -176,6 +177,26 @@ useEffect(() => {
       setCurrentPopup(1); // Démarrer les popups si l'onboarding n'est pas terminé
     }
   }, [user]);
+
+
+  useEffect(() => {
+    if (user && user.onboardingMessageSent === false) {
+      onSubmit([], "", true);
+      const userRef = doc(db, "users", user.id);
+      updateDoc(userRef, { onboardingMessageSent: true })
+        .then(() => {
+          setUser((prevUser: any) => ({
+            ...(prevUser || {}),
+            onboardingMessageSent: true,
+          }));
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la mise à jour de onboardingMessageSent:", error);
+        });
+    }
+  }, [user]);
+
+
 
   useEffect(() => {
     fetchUserInfo();
@@ -842,8 +863,9 @@ useEffect(() => {
   };
 
 
+
   // Fonction pour envoyer le message à l'AI ou à l'API
-  const onSubmit = async (messageHistory: Message[], inputValue: string) => {
+  const onSubmit = async (messageHistory: Message[], inputValue: string, isOnboardingMessage: boolean = false) => {
     setIsStreaming(true); 
     setHasNewContent(false); // Reset new content detection at the start of each message
     let answer = '';
@@ -876,6 +898,7 @@ useEffect(() => {
         const courseId = 'default_course_id';
         const username = user.name || 'default_username_OnSubmitFunction';
         const university = user.university || 'University Name';
+        const linkedin_profile = user.linkedin_profile || 'nolinkedinprofile';
         const year = user.year || 'Null';
         const interests = Array.isArray(user.interests) ? user.interests : ['No interest']; //Adding new interest into Lucy
         const student_profile = localStorage.getItem('student_profile') || 'Brief profile description';
@@ -897,6 +920,7 @@ useEffect(() => {
         
         const currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
         const isFirstMessage = currentConversation?.name === 'New Chat'; // Vérifie si le titre est par défaut
+
         console.log("This is the name of the current conversation", currentConversation?.name)
         console.log("This is the value of isfirstmessage", isFirstMessage)
         
@@ -914,6 +938,8 @@ useEffect(() => {
             year: year,
             faculty: faculty,
             isFirstMessage: isFirstMessage,
+            user: user,
+            isOnboardingMessage: isOnboardingMessage,
         },
         abortController.signal // Passez le signal ici
       )) {
@@ -971,9 +997,11 @@ useEffect(() => {
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'accuracy_score')) {
                         answerACCURACYSCORE.push((packet as any).accuracy_score);
                         console.log("Accuracy score ajoutées");
+
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'classification_title_result')) {
                         answerTITLEANDCATEGORY.push((packet as any).classification_title_result);
                         console.log("title and category ajoutées");
+
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
                         answerWaiting = (packet as any).answer_waiting;
                     } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
