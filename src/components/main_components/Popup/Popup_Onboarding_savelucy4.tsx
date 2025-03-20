@@ -158,7 +158,7 @@ const Popup4: React.FC<Popup4Props> = ({ onFinish, confettiOptions }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 p-4">
+    <div role="dialog" aria-labelledby="popup4-title" aria-modal="true" className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 p-4">
       {showConfetti && buttonRef.current && (
         <Confetti
           width={window.innerWidth}
@@ -170,7 +170,7 @@ const Popup4: React.FC<Popup4Props> = ({ onFinish, confettiOptions }) => {
       )}
       <div className="bg-white p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-[500px] h-[450px]">
         {/* Title */}
-        <h1 id="popup1-title" className="text-2xl font-bold">Mobile App is Coming Soon 📲</h1>
+        <h1 id="popup4-title" className="text-2xl font-bold">Mobile App is Coming Soon 📲</h1>
 
         {/* Description */}
         <p id="popup4-desc" className="mt-4 text-gray-700 text-lg px-4">

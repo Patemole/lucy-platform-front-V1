@@ -114,7 +114,7 @@ const unreadCount = 3;
 
 const Popup2: React.FC<Popup2Props> = ({ onNext }) => {
   return (
-    <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 p-4">
+    <div role="dialog" aria-labelledby="popup2-title" aria-modal="true" className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 p-4">
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center flex flex-col justify-between w-full max-w-xs sm:max-w-md md:max-w-lg">
         {/* title with notification badge */}
         <div className="flex items-center justify-center space-x-3">
@@ -132,9 +132,9 @@ const Popup2: React.FC<Popup2Props> = ({ onNext }) => {
         <div className="mt-4 space-y-4 sm:space-y-6">
           {messageTypes.map(({ type, description, color }) => (
             <div key={type} className="text-left">
-              <h3 className="text-base sm:text-lg font-semibold">
+              <h2 className="text-base sm:text-lg font-semibold">
                 {type === "Public" ? "On Public" : "On Private"}
-              </h3>
+              </h2>
               <p className="text-gray-700 text-xs sm:text-sm">{description}</p>
               <div
                 className="flex items-center justify-center mt-2 rounded-md font-medium"
