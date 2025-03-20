@@ -164,6 +164,11 @@ useEffect(() => {
   setDrawerOpen(!isSmallScreen);
 }, [isSmallScreen]);
 
+//Uniquement pour visualiser quand showchat est cense etre visible ou non. 
+useEffect(() => {
+  console.log("showChat state updated:", showChat);
+}, [showChat]);
+
 
   //To display popup with onboqrdingComplete is false
   useEffect(() => {
@@ -1298,8 +1303,12 @@ const handleConversationClick = async (chat_id: string) => {
 
     // *2️⃣ Récupère l'historique des messages*
     const chatHistory = await getChatHistory(chat_id);
+    console.log("Chat history retrieved for chat_id", chat_id, ":", chatHistory);
     setMessages(chatHistory);
     setShowChat(true);
+
+    // Log immédiatement après avoir défini showChat à true
+    console.log("setShowChat called with true");
 
     // *3️⃣ Récupère les détails de la conversation*
     const chatRef = doc(db, 'chatsessions', chat_id);
@@ -3084,7 +3093,7 @@ const handleConversationClick = async (chat_id: string) => {
 
 
 
-          
+
   
           <div
             className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60 pl-5' : 'pl-4'} ${
