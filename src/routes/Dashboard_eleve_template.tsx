@@ -1273,6 +1273,7 @@ const handleNewConversation = async () => {
 
 
 const handleConversationClick = async (chat_id: string) => {
+  console.log('On se trouve dans le handleConversationClick')
   setCurrentView('chat'); // 🔥 Quand on clique sur une conversation, on revient sur le chat
   setPrimaryChatId(chat_id); // Met à jour le chat_id principal
   setActiveChatId(chat_id); // Définit la conversation active
@@ -1857,6 +1858,14 @@ const handleConversationClick = async (chat_id: string) => {
                         onClick={() => {
                           handleConversationClick(conversation.chat_id);
                           if (isSmallScreen) toggleDrawer();
+                        }}
+                        onKeyDown={(e: React.KeyboardEvent) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            // Déclenche la même action que le clic
+                            handleConversationClick(conversation.chat_id);
+                            if (isSmallScreen) toggleDrawer();
+                          }
                         }}
                         sx={{
                           cursor: 'pointer',
@@ -2713,7 +2722,7 @@ const handleConversationClick = async (chat_id: string) => {
                   }}
                 >
                   {/* Champ de saisie avec placeholder "Ask Lucy..." */}
-                  <section id="chat-section" aria-label="Chat section">
+                  <section id="chat-section" tabIndex={-1} aria-label="Chat section">
                   <TextField
                     fullWidth
                     variant="outlined"
