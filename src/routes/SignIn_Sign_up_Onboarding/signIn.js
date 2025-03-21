@@ -184,8 +184,8 @@ const SignIn = ({ handleToggleThemeMode }) => {
         //login(userData);
         login({
           id: userData.uid, // Assure la cohérence avec le SSO
-          //name: userData.name || "",
-          name: user.displayName || "",
+          name: userData.name || "",
+          //name: user.displayName || "",
           email: userData.email,
           university: userData.university,
           onboardingComplete: userData.onboardingComplete,
