@@ -921,20 +921,23 @@ useEffect(() => {
         console.log("Voici la valeur de chatSessionID", chatSessionId)
         console.log("Contenu de conversations:", conversations);
 
-        // Ajout immédiat de la nouvelle conversation dans la list
+        let currentConversation = null;
+
         if (isOnboardingMessage) {
-          setConversations((prevConversations) => [
-            { chat_id: chatSessionId, name: 'New Chat', thread_type: 'Public'}, //toujours public pour une nouvelle conversation
-            ...prevConversations,
-          ]);
+          const newConv = { chat_id: chatSessionId, name: 'New Chat', thread_type: 'Public' };
+          setConversations((prevConversations) => [newConv, ...prevConversations]);
+          currentConversation = newConv; // ✅ tu sais que tu viens de l'ajouter
+        } else {
+          currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
         }
-        const currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
-        const isFirstMessage = currentConversation?.name === 'New Chat'; // Vérifie si le titre est par défaut
+
+        const isFirstMessage = currentConversation?.name === 'New Chat';
 
         console.log("This is the name of the current conversation", currentConversation?.name)
-        console.log("This is the value of isfirstmessage", isFirstMessage)
-        console.log("This is the value for onboarding message", isOnboardingMessage)
-        
+        console.log("This is the value of isFirstMessage", isFirstMessage)
+        console.log("This is the value for onboardingMessage", isOnboardingMessage)
+
+       
 
         for await (const packetBunch of sendMessageSocraticLangGraph({
             message: inputValue,
