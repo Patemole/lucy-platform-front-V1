@@ -920,6 +920,14 @@ useEffect(() => {
 
         console.log("Voici la valeur de chatSessionID", chatSessionId)
         console.log("Contenu de conversations:", conversations);
+
+        // Ajout immédiat de la nouvelle conversation dans la list
+        if (isOnboardingMessage) {
+          setConversations((prevConversations) => [
+            { chat_id: chatSessionId, name: 'New Chat', thread_type: 'Public'}, //toujours public pour une nouvelle conversation
+            ...prevConversations,
+          ]);
+        }
         const currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
         const isFirstMessage = currentConversation?.name === 'New Chat'; // Vérifie si le titre est par défaut
 
