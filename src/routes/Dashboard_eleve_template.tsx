@@ -178,7 +178,8 @@ useEffect(() => {
     }
   }, [user]);
 
-
+//To send onboarding message
+ /*
   useEffect(() => {
     if (user && user.onboardingMessageSent === false) {
       onSubmit([], "", true);
@@ -195,6 +196,7 @@ useEffect(() => {
         });
     }
   }, [user]);
+  */
 
 
 
