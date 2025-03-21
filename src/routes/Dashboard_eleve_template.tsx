@@ -221,7 +221,7 @@ useEffect(() => {
   }, [unreadCount, profilePicture, onlineUsers, isPrivate]);
   
 
-  /*
+  
   //Change the fake number of online student every 15 secondes
   useEffect(() => {
     const updateOnlineUsers = () => {
@@ -242,7 +242,7 @@ useEffect(() => {
     const initialTimeout = setTimeout(updateOnlineUsers, Math.floor(Math.random() * 60000) + 1000);
     return () => clearTimeout(initialTimeout);
   }, []);
-  */
+
 
 
   useEffect(() => {
