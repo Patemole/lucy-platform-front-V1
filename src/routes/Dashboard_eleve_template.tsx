@@ -180,7 +180,7 @@ useEffect(() => {
 
 //To send onboarding message
   useEffect(() => {
-    if (user && user.onboardingMessageSent === false) {
+    if (user && user.onboardingMessageSent === false && chatIds.length > 0 && chatIds[0]) {
       onSubmit([], "", true);
       const userRef = doc(db, "users", user.id);
       updateDoc(userRef, { onboardingMessageSent: true })
@@ -918,12 +918,14 @@ useEffect(() => {
 
         const lastMessageIndex = messageHistory.length - 1;
 
-        
+        console.log("Voici la valeur de chatSessionID", chatSessionId)
+        console.log("Contenu de conversations:", conversations);
         const currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
         const isFirstMessage = currentConversation?.name === 'New Chat'; // Vérifie si le titre est par défaut
 
         console.log("This is the name of the current conversation", currentConversation?.name)
         console.log("This is the value of isfirstmessage", isFirstMessage)
+        console.log("This is the value for onboarding message", isOnboardingMessage)
         
 
         for await (const packetBunch of sendMessageSocraticLangGraph({
