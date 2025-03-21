@@ -98,6 +98,32 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
 
+
+  useEffect(() => {
+    // Si l'utilisateur est défini et que le champ name est vide ou correspond à la valeur par défaut,
+    // alors on refetch les données Firestore pour mettre à jour le contexte.
+    if (user && (!user.name || user.name === 'default_username_OnSubmitFunction')) {
+      const fetchUserData = async () => {
+        try {
+          const docRef = doc(db, 'users', user.id);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const updatedData = docSnap.data();
+            setUser((prevUser) => ({
+              ...prevUser,
+              name: updatedData.name || prevUser.name,
+            }));
+            console.log("AuthProvider: Contexte mis à jour avec les données Firestore:", updatedData);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la mise à jour des données utilisateur depuis Firestore:", error);
+        }
+      };
+      fetchUserData();
+    }
+  }, [user]);
+
+
   
   
   // Fonction pour définir le chat_id principal
