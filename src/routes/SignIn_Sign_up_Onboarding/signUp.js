@@ -195,7 +195,7 @@ export default function SignUp() {
         //login(userData);
         login({
           id: userData.uid, // Assure la cohérence avec le SSO
-          name: userData.displayName || "",
+          name: userData.name || "",
           email: userData.email,
           university: userData.university,
           onboardingComplete: userData.onboardingComplete,
