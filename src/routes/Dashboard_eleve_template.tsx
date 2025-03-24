@@ -178,6 +178,7 @@ useEffect(() => {
     }
   }, [user]);
 
+  /*
 //To send onboarding message
   useEffect(() => {
     if (user && user.onboardingMessageSent === false && chatIds.length > 0 && chatIds[0]) {
@@ -195,9 +196,8 @@ useEffect(() => {
         });
     }
   }, [user]);
+  */
   
-
-
 
   useEffect(() => {
     fetchUserInfo();
