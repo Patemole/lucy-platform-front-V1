@@ -42,6 +42,39 @@ export const sendWelcomeEmail = async (email: string, name: string, university: 
 
 
 
+export const sendUniversityRequestEmail = async (email: string, university: string) => {
+    try {
+        const response = await fetch(`${apiUrlPrefix}/files/send-email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                to: email,
+                subject: `Thanks for requesting Lucy at ${university}! 🎓`,
+                html: `
+                  <p>Hi there!</p>
+                  <p>Thank you for your interest in bringing <strong>Lucy</strong> to <strong>${university}</strong>!</p>
+                  <p>We're excited about expanding Lucy's reach to more campuses. We'll notify you as soon as Lucy becomes available at your university.</p>
+                  <p>Stay tuned!</p>
+                  <p>Cheers,<br>The Lucy Team 🚀</p>
+                `,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorJson = await response.json();
+            throw new Error(`Error sending email: ${errorJson.detail || response.statusText}`);
+        }
+
+        console.log('University request email sent successfully');
+    } catch (error) {
+        console.error('Error sending university request email:', error);
+    }
+};
+
+
+
 export const scrapeLinkedInProfile = async (linkedinUrl: string) => {
     try {
         const response = await fetch(`${apiUrlPrefix}/chat/linkedin_scraping`, {

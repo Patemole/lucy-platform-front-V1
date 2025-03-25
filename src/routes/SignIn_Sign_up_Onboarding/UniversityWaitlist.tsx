@@ -6,6 +6,7 @@ import lucyLogo from '../../logo_lucy.png';
 import { useNavigate } from 'react-router-dom';
 import universitiesList from '../../data/us_universities.json';
 import WaitlistPopup from '../../components/main_components/Popup/Popup_Waitlist';
+import { sendUniversityRequestEmail } from '../../api/auth_and_onboarding';
 
 interface University {
   name: string;
@@ -72,8 +73,10 @@ const UniversityListPage: React.FC = () => {
   
     if (existingUni) {
       await addDoc(collection(db, 'waitlist'), { email, university: selectedUniversity });
+      await sendUniversityRequestEmail(email, selectedUniversity);
     } else {
       await addDoc(collection(db, 'requested_universities'), { email, name: selectedUniversity });
+      await sendUniversityRequestEmail(email, selectedUniversity);
     }
   
     setModalOpen(false);
