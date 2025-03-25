@@ -93,47 +93,57 @@ const UniversityListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="flex items-center justify-center p-4 bg-white shadow-sm relative">
-        <img src={lucyLogo} alt="Lucy Logo" className="h-8 absolute left-4" />
-        <h1 className="text-lg font-medium text-gray-800">Select your University</h1>
+      <header className="fixed top-0 left-0 right-0 flex items-center justify-center p-4 bg-white shadow-sm z-10">
+        <img
+          src={lucyLogo}
+          alt="Lucy Logo"
+          className="h-7 absolute left-4"
+        />
+        <h1 className="text-base md:text-lg font-medium text-gray-800 text-center px-12">
+          Select your University
+        </h1>
       </header>
-
-      <main className="max-w-xl mx-auto mt-10">
-        <h2 className="text-lg font-medium mb-2">Universities offering Lucy</h2>
-        <div className="max-h-96 overflow-y-auto bg-white rounded-lg shadow-sm border">
+  
+      <main className="max-w-xl mx-auto pt-20 px-4 pb-10">
+        <h2 className="text-base md:text-lg font-medium mb-3">
+          Universities offering Lucy
+        </h2>
+        <div className="max-h-72 overflow-y-auto bg-white rounded-lg shadow-sm border">
           {universitiesLucy.map((uni, idx) => (
             <div
               key={idx}
               onClick={() => handleUniversityClick(uni)}
-              className="flex items-center p-4 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
+              className="flex items-center p-3 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
             >
               {uni.logoUrl && (
                 <img
                   src={uni.logoUrl}
                   alt={`${uni.name} logo`}
-                  className="w-8 h-8 rounded-full object-cover mr-3"
+                  className="w-7 h-7 rounded-full object-cover mr-2"
                 />
               )}
-              <span>{uni.name}</span>
+              <span className="text-sm md:text-base">{uni.name}</span>
             </div>
           ))}
         </div>
-
-        <h2 className="text-lg font-medium mt-8 mb-2">Can't find your uni? Add it to bring Lucy to your campus!</h2>
+  
+        <h2 className="text-base md:text-lg font-medium mt-8 mb-3">
+          Can't find your uni? Add it to bring Lucy to your campus!
+        </h2>
         <input
           type="text"
-          placeholder="Type the name of your university..."
+          placeholder="Type your university name..."
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
-          className="w-full p-3 border rounded-lg"
+          className="w-full p-2.5 border rounded-lg text-sm md:text-base"
         />
-
+  
         {suggestions.length > 0 && (
-          <div className="border bg-white rounded-lg shadow-sm">
+          <div className="border bg-white rounded-lg shadow-sm mt-2">
             {suggestions.map((suggestion, idx) => (
               <div
                 key={idx}
-                className="p-3 cursor-pointer hover:bg-gray-100"
+                className="p-2.5 cursor-pointer hover:bg-gray-100 text-sm md:text-base"
                 onClick={() => {
                   setSearchTerm(suggestion);
                   setSuggestions([]);
@@ -144,14 +154,14 @@ const UniversityListPage: React.FC = () => {
             ))}
           </div>
         )}
-
+  
         <button
           onClick={handleAddUniversity}
-          className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+          className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm md:text-base"
         >
           Join the Waitlist
         </button>
-
+  
         {modalOpen && (
           <WaitlistPopup
             universityName={selectedUniversity}
@@ -160,14 +170,15 @@ const UniversityListPage: React.FC = () => {
           />
         )}
       </main>
+  
       {showSnackbar && (
-        <div className="fixed bottom-6 left-6 bg-green-100 text-green-800 px-4 py-2 rounded-lg shadow-md">
-            {snackbarMessage}
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 px-4 py-2 rounded-lg shadow-md text-sm text-center w-11/12 md:w-auto">
+          {snackbarMessage}
         </div>
-)}
+      )}
     </div>
   );
-};
+}
 
 export default UniversityListPage;
 
