@@ -19,6 +19,7 @@ const WaitlistPopup: React.FC<WaitlistPopupProps> = ({ universityName, onClose, 
     if (email.trim()) {
       onSubmit(email.trim());
       setEmail("");
+      onClose();
     }
   };
 

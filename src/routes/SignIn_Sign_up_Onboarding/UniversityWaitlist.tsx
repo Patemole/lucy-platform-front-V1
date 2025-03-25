@@ -66,15 +66,16 @@ const UniversityListPage: React.FC = () => {
   };
 
   const handleWaitlistSubmit = async (email: string) => {
-    const existingUni = universitiesLucy.find(u => u.name.toLowerCase() === selectedUniversity.toLowerCase());
-
+    const existingUni = universitiesLucy.find(
+      u => u.name.toLowerCase() === selectedUniversity.toLowerCase()
+    );
+  
     if (existingUni) {
       await addDoc(collection(db, 'waitlist'), { email, university: selectedUniversity });
     } else {
       await addDoc(collection(db, 'requested_universities'), { email, name: selectedUniversity });
     }
-
-    alert('Thank you! You have been added to the waitlist.');
+  
     setModalOpen(false);
   };
 
