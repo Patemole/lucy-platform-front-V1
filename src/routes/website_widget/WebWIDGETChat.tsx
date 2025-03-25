@@ -219,7 +219,7 @@ useEffect(() => {
     onSubmit([...messages, newMessage, loadingMessage], COURSE_message);
   };
 
-  const handleSendMessageSocraticLangGraph = (message: string) => {
+  const handleSendMessageSocraticLangGraph = (message: string, isOnboardingMessage: boolean = false) => {
     if (message.trim() === '') return;
   
     console.log('handleSendMessageSocraticLangGraph called');
@@ -329,7 +329,9 @@ useEffect(() => {
         minor: [minor],
         year: year,
         faculty: [faculty],
-        isFirstMessage: false
+        isFirstMessage: false,
+        user: {},  // 👈 ajout nécessaire
+        isOnboardingMessage: false, // 👈 ajout nécessaire
 
       })) {
         if (Array.isArray(packetBunch)) {

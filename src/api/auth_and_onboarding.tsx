@@ -2,7 +2,9 @@ import config from '../config'; // Récupération de l'URL du serveur backend
 
 const apiUrlPrefix: string = config.server_url; // Utilisation de l'URL du backend
 
-export const sendWelcomeEmail = async (email: string, name: string) => {
+export const sendWelcomeEmail = async (email: string, name: string, university: string) => {
+
+    const firstName = name ? name.split(' ')[0] : "there";
     try {
         const response = await fetch(`${apiUrlPrefix}/files/send-email`, {
             method: 'POST',
@@ -13,13 +15,13 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
                 to: email,
                 subject: 'Welcome to Lucy! 🎉',
                 html: `
-                  <p>Hi ${name || "there"}!</p>
+                  <p>Hi ${firstName || "there"}!</p>
               
-                  <p>We're thrilled to have you join <strong>Lucy</strong>, your personalized AI peer advisor designed to simplify your university journey.</p>
+                  <p>We're thrilled to have you join <strong>Lucy</strong>, your personalized AI-Powered Peer Advisor designed to simplify your university journey.</p>
               
                   <p>With Lucy, you can effortlessly access tailored course recommendations, explore campus opportunities, and receive support whenever you need it.</p>
               
-                  <p>Ready to get started? Log in now and experience smarter university life!</p>
+                  <p>Ready to get started? <a href="https://${university}.my-lucy.com/auth/sign-in">Log in now</a> and experience smarter university life!</p>
               
                   <p>Cheers,<br>
                   The Lucy Team 🚀</p>

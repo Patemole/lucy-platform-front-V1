@@ -234,7 +234,7 @@ export default function LearningStyleSurvey() {
         setPrimaryChatId(chatId);
 
         console.log("[Step 6] Sending welcome email via backend API");
-        await sendWelcomeEmail(userData.email, userData.name)
+        await sendWelcomeEmail(userData.email, userData.name, userData.university )
 
         console.log("[Step 7] Updating auth context with user data");
         login({
