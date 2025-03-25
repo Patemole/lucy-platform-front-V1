@@ -84,8 +84,8 @@ const UniversityListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="flex items-center p-4 bg-white shadow-sm">
-        <img src={lucyLogo} alt="Lucy Logo" className="h-8" />
+      <header className="flex items-center justify-center p-4 bg-white shadow-sm relative">
+        <img src={lucyLogo} alt="Lucy Logo" className="h-8 absolute left-4" />
         <h1 className="text-lg font-medium text-gray-800">Select your University</h1>
       </header>
 
