@@ -34,6 +34,7 @@ import SignUp from './routes/SignIn_Sign_up_Onboarding/signUp';
 import OnboardingPage from './routes/SignIn_Sign_up_Onboarding/onboardingPage';
 import ResetPassword from "./routes/SignIn_Sign_up_Onboarding/ResetPassword";
 import LtiLogin from "./routes/SignIn_Sign_up_Onboarding/LtiLogin";
+import UniversityWaitlist from "./routes/SignIn_Sign_up_Onboarding/UniversityWaitlist";
 
 //Compliance document pages
 import DataPrivacy from './routes/compliance_document/DataPrivacy';
@@ -74,6 +75,8 @@ const App: React.FC = () => {
                     <Route path="/auth/sign-up" element={<SignUp />} />
                     <Route path="/auth/reset-password" element={<ResetPassword />} />
                     <Route path="/auth/lti-login" element={<LtiLogin />} />
+
+                    <Route path="/auth/choose-your-university" element={<UniversityWaitlist />} />
 
                     <Route path="/chat" element={<WebChat />} />
                     <Route path="/chatWidget" element={<WebChatWIDGET />} />
