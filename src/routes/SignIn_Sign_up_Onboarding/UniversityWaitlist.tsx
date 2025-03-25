@@ -81,11 +81,13 @@ const UniversityListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="flex items-center p-4 bg-white shadow-sm">
-        <img src={lucyLogo} alt="Lucy Logo" className="h-8" />
-      </header>
+    <header className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between bg-white shadow-sm p-4">
+      <img src={lucyLogo} alt="Lucy Logo" className="h-8" />
+      <h1 className="text-lg font-medium text-gray-800">Select your University</h1>
+      <div className="w-8 h-8"></div> 
+    </header>
 
-      <main className="max-w-xl mx-auto mt-10">
+    <main className="max-w-xl mx-auto mt-24 mb-10 px-4">
         <h2 className="text-lg font-medium mb-2">Universities offering Lucy</h2>
         <div className="max-h-96 overflow-y-auto bg-white rounded-lg shadow-sm border">
           {universitiesLucy.map((uni, idx) => (
