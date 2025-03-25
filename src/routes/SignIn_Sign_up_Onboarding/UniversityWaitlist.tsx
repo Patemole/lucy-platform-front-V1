@@ -20,6 +20,8 @@ const UniversityListPage: React.FC = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUniversity, setSelectedUniversity] = useState('');
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,6 +82,13 @@ const UniversityListPage: React.FC = () => {
     }
   
     setModalOpen(false);
+    setSnackbarMessage("Your request has been received! We'll keep you updated by email.");
+    setShowSnackbar(true);
+
+    // Masquer la snackbar après 4 secondes :
+    setTimeout(() => {
+        setShowSnackbar(false);
+    }, 4000);
   };
 
   return (
@@ -151,6 +160,11 @@ const UniversityListPage: React.FC = () => {
           />
         )}
       </main>
+      {showSnackbar && (
+        <div className="fixed bottom-6 left-6 bg-green-100 text-green-800 px-4 py-2 rounded-lg shadow-md">
+            {snackbarMessage}
+        </div>
+)}
     </div>
   );
 };
