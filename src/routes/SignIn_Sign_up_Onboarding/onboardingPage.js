@@ -585,6 +585,8 @@ export default function LearningStyleSurvey() {
             </label>
           </div>
 
+          
+
           {/* Affichage de l'erreur si l'utilisateur ne coche pas la case */}
           {errors.cookieConsent && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.cookieConsent}</p>}
 
