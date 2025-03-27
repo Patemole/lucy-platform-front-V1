@@ -238,7 +238,15 @@ const Dashboard_eleve_template: React.FC = () => {
   const sendNextOnboardingMessage = async (index: number) => {
     if (index >= onboardingMessages.length) {
       setIsOnboardingActive(false); // Onboarding terminé
-      setIsStreaming(false);
+    
+    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: '' };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy' };
+    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
+
+    onSubmit([...messages, newMessage, loadingMessage], '');
+    setInputValue('');
       return;
     }
     // Mise à jour des états selon ta logique existante
