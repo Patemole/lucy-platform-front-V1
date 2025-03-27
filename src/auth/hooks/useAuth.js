@@ -4,6 +4,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
+
 export const useAuth = () => {
   const { 
     user, 

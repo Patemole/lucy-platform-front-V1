@@ -35,6 +35,7 @@ import OnboardingPage from './routes/SignIn_Sign_up_Onboarding/onboardingPage';
 import ResetPassword from "./routes/SignIn_Sign_up_Onboarding/ResetPassword";
 import LtiLogin from "./routes/SignIn_Sign_up_Onboarding/LtiLogin";
 import UniversityWaitlist from "./routes/SignIn_Sign_up_Onboarding/UniversityWaitlist";
+import OnboardingLucyQuestions from "./routes/SignIn_Sign_up_Onboarding/onboardingLucyQuestions";
 
 //Compliance document pages
 import DataPrivacy from './routes/compliance_document/DataPrivacy';
@@ -88,12 +89,13 @@ const App: React.FC = () => {
                     <Route path="/dataprivacy" element={<DataPrivacy />} />
                     <Route path="/cookiepolicy" element={< CookiePolicy/>} />
 
-
+                    
                     <Route path="/" element={<PrivateRoute />}>
                         <Route path="/dashboard/student/:uid" element={<DashboardEleveTemplate />} />
              
                         <Route path="/onboarding/learningStyleSurvey" element={<OnboardingPage />} />
                         <Route path="/onboarding/learningStyleSurvey/:course_id" element={<OnboardingPage />} />
+                        <Route path="/onboarding-with-lucy" element={<OnboardingLucyQuestions />} />
         
                         <Route path="/dashboard/academic-advisor/:uid" element={<FlagingDashboard />} />
                         <Route path="/dashboard/enrollment/:uid" element={<EnrollmentDashboard />} />

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="41px" height="7px" viewBox="0 0 41 7" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Arrowhead</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Arrowhead" transform="translate(0.333333, 0.613246)" fill="#FFFFFF" fill-rule="nonzero">
+            <path d="M3.4455197e-16,3.00000208 C3.4455197e-16,4.53053882 1.2350762,5.77128621 2.75862101,5.77128621 C4.28216583,5.77128621 5.51724512,4.53053882 5.51724512,3.00000208 C5.51724512,1.46946534 4.28216583,0.228721068 2.75862101,0.228721068 C1.2350762,0.228721068 3.4455197e-16,1.46946534 3.4455197e-16,3.00000208 Z M40,3 L34.8275863,2.3075547e-16 L34.8275863,6 L40,3 Z M2.75862101,3.5196172 L35.3448276,3.5196172 L35.3448276,2.48038695 L2.75862101,2.48038695 L2.75862101,3.5196172 Z" id="Shape"></path>
+        </g>
+    </g>
+</svg>

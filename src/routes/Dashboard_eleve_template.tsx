@@ -307,7 +307,7 @@ useEffect(() => {
     const unsubscribe = fetchSocialThreads(); // Active l'écoute Firestore en temps réel
   
     return () => unsubscribe(); // Stoppe l'écoute quand le composant est démonté
-  }, [user.id, user.university]); // Déclenchement si user.id ou user.university change
+  }, [user?.id, user?.university]); // Déclenchement si user.id ou user.university change
   
 
 
@@ -342,7 +342,7 @@ useEffect(() => {
   //permet d afficher les anciennes conversations dans la sidebar
   useEffect(() => {
     fetchCourseOptionsAndChatSessions();
-  }, [user.id]);
+  }, [user?.id]);
 
 
   //permet d aller chercher le dernier chatid on chargerement de la page pour afficher la derniere conversation
@@ -491,7 +491,7 @@ useEffect(() => {
 
   const fetchSocialThreads = () => {
   setLoadingSocialThreads(true);
-  const university = user.university || "upenn"; // Université par défaut
+  const university = user?.university || "upenn"; // Université par défaut
 
   // 🔥 Ne filtrer que par "university" dans Firestore
   const q = query(
@@ -501,7 +501,7 @@ useEffect(() => {
   );
 
   return onSnapshot(q, (snapshot) => {
-    const userId = user.id; // ID de l'utilisateur actuel
+    const userId = user?.id; // ID de l'utilisateur actuel
 
     // 🔥 Transformation des threads depuis Firestore
     const threads = snapshot.docs.map((doc) => ({
@@ -685,8 +685,8 @@ useEffect(() => {
 
   //fonction qui permet d afficher les anciennes conversations dans la sidebar of historic conversation and not social conversation
   const fetchCourseOptionsAndChatSessions = async () => {
-    if (user.id) {
-      const userRef = doc(db, 'users', user.id);
+    if (user?.id) {
+      const userRef = doc(db, 'users', user?.id);
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
@@ -897,15 +897,15 @@ useEffect(() => {
     try {
         const chatSessionId = chatIds[0] || 'default_chat_id';
         const courseId = 'default_course_id';
-        const username = user.name || 'default_username_OnSubmitFunction';
-        const university = user.university || 'University Name';
-        const linkedin_profile = user.linkedin_profile || 'nolinkedinprofile';
-        const year = user.year || 'Null';
-        const interests = Array.isArray(user.interests) ? user.interests : ['No interest']; //Adding new interest into Lucy
+        const username = user?.name || 'default_username_OnSubmitFunction';
+        const university = user?.university || 'University Name';
+        const linkedin_profile = user?.linkedin_profile || 'nolinkedinprofile';
+        const year = user?.year || 'Null';
+        const interests = Array.isArray(user?.interests) ? user?.interests : ['No interest']; //Adding new interest into Lucy
         const student_profile = localStorage.getItem('student_profile') || 'Brief profile description';
-        const major = Array.isArray(user.major) ? user.major : ['None_Default'];
-        const minor = Array.isArray(user.minor) ? user.minor : ['None_Default'];
-        const faculty = Array.isArray(user.faculty) ? user.faculty : ['None_Default'];
+        const major = Array.isArray(user?.major) ? user?.major : ['None_Default'];
+        const minor = Array.isArray(user?.minor) ? user?.minor : ['None_Default'];
+        const faculty = Array.isArray(user?.faculty) ? user?.faculty : ['None_Default'];
 
         console.log('chatSessionId:', chatSessionId);
         console.log('username:', username);
@@ -945,12 +945,12 @@ useEffect(() => {
             courseId: courseId,
             username: username,
             university: university,
-            interests: interests,
+            interests: interests || [],
             student_profile: student_profile,
-            major: major,
-            minor: minor,
+            major: major || [],
+            minor: minor|| [],
             year: year,
-            faculty: faculty,
+            faculty: faculty || [],
             isFirstMessage: isFirstMessage,
             user: user,
             isOnboardingMessage: isOnboardingMessage,
@@ -1175,7 +1175,7 @@ useEffect(() => {
           setIsStreaming(false);
         }
 
-        if (!user.id) {
+        if (!user?.id) {
           throw new Error("L'ID utilisateur (uid) est manquant dans l'URL.");
         }
 
@@ -1243,7 +1243,7 @@ const handleNewConversation = async () => {
     console.log("Après le timeout:", cancelConversationRef.current);
   }
 
-  const university = user.university || 'University Name'; // Définition de la valeur du champ university
+  const university = user?.university || 'University Name'; // Définition de la valeur du champ university
   const firstMessageContent = messages.length > 0 ? messages[0].content : 'Conversation history';
   console.log("Contenu du premier message capturé:", firstMessageContent);
 
@@ -1265,8 +1265,8 @@ const handleNewConversation = async () => {
   ]);
 
   // Tâches en arrière-plan
-  if (user.id) {
-    const userRef = doc(db, 'users', user.id);
+  if (user?.id) {
+    const userRef = doc(db, 'users', user?.id);
 
     try {
       const userSnap = await getDoc(userRef);
@@ -1389,7 +1389,7 @@ const handleConversationClick = async (chat_id: string) => {
       }
 
       // *6️⃣ Ajoute l'utilisateur à ⁠ ReadBy ⁠ s'il ne l'a pas encore lu*
-      const userId = user.id;
+      const userId = user?.id;
       const readBy = chatData.ReadBy || [];
 
       if (!readBy.includes(userId)) {
@@ -1441,7 +1441,7 @@ const handleConversationClick = async (chat_id: string) => {
     humanMessageContent: string | null,
     ratings: { relevance?: number; accuracy?: number; format?: number; sources?: number; overall_satisfaction?: number }
   ) => {
-    const uid = user.id || 'default_uid';
+    const uid = user?.id || 'default_uid';
     const chatId = chatIds[0] || 'default_chat_id';
   
     await submitFeedbackWrongAnswer({
@@ -1469,7 +1469,7 @@ const handleConversationClick = async (chat_id: string) => {
   const handleFeedbackClick = async (index: number) => {
     const currentMessage = messages[index];
     const previousMessage = index > 0 ? messages[index - 1] : null;
-    const uid = user.id || 'default_uid';
+    const uid = user?.id || 'default_uid';
     const chatId = chatIds[0] || 'default_chat_id';
 
 
@@ -2682,7 +2682,7 @@ const handleConversationClick = async (chat_id: string) => {
             )}
             
 
-            {currentView === 'chat' && !isLandingPageVisible && (!hasTak || inputValue.trim() !== "") && (
+            {currentView === 'chat' && !isLandingPageVisible && (!hasTak|| inputValue.trim() !== "") && (
             <>
               {isSmallScreen ? (
                 // VERSION MOBILE AVEC MODIFICATIONS

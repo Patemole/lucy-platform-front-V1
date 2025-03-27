@@ -1,0 +1,209 @@
+(function ($, Drupal, drupalSettings, once) {
+  Drupal.behaviors.ajaxLink = {
+    attach(context, settings) {
+      // Deal with auto ajax link load.
+      const ajaxLinkAutoLinks = {
+        // All links defined as auto ajax link.
+        links: [],
+        // Enabled links are the links which can still be used by ajax links.
+        enabledLinks: [],
+        addLink(element) {
+          this.links.push(element);
+          this.enabledLinks.push(element);
+        },
+        // Link has been used and has to be disabled. Remove it from enabled
+        // list.
+        disableLink(element) {
+          for (let i = 0; i < this.enabledLinks.length; i++) {
+            if (this.enabledLinks[i] === element) {
+              this.enabledLinks.splice(i, 1);
+            }
+          }
+        },
+        // Init the scroll listener to check if enabled elements are displayed
+        // and ajax link as to be launched.
+        init() {
+          const self = this;
+          $(window).scroll(function () {
+            self.executeAll();
+          });
+        },
+        // Check each enabled link to try executing ajax.
+        executeAll() {
+          const self = this;
+          // Only enabled links will work, and link can be used only once.
+          self.enabledLinks.forEach(function (element) {
+            self.execute(element);
+          });
+        },
+        // Execute ajax link if link is in the displayed browser area.
+        execute(element) {
+          // Do not fake click event if link is not configured as auto ajax
+          // link.
+          if (element.className.indexOf('ajax-link-auto') === -1) {
+            return;
+          }
+          // We check if link is in the displayed area.
+          const viewportOffset = element.getBoundingClientRect();
+          const ajaxLinkLinkTop = viewportOffset.top;
+          if (ajaxLinkLinkTop >= 0 && $(window).height() > ajaxLinkLinkTop) {
+            this.disableLink(element);
+
+            // Init click event.
+            const e = new MouseEvent('click', {
+              view: window,
+              bubbles: true,
+              cancelable: true,
+            });
+            element.dispatchEvent(e);
+          }
+        },
+      };
+
+      // Deal with ajax link action.
+      const ajaxLink = {
+        execute(element, elementWithSettings, e = {}) {
+          const $element = $(element);
+          const $elementWithSettings = elementWithSettings;
+
+          // Prevent an ajax link to be executed twice.
+          if ($element.data('ajax-link-executed')) {
+            return false;
+          }
+          $element.data('ajax-link-executed', 'true');
+
+          // Selector will be used to know where to make method replacement.
+          let selector = $elementWithSettings.data('ajax-link-selector');
+          // Fallback if no selector is defined, add one on the parent.
+          if (selector === '' || selector === undefined) {
+            $elementWithSettings.parent().addClass('ajax-link-wrapper');
+            selector = '.ajax-link-wrapper';
+          }
+
+          const $selectedWrapper = $(selector);
+
+          // Only following methods are available :
+          // - replace : will use ReplaceCommand.
+          // - append : will use AppendCommand.
+          // If another method is used, nothing will append.
+          let method = $elementWithSettings.data('ajax-link-method');
+          // Fallback if no method is defined, use replace as default.
+          if (method === '' || method === undefined) {
+            method = 'replace';
+          }
+
+          // Define if history browser functionality has to be used, that will
+          // be reflected in the browser url.
+          let history = $elementWithSettings.data('ajax-link-history');
+          // Fallback if no history is defined, use 0 as default (no history).
+          if (history === '' || history === undefined) {
+            history = 0;
+          }
+
+          // Prepare the ajax call.
+          const href = $element.attr('href');
+          const encodedHref = encodeURI($element.attr('href'));
+          const encodedSelector = encodeURIComponent(selector);
+          const url = `${drupalSettings.path.baseUrl}ajax/ajax_link?path=${encodedHref}&selector=${encodedSelector}&method=${method}`;
+          const settings = {
+            progress: { type: 'throbber' },
+            url,
+            element: $element.get(0),
+          };
+
+          const regex = /https?:\/\/[^/]+/i;
+          const path = href.replace(regex, '');
+          const ajax = new Drupal.ajax(settings);
+
+          // Collect original success method to be able to override and call it
+          // later.
+          const parentSuccess = ajax.options.success;
+          ajax.options.success = function (response, status, xmlHttpRequest) {
+            if (history === 1) {
+              window.history.pushState(response, '', path);
+            }
+            // Call original success method.
+            parentSuccess(response, status, xmlHttpRequest);
+
+            // Reload behaviors for the new content.
+            $selectedWrapper.each(function () {
+              Drupal.attachBehaviors(this, Drupal.settings);
+            });
+          };
+
+          // Register the call ajax event.
+          ajax.eventResponse(ajax, e);
+
+          // Remove link so it cannot be accidentally used anymore.
+          if (
+            $elementWithSettings.data('ajax-link-remove-after-execution') ||
+            $elementWithSettings.data('ajax-link-remove-after-execution') ===
+              undefined
+          ) {
+            $elementWithSettings.remove();
+          }
+        },
+      };
+
+      // Execute the ajax link on click and prevent access to this link.
+      const setAjaxLink = function ($element, $elementWithSettings = null) {
+        if ($elementWithSettings === null) {
+          $elementWithSettings = $element;
+        }
+        let $elementToFire = $element;
+        if ($elementWithSettings.data('ajax-link-remove-after-execution')) {
+          $elementToFire = $(once('setajaxlink', $element[0]));
+        }
+        $elementToFire.on('click', function (e) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          ajaxLink.execute(e.currentTarget, $elementWithSettings, e);
+
+          // Allow link to be executed another time if
+          // ajax-link-remove-after-execution is explicitly set to false.
+          if (!$elementWithSettings.data('ajax-link-remove-after-execution')) {
+            $elementWithSettings.data('ajax-link-executed', false);
+          }
+
+          return false;
+        });
+      };
+
+      // In case context IS ajax link, set parent as context.
+      if (
+        context.tagName === 'A' &&
+        context.className.indexOf('ajax-link') !== -1
+      ) {
+        context = context.parentNode;
+      }
+
+      // Find ajax link and set ajax link feature.
+      once('ajaxlink', 'a.ajax-link', context).forEach((link) => {
+        setAjaxLink($(link));
+      });
+
+      // Find ajax links and set ajax links feature.
+      once('ajaxlink', '.ajax-links-wrapper', context).forEach(
+        (elementWithSettings) => {
+          const $elementWithSettings = $(elementWithSettings);
+          once('ajaxlink', 'a', elementWithSettings).forEach((link) => {
+            setAjaxLink($(link), $elementWithSettings);
+          });
+        },
+      );
+
+      // Initialize auto ajax links based on their class.
+      once('ajaxLinkAuto', 'a.ajax-link-auto', context).forEach((link) => {
+        // Add the current link to the auto links.
+        ajaxLinkAutoLinks.addLink(link);
+        if (ajaxLinkAutoLinks.links.length === 1) {
+          // Init when the first element is added to add scroll listener.
+          ajaxLinkAutoLinks.init();
+        }
+        // In any cases, don't wait to scroll the first time.
+        ajaxLinkAutoLinks.execute(link);
+      });
+    },
+  };
+})(jQuery, Drupal, drupalSettings, once);

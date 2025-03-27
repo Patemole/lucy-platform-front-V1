@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   FiCheck,
   FiCopy,
@@ -42,8 +42,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import remarkGfm from "remark-gfm";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme, useMediaQuery, Box, Typography, Drawer, List, ListItem, ListItemText, Tooltip } from "@mui/material";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import HighchartsMore from 'highcharts/highcharts-more';
@@ -52,6 +51,8 @@ import { ThreeDots } from 'react-loader-spinner';
 import remarkBreaks from 'remark-breaks';
 
 import { FiRefreshCw } from "react-icons/fi";
+import LanguageIcon from '@mui/icons-material/Language';
+import CloseIcon from '@mui/icons-material/Close';
 
 
 HighchartsMore(Highcharts);
@@ -184,6 +185,9 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [otherInput, setOtherInput] = useState<string>("");
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [showAllSteps, setShowAllSteps] = useState(false);
+  const [showSourcesSidebar, setShowSourcesSidebar] = useState(false);
+  const [isTextDisplayed, setIsTextDisplayed] = useState(false);
+  const [showShadowSources, setShowShadowSources] = useState(false);
 
   // États pour la gestion des messages
   const [messages, setMessages] = useState<string[]>([]);
@@ -961,13 +965,247 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
 
 
-            {/* Gestion des documents cités */}
+
+          {/* Bloc des sources : il s'affiche uniquement si le texte n'est pas encore affiché 
+          et que soit le loader est actif, soit des sources réelles sont disponibles */}
+        {!isTextDisplayed && (showShadowSources || (citedDocuments && citedDocuments.length > 0)) && (
+          <div className={`mt-0 ${!isSmallScreen ? "ml-8" : ""} pb-3`}>
+            {/* Titre : affiché uniquement si des sources réelles sont disponibles */}
+            {(showShadowSources || (citedDocuments && citedDocuments.length > 0)) && (
+              <div className="flex items-center mb-3">
+                <LanguageIcon sx={{ width: 20, height: 20, marginRight: 1 }} />
+                <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
+                  Sources
+                </span>
+              </div>
+            )}
+
+    {/* Contenu : si le loader est actif, on affiche les boîtes skeleton avec les mêmes styles que les vraies sources */}
+    {showShadowSources ? (
+      <div
+        className="sources-grid mt-2 grid grid-cols-5 gap-2"
+        style={{ 
+          width: "800px", 
+          maxWidth: "100%" }}
+      >
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="animate-pulse rounded bg-gray-300"
+            style={{
+              height: "45px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "10px 12px",
+              flex: "1",
+              minWidth: "0px",
+            }}
+          ></div>
+        ))}
+        <div
+          className="animate-pulse rounded bg-gray-300"
+          style={{
+            height: "45px",
+            width: "150px", // ✅ Contraindre chaque boîte à une largeur fixe
+            minWidth: "150px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "10px 12px",
+            flex: "1",
+            //minWidth: "0px",
+          }}
+        ></div>
+      </div>
+    ) : (
+      <div
+        className="sources-grid mt-2 grid grid-cols-5 gap-2"
+        style={{ width: "100%" }}
+      >
+        {citedDocuments?.slice(0, 4).map((document) => (
+          <a
+            key={document.document_id}
+            className="group p-2 rounded-lg cursor-pointer flex items-center shadow transition-shadow duration-200 ease-in-out hover:shadow-lg"
+            href="#"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.3)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              height: "45px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "10px 12px",
+              flex: "1",
+              minWidth: "0px",
+            }}
+            aria-label={`Open source: ${document.document_name}`}
+            onClick={() => handleSourceClick(document.link)}
+          >
+            <div className="flex items-center w-full">
+              <div style={{ width: "24px", height: "24px", flexShrink: 0 }}>
+                <img
+                  src={theme.logo}
+                  alt="Source Logo"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    aspectRatio: "1/1",
+                    marginRight: "6px",
+                  }}
+                />
+              </div>
+
+              {/* Ajout de Tooltip autour du titre du document */}
+              <Tooltip title={document.document_name} arrow>
+              <span
+                className="text-sm truncate group-hover:underline transition duration-200 ease-in-out"
+                style={{
+                  maxWidth: "75%",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {document.document_name}
+              </span>
+              </Tooltip>
+            </div>
+          </a>
+        ))}
+
+        {citedDocuments && citedDocuments.length > 4 && (
+          <div
+            className="group p-2 rounded-lg cursor-pointer flex items-center justify-center shadow transition-shadow duration-200 ease-in-out hover:shadow-lg"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.3)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              fontSize: "0.9rem",
+              fontWeight: "600",
+              color: "#555",
+              height: "45px",
+              minWidth: "80px",
+              width: "auto",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+              padding: "0 12px",
+            }}
+            onClick={() => setShowSourcesSidebar(true)}
+          >
+            <span className="no-underline group-hover:underline transition duration-200 ease-in-out">
+              View {citedDocuments.length - 4}+
+            </span>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+)}
+
+
+
+{showSourcesSidebar && (
+  <Drawer
+    anchor="right"
+    open={showSourcesSidebar}
+    onClose={() => setShowSourcesSidebar(false)}
+    PaperProps={{
+      sx: {
+        width: 420, // ✅ Augmentation légère de la largeur
+        p: 3,
+        backgroundColor: "rgba(255, 255, 255, 0.4)", // ✅ Effet Glassmorphism plus clair
+        backdropFilter: "blur(10px)", // ✅ Appliquer le flou uniquement sur la sidebar
+        boxShadow: "none",
+        borderRadius: "15px 0 0 15px",
+      },
+    }}
+    BackdropProps={{
+      style: { backgroundColor: "rgba(0, 0, 0, 0.1)" },
+    }}
+  >
+    <Box sx={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      {/* Titre */}
+      <Typography variant="h6" sx={{ pb: 2, fontWeight: "bold", color: "black" }}>
+        📖 All Sources
+      </Typography>
+
+      {/* Bouton Fermer (aligné avec le titre) */}
+      <IconButton
+        onClick={() => setShowSourcesSidebar(false)}
+        sx={{ color: "red" }}
+        aria-label="close"
+      >
+        <CloseIcon />
+      </IconButton>
+    </Box>
+
+    {/* Liste des sources */}
+    {citedDocuments && citedDocuments.length > 0 ? (
+      <List>
+        {citedDocuments.map((document, index) => (
+          <ListItem 
+            key={index} 
+            sx={{
+              mb: 1,
+              borderRadius: "10px", // ✅ Coins plus arrondis
+              backgroundColor: "rgba(255, 255, 255, 0.6)",
+              padding: "12px", // ✅ Augmentation de l'espace autour des éléments
+              display: "flex",
+              alignItems: "center",
+              "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.8)" },
+            }}
+            button
+            component="a"
+            href={document.link}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {/* Logo à gauche */}
+            <Box sx={{ width: "28px", height: "28px", flexShrink: 0, marginRight: "12px" }}>
+              <img
+                src={theme.logo}
+                alt="Source Logo"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  aspectRatio: "1/1",
+                }}
+              />
+            </Box>
+
+            {/* Texte de la source */}
+            <ListItemText
+              primary={document.document_name}
+              primaryTypographyProps={{
+                fontSize: "1rem", // ✅ Texte légèrement plus grand
+                fontWeight: "500",
+                color: "black",
+              }}
+            />
+          </ListItem>
+        ))}
+      </List>
+    ) : (
+      <Typography variant="body2" sx={{ color: "black" }}>
+        No sources available.
+      </Typography>
+    )}
+  </Drawer>
+)}
+
+
+{/*
+            {/* Gestion des documents cités *
         {citedDocuments && citedDocuments.length > 0 && (
         <div className={`mt-4 ${!isSmallScreen ? "ml-8" : ""}`}>
-            {/* Divider above University Sources, visible only if Social Thread has elements */}
+            {/* Divider above University Sources, visible only if Social Thread has elements *
             
 
-            {/* Title for Sources Section */}
+            {/* Title for Sources Section *
             <div 
             className="font-bold mb-2" 
             style={{ 
@@ -990,7 +1228,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
                         iconSize={16}
                     />
                     </div>
-                    */}
+                    *
                     {document.document_name}
                 </div>
                 );
@@ -1015,6 +1253,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
             </div>
         </div>
         )}
+        */}
+
+
+
+
 
             {/*
             {/* Affichage des messages accumulés *
