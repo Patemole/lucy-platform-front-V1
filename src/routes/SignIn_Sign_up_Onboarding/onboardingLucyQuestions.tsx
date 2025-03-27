@@ -198,13 +198,23 @@ const Dashboard_eleve_template: React.FC = () => {
     const isLastStep = currentStepIndex === totalSteps - 1;
 
 
-
+/*
   //To send the first onboarding message
   useEffect(() => {
     if (isOnboardingActive && messages.length === 0) {
       sendNextOnboardingMessage(0);
     }
   }, []);
+  */
+
+  useEffect(() => {
+    const hasMetadata = messages.some(msg => msg.METADATAONBOARDING);
+    if (isOnboardingActive && !hasMetadata) {
+      console.log("🟢 Lancement de l'onboarding à la première question");
+      console.log("📊 Messages actuels :", messages.map(m => m.METADATAONBOARDING));
+      sendNextOnboardingMessage(0);
+    }
+  }, [isOnboardingActive, messages]);
 
 
   // Fonction qui simule le stream en ajoutant chunk par chunk
