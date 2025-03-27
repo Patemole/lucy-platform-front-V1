@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="27px" height="6px" viewBox="0 0 27 6" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>linkarrowhead</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M0.333333,3 C0.333333,4.47276 1.52724,5.66667 3,5.66667 C4.47276,5.66667 5.66667,4.47276 5.66667,3 C5.66667,1.52724 4.47276,0.333333 3,0.333333 C1.52724,0.333333 0.333333,1.52724 0.333333,3 Z M27,3 L22,0.113249 L22,5.88675 L27,3 Z M3,3.5 L22.5,3.5 L22.5,2.5 L3,2.5 L3,3.5 Z" id="linkarrowhead" fill="#011DAE" fill-rule="nonzero"></path>
+    </g>
+</svg>

@@ -52,6 +52,9 @@ import { Box,Drawer, Typography, ListItem, List } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from "@mui/material/Tooltip";
 
+import { useAuth } from '../../auth/hooks/useAuth';
+
+
 
 
 
@@ -124,7 +127,14 @@ interface AIMessageProps {
   retrievalDisabled?: boolean;
   handleWrongAnswerClick: (aiMessageContent: string) => void;
   handleSourceClick: (link: string) => void;
+
   handleSendTAKMessage: (TAK_message: string) => void;
+  handleSendSCHOOLMessage?: (school_message: string) => void; // 👈 optionnel
+  handleSendYEARMessage?: (year_message: string) => void; // 👈 optionnel
+  handleSendLINKEDINMessage?: (url: string) => void; // 👈 optionnel
+  handleSendMAJORMINORMessage?: (data: { majors: string[]; minors: string[] }) => void;
+  handleSendCOMPLIANCEMessage?: (payload: {termsAccepted: boolean; ageConfirmed: boolean;}) => void;
+
   handleSendCOURSEMessage: (COURSE_message: string) => void;
   drawerOpen: boolean;
   chartData?: AnswerCHART[] | null;
@@ -137,6 +147,7 @@ interface AIMessageProps {
   instaclubData?: AnswerINSTA_CLUB[] | null;
   linkedinData?: AnswerLINKEDIN[]| null;
   insta2Data?: AnswerINSTA2[] | null;
+  metadataOnboarding?: string | null; //for onboarding
 }
 
 export const AIMessage: React.FC<AIMessageProps> = ({
@@ -163,6 +174,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   handleWrongAnswerClick,
   handleSourceClick,
   handleSendTAKMessage,
+  handleSendSCHOOLMessage,
+  handleSendYEARMessage,
+  handleSendLINKEDINMessage,
+  handleSendMAJORMINORMessage,
+  handleSendCOMPLIANCEMessage,
   handleSendCOURSEMessage,
   drawerOpen,
   chartData,
@@ -174,9 +190,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   confidenceScoreData,
   instaclubData,
   linkedinData,
-  insta2Data
+  insta2Data,
+  metadataOnboarding
 }) => {
   // États pour la gestion des interactions utilisateur
+  const { user, login, setPrimaryChatId, chatIds, isAuth, loading } = useAuth();
   const [copyClicked, setCopyClicked] = useState(false);
   const [feedbackClicked, setFeedbackClicked] = useState(false);
   const [thumbsUpClicked, setThumbsUpClicked] = useState(false);
@@ -189,6 +207,29 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [showAllSteps, setShowAllSteps] = useState(false);
   const [isOtherSelected, setIsOtherSelected] = useState<boolean>(false);
   const [showSourcesSidebar, setShowSourcesSidebar] = useState(false);
+/*
+  const [selectedSchools, setSelectedSchools] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string[]>([]);
+  const [selectedLinkedin, setSelectedLinkedin] = useState<string[]>([]);
+  const [selectedMajor, setSelectedMajor] = useState<string[]>([]);
+  const [selectedMinor, setSelectedMinor] = useState<string[]>([]);
+  const [selectedCompliance, setSelectedCompliance] = useState<string[]>([]);
+  const [linkedinUrl, setLinkedinUrl] = useState<string>('');
+  const [learnerType, setLearnerType] = useState<string>('');
+  const [majors, setMajors] = useState<string[]>(['']);
+  const [minors, setMinors] = useState<string[]>(['']);
+  const [termsChecked, setTermsChecked] = useState(false);
+  const [ageChecked, setAgeChecked] = useState(false);
+  */
+
+  const [selectedSchools, setSelectedSchools] = useState(user?.faculty || ['']);
+  const [majors, setMajors] = useState(user?.major || ['']);
+  const [minors, setMinors] = useState(user?.minor || ['']);
+  const [learnerType, setLearnerType] = useState(user?.year || '');
+  const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || '');
+  const [termsChecked, setTermsChecked] = useState(user?.termsAccepted || false);
+  const [ageChecked, setAgeChecked] = useState(user?.ageConfirmed || false); 
+  
 
   const [isTextDisplayed, setIsTextDisplayed] = useState(false);
   const [showShadowSources, setShowShadowSources] = useState(false); // État pour afficher les shadow sources
@@ -214,6 +255,15 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const messageFontSize = isSmallScreen ? "custom-phone" : "text-lg";
 
 
+
+  const yearOptions = [
+    { label: "Freshman (1st year)", value: "Freshman" },
+    { label: "Sophomore (2nd year)", value: "Sophomore" },
+    { label: "Junior (3rd year)", value: "Junior" },
+    { label: "Senior (4th year)", value: "Senior" },
+    { label: "Grad 1 (5th year)", value: "Grad 1" },
+    { label: "Grad 2 (6th year)", value: "Grad 2" },
+  ];
 
   const navigate = useNavigate();
 
@@ -472,6 +522,10 @@ useEffect(() => {
     setOtherInput(e.target.value);
   };
 
+
+
+
+
   // Fonction pour envoyer les réponses TAK
   const handleSendClick = () => {
     const message = otherInput ? otherInput : selectedAnswers.join(", ");
@@ -479,6 +533,61 @@ useEffect(() => {
     setSelectedAnswers([]);
     setOtherInput("");
   };
+
+  //To send selected school from onboarding message
+  const handleSendSCHOOLClick = () => {
+    const message = selectedSchools.join(", ");
+    if (handleSendSCHOOLMessage && message) {
+      handleSendSCHOOLMessage(message);
+    }
+    //setSelectedSchools([]);
+  };
+
+
+  const handleSendYEARClick = (year: string) => {
+    if (handleSendYEARMessage && year) {
+      handleSendYEARMessage(year);
+    }
+  };
+
+  const handleSendLINKEDINClick = () => {
+    if (handleSendLINKEDINMessage && linkedinUrl) {
+      handleSendLINKEDINMessage(linkedinUrl);
+    }
+    //setLinkedinUrl('');
+  };
+
+
+  const handleSendMajorMinorClick = () => {
+    const cleanedMajors = majors.filter((m: string) => m.trim() !== '');
+    const cleanedMinors = minors.filter((m: string) => m.trim() !== '');
+  
+    if (handleSendMAJORMINORMessage) {
+      handleSendMAJORMINORMessage({ majors: cleanedMajors, minors: cleanedMinors });
+    }
+  
+    // reset if needed
+    //setMajors(['']);
+    //setMinors(['']);
+  };
+
+
+  const handleSendCompliance = () => {
+    if (handleSendCOMPLIANCEMessage) {
+      handleSendCOMPLIANCEMessage({
+        termsAccepted: true,
+        ageConfirmed: true,
+      });
+    }
+  
+    // Reset si besoin
+    //setTermsChecked(false);
+    //setAgeChecked(false);
+  };
+
+
+
+
 
   // Désactiver le bouton "Envoyer" si aucune réponse n'est sélectionnée ou si l'input "Autre" est vide
   const isSendDisabled =
@@ -1680,6 +1789,363 @@ useEffect(() => {
               ))}
             </div>
           )}
+
+
+
+
+          {/* Gestion dynamique des écoles avec au moins un menu déroulant visible */}
+          {metadataOnboarding === 'SCHOOL' && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <label className="block text-sm font-medium text-gray-800 mb-3">Select your school(s)</label>
+
+              {(selectedSchools.length === 0 ? [''] : selectedSchools).map((school, index) => (
+                <div key={index} className="flex items-center gap-2 mb-2">
+                  <select
+                    //value={school}
+                    value={selectedSchools[index] || ''}
+                    onChange={(e) => {
+                      const updatedSchools = [...selectedSchools];
+                      updatedSchools[index] = e.target.value;
+                      setSelectedSchools(updatedSchools);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm appearance-none bg-white bg-no-repeat bg-right pr-10 focus:ring focus:ring-blue-100 focus:border-blue-500"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCA2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
+                    }}
+                  >
+                    <option value="" disabled>Select your school</option>
+                    {theme.facultyOptions?.map((faculty) => (
+                      <option key={faculty} value={faculty}>
+                        {faculty}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedSchools.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSchools(selectedSchools.filter((_, i) => i !== index))}
+                      className="text-red-500 text-sm"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {selectedSchools.length < 5 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedSchools([...selectedSchools, ''])}
+                  className="text-blue-700 text-sm hover:underline"
+                >
+                  + Add another school
+                </button>
+              )}
+
+              <div className="flex justify-end mt-4 gap-x-4">
+                <button
+                  onClick={handleSendSCHOOLClick}
+                  disabled={(selectedSchools.length === 0 || selectedSchools.every(school => school === ''))}
+                  className={`flex items-center px-4 py-2 rounded-lg ${
+                    (selectedSchools.length === 0 || selectedSchools.every(school => school === ''))
+                      ? 'bg-gray-300 text-gray-700 cursor-not-allowed'
+                      : 'bg-gray-800 text-white hover:bg-gray-900'
+                  }`}
+                >
+                  <FiSend className="mr-2" /> Send
+                </button>
+              </div>
+            </div>
+          )}
+
+
+
+
+
+          {metadataOnboarding === 'YEAR' && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                maxWidth: 'max-content',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+              tabIndex={0}
+            >
+              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-4">
+                Select your current year
+              </label>
+              <div className="flex flex-col gap-2">
+              {yearOptions.map(({ label, value }) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      setLearnerType(value);
+                      handleSendYEARClick(value); // envoie la valeur correcte
+                    }}
+                    className={`w-full px-4 py-2 rounded-lg border text-sm text-left ${
+                      learnerType === value
+                        ? 'bg-gray-800 text-white'
+                        : 'bg-white text-gray-800 border-gray-300'
+                    } hover:bg-gray-100`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+
+
+          {metadataOnboarding === 'LINKEDIN' && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                maxWidth: 'max-content',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
+                Paste your LinkedIn profile URL
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center border border-gray-300 rounded-lg bg-white px-2 py-1 w-full">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png"
+                    alt="LinkedIn"
+                    className="w-5 h-5 mr-2"
+                  />
+                  <input
+                    type="url"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    placeholder="LinkedIn URL"
+                    className="w-full text-sm focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleSendLINKEDINClick}
+                  disabled={!linkedinUrl}
+                  className={`flex items-center px-4 py-2 text-sm rounded-lg ${
+                    !linkedinUrl
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-600'
+                      : 'text-white bg-gray-800 hover:bg-gray-900'
+                  }`}
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          )}
+
+
+          {metadataOnboarding === 'MAJOR&MINOR' && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <label className="block text-sm font-medium text-gray-800 mb-3">What is your major and minor?</label>
+
+              {/* MAJORS */}
+              <div className="mb-4">
+                <label className="text-sm font-semibold text-gray-700 mb-1 block">Majors</label>
+                {majors.map((major:string, index:number) => (
+                  <div key={index} className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      placeholder="Enter a major"
+                      value={major}
+                      onChange={(e) => {
+                        const updated = [...majors];
+                        updated[index] = e.target.value;
+                        setMajors(updated);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                    {majors.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setMajors(majors.filter((_: string, i: number) => i !== index))}
+                        className="text-red-500 text-sm"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setMajors([...majors, ''])}
+                  className="text-blue-700 text-sm hover:underline"
+                >
+                  + Add another major
+                </button>
+              </div>
+
+              {/* MINORS */}
+              <div className="mb-6">
+                <label className="text-sm font-semibold text-gray-700 mb-1 block">Minors</label>
+                {minors.map((minor: string, index: number) => (
+                  <div key={index} className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      placeholder="Enter a minor"
+                      value={minor}
+                      onChange={(e) => {
+                        const updated = [...minors];
+                        updated[index] = e.target.value;
+                        setMinors(updated);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                    {minors.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setMinors(minors.filter((_ : string, i: number) => i !== index))}
+                        className="text-red-500 text-sm"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setMinors([...minors, ''])}
+                  className="text-blue-700 text-sm hover:underline"
+                >
+                  + Add another minor
+                </button>
+              </div>
+
+              {/* CONTINUE */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSendMajorMinorClick}
+                  disabled={majors.filter((m: string) => m.trim()).length === 0}
+                  className={`px-4 py-2 text-sm rounded-lg ${
+                    majors.filter((m:string) => m.trim()).length === 0
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-600'
+                      : 'text-white bg-gray-800 hover:bg-gray-900'
+                  }`}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+
+
+          {metadataOnboarding === 'COMPLIANCE' && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <label className="block text-sm font-medium text-gray-800 mb-4">
+                Final step before you’re in!
+              </label>
+
+              {/* Checkbox 1 */}
+              <div className="flex items-start gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  id="termsCheckbox"
+                  checked={termsChecked}
+                  onChange={(e) => {
+                    setTermsChecked(e.target.checked);
+                    if (e.target.checked && ageChecked) handleSendCompliance();
+                  }}
+                  className="mt-1"
+                />
+                <label htmlFor="termsCheckbox" className="text-sm text-gray-700 leading-snug">
+                  You agree to our{' '}
+                  <a href="#" className="underline text-blue-700 hover:text-blue-900">
+                    Terms of Service
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    href="https://trust-ressources.s3.us-east-1.amazonaws.com/Privacy+Policy+-+My+Lucy+Corp+-+2024+-+11%3A11%3A24.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-blue-700 hover:text-blue-900"
+                  >
+                    Privacy Policy
+                  </a>. You also admit that you are beautiful.
+                </label>
+              </div>
+
+              {/* Checkbox 2 */}
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="ageCheckbox"
+                  checked={ageChecked}
+                  onChange={(e) => {
+                    setAgeChecked(e.target.checked);
+                    if (termsChecked && e.target.checked) handleSendCompliance();
+                  }}
+                  className="mt-1"
+                />
+                <label htmlFor="ageCheckbox" className="text-sm text-gray-700 leading-snug">
+                I confirm that I am at least 18 years old or have parental consent if aged 13-17. Users under 13 are not permitted.{" "}
+                <a
+                  href="/documents/age-consent.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-700 underline"
+                >
+                  Details
+                </a>.
+                </label>
+              </div>
+            </div>
+          )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
           {/* Gestion des données Course */}
           {CourseData && CourseData.length > 0 && (

@@ -1,3 +1,47 @@
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  university: string;
+  year?: string;
+  faculty?: string[];
+  academic_advisor?: string;
+  major?: string[];
+  minor?: string[];
+  interests?: string[];
+  role?: string;
+  linkedin_url?: string;
+  linkedin_profile?: any;
+  registered_club_status?: string;
+  registered_clubs?: string;
+  onboardingComplete?: boolean;
+  onboardingMessageSent?: boolean;
+  complianceAccepted?: boolean;
+  termsAccepted?: boolean;
+  ageConfirmed?: boolean;
+  chatsessions?: string[];
+  createdAt?: string;
+  lastLogin?: string;
+  profilePicture?: string;
+
+}
+
+export interface AuthContextType {
+  user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  isAuth: boolean;
+  setIsAuth: (value: boolean) => void;
+  loading: boolean;
+  chatIds: string[];
+  addChatId: (chatId: string) => void;
+  removeChatId: (chatId: string) => void;
+  setPrimaryChatId: (chatId: string) => void;
+  login: () => void;
+  logout: () => void;
+}
+
+
+
 export interface AnswerDocument {
     document_id: string;
     link: string;
@@ -146,6 +190,7 @@ export interface Message {
     INSTA_CLUB?: AnswerINSTA_CLUB[] | null;
     LINKEDIN?: AnswerLINKEDIN[] | null;
     INSTA2?: AnswerINSTA2[] | null;
+    METADATAONBOARDING?: string; // THE DATA FROM THE ONBOARDING, CAN BE SCHOOL, MAJOR, MINOR...
   };
 
 export interface Course {

@@ -1,17 +1,22 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, db } from "../firebase"; // Assurez-vous que le chemin est correct
 import { doc, getDoc } from 'firebase/firestore';
+import {User} from '../../interfaces/interfaces_eleve'
+import {AuthContextType} from '../../interfaces/interfaces_eleve'
+
 
 // Création du contexte d'authentification
-export const AuthContext = createContext();
+//export const AuthContext = createContext();
+export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 // Fournisseur du contexte d'authentification
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  //const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isAuth, setIsAuth] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [chatIds, setChatIds] = useState([]);
+  const [chatIds, setChatIds] = useState<string[]>([]);
 
   useEffect(() => {
     // Liste des routes publiques pour lesquelles l'authentification n'est pas nécessaire
@@ -38,7 +43,7 @@ export const AuthProvider = ({ children }) => {
             setUser({
               id: currentUser.uid,
               name: userData.name || '',
-              email: currentUser.email,
+              email: currentUser.email || '',
               university: userData.university || '',
               faculty: userData.faculty || [],
               year: userData.year || '',
@@ -60,7 +65,7 @@ export const AuthProvider = ({ children }) => {
               // Définir les chatIds dans le contexte
               setChatIds(chatSessions);
               // Déterminer le dernier chat_id ou utiliser un identifiant par défaut
-              const lastChatId = chatSessions.length > 0 ? chatSessions[chatSessions.length - 1] : 'default_chat_id';
+              const lastChatId = chatSessions.length > 0 ? chatSessions[chatSessions.length - 1] : 'default_chat_id_auth';
               console.log("Voici le chatId que l'on a récupéré de Firestore:", lastChatId);
               // Définir le chat_id principal avec le dernier chat_id
               setPrimaryChatId(lastChatId);
@@ -68,16 +73,44 @@ export const AuthProvider = ({ children }) => {
             console.error("Données utilisateur non trouvées dans Firestore");
             setUser({
               id: currentUser.uid,
-              email: currentUser.email,
+              email: currentUser.email || '',
               role: '',
+              name: '',
+              university: '',
+              faculty: [],
+              year: '',
+              academic_advisor: '',
+              interests: [],
+              major: [],
+              minor: [],
+              registered_club_status: '',
+              registered_clubs: '',
+              onboardingComplete: true,
+              linkedin_url: '',
+              linkedin_profile: {},
+              onboardingMessageSent: true
             });
           }
         } catch (error) {
           console.error("Erreur lors de la récupération des données utilisateur :", error);
           setUser({
             id: currentUser.uid,
-            email: currentUser.email,
+            email: currentUser.email || '',
             role: '',
+            name: '',
+            university: '',
+            faculty: [],
+            year: '',
+            academic_advisor: '',
+            interests: [],
+            major: [],
+            minor: [],
+            registered_club_status: '',
+            registered_clubs: '',
+            onboardingComplete: true,
+            linkedin_url: '',
+            linkedin_profile: {},
+            onboardingMessageSent: true
           });
         }
         setIsAuth(true);
@@ -109,10 +142,26 @@ export const AuthProvider = ({ children }) => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const updatedData = docSnap.data();
-            setUser((prevUser) => ({
+            setUser((prevUser) => prevUser ? {
               ...prevUser,
               name: updatedData.name || prevUser.name,
-            }));
+              id: prevUser.id,
+              email: prevUser.email,
+              university: prevUser.university,
+              faculty: prevUser.faculty,
+              year: prevUser.year,
+              academic_advisor: prevUser.academic_advisor,
+              interests: prevUser.interests,
+              major: prevUser.major,
+              minor: prevUser.minor,
+              role: prevUser.role,
+              registered_club_status: prevUser.registered_club_status,
+              registered_clubs: prevUser.registered_clubs,
+              onboardingComplete: prevUser.onboardingComplete,
+              linkedin_url: prevUser.linkedin_url,
+              linkedin_profile: prevUser.linkedin_profile,
+              onboardingMessageSent: prevUser.onboardingMessageSent
+            } : null);
             console.log("AuthProvider: Contexte mis à jour avec les données Firestore:", updatedData);
           }
         } catch (error) {
@@ -127,7 +176,7 @@ export const AuthProvider = ({ children }) => {
   
   
   // Fonction pour définir le chat_id principal
-  const setPrimaryChatId = (newChatId) => {
+  const setPrimaryChatId = (newChatId: string) => {
     setChatIds((prevChatIds) => {
       if (prevChatIds.length > 0) {
         const updatedChatIds = [...prevChatIds];
@@ -141,13 +190,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Fonction pour ajouter un chat_id au contexte
-  const addChatId = (chatId) => {
+  const addChatId = (chatId: string) => {
     setChatIds((prevChatIds) => [...prevChatIds, chatId]);
     console.log(`AuthProvider: chat_id ajouté au contexte: ${chatId}`);
   };
 
   // Fonction pour retirer un chat_id du contexte
-  const removeChatId = (chatId) => {
+  const removeChatId = (chatId: string) => {
     setChatIds((prevChatIds) => prevChatIds.filter(id => id !== chatId));
     console.log(`AuthProvider: chat_id retiré du contexte: ${chatId}`);
   };

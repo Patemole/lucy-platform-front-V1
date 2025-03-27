@@ -10,6 +10,7 @@ import Avatar from '@mui/material/Avatar';
 import lucyLogo from '../../logo_lucy.png';
 import config from '../../config';
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import { v4 as uuidv4 } from 'uuid';
 
 
 const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
@@ -89,7 +90,7 @@ const getErrorMessage = (subdomain) => {
 };
 
 export default function SignUp() {
-  const { isAuth, loading, user } = useAuth();
+  const { isAuth, loading, user, setPrimaryChatId,setIsAuth } = useAuth();
   const theme = useTheme();
   const { login } = useAuth(); // Utiliser la fonction `login` du contexte
   const navigate = useNavigate();
@@ -215,7 +216,7 @@ export default function SignUp() {
   }
   
 
-
+/*
   const handleSubmit = async (event) => {
     event.preventDefault();
     console.log("[Step 1] Form submission triggered");
@@ -259,6 +260,8 @@ export default function SignUp() {
         university: subdomain,
         role: subdomain === 'admin' ? "admin" : "student",
         createdAt: timestamp,
+        onboardingComplete: false, //Add for the new onboarding
+        onboardingConvIsCreated: false //Add for the new onboarding
       });
 
       console.log("[Step 5] Updating context with user data");
@@ -269,10 +272,13 @@ export default function SignUp() {
         university: subdomain,
         role: subdomain === 'admin' ? "admin" : "student",
         createdAt: timestamp,
+        onboardingComplete: false, //Add for the new onboarding
+        onboardingConvIsCreated: false //Add for the new onboarding
       });
 
       console.log("[Step 6] Redirecting user to appropriate dashboard");
-      const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding/learningStyleSurvey/${courseId || ''}`;
+      //const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding/learningStyleSurvey/${courseId || ''}`;
+      const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding-with-lucy`; //new redirection for new onboarding
       navigate(redirectUrl);
     } catch (error) {
       console.error("[Error] An error occurred:", error);
@@ -284,6 +290,89 @@ export default function SignUp() {
       setIsLoading(false);
     }
   };
+  */
+
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    console.log("[Step 1] Form submission triggered");
+    setErrors({});
+    setIsLoading(true);
+  
+    const data = new FormData(event.currentTarget);
+    const firstName = data.get('firstName');
+    const email = data.get('email');
+    const password = data.get('password');
+    const newErrors = {};
+  
+    // Validation des champs
+    if (!firstName) newErrors.firstName = 'First name is required';
+    if (!email) newErrors.email = 'Email is required';
+    else if (!isAllowedEmail(email, subdomain)) newErrors.email = getErrorMessage(subdomain);
+    if (!password) newErrors.password = 'Password is required';
+    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+  
+    if (Object.keys(newErrors).length > 0) {
+      console.log("[Step 2] Validation errors:", newErrors);
+      setErrors(newErrors);
+      setIsLoading(false);
+      return;
+    }
+  
+    try {
+      console.log("[Step 3] Creating user with Firebase Authentication");
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const timestamp = Timestamp.now();
+  
+      console.log("[Step 4] Creating onboarding chat session");
+      const chatId = uuidv4();
+      setPrimaryChatId(chatId);
+  
+      console.log("[Step 5] Storing user data in Firestore");
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name: firstName,
+        email,
+        university: subdomain,
+        role: subdomain === 'admin' ? "admin" : "student",
+        createdAt: timestamp,
+        onboardingComplete: false,
+        chatsessions: [chatId],
+      });
+
+      await setDoc(doc(db, "chatsessions", chatId), {
+        chat_id: chatId,
+        name: `${firstName} Onboarding`,
+        created_at: serverTimestamp(),
+        modified_at: serverTimestamp(),
+      });
+
+      console.log("[Step 6] Updating context with user data");
+      login({
+        id: user.uid,
+        name: firstName,
+        email,
+        university: subdomain,
+        role: subdomain === 'admin' ? "admin" : "student",
+        createdAt: timestamp,
+        onboardingComplete: false,
+      });
+  
+      console.log("[Step 7] Redirecting user to onboarding page");
+      const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding-with-lucy`;
+      navigate(redirectUrl);
+    } catch (error) {
+      console.error("[Error] An error occurred:", error);
+      const newErrors = {};
+      if (error.code === 'auth/email-already-in-use') {
+        newErrors.email = 'Email address already in use!';
+      }
+      setErrors(newErrors);
+      setIsLoading(false);
+    }
+  };
+
 
   const handleEmailBlur = (event) => {
     const email = event.target.value;
