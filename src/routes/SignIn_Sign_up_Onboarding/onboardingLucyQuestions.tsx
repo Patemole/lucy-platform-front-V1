@@ -17,10 +17,6 @@ import PopupWrongAnswer from '../../components/main_components/Popup/PopupWrongA
 import LandingPage from '../../components/main_components/LandingPageImprove'; // Import du composant LandingPage
 import StudentProfileDialog from '../../components/main_components/Popup/StudentProfileDialog'; // Import the dialog component
 import  PopupEventSoonAvailable  from '../../components/main_components/Popup/PopupEventSoonAvailable';
-//import  Popup1  from '../../components/main_components/Popup/Popup_Onboarding_topic1';
-//import  Popup2  from '../../components/main_components/Popup/Popup_Onboarding_public2';
-//import  Popup3  from '../../components/main_components/Popup/Popup_Onboarding_events3';
-//import  Popup4  from '../../components/main_components/Popup/Popup_Onboarding_savelucy4';
 import  PopupOnboardingSocialThread  from '../../components/main_components/Popup/Popup_Onboarding_SocialThread';
 import PopupOnboardingProfile from '../../components/main_components/Popup/Popup_Onboarding_Profile';
 import PopupOnboardingModifyConv from '../../components/main_components/Popup/Popup_Onboarding_ModifyConv';
@@ -120,7 +116,8 @@ const Dashboard_eleve_template: React.FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
   const [drawerOpen, setDrawerOpen] = useState(!isSmallScreen);
-  const [isLandingPageVisible, setIsLandingPageVisible] = useState(messages.length === 0);
+  //const [isLandingPageVisible, setIsLandingPageVisible] = useState(messages.length === 0);
+ 
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -146,18 +143,21 @@ const Dashboard_eleve_template: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false); // si la sidebar est ouverte ou pas
   const [peerAdvisorMenuAnchor, setPeerAdvisorMenuAnchor] = useState<null | HTMLElement>(null);
   const [isPeerAdvisorOpen, setIsPeerAdvisorOpen] = useState(false);
-  const [currentPopup, setCurrentPopup] = useState(0); // 0 = pas de popup, 1 à 4 pour les popups
+  //const [currentPopup, setCurrentPopup] = useState(0); // 0 = pas de popup, 1 à 4 pour les popups
   const subdomain = config.subdomain;
   const [openModal, setOpenModal] = useState(false);
   const [hasSentOnboarding, setHasSentOnboarding] = useState(false);
   const hasRun = useRef(false);  // ← En dehors du useEffect, directement dans le composant
   const [currentOnboardingIndex, setCurrentOnboardingIndex] = useState(0);
+
   const [isOnboardingActive, setIsOnboardingActive] = useState(true);
   const hasMetadataOnboarding = messages.some(msg => msg.METADATAONBOARDING);
+
 
   const [showOnboardingSocialThreadPopup, setShowOnboardingSocialThreadPopup] = useState(false);
   const [ShowOnboardingProfilePopup,   setShowOnboardingProfilePopup] = useState(false);
   const [showOnboardingModifyConvPopup, setShowOnboardingModifyConvPopup] = useState(false);
+  const [isLandingPageVisible, setIsLandingPageVisible] = useState(!isOnboardingActive && messages.length === 0);
 
 
   const onboardingMessages = [
@@ -218,18 +218,17 @@ const Dashboard_eleve_template: React.FC = () => {
 
 
   // Fonction qui simule le stream en ajoutant chunk par chunk
-  const fakeStreamMessage = async (messageContent: string, metadata: string) => {
+  const fakeStreamMessage = async (messageContent: string, metadata: string, messageId: number) => {
     const chunks = messageContent.split(' ');
     let displayedContent = '';
   
-    const onboardingMessageId = generateUniqueId();
   
     // 🟢 Vérifie si le message existe déjà avant de l'ajouter
     setMessages((prev) => {
-      const existing = prev.some(msg => msg.id === onboardingMessageId);
+      const existing = prev.some(msg => msg.id === messageId);
       return existing ? prev : [
         ...prev,
-        { id: onboardingMessageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata },
+        { id: messageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata },
       ];
     });
   
@@ -237,7 +236,7 @@ const Dashboard_eleve_template: React.FC = () => {
       displayedContent += chunk + ' ';
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
-          msg.id === onboardingMessageId ? { ...msg, content: displayedContent.trim() } : msg
+          msg.id === messageId ? { ...msg, content: displayedContent.trim() } : msg
         )
       );
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -259,6 +258,8 @@ const Dashboard_eleve_template: React.FC = () => {
     setInputValue('');
       return;
     }
+
+
     // Mise à jour des états selon ta logique existante
     setIsLandingPageVisible(false);
     setRelatedQuestions([]);
@@ -267,11 +268,22 @@ const Dashboard_eleve_template: React.FC = () => {
     setIsStreaming(true);
   
     const { question, metadata } = onboardingMessages[index];
+
+    // 🔐 Crée un seul ID partagé
+    const onboardingMessageId = generateUniqueId();
+
+    const loadingMessage: Message = { id: onboardingMessageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata};
+    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
+
+    // ✅ Petite pause avant de commencer le stream
+    await new Promise((resolve) => setTimeout(resolve, 800));
   
-    await fakeStreamMessage(question, metadata);
+    await fakeStreamMessage(question, metadata, onboardingMessageId);
   
     setIsStreaming(false);
   };
+
+
 
 
   const updateUserField = async (fieldName: string, value: any) => {
@@ -349,66 +361,7 @@ const Dashboard_eleve_template: React.FC = () => {
 
     await sendNextOnboardingMessage(5); // index 4 = COMPLIANCE
 
-   /*
-    const newMessage: Message = {
-      id: Date.now(),
-      type: 'human',
-      content: `✅ Compliance confirmed. Terms: ${termsAccepted ? '✔' : '✖'} | Age: ${ageConfirmed ? '✔' : '✖'}`,
-    };
   
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-  
-    // Fin de l'onboarding
-    setIsOnboardingActive(false);
-    setIsStreaming(false);
-  
-    // Tu peux aussi stocker en base ici si besoin
-    // await updateDoc(userRef, { complianceAccepted: true, ... })
-    */
-  };
-
-
-
-
-//--------------USEEFFECT----------------//
-/*
-//Create a new conversation if the onboarding conv doesnt exist and if the onboarding is not over
-useEffect(() => {
-    const createChatSessionIfNeeded = async () => {
-      if (!user?.onboardingComplete && !user?.onboardingConvIsCreated && !hasRun.current) {
-        hasRun.current = true;  // Bloque les exécutions futures
-        console.log("[Step 1] Creating a new chat session for the onboarding");
-  
-        const chatId = uuidv4();
-        const userRef = doc(db, 'users', user.id);
-  
-        await updateDoc(userRef, {
-          chatsessions: arrayUnion(chatId),
-          onboardingConvIsCreated: true,
-        });
-  
-        await setDoc(doc(db, "chatsessions", chatId), {
-          chat_id: chatId,
-          name: "Onboarding",
-          created_at: serverTimestamp(),
-          modified_at: serverTimestamp(),
-        });
-  
-        setPrimaryChatId(chatId);
-      }
-    };
-  
-    createChatSessionIfNeeded();
-  
-  }, [user?.onboardingComplete, user?.onboardingConvIsCreated, user?.id]);
-*/
-
-
-  //This useffect will be used to "display a first Lucy message"
-
-
-
-
 
 
 //Fonctional USEFFECT
@@ -417,22 +370,16 @@ useEffect(() => {
   setDrawerOpen(!isSmallScreen);
 }, [isSmallScreen]);
 
+
 //Uniquement pour visualiser quand showchat est cense etre visible ou non. 
 useEffect(() => {
   console.log("showChat state updated:", showChat);
 }, [showChat]);
 
 
-/*
-  //To display popup with onboqrdingComplete is false
-  useEffect(() => {
-    if (user && user.onboardingComplete === false) {
-      setCurrentPopup(1); // Démarrer les popups si l'onboarding n'est pas terminé
-    }
-  }, [user]);
-*/
 
   useEffect(() => {
+    if (!user?.id) return;
     fetchUserInfo();
   }, [user]);
 
@@ -444,41 +391,6 @@ useEffect(() => {
   }, []); // 🔥 Exécuté une seule fois au chargement
 
 
-  //UseEffect for debuging I think
-  /*
-  useEffect(() => {
-    console.log("🔥 Re-render déclenché. État actuel :", {
-      unreadCount,
-      profilePicture,
-      onlineUsers,
-      isPrivate,
-    });
-  }, [unreadCount, profilePicture, onlineUsers, isPrivate]);
-  */
-  
-
-  //Change the fake number of online student every 15 secondes, This one is no more needed 
-  /*
-  useEffect(() => {
-    const updateOnlineUsers = () => {
-      setOnlineUsers((prev) => {
-        let variation = Math.floor(Math.random() * 7) - 3; // Variation entre -3 et +3
-        let newCount = prev + variation;
-  
-        if (newCount < 10) newCount = 10;
-        if (newCount > 50) newCount = 50;
-  
-        return newCount;
-      });
-  
-      const nextUpdate = Math.floor(Math.random() * 60000) + 1000; // Entre 1s et 60s
-      setTimeout(updateOnlineUsers, nextUpdate);
-    };
-  
-    const initialTimeout = setTimeout(updateOnlineUsers, Math.floor(Math.random() * 60000) + 1000);
-    return () => clearTimeout(initialTimeout);
-  }, []);
-  */
 
 
 //To search the number of users changing in the database firestore from the function for a global variable
@@ -544,11 +456,7 @@ useEffect(() => {
   }, [user?.id]);
 
 
-  useEffect(() => {
-    const unsubscribe = fetchSocialThreads(); // Active l'écoute Firestore en temps réel
-  
-    return () => unsubscribe(); // Stoppe l'écoute quand le composant est démonté
-  }, [user?.id, user?.university]); // Déclenchement si user.id ou user.university change
+
   
 
 //Scrolling useffect for autoscrolling I think
@@ -580,10 +488,34 @@ useEffect(() => {
   }, [messages, isAtBottom]); // Depend on messages and isAtBottom
 
 
-  //permet d afficher les anciennes conversations dans la sidebar
-  useEffect(() => {
-    fetchCourseOptionsAndChatSessions();
-  }, [user?.id]);
+
+    //Load at first conversation history and after social thread and listen for every new social threds to add in real time
+    useEffect(() => {
+        const loadConversationsAndThreads = async () => {
+          if (!user?.id || !user?.university) return;
+      
+          console.log("🧩 Chargement des conversations classiques...");
+          await fetchCourseOptionsAndChatSessions();
+      
+          console.log("🌐 Chargement des social threads...");
+          const unsubscribe = fetchSocialThreads();
+      
+          // Stocker la fonction de nettoyage
+          return () => {
+            console.log("🔁 Nettoyage des listeners des social threads");
+            unsubscribe();
+          };
+        };
+      
+        const cleanupPromise = loadConversationsAndThreads();
+      
+        return () => {
+          cleanupPromise.then((cleanup) => cleanup && cleanup());
+        };
+      }, [user?.id, user?.university]);
+
+
+
 
 
   //permet d aller chercher le dernier chatid on chargerement de la page pour afficher la derniere conversation
@@ -596,56 +528,12 @@ useEffect(() => {
   }, []);
 
 
-  /* WE DONT WANT THE LANDING PAGE IN THE ONBOARDING SESSION
-  //permet d afficher ou non la landing page en fonction si il y a deja des messages
-  useEffect(() => {
-    if (messages.length > 0) {
-      setIsLandingPageVisible(false);
-    } else {
-      setIsLandingPageVisible(true);
-    }
-  }, [messages]);
-  */
-
-
-
-
-
-
-
 
 
 
   //--------------FUNCTIONS----------------//
 
-/*
-  const handleNextPopup = () => {
-    setCurrentPopup((prev) => prev + 1);
-  };
-  
-  */
 
-/*
-  const handleFinishOnboarding = async () => {
-    if (!user) return;
-  
-    try {
-      const userRef = doc(db, "users", user.id);
-      await updateDoc(userRef, { onboardingComplete: true });
-  
-      // 🔥 Mise à jour de `user` dans `useAuth`
-      setUser((prevUser: any) => ({
-        ...(prevUser || {}),
-        onboardingComplete: true, // ✅ Marquer l'onboarding comme terminé
-      }));
-  
-      // Masquer les popups et afficher le dashboard
-      setCurrentPopup(0);
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de onboardingComplete :", error);
-    }
-  };
-  */
 
   // fonction pour envoyer les infos de l'utilisateur au backend et récupérer les événements
   const fetchUserInfo = async () => {
@@ -1705,6 +1593,9 @@ const handleConversationClick = async (chat_id: string) => {
   const handleCloseWrongAnswerModal = () => {
     setModalOpen(false);
   };
+
+
+
 
   return (
     <ThemeProvider theme={theme}>
@@ -3324,30 +3215,6 @@ const handleConversationClick = async (chat_id: string) => {
           {/* Affichage de la popup si nécessaire */}
           {openModal && <PopupEventSoonAvailable onClose={() => setOpenModal(false)} />}
 
-          {/*
-          {currentPopup > 0 && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              backgroundColor: "rgba(0, 0, 0, 0.15)", // Assombrit légèrement l'arrière-plan
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 2000, // Au-dessus du reste
-            }}
-          >
-            {currentPopup === 1 && <Popup1 onNext={handleNextPopup} />}
-            {currentPopup === 2 && <Popup2 onNext={handleNextPopup} />}
-            {currentPopup === 3 && <Popup3 onNext={handleNextPopup} />}
-            {currentPopup === 4 && <Popup4 onFinish={handleFinishOnboarding} />}
-          </div>
-          
-        )}
-        */}
 
         {showOnboardingSocialThreadPopup && (
         <PopupOnboardingSocialThread onClose={() => setShowOnboardingSocialThreadPopup(false)} />

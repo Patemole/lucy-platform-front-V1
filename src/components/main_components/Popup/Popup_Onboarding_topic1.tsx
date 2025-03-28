@@ -113,6 +113,7 @@ const topics = [
 ];
 
 const Popup1: React.FC<Popup1Props> = ({ onNext }) => {
+  console.log("🔥 Popup1 monté");
   return (
     <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 p-4">
       <div 
