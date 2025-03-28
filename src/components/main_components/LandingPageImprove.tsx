@@ -594,7 +594,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
               fontWeight: '500'
             }}
           >
-            Lucy Game: {daysLeftUntilMarch31()} days left to be the top user and win round trip for 2 to Miami 🏖️
+            Lucy Game: <Box component="span" sx={{ fontWeight: '700' }}>
+              {daysLeftUntilMarch31()} days left
+            </Box> to be the top user and win round trip for 2 to Miami 🏖️
           </Typography>
         </Box>
       )}
