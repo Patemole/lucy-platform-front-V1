@@ -148,6 +148,7 @@ interface AIMessageProps {
   linkedinData?: AnswerLINKEDIN[]| null;
   insta2Data?: AnswerINSTA2[] | null;
   metadataOnboarding?: string | null; //for onboarding
+  hasStartedStreaming?: boolean; // ✅ indique que le stream a démarré
 }
 
 export const AIMessage: React.FC<AIMessageProps> = ({
@@ -191,7 +192,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   instaclubData,
   linkedinData,
   insta2Data,
-  metadataOnboarding
+  metadataOnboarding,
+  hasStartedStreaming
 }) => {
   // États pour la gestion des interactions utilisateur
   const { user, login, setPrimaryChatId, chatIds, isAuth, loading } = useAuth();
@@ -246,7 +248,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
   const [readyToDisplayStep, setReadyToDisplayStep] = useState(false);
 
-  const showLoadingIndicator = isLoading && !hasNewContent;
+  //const showLoadingIndicator = isLoading && !hasNewContent;
+  const showLoadingIndicator = isLoading && (!hasNewContent || !hasStartedStreaming);
   const isResponseReceived = !isLoading;
 
   // Thème et responsive

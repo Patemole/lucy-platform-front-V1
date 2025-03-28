@@ -2687,7 +2687,8 @@ const handleConversationClick = async (chat_id: string) => {
             )}
             
 
-            {currentView === 'chat' && !isLandingPageVisible && (!hasTak|| inputValue.trim() !== "") && (
+           
+            {currentView === 'chat' && !isLandingPageVisible && !isOnboardingActive && (!hasTak || inputValue.trim() !== "") && (
             <>
               {isSmallScreen ? (
                 // VERSION MOBILE AVEC MODIFICATIONS
