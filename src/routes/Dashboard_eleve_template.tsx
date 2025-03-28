@@ -17,10 +17,10 @@ import PopupWrongAnswer from '../components/main_components/Popup/PopupWrongAnsw
 import LandingPage from '../components/main_components/LandingPageImprove'; // Import du composant LandingPage
 import StudentProfileDialog from '../components/main_components/Popup/StudentProfileDialog'; // Import the dialog component
 import  PopupEventSoonAvailable  from '../components/main_components/Popup/PopupEventSoonAvailable';
-import  Popup1  from '../components/main_components/Popup/Popup_Onboarding_topic1';
-import  Popup2  from '../components/main_components/Popup/Popup_Onboarding_public2';
-import  Popup3  from '../components/main_components/Popup/Popup_Onboarding_events3';
-import  Popup4  from '../components/main_components/Popup/Popup_Onboarding_savelucy4';
+//import  Popup1  from '../components/main_components/Popup/Popup_Onboarding_topic1';
+//import  Popup2  from '../components/main_components/Popup/Popup_Onboarding_public2';
+//import  Popup3  from '../components/main_components/Popup/Popup_Onboarding_events3';
+//import  Popup4  from '../components/main_components/Popup/Popup_Onboarding_savelucy4';
 import EventDetailsSidebar from '../components/main_components/EventDetailsSidebar';
 import Calendar from '../components/main_components/Calendar_StudentProfile';
 import Kanban from '../components/main_components/Kanban_StudentProfile';
@@ -125,7 +125,6 @@ const Dashboard_eleve_template: React.FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
   const [drawerOpen, setDrawerOpen] = useState(!isSmallScreen);
-  const [isLandingPageVisible, setIsLandingPageVisible] = useState(messages.length === 0);
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -156,6 +155,8 @@ const Dashboard_eleve_template: React.FC = () => {
   const subdomain = config.subdomain;
   const [openModal, setOpenModal] = useState(false);
   const [hasSentOnboarding, setHasSentOnboarding] = useState(false);
+  const [isOnboardingActive, setIsOnboardingActive] = useState(true);
+  const [isLandingPageVisible, setIsLandingPageVisible] = useState(!isOnboardingActive && messages.length === 0);
 
 
 //--------------USEEFFECT----------------//
@@ -340,11 +341,12 @@ useEffect(() => {
 
 
   //permet d afficher les anciennes conversations dans la sidebar
+  /*
   useEffect(() => {
     fetchCourseOptionsAndChatSessions();
   }, [user?.id]);
-
-
+*/
+/*
   //permet d aller chercher le dernier chatid on chargerement de la page pour afficher la derniere conversation
   useEffect(() => { 
     const loadMessagesFromLocalStorageChatId = async () => {
@@ -354,9 +356,11 @@ useEffect(() => {
     };
     loadMessagesFromLocalStorageChatId();
   }, []);
+  */
 
 
   //permet d afficher ou non la landing page en fonction si il y a deja des messages
+  /*
   useEffect(() => {
     if (messages.length > 0) {
       setIsLandingPageVisible(false);
@@ -364,6 +368,7 @@ useEffect(() => {
       setIsLandingPageVisible(true);
     }
   }, [messages]);
+  */
 
 
 
@@ -3049,6 +3054,7 @@ const handleConversationClick = async (chat_id: string) => {
           {/* Affichage de la popup si nécessaire */}
           {openModal && <PopupEventSoonAvailable onClose={() => setOpenModal(false)} />}
 
+          {/*
           {currentPopup > 0 && (
           <div
             style={{
@@ -3070,6 +3076,7 @@ const handleConversationClick = async (chat_id: string) => {
             {currentPopup === 4 && <Popup4 onFinish={handleFinishOnboarding} />}
           </div>
         )}
+          */}
 
   
           <Snackbar

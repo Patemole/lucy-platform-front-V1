@@ -83,6 +83,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
     "Default": "#7F8C8D" // Gris
   };
 
+
+  const daysLeftUntilMarch31 = () => {
+    const today = new Date();
+    const targetDate = new Date(today.getFullYear(), 2, 31); // Mois indexé à 0 (mars = 2)
+    const differenceInTime = targetDate.getTime() - today.getTime();
+    const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+    
+    return differenceInDays >= 0 ? differenceInDays : 0;
+  };
+
+
+
   // Fonction pour envoyer le message
   const handleSend = () => {
     const message = inputValue.trim();
@@ -561,6 +573,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
         />
 
         {/* Affichage conditionnel pour Holy Family seulement */}
+      {/* Affichage conditionnel pour Holy Family seulement */}
       {subdomain === 'holyfamily' && (
         <Box
           sx={{
@@ -583,10 +596,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
               fontWeight: '500'
             }}
           >
-            Lucy Game: 7 days left to be the top user and win 2 plane tickets to Miami 🏖️
+            Lucy Game: <Box component="span" sx={{ fontWeight: '700' }}>
+              {daysLeftUntilMarch31()} days left
+            </Box> to be the top user and win round trip for 2 to Miami 🏖️
           </Typography>
         </Box>
-        )}
+      )}
 
         {/* Afficher les inspirations sous le placeholder sur petit écran */}
         {isSmallScreen && (

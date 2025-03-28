@@ -244,6 +244,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   // État pour les étapes de raisonnement
   const [displayedReasoningSteps, setDisplayedReasoningSteps] = useState<ReasoningStep[]>([]);
 
+  const [readyToDisplayStep, setReadyToDisplayStep] = useState(false);
+
   const showLoadingIndicator = isLoading && !hasNewContent;
   const isResponseReceived = !isLoading;
 
@@ -269,6 +271,23 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
   console.log("🔍 citedDocuments:", citedDocuments);
 
+
+
+  // ⏳ Ce useEffect permet d'ajouter un léger délai (400ms) après la fin du message de Lucy 
+// avant d'afficher le bloc d'onboarding (ex: YEAR, SCHOOL, etc.). 
+// Cela améliore la fluidité de l'expérience utilisateur en évitant que le bloc apparaisse 
+// immédiatement en même temps que le texte IA.
+  useEffect(() => {
+    if (isResponseReceived) {
+      const timeout = setTimeout(() => {
+        setReadyToDisplayStep(true);
+      }, 200);
+  
+      return () => clearTimeout(timeout);
+    } else {
+      setReadyToDisplayStep(false);
+    }
+  }, [isResponseReceived]);
 
 
 // Dès que les Reasoning Steps commencent, on affiche les shadow sources
@@ -1794,7 +1813,7 @@ useEffect(() => {
 
 
           {/* Gestion dynamique des écoles avec au moins un menu déroulant visible */}
-          {metadataOnboarding === 'SCHOOL' && (
+          {metadataOnboarding === 'SCHOOL' && isResponseReceived && readyToDisplayStep &&(
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -1871,7 +1890,7 @@ useEffect(() => {
 
 
 
-          {metadataOnboarding === 'YEAR' && (
+          {metadataOnboarding === 'YEAR' && isResponseReceived && readyToDisplayStep &&(
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -1909,7 +1928,7 @@ useEffect(() => {
 
 
 
-          {metadataOnboarding === 'LINKEDIN' && (
+          {metadataOnboarding === 'LINKEDIN' && isResponseReceived && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -1954,7 +1973,7 @@ useEffect(() => {
           )}
 
 
-          {metadataOnboarding === 'MAJOR&MINOR' && (
+          {metadataOnboarding === 'MAJOR&MINOR' && isResponseReceived && readyToDisplayStep &&(
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -2057,7 +2076,7 @@ useEffect(() => {
 
 
 
-          {metadataOnboarding === 'COMPLIANCE' && (
+          {metadataOnboarding === 'COMPLIANCE' && isResponseReceived && readyToDisplayStep &&(
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
