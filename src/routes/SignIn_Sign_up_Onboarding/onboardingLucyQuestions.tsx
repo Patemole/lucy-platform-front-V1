@@ -83,7 +83,7 @@ const topicColors: { [key: string]: string } = {
 
 const drawerWidth = 270;
 
-const Dashboard_eleve_template: React.FC = () => {
+const OnboardingLucyQuestions: React.FC = ()=> {
   const theme = useTheme();
   const { user, logout, chatIds, addChatId, setPrimaryChatId, setUser } = useAuth();
   const navigate = useNavigate();
@@ -158,6 +158,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [ShowOnboardingProfilePopup,   setShowOnboardingProfilePopup] = useState(false);
   const [showOnboardingModifyConvPopup, setShowOnboardingModifyConvPopup] = useState(false);
   const [isLandingPageVisible, setIsLandingPageVisible] = useState(!isOnboardingActive && messages.length === 0);
+  const [hasStartedStreaming, setHasStartedStreaming] = useState(false); //Premier chunk lors du message onboarding 
 
 
   const onboardingMessages = [
@@ -167,15 +168,6 @@ const Dashboard_eleve_template: React.FC = () => {
     { question: "What is your major and minor?", metadata: "MAJOR&MINOR" },
     { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" },
   ];
-
-  //Value for the progress bar
-  /*
-  const totalSteps = onboardingMessages.length;
-  const completedSteps = messages.filter(m => m.type === 'human').length;
-  const progressPercent = Math.min((completedSteps / totalSteps) * 100, 100);
-  //const isLastStep = totalSteps - 1;
-  const isLastStep = completedSteps === totalSteps - 1;
-  */
 
 
   // Récupère précisément le dernier message qui possède la propriété METADATAONBOARDING
@@ -198,172 +190,6 @@ const Dashboard_eleve_template: React.FC = () => {
     const isLastStep = currentStepIndex === totalSteps - 1;
 
 
-/*
-  //To send the first onboarding message
-  useEffect(() => {
-    if (isOnboardingActive && messages.length === 0) {
-      sendNextOnboardingMessage(0);
-    }
-  }, []);
-  */
-
-  useEffect(() => {
-    const hasMetadata = messages.some(msg => msg.METADATAONBOARDING);
-    if (isOnboardingActive && !hasMetadata) {
-      console.log("🟢 Lancement de l'onboarding à la première question");
-      console.log("📊 Messages actuels :", messages.map(m => m.METADATAONBOARDING));
-      sendNextOnboardingMessage(0);
-    }
-  }, [isOnboardingActive, messages]);
-
-
-  // Fonction qui simule le stream en ajoutant chunk par chunk
-  const fakeStreamMessage = async (messageContent: string, metadata: string, messageId: number) => {
-    const chunks = messageContent.split(' ');
-    let displayedContent = '';
-  
-  
-    // 🟢 Vérifie si le message existe déjà avant de l'ajouter
-    setMessages((prev) => {
-      const existing = prev.some(msg => msg.id === messageId);
-      return existing ? prev : [
-        ...prev,
-        { id: messageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata },
-      ];
-    });
-  
-    for (const chunk of chunks) {
-      displayedContent += chunk + ' ';
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === messageId ? { ...msg, content: displayedContent.trim() } : msg
-        )
-      );
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-  };
-  
-  // Fonction d'envoi de chaque message onboarding avec gestion des états
-  const sendNextOnboardingMessage = async (index: number) => {
-    if (index >= onboardingMessages.length) {
-      setIsOnboardingActive(false); // Onboarding terminé
-    
-    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: '' };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-    onSubmit([...messages, newMessage, loadingMessage], '');
-    setInputValue('');
-      return;
-    }
-
-
-    // Mise à jour des états selon ta logique existante
-    setIsLandingPageVisible(false);
-    setRelatedQuestions([]);
-    setShowChat(true);
-    setIsComplete(false);
-    setIsStreaming(true);
-  
-    const { question, metadata } = onboardingMessages[index];
-
-    // 🔐 Crée un seul ID partagé
-    const onboardingMessageId = generateUniqueId();
-
-    const loadingMessage: Message = { id: onboardingMessageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata};
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-    // ✅ Petite pause avant de commencer le stream
-    await new Promise((resolve) => setTimeout(resolve, 800));
-  
-    await fakeStreamMessage(question, metadata, onboardingMessageId);
-  
-    setIsStreaming(false);
-  };
-
-
-
-
-  const updateUserField = async (fieldName: string, value: any) => {
-    if (!user) return;
-    const userRef = doc(db, "users", user.id);
-    await updateDoc(userRef, {
-      [fieldName]: value,
-    });
-  
-    // Met à jour le contexte utilisateur
-    setUser((prev) => prev ? {
-      ...prev,
-      [fieldName]: value,
-    } : null);
-  };
-
-
-  const handleSendSCHOOLMessage = async (SCHOOL_message: string) => {
-    await updateUserField("faculty", [SCHOOL_message]); // Faculty est un array
-    const newMessage: Message = { id: Date.now(), type: 'human', content: SCHOOL_message };
-    
-    // Ajoute immédiatement le message humain à l'historique
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-  
-    // Envoie immédiatement la deuxième question d'onboarding (index 1)
-    await sendNextOnboardingMessage(1);
-  };
-
-
-  const handleSendYEARMessage = async (YEAR_message: string) => {
-    await updateUserField("year", YEAR_message);
-    const newMessage: Message = { id: Date.now(), type: 'human', content: YEAR_message };
-    
-    // Ajoute immédiatement le message humain à l'historique
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-  
-    // Envoie immédiatement la deuxième question d'onboarding (index 1)
-    await sendNextOnboardingMessage(2);
-  };
-
-
-  const handleSendLINKEDINMessage = async (LINKEDIN_message: string) => {
-    await updateUserField("linkedin_url", LINKEDIN_message);
-    const newMessage: Message = { id: Date.now(), type: 'human', content: LINKEDIN_message };
-    
-    // Ajoute immédiatement le message humain à l'historique
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-  
-    // Envoie immédiatement la deuxième question d'onboarding (index 1)
-    await sendNextOnboardingMessage(3);
-  };
-
-
-  const handleSendMAJORMINORMessage = async ({ majors, minors }: { majors: string[]; minors: string[] }) => {
-    await updateUserField("major", majors);
-    await updateUserField("minor", minors);
-    const content = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;
-  
-    const newMessage: Message = { id: Date.now(), type: 'human', content };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-  
-    await sendNextOnboardingMessage(4); // index 4 = COMPLIANCE
-  };
-
-
-  const handleSendCOMPLIANCEMessage = async (payload: {
-    termsAccepted: boolean;
-    ageConfirmed: boolean;
-  }) => {
-    await updateUserField("complianceAccepted", true);
-    await updateUserField("termsAccepted", payload.termsAccepted);
-    await updateUserField("ageConfirmed", payload.ageConfirmed);
-
-    const { termsAccepted, ageConfirmed } = payload;
-
-    await sendNextOnboardingMessage(5); // index 4 = COMPLIANCE
-
-  
-
-
 //Fonctional USEFFECT
 //To close the sidebqr if the user is diminue the size of the screen to close the sidebar
 useEffect(() => {
@@ -377,21 +203,12 @@ useEffect(() => {
 }, [showChat]);
 
 
-
-  useEffect(() => {
+useEffect(() => {
     if (!user?.id) return;
     fetchUserInfo();
   }, [user]);
 
-
-  useEffect(() => {
-    if (!chatIdFromUrl) return; // 🔥 Si `chatIdFromUrl` n'existe pas, ne fait rien
   
-    handleConversationClick(chatIdFromUrl);
-  }, []); // 🔥 Exécuté une seule fois au chargement
-
-
-
 
 //To search the number of users changing in the database firestore from the function for a global variable
   useEffect(() => {
@@ -456,9 +273,6 @@ useEffect(() => {
   }, [user?.id]);
 
 
-
-  
-
 //Scrolling useffect for autoscrolling I think
   useEffect(() => {
     const handleScroll = debounce(() => {
@@ -514,18 +328,6 @@ useEffect(() => {
         };
       }, [user?.id, user?.university]);
 
-
-
-
-
-  //permet d aller chercher le dernier chatid on chargerement de la page pour afficher la derniere conversation
-  useEffect(() => { 
-    const loadMessagesFromLocalStorageChatId = async () => {
-      const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
-      if (storedChatId) await handleConversationClick(storedChatId);
-    };
-    loadMessagesFromLocalStorageChatId();
-  }, []);
 
 
 
@@ -1330,7 +1132,205 @@ useEffect(() => {
     }
 };
 
+//------------------------------------------------------------------------------
+ // Fonction d'envoi de chaque message onboarding avec gestion des états
+ const sendNextOnboardingMessage = async (index: number, fieldToUpdate?: string | Record<string, any>, previousAnswer?: string) => {
+    if (index >= onboardingMessages.length) {
+      setIsOnboardingActive(false); // Onboarding terminé
+    
+    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: previousAnswer || '' };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
 
+    const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy' };
+    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
+
+    if (typeof fieldToUpdate === "string") {
+        await updateUserField(fieldToUpdate, previousAnswer);
+      } else if (typeof fieldToUpdate === "object") {
+        await updateUserField(fieldToUpdate);
+      }
+
+    //ICI ON POURRA METTRE LA FONCTION QUI VA APPELER LE BACKEND POUR SAVE LE DERNIER MESSAGE
+
+    onSubmit([...messages, newMessage, loadingMessage], '');
+    setInputValue('');
+      return;
+    }
+
+    // Mise à jour des états selon ta logique existante
+    setIsLandingPageVisible(false);
+    setRelatedQuestions([]);
+    setShowChat(true);
+    setIsComplete(false);
+    setIsStreaming(true);
+  
+    const { question, metadata } = onboardingMessages[index];
+
+    // 🔐 Crée un seul ID partagé
+    const onboardingMessageId = generateUniqueId();
+
+    const loadingMessage: Message = { id: onboardingMessageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata};
+    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
+
+    if (typeof fieldToUpdate === "string") {
+        await updateUserField(fieldToUpdate, previousAnswer);
+      } else if (typeof fieldToUpdate === "object") {
+        await updateUserField(fieldToUpdate);
+      }
+
+    //ICI ON POURRA METTRE LA FONCTION QUI VA APPELER LE BACKEND POUR SAVE LE MESSAGE
+
+    // ✅ Petite pause avant de commencer le stream
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  
+    await fakeStreamMessage(question, metadata, onboardingMessageId);
+  
+    setIsStreaming(false);
+  };
+
+
+
+
+  useEffect(() => {
+    const hasMetadata = messages.some(msg => msg.METADATAONBOARDING);
+    if (isOnboardingActive && !hasMetadata) {
+      console.log("🟢 Lancement de l'onboarding à la première question");
+      console.log("📊 Messages actuels :", messages.map(m => m.METADATAONBOARDING));
+      sendNextOnboardingMessage(0);
+    }
+  }, [isOnboardingActive, messages]);
+
+
+  // Fonction qui simule le stream en ajoutant chunk par chunk
+  const fakeStreamMessage = async (messageContent: string, metadata: string, messageId: number) => {
+    const chunks = messageContent.split(' ');
+    let displayedContent = '';
+  
+  
+    // 🟢 Vérifie si le message existe déjà avant de l'ajouter
+    setMessages((prev) => {
+      const existing = prev.some(msg => msg.id === messageId);
+      return existing ? prev : [
+        ...prev,
+        { id: messageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata },
+      ];
+    });
+  
+    for (const chunk of chunks) {
+      displayedContent += chunk + ' ';
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.id === messageId ? { ...msg, content: displayedContent.trim() } : msg
+        )
+      );
+      if (displayedContent.trim().length > 0 && !hasStartedStreaming) {
+        setHasStartedStreaming(true); // ✅ dès que le premier mot est là on envoie a messageWEB pour dire que le stream a commence et on enleve le three dot de chargement 
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  };
+
+  /*
+  const updateUserField = async (fieldName: string, value: any) => {
+    if (!user) return;
+    const userRef = doc(db, "users", user.id);
+    await updateDoc(userRef, {
+      [fieldName]: value,
+    });
+  
+    // Met à jour le contexte utilisateur
+    setUser((prev) => prev ? {
+      ...prev,
+      [fieldName]: value,
+    } : null);
+  };
+  */
+
+  const updateUserField = async (
+    fieldOrObject: string | Record<string, any>,
+    value?: any
+  ) => {
+    if (!user) return;
+  
+    const userRef = doc(db, "users", user.id);
+  
+    const updatePayload =
+      typeof fieldOrObject === "string"
+        ? { [fieldOrObject]: value }
+        : fieldOrObject;
+  
+    await updateDoc(userRef, updatePayload);
+  
+    // Mise à jour du contexte utilisateur local
+    setUser((prev) =>
+      prev ? { ...prev, ...updatePayload } : null
+    );
+  };
+  
+
+
+  const handleSendSCHOOLMessage = async (SCHOOL_message: string) => {
+    const newMessage: Message = { id: Date.now(), type: 'human', content: SCHOOL_message };
+    
+    // Ajoute immédiatement le message humain à l'historique
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  
+    // Envoie immédiatement la deuxième question d'onboarding (index 1)
+    await sendNextOnboardingMessage(1,"faculty", SCHOOL_message );
+  };
+
+
+  const handleSendYEARMessage = async (YEAR_message: string) => {
+    await updateUserField("year", YEAR_message);
+    const newMessage: Message = { id: Date.now(), type: 'human', content: YEAR_message };
+    
+    // Ajoute immédiatement le message humain à l'historique
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  
+    // Envoie immédiatement la deuxième question d'onboarding (index 1)
+    await sendNextOnboardingMessage(2,"year",YEAR_message);
+  };
+
+
+  const handleSendLINKEDINMessage = async (LINKEDIN_message: string) => {
+    await updateUserField("linkedin_url", LINKEDIN_message);
+    const newMessage: Message = { id: Date.now(), type: 'human', content: LINKEDIN_message };
+    
+    // Ajoute immédiatement le message humain à l'historique
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  
+    // Envoie immédiatement la deuxième question d'onboarding (index 1)
+    await sendNextOnboardingMessage(3,"linkedin_url",LINKEDIN_message );
+  };
+
+
+
+  const handleSendMAJORMINORMessage = async ({
+    majors,
+    minors,
+  }: {
+    majors: string[];
+    minors: string[];
+  }) => {
+    const content = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;
+  
+    await sendNextOnboardingMessage(4, { major: majors, minor: minors }, content);
+  };
+
+
+    const handleSendCOMPLIANCEMessage = async (payload: {
+        termsAccepted: boolean;
+        ageConfirmed: boolean;
+      }) => {
+        const complianceSummary = `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
+      
+        await sendNextOnboardingMessage(5, {
+          complianceAccepted: true,termsAccepted: payload.termsAccepted, ageConfirmed: payload.ageConfirmed}, complianceSummary);
+      };
+
+  
+
+//---------------------------------------
 
 const handleNewConversation = async () => {
   console.log('NEW CONVERSATION');
@@ -1429,7 +1429,7 @@ const handleNewConversation = async () => {
 
 
 
-
+//---------------------------
 const handleConversationClick = async (chat_id: string) => {
   console.log('On se trouve dans le handleConversationClick')
   setCurrentView('chat'); // 🔥 Quand on clique sur une conversation, on revient sur le chat
@@ -1528,11 +1528,22 @@ const handleConversationClick = async (chat_id: string) => {
     setDrawerOpen(!drawerOpen);
   };
 
-  /*
-  const handleSourceClick = (link: string) => {
-    setIframeSrc(link);
-  };
-  */
+
+  useEffect(() => {
+    if (!chatIdFromUrl) return; // 🔥 Si `chatIdFromUrl` n'existe pas, ne fait rien
+  
+    handleConversationClick(chatIdFromUrl);
+  }, []); // 🔥 Exécuté une seule fois au chargement
+
+
+   //permet d aller chercher le dernier chatid on chargerement de la page pour afficher la derniere conversation
+   useEffect(() => { 
+    const loadMessagesFromLocalStorageChatId = async () => {
+      const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
+      if (storedChatId) await handleConversationClick(storedChatId);
+    };
+    loadMessagesFromLocalStorageChatId();
+  }, []);
 
 
   const handleSourceClick = (link: string) => {
@@ -1594,10 +1605,11 @@ const handleConversationClick = async (chat_id: string) => {
     setModalOpen(false);
   };
 
+  //------------------------------------------------------------
 
 
 
-  return (
+ return (
     <ThemeProvider theme={theme}>
       {/* Éléments d'arrière-plan */}
       <div className="background-container"> 
@@ -1703,7 +1715,7 @@ const handleConversationClick = async (chat_id: string) => {
                       />
                     )}
                     <Menu
-                      anchorEl={profileMenuAnchorEl}
+                      anchorEl={profileMenuAnchorEl}     
                       open={Boolean(profileMenuAnchorEl)}
                       onClose={handleProfileMenuClose}
                       PaperProps={{
@@ -2717,6 +2729,9 @@ const handleConversationClick = async (chat_id: string) => {
                               handleSendLINKEDINMessage={handleSendLINKEDINMessage}
                               handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
                               handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
+                              hasStartedStreaming={hasStartedStreaming}
+                              
+                            
                             />
                           </div>
                         </div>
@@ -2848,7 +2863,7 @@ const handleConversationClick = async (chat_id: string) => {
             )}
             
 
-            {currentView === 'chat' && !isLandingPageVisible && (!hasTak && !hasMetadataOnboarding || inputValue.trim() !== "") && (
+            {currentView === 'chat' && !isLandingPageVisible && !isOnboardingActive && (!hasTak || inputValue.trim() !== "") && (
             <>
               {isSmallScreen ? (
                 // VERSION MOBILE AVEC MODIFICATIONS
@@ -3247,5 +3262,4 @@ const handleConversationClick = async (chat_id: string) => {
   );
   
 };
-
-export default Dashboard_eleve_template;
+export default OnboardingLucyQuestions;
