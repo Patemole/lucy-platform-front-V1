@@ -51,6 +51,11 @@ export async function getChatHistory(chat_id: string) {
             content: message['body'],
             type: message['username'] === "Lucy" ? "ai" : "human", // type de message, qui est "ai" si le username est "TAI", sinon "human".
         };
+
+        if (Object.prototype.hasOwnProperty.call(message, 'step_metadata')) {
+            newMessage.METADATAONBOARDING = message.step_metadata;
+          }
+
         if (Object.prototype.hasOwnProperty.call(message, 'documents')) {
             newMessage.citedDocuments = message.documents;
         }
