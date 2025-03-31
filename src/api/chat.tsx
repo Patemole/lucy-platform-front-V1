@@ -163,23 +163,6 @@ export async function* sendMessageFakeDemo({
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Function to save the ai message to the backend
 export const saveMessageAIToBackend = async ({
     message,
@@ -228,4 +211,62 @@ export const saveMessageAIToBackend = async ({
         console.log('Error saving message to the backend:', error);
     }
 };
+
+
+
+
+export const saveOnboardingStep = async ({
+    chatId,
+    userId,
+    metadata,
+    question,
+    answer
+  }: {
+    chatId: string;
+    userId: string;
+    metadata: string;
+    question: string;
+    answer: string;
+  }) => {
+    try {
+      // Message AI (Lucy) avec metadata
+      await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: question,
+          chatSessionId: chatId,
+          courseId: 'onboarding_course', // ou "" si inutile
+          username: 'Lucy',
+          type: 'ai',
+          uid: userId,
+          input_message: '',
+          university: 'onboarding', // ou user.university
+          metadataOnboarding: metadata, // 👈 à ajouter dans le backend
+        }),
+      });
+  
+      // Message de l'étudiant
+      await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: answer,
+          chatSessionId: chatId,
+          courseId: 'onboarding_course',
+          username: 'onboardingstudent', // 👈 distinct pour pouvoir filtrer
+          type: 'human',
+          uid: userId,
+          input_message: '',
+          university: 'onboarding',
+        }),
+      });
+  
+      console.log(`✅ Onboarding step '${metadata}' saved as two messages`);
+    } catch (error) {
+      console.error('❌ Error saving onboarding step:', error);
+    }
+  };
+
+
 

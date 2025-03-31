@@ -1,3 +1,6 @@
+
+
+/*
 import React, { useState, useEffect, KeyboardEvent, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -180,6 +183,12 @@ useEffect(() => {
   }, [user]);
 
   /*
+  useEffect(() => {
+    fetchCourseOptionsAndChatSessions();
+  }, [user?.id]);
+  */
+
+  /*
 //To send onboarding message
   useEffect(() => {
     if (user && user.onboardingMessageSent === false && chatIds.length > 0 && chatIds[0]) {
@@ -197,7 +206,7 @@ useEffect(() => {
         });
     }
   }, [user]);
-  */
+  *
   
 
   useEffect(() => {
@@ -368,7 +377,7 @@ useEffect(() => {
       setIsLandingPageVisible(true);
     }
   }, [messages]);
-  */
+  *
 
 
 
@@ -412,7 +421,7 @@ useEffect(() => {
   const handlePeerAdvisorMenuClose = () => {
     setPeerAdvisorMenuAnchor(null);
   };
-  */
+  *
 
   // fonction pour envoyer les infos de l'utilisateur au backend et récupérer les événements
   const fetchUserInfo = async () => {
@@ -469,7 +478,7 @@ useEffect(() => {
   const togglePrivacy = () => {
     setIsPrivate((prev) => !prev);
   };
-  */
+  *
 
   // Fonction pour formater la date
   const formatDate = (timestamp: { toDate: () => Date }) => {
@@ -546,7 +555,7 @@ useEffect(() => {
       )
     );
   };
-  */
+  *
 
 
   
@@ -1431,7 +1440,7 @@ const handleConversationClick = async (chat_id: string) => {
   const handleSourceClick = (link: string) => {
     setIframeSrc(link);
   };
-  */
+  *
 
 
   const handleSourceClick = (link: string) => {
@@ -1495,7 +1504,7 @@ const handleConversationClick = async (chat_id: string) => {
 
   return (
     <ThemeProvider theme={theme}>
-      {/* Éléments d'arrière-plan */}
+      {/* Éléments d'arrière-plan *
       <div className="background-container"> 
         <div className="blob blob-1"></div>
         <div className="blob blob-2"></div>
@@ -1559,7 +1568,7 @@ const handleConversationClick = async (chat_id: string) => {
               },
             }}
           >
-            {/* header avec boutons de menu et nouvelle conversation */}
+            {/* header avec boutons de menu et nouvelle conversation *
             <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
               <IconButton aria-label="open menu" onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
                 {drawerOpen ? <KeyboardDoubleArrowLeftIcon /> : <MenuIcon />}
@@ -1652,7 +1661,7 @@ const handleConversationClick = async (chat_id: string) => {
               )}
             </Box>
 
-            {/* navigation de la sidebar */}
+            {/* navigation de la sidebar *
             <nav aria-label="sidebar navigation">
               <List component="ul" style={{ padding: '0 10px' }}>
                 {/*
@@ -1668,9 +1677,9 @@ const handleConversationClick = async (chat_id: string) => {
                   </ListItemIcon>
                   <ListItemText primary="your events" ... />
                 </ListItem>
-                */}
+                *
 
-                {/* bouton conversation history */}
+                {/* bouton conversation history *
                 <ListItem
                   component="li"
                   tabIndex={0}
@@ -1715,7 +1724,7 @@ const handleConversationClick = async (chat_id: string) => {
                   />
                 </ListItem>
 
-                {/* bouton social thread */}
+                {/* bouton social thread *
                 <ListItem
                   component="li"
                   tabIndex={0}
@@ -1789,7 +1798,7 @@ const handleConversationClick = async (chat_id: string) => {
 
             <Divider style={{ backgroundColor: 'lightgray' }} />
 
-            {/* en-tête de la section affichée */}
+            {/* en-tête de la section affichée *
             <section aria-label={isHistory ? "Conversation History" : "Last Public Interactions"}>
               <div
                 className="text-center text-black-500 font-semibold mt-5 mb-2 flex justify-center items-center"
@@ -1821,7 +1830,7 @@ const handleConversationClick = async (chat_id: string) => {
               </div>
             </section>
 
-            {/* conteneur défilant pour la liste */}
+            {/* conteneur défilant pour la liste *
             <Box style={{ flexGrow: 1, overflowY: 'auto', padding: '0 5px' }}>
               {isHistory ? (
                 <nav
@@ -2143,7 +2152,7 @@ const handleConversationClick = async (chat_id: string) => {
               )}
             </Box>
 
-            {/* menu contextuel */}
+            {/* menu contextuel *
             <Menu
               anchorEl={menuAnchorEl}
               open={Boolean(menuAnchorEl)}
@@ -2267,9 +2276,9 @@ const handleConversationClick = async (chat_id: string) => {
                 alt="University Logo"
                 style={{ height: '40px', marginRight: '10px' }}
               />
-              */}
+              *
   
-              {/* Vignette avec le nombre d'étudiants en ligne */}
+              {/* Vignette avec le nombre d'étudiants en ligne *
               <section aria-label="Online users">
               <div
                 style={{
@@ -2284,7 +2293,7 @@ const handleConversationClick = async (chat_id: string) => {
                   fontSize: '0.83rem',
                 }}
               >
-                {/*{onlineUsers} online users*/}
+                {/*{onlineUsers} online users*
                 {onlineUsers} {isSmallScreen ? "online" : "online users"}
                 <div
                   style={{
@@ -2453,7 +2462,7 @@ const handleConversationClick = async (chat_id: string) => {
               </div>
             </div>
   
-            {/* Content Area */}
+            {/* Content Area *
             {currentView === 'chat' ? (
               isLandingPageVisible ? (
                 <>
@@ -2570,7 +2579,7 @@ const handleConversationClick = async (chat_id: string) => {
               
               <section className="events-view p-4" aria-label="Events view">
                 <div className="events-toggle flex justify-between mb-4 ml-5">
-                  {/* Sur la vue Kanban, afficher le bouton Calendar avec une icône 🗓 */}
+                  {/* Sur la vue Kanban, afficher le bouton Calendar avec une icône 🗓 *
                   {eventDisplayMode === 'kanban' ? (
                     <Button
                       variant="contained"
@@ -2708,7 +2717,7 @@ const handleConversationClick = async (chat_id: string) => {
                     zIndex: 2,
                   }}
                 >
-                  {/* Champ de saisie avec placeholder "Ask Lucy..." */}
+                  {/* Champ de saisie avec placeholder "Ask Lucy..." *
                   <section id="chat-section" tabIndex={-1} aria-label="Chat section">
                   <TextField
                     fullWidth
@@ -2739,7 +2748,7 @@ const handleConversationClick = async (chat_id: string) => {
                   />
                   </section>
 
-                  {/* Conteneur des boutons Public/Private et du bouton d'envoi */}
+                  {/* Conteneur des boutons Public/Private et du bouton d'envoi *
                   <div
                     className="w-full flex items-center justify-start"
                     style={{
@@ -2748,7 +2757,7 @@ const handleConversationClick = async (chat_id: string) => {
                       gap: '10px',
                     }}
                   >
-                    {/* Bouton Public */}
+                    {/* Bouton Public *
                     <button
                       aria-label="Set conversation to public"
                       className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
@@ -2766,7 +2775,7 @@ const handleConversationClick = async (chat_id: string) => {
                       <LockOpenIcon fontSize="small" style={{ color: !isPrivate ? '#3155CC' : '#6F6F6F' }} /> Public
                     </button>
 
-                    {/* Bouton Private */}
+                    {/* Bouton Private *
                     <button
                       aria-label="Set conversation to private"
                       className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
@@ -2782,11 +2791,11 @@ const handleConversationClick = async (chat_id: string) => {
                       }}
                       onClick={() => setIsPrivate(true)}
                     >
-                      {/*<LockIcon fontSize="small" style={{ color: isPrivate ? '#6F6F6F' : '#3155CC' }} /> Private*/}
+                      {/*<LockIcon fontSize="small" style={{ color: isPrivate ? '#6F6F6F' : '#3155CC' }} /> Private*
                       <LockIcon fontSize="small" style={{ color: '#6F6F6F' }} /> Private
                     </button>
 
-                    {/* Bouton d'envoi (cercle identique à celui de desktop, mais avec flèche vers le haut) */}
+                    {/* Bouton d'envoi (cercle identique à celui de desktop, mais avec flèche vers le haut) *
                     <button
                       className="rounded-full flex items-center justify-center"
                       onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
@@ -2808,7 +2817,7 @@ const handleConversationClick = async (chat_id: string) => {
                     </button>
                   </div>
 
-                  {/* Phrase d'information sous le champ de saisie (version mobile courte) */}
+                  {/* Phrase d'information sous le champ de saisie (version mobile courte) *
                   <div className="flex justify-center w-full">
                     <p className="mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80">
                       Lucy can make mistake. Consider checking important information.
@@ -3048,11 +3057,11 @@ const handleConversationClick = async (chat_id: string) => {
             humanMessageContent={selectedHumanMessage}
           />
   
-          {/* Render the StudentProfileDialog component */}
+          {/* Render the StudentProfileDialog component *
           <StudentProfileDialog open={dialogOpen} onClose={handleDialogClose} setProfilePicture={setProfilePicture} />
           <EventDetailsSidebar event={selectedEvent} open={sidebarOpen} onClose={handleCloseSidebar} />
 
-          {/* Affichage de la popup si nécessaire */}
+          {/* Affichage de la popup si nécessaire *
           {openModal && <PopupEventSoonAvailable onClose={() => setOpenModal(false)} />}
 
           {/*
@@ -3077,7 +3086,7 @@ const handleConversationClick = async (chat_id: string) => {
             {currentPopup === 4 && <Popup4 onFinish={handleFinishOnboarding} />}
           </div>
         )}
-          */}
+          *
 
   
           <Snackbar
@@ -3101,3 +3110,6 @@ const handleConversationClick = async (chat_id: string) => {
 };
 
 export default Dashboard_eleve_template;
+*/
+
+export {}

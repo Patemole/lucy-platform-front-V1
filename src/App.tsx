@@ -5,7 +5,7 @@ import { AnimatePresence } from 'framer-motion'; // Import AnimatePresence
 import getTheme from './themes';
 
 //Main page
-import DashboardEleveTemplate from './routes/Dashboard_eleve_template';
+//import DashboardEleveTemplate from './routes/Dashboard_eleve_template';
 
 //For the widget on the website
 import WebChat from './routes/website_widget/WebChat';
@@ -91,11 +91,11 @@ const App: React.FC = () => {
 
                     
                     <Route path="/" element={<PrivateRoute />}>
-                        <Route path="/dashboard/student/:uid" element={<DashboardEleveTemplate />} />
+                        {/*<Route path="/dashboard/student/:uid" element={<DashboardEleveTemplate />} />*/}
              
                         <Route path="/onboarding/learningStyleSurvey" element={<OnboardingPage />} />
                         <Route path="/onboarding/learningStyleSurvey/:course_id" element={<OnboardingPage />} />
-                        <Route path="/onboarding-with-lucy" element={<OnboardingLucyQuestions />} />
+                        <Route path="/onboarding-with-lucy/:uid" element={<OnboardingLucyQuestions />} />
         
                         <Route path="/dashboard/academic-advisor/:uid" element={<FlagingDashboard />} />
                         <Route path="/dashboard/enrollment/:uid" element={<EnrollmentDashboard />} />
