@@ -26,7 +26,7 @@ import Kanban from '../../components/main_components/Kanban_StudentProfile';
 import config from '../../config';
 
 //API request for the backend
-import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph } from '../../api/chat';
+import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph, saveOnboardingStep } from '../../api/chat';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../../api/feedback_wrong_answer';
 import { sendUserInfoToBackend } from '../../api/calendar-event-studentProfile';
 
@@ -150,7 +150,8 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const hasRun = useRef(false);  // ← En dehors du useEffect, directement dans le composant
   const [currentOnboardingIndex, setCurrentOnboardingIndex] = useState(0);
 
-  const [isOnboardingActive, setIsOnboardingActive] = useState(true);
+  //const [isOnboardingActive, setIsOnboardingActive] = useState(true);
+  const [isOnboardingActive, setIsOnboardingActive] = useState(() => !(user?.onboardingComplete ?? false));
   const hasMetadataOnboarding = messages.some(msg => msg.METADATAONBOARDING);
 
 
@@ -172,20 +173,16 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
   // Récupère précisément le dernier message qui possède la propriété METADATAONBOARDING
   const currentOnboardingMessage = [...messages].reverse().find(msg => msg.METADATAONBOARDING);
-
     // Récupère précisément le nom de l'étape actuelle ou une chaîne vide si aucun message n'est trouvé
   const currentMetadataOnboarding = currentOnboardingMessage?.METADATAONBOARDING || '';
-
     // Détermine l'index de l'étape actuelle dans onboardingMessages
    const currentStepIndex = onboardingMessages.findIndex(
     step => step.metadata === currentMetadataOnboarding
     );
-
     // Calcule précisément la progression en fonction de l'étape actuelle
     const totalSteps = onboardingMessages.length;
     const completedSteps = currentStepIndex >= 0 ? currentStepIndex : 0;
     const progressPercent = ((completedSteps + 1) / totalSteps) * 100;
-
     // Vérifie précisément si c'est la dernière étape
     const isLastStep = currentStepIndex === totalSteps - 1;
 
@@ -195,6 +192,13 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 useEffect(() => {
   setDrawerOpen(!isSmallScreen);
 }, [isSmallScreen]);
+
+
+useEffect(() => {
+    if (user && user.onboardingComplete) {
+      setIsOnboardingActive(false);
+    }
+  }, [user?.onboardingComplete]);
 
 
 //Uniquement pour visualiser quand showchat est cense etre visible ou non. 
@@ -209,7 +213,6 @@ useEffect(() => {
   }, [user]);
 
   
-
 //To search the number of users changing in the database firestore from the function for a global variable
   useEffect(() => {
     console.log("🔄 Setting up Firestore listener for onlineUsers...");
@@ -239,8 +242,6 @@ useEffect(() => {
       unsubscribe();
     };
   }, []);
-
-
 
 
   useEffect(() => {
@@ -656,6 +657,14 @@ useEffect(() => {
           (conversation): conversation is Conversation => conversation !== null
         );
         setConversations(validConversations.reverse());
+
+        if (validConversations.length > 0) {
+            const latestChatId = validConversations[0].chat_id;
+            setPrimaryChatId(latestChatId);
+            setActiveChatId(latestChatId);
+          }
+
+
       }
     }
   };
@@ -1132,11 +1141,26 @@ useEffect(() => {
     }
 };
 
+
+useEffect(() => {
+    if (user?.id && user?.onboardingComplete) {
+      fetchCourseOptionsAndChatSessions();
+    }
+  }, [user?.id, user?.onboardingComplete]);
+
 //------------------------------------------------------------------------------
  // Fonction d'envoi de chaque message onboarding avec gestion des états
  const sendNextOnboardingMessage = async (index: number, fieldToUpdate?: string | Record<string, any>, previousAnswer?: string) => {
+
     if (index >= onboardingMessages.length) {
       setIsOnboardingActive(false); // Onboarding terminé
+      // ✅ Marquer onboarding comme terminé dans Firebase et contexte local
+      await updateUserField({ onboardingComplete: true });
+
+        // Récupère la dernière vraie étape
+      const lastStep = onboardingMessages[onboardingMessages.length - 1];
+      const lastMetadata = lastStep.metadata;
+      const lastQuestion = lastStep.question;
     
     const newMessage: Message = { id: generateUniqueId(), type: 'human', content: previousAnswer || '' };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -1149,6 +1173,10 @@ useEffect(() => {
       } else if (typeof fieldToUpdate === "object") {
         await updateUserField(fieldToUpdate);
       }
+
+    if (user?.id && chatIds[0] && previousAnswer) {
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, metadata: lastMetadata, question: lastQuestion, answer: previousAnswer,});
+    }
 
     //ICI ON POURRA METTRE LA FONCTION QUI VA APPELER LE BACKEND POUR SAVE LE DERNIER MESSAGE
 
@@ -1179,12 +1207,17 @@ useEffect(() => {
       }
 
     //ICI ON POURRA METTRE LA FONCTION QUI VA APPELER LE BACKEND POUR SAVE LE MESSAGE
+    // ✅ Sauvegarde dans le backend après affichage de la question et réception de la réponse
+    if (user?.id && chatIds[0] && previousAnswer) {
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id,metadata,question,answer: previousAnswer,});
+    }
 
     // ✅ Petite pause avant de commencer le stream
     await new Promise((resolve) => setTimeout(resolve, 800));
   
     await fakeStreamMessage(question, metadata, onboardingMessageId);
-  
+
+
     setIsStreaming(false);
   };
 

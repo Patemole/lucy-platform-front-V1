@@ -349,7 +349,7 @@ export default function SignUp() {
       });
 
       console.log("[Step 6] Updating context with user data");
-      login({
+      await login({
         id: user.uid,
         name: firstName,
         email,
@@ -358,9 +358,14 @@ export default function SignUp() {
         createdAt: timestamp,
         onboardingComplete: false,
       });
+
+      setTimeout(() => {
+        navigate(redirectUrl);
+      }, 300);
   
       console.log("[Step 7] Redirecting user to onboarding page");
-      const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding-with-lucy`;
+      const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding-with-lucy/${user.uid || 'defaultId'}`;
+      //navigate(`/dashboard/student/${result.user.uid || 'defaultId'}`, { replace: true });
       navigate(redirectUrl);
     } catch (error) {
       console.error("[Error] An error occurred:", error);

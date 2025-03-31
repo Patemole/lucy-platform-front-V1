@@ -254,7 +254,10 @@ const SignIn = ({ handleToggleThemeMode }) => {
       
       // Navigate immediately after successful sign-in
       //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
-      navigate(`/dashboard/student/${result.user.uid || 'defaultId'}`, { replace: true });
+      //navigate(`/dashboard/student/${result.user.uid || 'defaultId'}`, { replace: true });
+      navigate(`/onboarding-with-lucy/${result.user.uid || 'defaultId'}`, { replace: true });
+      
+
     } catch (error) {
       const newErrors = {};
       if (error.code === 'auth/user-not-found') {
