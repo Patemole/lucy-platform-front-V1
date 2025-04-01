@@ -1816,7 +1816,9 @@ useEffect(() => {
 
 
           {/* Gestion dynamique des écoles avec au moins un menu déroulant visible */}
-          {metadataOnboarding === 'SCHOOL' && isResponseReceived && readyToDisplayStep &&(
+          
+          {typeof metadataOnboarding === 'string' && metadataOnboarding === 'SCHOOL' && isResponseReceived && readyToDisplayStep && (
+
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
