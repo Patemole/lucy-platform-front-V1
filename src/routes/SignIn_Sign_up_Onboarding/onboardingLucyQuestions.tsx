@@ -1616,7 +1616,6 @@ const handleConversationClick = async (chat_id: string) => {
 
   useEffect(() => {
     if (!chatIdFromUrl) return; // 🔥 Si `chatIdFromUrl` n'existe pas, ne fait rien
-  
     handleConversationClick(chatIdFromUrl);
   }, []); // 🔥 Exécuté une seule fois au chargement
 
@@ -1626,6 +1625,7 @@ const handleConversationClick = async (chat_id: string) => {
     const loadMessagesFromLocalStorageChatId = async () => {
       const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
       if (storedChatId) await handleConversationClick(storedChatId);
+      setIsLandingPageVisible(false);
     };
     loadMessagesFromLocalStorageChatId();
   }, []);
