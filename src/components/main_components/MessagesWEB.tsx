@@ -226,15 +226,15 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
   //const [selectedSchools, setSelectedSchools] = useState(user?.faculty || ['']);
   const [selectedSchools, setSelectedSchools] = useState(
-    Array.isArray(user?.faculty) && user.faculty.length > 0 ? user.faculty : ['']
+    user && Array.isArray(user.faculty) && user.faculty.length > 0 ? user.faculty : ['']
   );
-  //const [majors, setMajors] = useState(user?.major || ['']);
-  //const [minors, setMinors] = useState(user?.minor || ['']);
+  
   const [majors, setMajors] = useState(
-    Array.isArray(user?.major) ? user.major : user?.major ? [user.major] : ['']
+    user && Array.isArray(user.major) && user.major.length > 0 ? user.major : ['']
   );
+  
   const [minors, setMinors] = useState(
-    Array.isArray(user?.minor) ? user.minor : user?.minor ? [user.minor] : ['']
+    user && Array.isArray(user.minor) && user.minor.length > 0 ? user.minor : ['']
   );
   const [learnerType, setLearnerType] = useState(user?.year || '');
   const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || '');
