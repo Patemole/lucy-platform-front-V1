@@ -1620,7 +1620,8 @@ const handleConversationClick = async (chat_id: string) => {
   }, []); // 🔥 Exécuté une seule fois au chargement
 
 
-   //permet d aller chercher le dernier chatid on chargerement de la page pour afficher la derniere conversation
+
+   //PERMET DE CHARGER LES CONVERSATIONS LORSQU ELLES EXISTENT QUAND ON NAVIGATE SUR LA PAGE
    useEffect(() => { 
     const loadMessagesFromLocalStorageChatId = async () => {
       const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
@@ -1631,10 +1632,11 @@ const handleConversationClick = async (chat_id: string) => {
   }, []);
 
 
+
+
   const handleSourceClick = (link: string) => {
     window.open(link, "_blank", "noopener,noreferrer"); // Ouvre dans un nouvel onglet
 };
-
 
 
   const handleSubmitWrongAnswerFeedback = async (

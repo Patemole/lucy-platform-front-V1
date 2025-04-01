@@ -94,9 +94,28 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
           setFirstName(userData.name || '');
           setYear(userData.year || '');
           setAcademicAdvisor(userData.academic_advisor || '');
-          setFaculty(userData.faculty || ['']);
-          setMajor(userData.major || ['']);
-          setMinor(userData.minor || ['']);
+
+          setFaculty(
+            Array.isArray(userData.faculty)
+              ? userData.faculty
+              : userData.faculty
+              ? [userData.faculty]
+              : ['']
+          );
+          setMajor(
+            Array.isArray(userData.major)
+              ? userData.major
+              : userData.major
+              ? [userData.major]
+              : ['']
+          );
+          setMinor(
+            Array.isArray(userData.minor)
+              ? userData.minor
+              : userData.minor
+              ? [userData.minor]
+              : ['']
+          );
           setInterests(userData.interests || ['']);
           setProfilePictureUrl(userData.profile_picture || '');
         } else {
