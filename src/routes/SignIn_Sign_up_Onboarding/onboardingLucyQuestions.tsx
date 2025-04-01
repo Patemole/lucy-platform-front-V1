@@ -1124,6 +1124,11 @@ useEffect(() => {
                 uid: user?.id,
                 input_message: inputValue,
                 university: university,
+                //confident_score: confident_score => important
+                //sources: sources / un tableau je pense avec le le titre et le lien des sources. avec answer document je pense => important
+                //reasonning_steps / un tableau 
+                //TAK / une structure de donnne, je ne sais pas comment save pour l instant
+
             });
         } else {
           console.log("Conversation annulée -> Le message AI ne sera pas envoyé");
@@ -1622,6 +1627,7 @@ const handleConversationClick = async (chat_id: string) => {
 
 
    //PERMET DE CHARGER LES CONVERSATIONS LORSQU ELLES EXISTENT QUAND ON NAVIGATE SUR LA PAGE
+   /*
    useEffect(() => { 
     const loadMessagesFromLocalStorageChatId = async () => {
       const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
@@ -1630,6 +1636,20 @@ const handleConversationClick = async (chat_id: string) => {
     };
     loadMessagesFromLocalStorageChatId();
   }, []);
+  */
+
+
+  useEffect(() => { 
+    const loadMessagesFromLocalStorageChatId = async () => {
+      const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
+      if (storedChatId) await handleConversationClick(storedChatId);
+      
+      const shouldShowLanding = !isOnboardingActive && messages.length === 0;
+      setIsLandingPageVisible(shouldShowLanding);
+    };
+  
+    loadMessagesFromLocalStorageChatId();
+  }, [activeChatId, chatIds, messages.length, isOnboardingActive]);
 
 
 
