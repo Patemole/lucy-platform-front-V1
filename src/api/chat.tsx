@@ -130,7 +130,9 @@ export async function getChatHistory(chat_id: string) {
 
       if (Object.prototype.hasOwnProperty.call(message, 'confidence_score')) {
         newMessage.CONFIDENCESCORE = [{
-          confidenceScore: message.confidence_score.toString()
+          confidenceScore: message.confidence_score 
+            ? message.confidence_score.toString() 
+            : "0"  // valeur par défaut si null
         }];
       }
   

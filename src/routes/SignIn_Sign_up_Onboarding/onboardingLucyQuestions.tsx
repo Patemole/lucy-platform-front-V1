@@ -1526,7 +1526,6 @@ const handleNewConversation = async () => {
 };
 
 
-
 //---------------------------
 const handleConversationClick = async (chat_id: string) => {
   console.log('On se trouve dans le handleConversationClick')
