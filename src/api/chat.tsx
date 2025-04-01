@@ -29,7 +29,7 @@ export interface SendMessageRequest {
 
 
 
-
+/*
 export async function getChatHistory(chat_id: string) {
     const getChatHistoryResponse = await fetch(
         `${apiUrlPrefix}/chat/get_chat_history/${chat_id}`,
@@ -51,6 +51,7 @@ export async function getChatHistory(chat_id: string) {
             content: message['body'],
             type: message['username'] === "Lucy" ? "ai" : "human", // type de message, qui est "ai" si le username est "TAI", sinon "human".
             METADATAONBOARDING: undefined, // initialisé proprement
+            citedDocuments: message['documents'] || [], // 👈 sécurité supplémentaire //to recuperer les sources du backend
         };
 
         if (Object.prototype.hasOwnProperty.call(message, 'step_metadata')) {
@@ -58,6 +59,18 @@ export async function getChatHistory(chat_id: string) {
                 ? message.step_metadata[0]
                 : message.step_metadata;
         }
+
+
+        if (Object.prototype.hasOwnProperty.call(message, 'documents')) {
+            newMessage.citedDocuments = Array.isArray(message.documents)
+              ? message.documents.map((doc: any) => ({
+                  document_id: doc.document_id,
+                  document_name: doc.document_name,
+                  link: doc.link,
+                  source_type: doc.source_type
+                }))
+              : [];
+          }
 
         if (Object.prototype.hasOwnProperty.call(message, 'documents')) {
             newMessage.citedDocuments = message.documents;
@@ -67,6 +80,65 @@ export async function getChatHistory(chat_id: string) {
 
     return messages;
 }
+*/
+
+
+export async function getChatHistory(chat_id: string) {
+    const getChatHistoryResponse = await fetch(
+      `${apiUrlPrefix}/chat/get_chat_history/${chat_id}`,
+      {
+        method: "GET",
+      }
+    );
+  
+    if (!getChatHistoryResponse.ok) {
+      console.log(
+        `Failed to get chat history - ${getChatHistoryResponse.status}`
+      );
+      throw Error("Failed to get chat history");
+    }
+  
+    const responseBody = await getChatHistoryResponse.json();
+  
+    const messages: Message[] = responseBody.map((message: any) => {
+      const newMessage: Message = {
+        id: message['message_id'],
+        content: message['body'],
+        type: message['username'] === "Lucy" ? "ai" : "human",
+        METADATAONBOARDING: undefined,
+        citedDocuments: [], // Initialisation claire
+        CONFIDENCESCORE: [], // initialisation en tableau comme dans onSubmit ✅
+      };
+  
+      if (Object.prototype.hasOwnProperty.call(message, 'step_metadata')) {
+        newMessage.METADATAONBOARDING = Array.isArray(message.step_metadata)
+          ? message.step_metadata[0]
+          : message.step_metadata;
+      }
+  
+      if (Object.prototype.hasOwnProperty.call(message, 'sources')) {
+        newMessage.citedDocuments = Array.isArray(message.sources)
+          ? message.sources.map((source: any) => ({
+              document_id: source.document_id,
+              document_name: source.document_name,
+              link: source.link,
+              source_type: source.source_type
+            }))
+          : [];
+      }
+
+
+      if (Object.prototype.hasOwnProperty.call(message, 'confidence_score')) {
+        newMessage.CONFIDENCESCORE = [{
+          confidenceScore: message.confidence_score.toString()
+        }];
+      }
+  
+      return newMessage;
+    });
+  
+    return messages;
+  }
 
 
 
@@ -181,6 +253,8 @@ export const saveMessageAIToBackend = async ({
     uid,
     input_message,
     university,
+    sources,
+    confident_score
 }: {
     message: string;
     chatSessionId: string;
@@ -190,6 +264,8 @@ export const saveMessageAIToBackend = async ({
     uid: string,
     input_message: string
     university: string
+    sources?: { document_id: string; document_name: string; link: string; source_type: string }[];
+    confident_score?: number | null; // 👈 Ajout du confident_score
 }) => {
     try {
         console.log("Entering saveMessageAIToBackend with message:", message);
@@ -207,6 +283,8 @@ export const saveMessageAIToBackend = async ({
                 uid,
                 input_message,
                 university,
+                sources,
+                confident_score
             }),
         });
 

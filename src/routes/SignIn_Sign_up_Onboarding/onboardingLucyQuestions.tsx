@@ -819,6 +819,7 @@ useEffect(() => {
     let answerERROR: AnswerERROR[] = [];
     let answerACCURACYSCORE: AnswerACCURACYSCORE[] = [];
     let answerTITLEANDCATEGORY: AnswerTITLEANDCATEGORY[] = [];
+    let flattenedACCURACYSCORE: AnswerACCURACYSCORE[] = [];
     let error: string | null = null;
 
 
@@ -1014,7 +1015,7 @@ useEffect(() => {
             // Log before flattening `answerACCURACYSCORE`
             console.log("Raw answerACCURACYSCORE received:", answerACCURACYSCORE);
 
-            const flattenedACCURACYSCORE = answerACCURACYSCORE.flat();
+            flattenedACCURACYSCORE = answerACCURACYSCORE.flat();
 
             const flattenedTITLEANDCATEGORY = answerTITLEANDCATEGORY.flat();
             console.log("Flattened answerTITLEANDCATEGORY:", flattenedTITLEANDCATEGORY);
@@ -1124,12 +1125,19 @@ useEffect(() => {
                 uid: user?.id,
                 input_message: inputValue,
                 university: university,
+                sources: answerDocuments.map((doc) => ({ 
+                    document_id: doc.document_id,
+                    document_name: doc.document_name,
+                    link: doc.link,
+                    source_type: doc.source_type
+                })),
+                confident_score: flattenedACCURACYSCORE.length > 0 ? parseFloat(flattenedACCURACYSCORE[0].confidenceScore): null, // 👈 Conversion correcte en nombre
+                });
                 //confident_score: confident_score => important
                 //sources: sources / un tableau je pense avec le le titre et le lien des sources. avec answer document je pense => important
                 //reasonning_steps / un tableau 
                 //TAK / une structure de donnne, je ne sais pas comment save pour l instant
 
-            });
         } else {
           console.log("Conversation annulée -> Le message AI ne sera pas envoyé");
       }
