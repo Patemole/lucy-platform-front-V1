@@ -1846,7 +1846,7 @@ useEffect(() => {
                     }}
                   >
                     <option value="" disabled>Select your school</option>
-                    {theme.facultyOptions?.map((faculty) => (
+                    {(Array.isArray(theme.facultyOptions) ? theme.facultyOptions : []).map((faculty) => (
                       <option key={faculty} value={faculty}>
                         {faculty}
                       </option>
