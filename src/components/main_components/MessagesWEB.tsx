@@ -224,9 +224,18 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [ageChecked, setAgeChecked] = useState(false);
   */
 
-  const [selectedSchools, setSelectedSchools] = useState(user?.faculty || ['']);
-  const [majors, setMajors] = useState(user?.major || ['']);
-  const [minors, setMinors] = useState(user?.minor || ['']);
+  //const [selectedSchools, setSelectedSchools] = useState(user?.faculty || ['']);
+  const [selectedSchools, setSelectedSchools] = useState(
+    Array.isArray(user?.faculty) && user.faculty.length > 0 ? user.faculty : ['']
+  );
+  //const [majors, setMajors] = useState(user?.major || ['']);
+  //const [minors, setMinors] = useState(user?.minor || ['']);
+  const [majors, setMajors] = useState(
+    Array.isArray(user?.major) ? user.major : user?.major ? [user.major] : ['']
+  );
+  const [minors, setMinors] = useState(
+    Array.isArray(user?.minor) ? user.minor : user?.minor ? [user.minor] : ['']
+  );
   const [learnerType, setLearnerType] = useState(user?.year || '');
   const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || '');
   const [termsChecked, setTermsChecked] = useState(user?.termsAccepted || false);
@@ -1817,7 +1826,7 @@ useEffect(() => {
 
           {/* Gestion dynamique des écoles avec au moins un menu déroulant visible */}
           
-          {typeof metadataOnboarding === 'string' && metadataOnboarding === 'SCHOOL' && isResponseReceived && readyToDisplayStep && (
+          {metadataOnboarding === 'SCHOOL' && isResponseReceived && readyToDisplayStep && (
 
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
