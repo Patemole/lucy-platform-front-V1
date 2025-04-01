@@ -225,16 +225,19 @@ export const saveOnboardingStep = async ({
     userId,
     metadata,
     question,
-    answer
+    answer,
+    isLastStep = false, // 👈 Paramètre supplémentaire avec valeur par défaut à false
   }: {
     chatId: string;
     userId: string;
     metadata: string;
     question: string;
     answer: string;
+    isLastStep?: boolean; // 👈 optionnel
   }) => {
     try {
       // Message AI (Lucy) avec metadata
+      if (!isLastStep) {
       await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -250,8 +253,10 @@ export const saveOnboardingStep = async ({
           metadataOnboarding: metadata, // 👈 à ajouter dans le backend
         }),
       });
+    }
   
       // Message de l'étudiant
+      if (answer && answer.trim() !== '') {
       await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -266,6 +271,7 @@ export const saveOnboardingStep = async ({
           university: 'onboarding',
         }),
       });
+    }
   
       console.log(`✅ Onboarding step '${metadata}' saved as two messages`);
     } catch (error) {

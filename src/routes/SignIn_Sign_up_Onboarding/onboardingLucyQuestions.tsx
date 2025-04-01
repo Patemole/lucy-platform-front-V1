@@ -1191,7 +1191,7 @@ useEffect(() => {
       }
 
     if (user?.id && chatIds[0] && previousAnswer) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, metadata: lastMetadata, question: lastQuestion, answer: previousAnswer,});
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, metadata: lastMetadata, question: lastQuestion, answer: previousAnswer, isLastStep: true});
     }
 
     //ICI ON POURRA METTRE LA FONCTION QUI VA APPELER LE BACKEND POUR SAVE LE DERNIER MESSAGE
@@ -1222,9 +1222,15 @@ useEffect(() => {
         await updateUserField(fieldToUpdate);
       }
 
+    /*
     // ✅ Sauvegarde dans le backend après affichage de la question et réception de la réponse
     if (user?.id && chatIds[0] && previousAnswer) {
         await saveOnboardingStep({chatId: chatIds[0],userId: user.id,metadata,question,answer: previousAnswer,});
+    }
+    */
+
+    if (user?.id && chatIds[0]) {
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id,metadata,question,answer: previousAnswer || '',});
     }
 
     // ✅ Petite pause avant de commencer le stream
