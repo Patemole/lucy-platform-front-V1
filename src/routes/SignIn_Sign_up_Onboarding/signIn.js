@@ -209,6 +209,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
     }
   }
   
+  /*
   // Redirect if user is already authenticated
   useEffect(() => {
     if (!loading && isAuth && user && shouldRedirect) {
@@ -217,6 +218,18 @@ const SignIn = ({ handleToggleThemeMode }) => {
       navigate(`/dashboard/student/${user?.id || 'defaultId'}`, { replace: true });
     }
   }, [loading, isAuth, user, shouldRedirect, navigate]);
+  */
+
+
+   // Redirect if user is already authenticated
+  useEffect(() => {
+    if (!loading && isAuth && user && shouldRedirect) {
+      console.log("User authenticated via useeffect, redirecting...");
+      console.log("user.id est", user?.id || 'defaultId')
+      navigate(`/onboarding-with-lucy/${user?.id || 'defaultId'}`, { replace: true });
+    }
+  }, [loading, isAuth, user, shouldRedirect, navigate]);
+
 
 
   
