@@ -219,7 +219,7 @@ export const saveMessageAIToBackend = async ({
 
 
 
-
+/*
 export const saveOnboardingStep = async ({
     chatId,
     userId,
@@ -278,6 +278,46 @@ export const saveOnboardingStep = async ({
       console.error('❌ Error saving onboarding step:', error);
     }
   };
+*/
 
+
+export const saveOnboardingStep = async ({
+    chatId,
+    userId,
+    metadata,
+    message,
+    type,
+  }: {
+    chatId: string;
+    userId: string;
+    metadata?: string;
+    message: string;
+    type: 'ai' | 'human';
+  }) => {
+    try {
+      const username = type === 'ai' ? 'Lucy' : 'onboardingstudent';
+  
+      await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          chatSessionId: chatId,
+          courseId: 'onboarding_course', // ou "" si inutile
+          username,
+          type,
+          uid: userId,
+          input_message: '',
+          university: 'onboarding', // ou user.university
+          ...(type === 'ai' && metadata ? { metadataOnboarding: metadata } : {}), // Ajoute metadata seulement si AI
+        }),
+      });
+  
+      console.log(`✅ Onboarding ${type} message saved successfully.`);
+    } catch (error) {
+      console.error(`❌ Error saving onboarding ${type} message:`, error);
+    }
+  };
+  
 
 

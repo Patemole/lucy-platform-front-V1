@@ -1191,7 +1191,7 @@ useEffect(() => {
       }
 
     if (user?.id && chatIds[0] && previousAnswer) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, metadata: lastMetadata, question: lastQuestion, answer: previousAnswer, isLastStep: true});
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, metadata: lastMetadata, message: previousAnswer, type: 'human'});
     }
 
     //ICI ON POURRA METTRE LA FONCTION QUI VA APPELER LE BACKEND POUR SAVE LE DERNIER MESSAGE
@@ -1230,7 +1230,7 @@ useEffect(() => {
     */
 
     if (user?.id && chatIds[0]) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id,metadata,question,answer: previousAnswer || '',});
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id,metadata, message: question, type: 'ai'});
     }
 
     // ✅ Petite pause avant de commencer le stream
@@ -1339,6 +1339,11 @@ useEffect(() => {
     const newMessage: Message = { id: Date.now(), type: 'human', content: SCHOOL_message };
     // Ajoute immédiatement le message humain à l'historique
     setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    // 🚨 Sauvegarde immédiate du message humain SCHOOL
+    if (user?.id && chatIds[0]) {
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, message: SCHOOL_message, type: 'human'});
+    }
   
     // Envoie immédiatement la deuxième question d'onboarding (index 1)
     await sendNextOnboardingMessage(1,"faculty", SCHOOL_message );
@@ -1350,6 +1355,11 @@ useEffect(() => {
     const newMessage: Message = { id: Date.now(), type: 'human', content: YEAR_message };
     // Ajoute immédiatement le message humain à l'historique
     setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    // 🚨 Sauvegarde immédiate du message humain SCHOOL
+    if (user?.id && chatIds[0]) {
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, message: YEAR_message, type: 'human'});
+    }
   
     // Envoie immédiatement la deuxième question d'onboarding (index 1)
     await sendNextOnboardingMessage(2,"year",YEAR_message);
@@ -1362,6 +1372,11 @@ useEffect(() => {
     
     // Ajoute immédiatement le message humain à l'historique
     setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    // 🚨 Sauvegarde immédiate du message humain SCHOOL
+    if (user?.id && chatIds[0]) {
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, message: LINKEDIN_message, type: 'human'});
+    }
   
     // Envoie immédiatement la deuxième question d'onboarding (index 1)
     await sendNextOnboardingMessage(3,"linkedin_url",LINKEDIN_message );
@@ -1377,6 +1392,12 @@ useEffect(() => {
 
     // Ajoute immédiatement le message humain à l'historique
     setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    // 🚨 Sauvegarde immédiate du message humain SCHOOL
+    if (user?.id && chatIds[0]) {
+        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, message: contentMAJORMINOR, type: 'human'});
+    }
+
   
     await sendNextOnboardingMessage(4, { major: majors, minor: minors }, contentMAJORMINOR);
   };
