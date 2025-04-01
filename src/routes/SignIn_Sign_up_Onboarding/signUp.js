@@ -108,7 +108,7 @@ export default function SignUp() {
   console.log("subdomain is ", subdomain);
 
 
-  
+  /*
    // Redirect if user is already authenticated
    useEffect(() => {
     if (!loading && isAuth && user && shouldRedirect ) {
@@ -116,6 +116,15 @@ export default function SignUp() {
       navigate(`/dashboard/student/${user?.id || 'defaultId'}`, { replace: true });
     }
   }, [loading, isAuth, user, shouldRedirect, navigate]);
+  */
+
+    // Redirect if user is already authenticated
+    useEffect(() => {
+      if (!loading && isAuth && user && shouldRedirect ) {
+        console.log("User authenticated, redirecting...");
+        navigate(`/onboarding-with-lucy/${user?.id || 'defaultId'}`, { replace: true });
+      }
+    }, [loading, isAuth, user, shouldRedirect, navigate]);
 
 
   async function signInWithSSO() {
@@ -359,14 +368,15 @@ export default function SignUp() {
         onboardingComplete: false,
       });
 
-      setTimeout(() => {
-        navigate(redirectUrl);
-      }, 300);
-  
       console.log("[Step 7] Redirecting user to onboarding page");
       const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding-with-lucy/${user.uid || 'defaultId'}`;
       //navigate(`/dashboard/student/${result.user.uid || 'defaultId'}`, { replace: true });
-      navigate(redirectUrl);
+      //navigate(redirectUrl);
+      setTimeout(() => {
+        navigate(redirectUrl, {replace: true});
+      }, 300);
+
+
     } catch (error) {
       console.error("[Error] An error occurred:", error);
       const newErrors = {};

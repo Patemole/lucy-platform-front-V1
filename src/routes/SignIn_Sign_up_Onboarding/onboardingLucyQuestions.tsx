@@ -151,7 +151,9 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const [currentOnboardingIndex, setCurrentOnboardingIndex] = useState(0);
 
   //const [isOnboardingActive, setIsOnboardingActive] = useState(true);
-  const [isOnboardingActive, setIsOnboardingActive] = useState(() => !(user?.onboardingComplete ?? false));
+  //const [isOnboardingActive, setIsOnboardingActive] = useState(() => !(user?.onboardingComplete ?? false));
+  // Initialisation par défaut stable
+  const [isOnboardingActive, setIsOnboardingActive] = useState(false);
   const hasMetadataOnboarding = messages.some(msg => msg.METADATAONBOARDING);
 
 
@@ -187,18 +189,30 @@ const OnboardingLucyQuestions: React.FC = ()=> {
     const isLastStep = currentStepIndex === totalSteps - 1;
 
 
-//Fonctional USEFFECT
-//To close the sidebqr if the user is diminue the size of the screen to close the sidebar
-useEffect(() => {
-  setDrawerOpen(!isSmallScreen);
-}, [isSmallScreen]);
 
 
+/*
 useEffect(() => {
     if (user && user.onboardingComplete) {
       setIsOnboardingActive(false);
     }
   }, [user?.onboardingComplete]);
+*/
+
+  // Mise à jour claire seulement après chargement explicite de user
+useEffect(() => {
+    if (user) {
+      setIsOnboardingActive(!user.onboardingComplete);
+    }
+  }, [user?.onboardingComplete, user?.id]);
+
+
+
+//Fonctional USEFFECT
+//To close the sidebqr if the user is diminue the size of the screen to close the sidebar
+useEffect(() => {
+    setDrawerOpen(!isSmallScreen);
+  }, [isSmallScreen]);
 
 
 //Uniquement pour visualiser quand showchat est cense etre visible ou non. 
@@ -1148,6 +1162,8 @@ useEffect(() => {
     }
   }, [user?.id, user?.onboardingComplete]);
 
+
+
 //------------------------------------------------------------------------------
  // Fonction d'envoi de chaque message onboarding avec gestion des états
  const sendNextOnboardingMessage = async (index: number, fieldToUpdate?: string | Record<string, any>, previousAnswer?: string) => {
@@ -1206,7 +1222,6 @@ useEffect(() => {
         await updateUserField(fieldToUpdate);
       }
 
-    //ICI ON POURRA METTRE LA FONCTION QUI VA APPELER LE BACKEND POUR SAVE LE MESSAGE
     // ✅ Sauvegarde dans le backend après affichage de la question et réception de la réponse
     if (user?.id && chatIds[0] && previousAnswer) {
         await saveOnboardingStep({chatId: chatIds[0],userId: user.id,metadata,question,answer: previousAnswer,});
@@ -1222,8 +1237,7 @@ useEffect(() => {
   };
 
 
-
-
+/*
   useEffect(() => {
     const hasMetadata = messages.some(msg => msg.METADATAONBOARDING);
     if (isOnboardingActive && !hasMetadata) {
@@ -1232,6 +1246,19 @@ useEffect(() => {
       sendNextOnboardingMessage(0);
     }
   }, [isOnboardingActive, messages]);
+  */
+
+
+  useEffect(() => {
+    const hasStartedOnboarding = messages.some(msg => msg.METADATAONBOARDING);
+    if (isOnboardingActive && !hasStartedOnboarding && !hasRun.current) {
+      hasRun.current = true; // Empêche le double lancement
+      console.log("🟢 Lancement de l'onboarding à la première question");
+      console.log("📊 Messages actuels :", messages.map(m => m.METADATAONBOARDING));
+      sendNextOnboardingMessage(0);
+    }
+  }, [isOnboardingActive, messages]); 
+
 
 
   // Fonction qui simule le stream en ajoutant chunk par chunk
@@ -1304,7 +1331,6 @@ useEffect(() => {
 
   const handleSendSCHOOLMessage = async (SCHOOL_message: string) => {
     const newMessage: Message = { id: Date.now(), type: 'human', content: SCHOOL_message };
-    
     // Ajoute immédiatement le message humain à l'historique
     setMessages((prevMessages) => [...prevMessages, newMessage]);
   
@@ -1314,9 +1340,8 @@ useEffect(() => {
 
 
   const handleSendYEARMessage = async (YEAR_message: string) => {
-    await updateUserField("year", YEAR_message);
+    //await updateUserField("year", YEAR_message);
     const newMessage: Message = { id: Date.now(), type: 'human', content: YEAR_message };
-    
     // Ajoute immédiatement le message humain à l'historique
     setMessages((prevMessages) => [...prevMessages, newMessage]);
   
@@ -1326,7 +1351,7 @@ useEffect(() => {
 
 
   const handleSendLINKEDINMessage = async (LINKEDIN_message: string) => {
-    await updateUserField("linkedin_url", LINKEDIN_message);
+    //await updateUserField("linkedin_url", LINKEDIN_message);
     const newMessage: Message = { id: Date.now(), type: 'human', content: LINKEDIN_message };
     
     // Ajoute immédiatement le message humain à l'historique
@@ -1337,29 +1362,29 @@ useEffect(() => {
   };
 
 
-
-  const handleSendMAJORMINORMessage = async ({
-    majors,
-    minors,
-  }: {
+  const handleSendMAJORMINORMessage = async ({majors,minors,}: {
     majors: string[];
     minors: string[];
   }) => {
-    const content = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;
+    const contentMAJORMINOR = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;
+    const newMessage: Message = { id: Date.now(), type: 'human', content: contentMAJORMINOR };
+
+    // Ajoute immédiatement le message humain à l'historique
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
   
-    await sendNextOnboardingMessage(4, { major: majors, minor: minors }, content);
+    await sendNextOnboardingMessage(4, { major: majors, minor: minors }, contentMAJORMINOR);
   };
 
 
-    const handleSendCOMPLIANCEMessage = async (payload: {
+
+ const handleSendCOMPLIANCEMessage = async (payload: {
         termsAccepted: boolean;
         ageConfirmed: boolean;
-      }) => {
+    }) => {
         const complianceSummary = `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
       
-        await sendNextOnboardingMessage(5, {
-          complianceAccepted: true,termsAccepted: payload.termsAccepted, ageConfirmed: payload.ageConfirmed}, complianceSummary);
-      };
+    await sendNextOnboardingMessage(5, {complianceAccepted: true,termsAccepted: payload.termsAccepted, ageConfirmed: payload.ageConfirmed}, complianceSummary);
+    };
 
   
 
