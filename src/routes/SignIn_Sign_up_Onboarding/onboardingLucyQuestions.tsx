@@ -1645,7 +1645,7 @@ const handleConversationClick = async (chat_id: string) => {
   }, []);
   */
 
-
+/*
   useEffect(() => { 
     const loadMessagesFromLocalStorageChatId = async () => {
       const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
@@ -1657,6 +1657,24 @@ const handleConversationClick = async (chat_id: string) => {
   
     loadMessagesFromLocalStorageChatId();
   }, [activeChatId, chatIds, messages.length, isOnboardingActive]);
+  */
+
+
+  useEffect(() => {
+    const loadMessagesFromLocalStorageChatId = async () => {
+      const storedChatId = chatIds[0];
+      if (storedChatId && messages.length === 0 && !isOnboardingActive) {
+        try {
+          await handleConversationClick(storedChatId);
+          setIsLandingPageVisible(false);
+        } catch (error) {
+          console.error("Erreur dans loadMessagesFromLocalStorageChatId:", error);
+        }
+      }
+    };
+  
+    loadMessagesFromLocalStorageChatId();
+  }, [chatIds, isOnboardingActive]);
 
 
 
