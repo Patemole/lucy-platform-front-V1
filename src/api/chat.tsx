@@ -84,61 +84,77 @@ export async function getChatHistory(chat_id: string) {
 
 
 export async function getChatHistory(chat_id: string) {
-    const getChatHistoryResponse = await fetch(
-      `${apiUrlPrefix}/chat/get_chat_history/${chat_id}`,
-      {
-        method: "GET",
-      }
-    );
-  
-    if (!getChatHistoryResponse.ok) {
-      console.log(
-        `Failed to get chat history - ${getChatHistoryResponse.status}`
-      );
-      throw Error("Failed to get chat history");
-    }
-  
-    const responseBody = await getChatHistoryResponse.json();
-  
-    const messages: Message[] = responseBody.map((message: any) => {
-      const newMessage: Message = {
-        id: message['message_id'],
-        content: message['body'],
-        type: message['username'] === "Lucy" ? "ai" : "human",
-        METADATAONBOARDING: undefined,
-        citedDocuments: [], // Initialisation claire
-        CONFIDENCESCORE: [], // initialisation en tableau comme dans onSubmit ✅
-      };
-  
-      if (Object.prototype.hasOwnProperty.call(message, 'step_metadata')) {
-        newMessage.METADATAONBOARDING = Array.isArray(message.step_metadata)
-          ? message.step_metadata[0]
-          : message.step_metadata;
-      }
-  
-      if (Object.prototype.hasOwnProperty.call(message, 'sources')) {
-        newMessage.citedDocuments = Array.isArray(message.sources)
-          ? message.sources.map((source: any) => ({
-              document_id: source.document_id,
-              document_name: source.document_name,
-              link: source.link,
-              source_type: source.source_type
-            }))
-          : [];
-      }
+    console.log(`🔍 Fetching chat history for chat_id: ${chat_id}`);
 
-       // On ne rajoute CONFIDENCESCORE que si confidence_score est présent ET non null
-     if ('confidence_score' in message && message.confidence_score !== null) {
-            newMessage.CONFIDENCESCORE = [{
-            confidenceScore: message.confidence_score.toString()
-            }];
-      }
-      
-      return newMessage;
+    const response = await fetch(`${apiUrlPrefix}/chat/get_chat_history/${chat_id}`, {
+        method: "GET",
     });
-  
+
+    if (!response.ok) {
+        console.error(`❌ Failed to fetch chat history. Status: ${response.status}`);
+        throw new Error("Failed to get chat history from backend");
+    }
+
+    let responseBody: any[];
+
+    try {
+        responseBody = await response.json();
+        console.log(`📦 Chat history response received:`, responseBody);
+    } catch (jsonError) {
+        console.error("❌ Error parsing JSON response:", jsonError);
+        throw new Error("Invalid JSON response received from backend");
+    }
+
+    if (!Array.isArray(responseBody)) {
+        console.error("❌ Unexpected chat history format:", responseBody);
+        throw new Error("Chat history response is not an array");
+    }
+
+    const messages: Message[] = responseBody.map((message: any, index: number) => {
+        const newMessage: Message = {
+            id: message.message_id,
+            content: message.body,
+            type: message.username === "Lucy" ? "ai" : "human",
+            METADATAONBOARDING: undefined,
+            citedDocuments: [],
+            CONFIDENCESCORE: [],
+        };
+
+        console.log(`🔖 Processing message #${index}:`, message);
+
+        // Gérer step_metadata si disponible et non vide
+        if (message.step_metadata) {
+            newMessage.METADATAONBOARDING = Array.isArray(message.step_metadata)
+                ? message.step_metadata[0]
+                : message.step_metadata;
+            console.log(`📝 Added METADATAONBOARDING to message #${index}:`, newMessage.METADATAONBOARDING);
+        }
+
+        // Gérer les sources si elles sont présentes et valides
+        if (Array.isArray(message.sources) && message.sources.length > 0) {
+            newMessage.citedDocuments = message.sources.map((source: any) => ({
+                document_id: source.document_id,
+                document_name: source.document_name,
+                link: source.link,
+                source_type: source.source_type
+            }));
+            console.log(`📚 Added citedDocuments to message #${index}:`, newMessage.citedDocuments);
+        }
+
+        // Gérer confidence_score s'il est présent et non null
+        if ('confidence_score' in message && message.confidence_score !== null) {
+            newMessage.CONFIDENCESCORE = [{
+                confidenceScore: message.confidence_score.toString()
+            }];
+            console.log(`✅ Added CONFIDENCESCORE to message #${index}:`, newMessage.CONFIDENCESCORE);
+        }
+
+        return newMessage;
+    });
+
+    console.log(`🎉 Successfully constructed ${messages.length} messages from history.`);
     return messages;
-  }
+}
 
 
 
