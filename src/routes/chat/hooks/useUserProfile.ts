@@ -31,9 +31,9 @@ export const useUserProfile = ({
         fetchUserInfo();
       }, [user]);
 
-
+/*
     //Aller chercher la photo de profile de l utilisateur 
-    useEffect(() => {
+ useEffect(() => {
         const fetchProfilePicture = async () => {
           if (!user?.id) return;
       
@@ -55,6 +55,27 @@ export const useUserProfile = ({
       
         fetchProfilePicture();
       }, [user?.id]);
+*/
+
+
+    const fetchProfilePicture = async () => {
+        if (!user?.id) return;
+    
+        try {
+          const userRef = doc(db, 'users', user.id);
+          const userSnap = await getDoc(userRef);
+    
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            setProfilePicture(userData.profile_picture || null); // Met à jour avec l'URL ou null
+            console.log('Fetched profile picture:', userData.profile_picture || 'No profile picture found');
+          } else {
+            console.warn('User document does not exist.');
+          }
+        } catch (error) {
+          console.error('Error fetching profile picture:', error);
+        }
+      };
 
 
     // fonction pour envoyer les infos de l'utilisateur au backend et récupérer les événements
@@ -142,6 +163,7 @@ export const useUserProfile = ({
         handleProfileMenuClose,
         handleParametersMenuClose,
         handleParametersMenuClick,
+        fetchProfilePicture,
       };
     };
 
