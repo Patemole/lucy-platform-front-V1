@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { AuthProvider } from './auth/context/AuthContext';
+import { ChatProvider } from './auth/context/ChatContext';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
@@ -20,7 +21,9 @@ root.render(
 
 root.render(
     <AuthProvider>
+      <ChatProvider>
       <App />
+      </ChatProvider>
     </AuthProvider>
 );
 

@@ -1,14 +1,14 @@
-import React, { useState, useEffect, KeyboardEvent, useRef, useMemo } from 'react';
+import React, { useState, useRef,} from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+import { useNavigate,} from 'react-router-dom';
 
 //Firestore, Firebase
 import { db } from '../../auth/firebase';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp, deleteDoc, query, collection, orderBy, where, onSnapshot, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc} from 'firebase/firestore';
 
 //Use Auth for user info
 import { useAuth } from '../../auth/hooks/useAuth';
+import { useChat } from '../../auth/hooks/useChat';
 
 //Components used
 import { AIMessage } from '../../components/main_components/MessagesWEB';
@@ -23,16 +23,9 @@ import PopupOnboardingModifyConv from '../../components/main_components/Popup/Po
 import EventDetailsSidebar from '../../components/main_components/EventDetailsSidebar';
 import Calendar from '../../components/main_components/Calendar_StudentProfile';
 import Kanban from '../../components/main_components/Kanban_StudentProfile';
-import config from '../../config';
-
-//API request for the backend
-import { sendMessageFakeDemo, saveMessageAIToBackend, getChatHistory, sendMessageSocraticLangGraph, saveOnboardingStep } from '../../api/chat';
-import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../../api/feedback_wrong_answer';
-import { sendUserInfoToBackend } from '../../api/calendar-event-studentProfile';
 
 //Interfaces
-import { Message, EventStudentProfile, SocialThread, Conversation, StudentProfile, Course, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY} from '../../interfaces/interfaces_eleve';
-import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../../interfaces/interfaces';
+import {EventStudentProfile, SocialThread} from '../../interfaces/interfaces_eleve';
  
 //Mui Icons
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
@@ -62,11 +55,19 @@ import { useTheme } from '@mui/material/styles';
 import StopIcon from '@mui/icons-material/Stop';
 
 //Other
-import { format, isToday, isYesterday } from 'date-fns';
 import { FaArrowDown } from 'react-icons/fa'; // Import an arrow down icon
-import debounce from 'lodash/debounce';
 import '../styles.css'; // Import du fichier CSS pour le gradient
 import '../../index.css';
+
+
+//Hooks import
+import { useOnboarding } from './hooks/useOnboarding';
+import { useMessage } from './hooks/useMessage';
+import { useConversations } from './hooks/useConversations';
+import { useUserProfile } from './hooks/useUserProfile';
+import { useUIState } from './hooks/useUIState';
+
+
 
 
 //For Topic of the conversations
@@ -80,89 +81,101 @@ const topicColors: { [key: string]: string } = {
   "Default": "#7F8C8D" // Gris
 };
 
-
 const drawerWidth = 270;
 
 const OnboardingLucyQuestions: React.FC = ()=> {
+
+  //1. Paramètres graphiques et responsivité
   const theme = useTheme();
-  const { user, logout, chatIds, addChatId, setPrimaryChatId, setUser } = useAuth();
-  const navigate = useNavigate();
-  const { popup, setPopup } = usePopup();
-  const [showChat, setShowChat] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
+
+  //2. Contexte utilisateur et Authentification
+  const { user, logout, chatIds } = useAuth();
+  const { conversations, setConversations, messages, setMessages, isLandingPageVisible} = useChat();
+
+  //3. Messages et gestion du Chat
+  //const [messages, setMessages] = useState<Message[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<string>('');
-  const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [courseOptions, setCourseOptions] = useState<Course[]>([]);
-  const [activeChatId, setActiveChatId] = useState<string | null>(localStorage.getItem('chat_id')); //TODO CHANGER ICI POUR NE PLUS AVOIR LE LOCALSTORAGE 
-  const [iframeSrc, setIframeSrc] = useState<string | null>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [hasStartedStreaming, setHasStartedStreaming] = useState(false);
+  const [activeChatId, setActiveChatId] = useState<string | null>(localStorage.getItem('chat_id')); // TODO : Changer pour ne plus avoir localStorage
+  const [cancelConversation, setCancelConversation] = useState(false);
+  const cancelConversationRef = useRef(false);
   const [selectedAiMessage, setSelectedAiMessage] = useState<string | null>(null);
   const [selectedHumanMessage, setSelectedHumanMessage] = useState<string | null>(null);
   const [relatedQuestions, setRelatedQuestions] = useState<string[]>([]);
-  const [hasNewContent, setHasNewContent] = useState(false); 
-  const [cancelConversation, setCancelConversation] = useState(false);
-  const cancelConversationRef = useRef(false);
-  const [dialogOpen, setDialogOpen] = useState(false); 
-  const handleDialogOpen = () => setDialogOpen(true);
-  const handleDialogClose = () => setDialogOpen(false);
-  const scrollableDivRef = useRef<HTMLDivElement>(null);
-  const endDivRef = useRef<HTMLDivElement>(null);
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
-  const [drawerOpen, setDrawerOpen] = useState(!isSmallScreen);
-  //const [isLandingPageVisible, setIsLandingPageVisible] = useState(messages.length === 0);
- 
-  const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [isHistory, setIsHistory] = useState(true);
-  const [parametersMenuAnchorEl, setParametersMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
+  const scrollableDivRef = useRef<HTMLDivElement>(null);
+  const endDivRef = useRef<HTMLDivElement>(null);
+
+  //4. Onboarding
+  //const [isOnboardingActive, setIsOnboardingActive] = useState(false);
+  const hasMetadataOnboarding = messages.some(msg => msg.METADATAONBOARDING);
+  const [showOnboardingSocialThreadPopup, setShowOnboardingSocialThreadPopup] = useState(false);
+  const [ShowOnboardingProfilePopup, setShowOnboardingProfilePopup] = useState(false);
+  const [showOnboardingModifyConvPopup, setShowOnboardingModifyConvPopup] = useState(false);
+
+  //5. Conversations et Social Threads
+  //const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isHistory, setIsHistory] = useState(true);
   const [socialThreads, setSocialThreads] = useState<SocialThread[]>([]);
   const [loadingSocialThreads, setLoadingSocialThreads] = useState(false);
+  const [isSocialThread, setIsSocialThread] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [isPrivate, setIsPrivate] = useState(false); // false = Public, true = Private
-  const [profilePicture, setProfilePicture] = useState<string | null>(null); // null signifie qu'aucune image n'est définie
-  const [unreadCount, setUnreadCount] = useState<number>(0); //Count for number of conversation social thread dont opened
-  const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
-  const [isSocialThread, setIsSocialThread] = useState(false); // Permet de savoir si c'est un Social Thread
+
+  //6. Événements et gestion du Calendrier
+  const [events, setEvents] = useState<EventStudentProfile[]>([]);
+  const [currentView, setCurrentView] = useState('chat'); // 'chat' ou 'events'
+  const [eventDisplayMode, setEventDisplayMode] = useState('kanban'); // 'kanban' ou 'calendar'
+  const [selectedEvent, setSelectedEvent] = useState<EventStudentProfile | null>(null);
+
+
+  //7. UI, Modales et Menus
+  //const [isLandingPageVisible, setIsLandingPageVisible] = useState(!isOnboardingActive && messages.length === 0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [openModal, setOpenModal] = useState(false); // potentiellement doublon avec modalOpen
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const handleDialogOpen = () => setDialogOpen(true);
+  const handleDialogClose = () => setDialogOpen(false);
+  const [drawerOpen, setDrawerOpen] = useState(!isSmallScreen);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // potentiellement doublon avec drawerOpen
+  const { popup, setPopup } = usePopup();
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [searchParams] = useSearchParams();
-  const chatIdFromUrl = searchParams.get("chat_id"); // 🔥 Récupère `chat_id` depuis l'URL
-  const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'events'
-  const [eventDisplayMode, setEventDisplayMode] = useState('kanban'); // 'kanban' or 'calendar'
-  const [events, setEvents] = useState<EventStudentProfile[]>([]); // on charge les événements du backend ici
-  const [isCalendarView, setIsCalendarView] = useState(false); // état pour savoir si on est en vue calendar ou pas
-  const [selectedEvent, setSelectedEvent] = useState<EventStudentProfile | null>(null); // événement sélectionné lors d'un clic
-  const [sidebarOpen, setSidebarOpen] = useState(false); // si la sidebar est ouverte ou pas
-  const [peerAdvisorMenuAnchor, setPeerAdvisorMenuAnchor] = useState<null | HTMLElement>(null);
-  const [isPeerAdvisorOpen, setIsPeerAdvisorOpen] = useState(false);
-  //const [currentPopup, setCurrentPopup] = useState(0); // 0 = pas de popup, 1 à 4 pour les popups
-  const subdomain = config.subdomain;
-  const [openModal, setOpenModal] = useState(false);
-  const [hasSentOnboarding, setHasSentOnboarding] = useState(false);
-  const hasRun = useRef(false);  // ← En dehors du useEffect, directement dans le composant
-  const [currentOnboardingIndex, setCurrentOnboardingIndex] = useState(0);
-
-  //const [isOnboardingActive, setIsOnboardingActive] = useState(true);
-  //const [isOnboardingActive, setIsOnboardingActive] = useState(() => !(user?.onboardingComplete ?? false));
-  // Initialisation par défaut stable
-  const [isOnboardingActive, setIsOnboardingActive] = useState(false);
-  const hasMetadataOnboarding = messages.some(msg => msg.METADATAONBOARDING);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [parametersMenuAnchorEl, setParametersMenuAnchorEl] = useState<HTMLElement | null>(null);
+  const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
 
 
-  const [showOnboardingSocialThreadPopup, setShowOnboardingSocialThreadPopup] = useState(false);
-  const [ShowOnboardingProfilePopup,   setShowOnboardingProfilePopup] = useState(false);
-  const [showOnboardingModifyConvPopup, setShowOnboardingModifyConvPopup] = useState(false);
-  const [isLandingPageVisible, setIsLandingPageVisible] = useState(!isOnboardingActive && messages.length === 0);
-  const [hasStartedStreaming, setHasStartedStreaming] = useState(false); //Premier chunk lors du message onboarding 
+  //8. Others
+  const [iframeSrc, setIframeSrc] = useState<string | null>(null);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
+  const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
+  const [selectedFilter, setSelectedFilter] = useState<string>('');
+  const [hasNewContent, setHasNewContent] = useState(false);
 
+
+  //from userprofile
+  const {handleProfileMenuClick,handleLogout,handleDeleteAccount,handleProfileMenuClose, handleParametersMenuClick, handleParametersMenuClose } = useUserProfile({setEvents,setProfileMenuAnchorEl,setParametersMenuAnchorEl,setProfilePicture,});
+
+  //from UIstate
+  const {toggleDrawer,hasTak,lastAiMessageId} = useUIState({isSmallScreen,messages,drawerOpen,scrollableDivRef,setDrawerOpen,setOnlineUsers,setIsAtBottom,setNewMessagesCount,setParametersMenuAnchorEl,});
+
+  //from conversations
+  const {formatDate, handleMenuOpen,handleMenuClose, handlePrivacyChange, handleRename, handleDelete, handleConversationClick, handleNewConversation, updateThreadTypeLocally,} = useConversations({isStreaming, setSelectedFilter,setIsPrivate,setCurrentView,setRelatedQuestions,setUnreadCount,setActiveChatId,cancelConversationRef,setCancelConversation,setIsStreaming,});
+
+  //from useMessage
+  const {onSubmit, handleSendMessageFromLandingPage, handleSendTAKMessage, handleSendCOURSEMessage, handleSendMessageSocraticLangGraph, handleInputKeyPressSocraticLangGraph, scrollToBottom, scrollToBottomNewMessage, handleSourceClick, handleSubmitWrongAnswerFeedback, handleWrongAnswerClick, handleFeedbackClick, handleCloseWrongAnswerModal,} = useMessage({generateUniqueId,inputValue, setInputValue, isStreaming, setIsStreaming, setHasNewContent, scrollableDivRef, setIsComplete, setRelatedQuestions, isAtBottom, setIsAtBottom, setNewMessagesCount, endDivRef, cancelConversationRef, setCancelConversation, setSelectedAiMessage, setSelectedHumanMessage, setModalOpen, setSnackbarOpen,});
+
+  //Passing variables like setInputValue needed to run correclty and output the functions
+  const {handleSendSCHOOLMessage,handleSendYEARMessage,handleSendLINKEDINMessage,handleSendMAJORMINORMessage,handleSendCOMPLIANCEMessage,} = useOnboarding({setInputValue,setRelatedQuestions,setIsComplete,setIsStreaming,onSubmit,generateUniqueId,hasStartedStreaming,setHasStartedStreaming,});
+
+  
 
   const onboardingMessages = [
     { question: "What is your current school?", metadata: "SCHOOL" },
@@ -172,1572 +185,40 @@ const OnboardingLucyQuestions: React.FC = ()=> {
     { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" },
   ];
 
-
   // Récupère précisément le dernier message qui possède la propriété METADATAONBOARDING
   const currentOnboardingMessage = [...messages].reverse().find(msg => msg.METADATAONBOARDING);
     // Récupère précisément le nom de l'étape actuelle ou une chaîne vide si aucun message n'est trouvé
   const currentMetadataOnboarding = currentOnboardingMessage?.METADATAONBOARDING || '';
     // Détermine l'index de l'étape actuelle dans onboardingMessages
-   const currentStepIndex = onboardingMessages.findIndex(
+  const currentStepIndex = onboardingMessages.findIndex(
     step => step.metadata === currentMetadataOnboarding
     );
     // Calcule précisément la progression en fonction de l'étape actuelle
-    const totalSteps = onboardingMessages.length;
-    const completedSteps = currentStepIndex >= 0 ? currentStepIndex : 0;
-    const progressPercent = ((completedSteps + 1) / totalSteps) * 100;
-    // Vérifie précisément si c'est la dernière étape
-    const isLastStep = currentStepIndex === totalSteps - 1;
+  const totalSteps = onboardingMessages.length;
+  const completedSteps = currentStepIndex >= 0 ? currentStepIndex : 0;
+  const progressPercent = ((completedSteps + 1) / totalSteps) * 100; //dans le return
+  // Vérifie précisément si c'est la dernière étape
+  const isLastStep = currentStepIndex === totalSteps - 1; //dans le return
 
 
-
-
-/*
-useEffect(() => {
-    if (user && user.onboardingComplete) {
-      setIsOnboardingActive(false);
-    }
-  }, [user?.onboardingComplete]);
-*/
-
-  // Mise à jour claire seulement après chargement explicite de user
-useEffect(() => {
-    if (user) {
-      setIsOnboardingActive(!user.onboardingComplete);
-    }
-  }, [user?.onboardingComplete, user?.id]);
-
-
-
-//Fonctional USEFFECT
-//To close the sidebqr if the user is diminue the size of the screen to close the sidebar
-useEffect(() => {
-    setDrawerOpen(!isSmallScreen);
-  }, [isSmallScreen]);
-
-
-//Uniquement pour visualiser quand showchat est cense etre visible ou non. 
-useEffect(() => {
-  console.log("showChat state updated:", showChat);
-}, [showChat]);
-
-
-useEffect(() => {
-    if (!user?.id) return;
-    fetchUserInfo();
-  }, [user]);
-
-  
-//To search the number of users changing in the database firestore from the function for a global variable
-  useEffect(() => {
-    console.log("🔄 Setting up Firestore listener for onlineUsers...");
-  
-    // Reference to Firestore document
-    const docRef = doc(db, "stats", "onlineUsers");
-  
-    // Subscribe to real-time updates
-    const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        const data = docSnapshot.data();
-        console.log("📡 Firestore update detected:", data);
-  
-        if (typeof data.count === "number") {
-          setOnlineUsers(data.count); // Update state when Firestore changes
-          console.log('✅ Online users updated: ${data.count}');
-        }
-      } else {
-        console.warn("⚠️ Firestore document 'onlineUsers' not found. Setting default value.");
-        setOnlineUsers(20); // Default value if Firestore document does not exist
-      }
-    });
-  
-    // Cleanup function to unsubscribe when component unmounts
-    return () => {
-      console.log("🚫 Unsubscribing from Firestore listener.");
-      unsubscribe();
+  const variants = {
+      initial: { opacity: 0, x: -50 }, // Légèrement hors de l'écran à gauche
+      animate: { opacity: 1, x: 0 },   // Complètement visible au centre
+      exit: { opacity: 0, x: 50 },     // Glisse vers la droite
     };
-  }, []);
-
-
-  useEffect(() => {
-    console.log("isPrivate changed to:", isPrivate);
-  }, [isPrivate]);
-
-
-  //usEffect who are looking to change the profilePicture if the user have a profile picture (Need to be change and add a condition like if user.profile_picture then we charge it otherwize we are not doing anything)
-  useEffect(() => {
-    const fetchProfilePicture = async () => {
-      if (!user?.id) return;
-  
-      try {
-        const userRef = doc(db, 'users', user.id);
-        const userSnap = await getDoc(userRef);
-  
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setProfilePicture(userData.profile_picture || null); // Met à jour avec l'URL ou null
-          console.log('Fetched profile picture:', userData.profile_picture || 'No profile picture found');
-        } else {
-          console.warn('User document does not exist.');
-        }
-      } catch (error) {
-        console.error('Error fetching profile picture:', error);
-      }
-    };
-  
-    fetchProfilePicture();
-  }, [user?.id]);
-
-
-//Scrolling useffect for autoscrolling I think
-  useEffect(() => {
-    const handleScroll = debounce(() => {
-      const scrollDiv = scrollableDivRef.current;
-      if (scrollDiv) {
-        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
-        const atBottom = scrollTop + clientHeight >= scrollHeight - 100; // Adjust threshold as needed
-        setIsAtBottom(atBottom);
-        if (atBottom) setNewMessagesCount(0);
-      }
-    }, 100); // Delay of 100ms
-  
-    const scrollDiv = scrollableDivRef.current;
-    scrollDiv?.addEventListener('scroll', handleScroll);
-  
-    return () => scrollDiv?.removeEventListener('scroll', handleScroll);
-  }, []);
-
-
-  // Autoscroll logic based on isAtBottom
-  useEffect(() => {
-    if (isAtBottom) {
-      scrollToBottom();
-    } else {
-      setNewMessagesCount((prevCount) => prevCount + 1);
-    }
-  }, [messages, isAtBottom]); // Depend on messages and isAtBottom
 
 
 
-    //Load at first conversation history and after social thread and listen for every new social threds to add in real time
-    useEffect(() => {
-        const loadConversationsAndThreads = async () => {
-          if (!user?.id || !user?.university) return;
-      
-          console.log("🧩 Chargement des conversations classiques...");
-          await fetchCourseOptionsAndChatSessions();
-      
-          console.log("🌐 Chargement des social threads...");
-          const unsubscribe = fetchSocialThreads();
-      
-          // Stocker la fonction de nettoyage
-          return () => {
-            console.log("🔁 Nettoyage des listeners des social threads");
-            unsubscribe();
-          };
-        };
-      
-        const cleanupPromise = loadConversationsAndThreads();
-      
-        return () => {
-          cleanupPromise.then((cleanup) => cleanup && cleanup());
-        };
-      }, [user?.id, user?.university]);
-
-
-
-
-
-
-  //--------------FUNCTIONS----------------//
-
-
-
-  // fonction pour envoyer les infos de l'utilisateur au backend et récupérer les événements
-  const fetchUserInfo = async () => {
-    if (!user) {
-      console.warn('User data is unavailable.');
-      return;
-    }
-  
-    const userInfo: StudentProfile = {
-      username: user.name || 'default_username_username_fetch_info',
-      university: user.university || 'University Name',
-      year: user.year || 'Null',
-      studentProfile: localStorage.getItem('student_profile') || 'Brief profile description',
-      interests: Array.isArray(user.interests) ? user.interests : ['No interests now'], //Adding interest to the student profile
-      registered_club_status: user.registered_club_status || 'No registered_club_status',
-      registered_clubs: user.registered_clubs || 'No registered_clubs',
-      major: Array.isArray(user.major) ? user.major : ['None_Default'],
-      minor: Array.isArray(user.minor) ? user.minor : ['None_Default'],
-      faculty: Array.isArray(user.faculty) ? user.faculty : ['None_Default'],
-      email: user.email || 'No email provided',
-      userId: user.id || 'No ID',
-      role: user.role || 'No role',
-      createdAt: user?.createdAt || 'Unknown',
-      lastLogin: user?.lastLogin || 'Unknown',
-      profilePicture: user?.profilePicture || 'No profile picture',
-      name: user.name || 'default_username_name_fetch_info',
-      academic_advisor: user.academic_advisor || 'Unknown',
-    };
-  
-    console.log('Fetched user info:', userInfo);
-  
-    try {
-      const response = await sendUserInfoToBackend(userInfo);
-      if (response && response.events) {
-        setEvents(response.events);
-        console.log('Events successfully retrieved:', response.events);
-      } else {
-        console.warn('No events found in response.');
-      }
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    }
-  };
-  
-
-
+//des fonctions pour events je sais pas encore ou le mettre pour l instant
   const handleEventClick = (event: EventStudentProfile) => {
     setSelectedEvent(event);
     setSidebarOpen(true);
-  };
-
-
-  // Fonction pour formater la date
-  const formatDate = (timestamp: { toDate: () => Date }) => {
-    const date = timestamp.toDate();
-    if (isToday(date)) {
-      return `Today, ${format(date, 'HH:mm')}`;
-    } else if (isYesterday(date)) {
-      return `Yesterday, ${format(date, 'HH:mm')}`;
-    } else {
-      return `${format(date, 'dd/MM/yyyy')}, ${format(date, 'HH:mm')}`;
-    }
-  };
-
-
-  const updateThreadTypeLocally = (threadType: string) => {
-    setConversations((prevConversations) =>
-      prevConversations.map((conv) =>
-        conv.chat_id === activeChatId
-          ? { ...conv, thread_type: threadType }
-          : conv
-      )
-    );
-  };
-
-  const fetchSocialThreads = () => {
-  setLoadingSocialThreads(true);
-  const university = user?.university || "upenn"; // Université par défaut
-
-  // 🔥 Ne filtrer que par "university" dans Firestore
-  const q = query(
-    collection(db, "chatsessions"),
-    where("university", "==", university), // ✅ Filtrer uniquement par université
-    orderBy("created_at", "desc") // Trier du plus récent au plus ancien
-  );
-
-  return onSnapshot(q, (snapshot) => {
-    const userId = user?.id; // ID de l'utilisateur actuel
-
-    // 🔥 Transformation des threads depuis Firestore
-    const threads = snapshot.docs.map((doc) => ({
-      chat_id: doc.id,
-      name: doc.data().name,
-      created_at: doc.data().created_at,
-      topic: doc.data().topic || "Default",
-      thread_type: doc.data().thread_type || "Public", // 🔥 Si `thread_type` est absent, on met "Public"
-      university: doc.data().university || "Default",
-      isRead: (doc.data().ReadBy || []).includes(userId),
-    }));
-
-    // 🔥 Appliquer le filtre `thread_type === "Public"` après récupération
-    const filteredThreads = threads.filter(
-      (thread) => thread.thread_type === "Public" && thread.name !== "New Chat"
-    );
-
-    console.log(`📌 Après filtrage manuel, ${filteredThreads.length} conversations sont affichées`);
-
-    setSocialThreads(filteredThreads);
-
-    // 🔥 Mise à jour du compteur des messages non lus
-    const unread = filteredThreads.filter((thread) => !thread.isRead).length;
-    setUnreadCount(unread);
-
-    setLoadingSocialThreads(false);
-  });
-};  
-
-
-  const scrollToBottom = () => {
-    if (endDivRef.current) {
-      endDivRef.current.scrollIntoView({ behavior: 'smooth' });
-      setIsAtBottom(true); // Mettre à jour l'état pour refléter que nous sommes en bas
-      setNewMessagesCount(0); // Réinitialiser le compteur de nouveaux messages
-    }
-  };
-
-  const handlePrivacyChange = (newPrivacyState: boolean) => {
-    setIsPrivate(newPrivacyState);
-    console.log(`Privacy state updated in parent: ${newPrivacyState ? 'Private' : 'Public'}`);
-  };
-
-  const scrollToBottomNewMessage = () => {
-    if (endDivRef.current) {
-      endDivRef.current.scrollIntoView({ behavior: 'smooth' }); // Défilement fluide
-    }
-  };
-
- 
-  const handleToggleHistory = () => {
-    setIsHistory((prev) => {
-      const newIsHistory = !prev;
-      
-      // 🔥 Toujours recharger les Social Threads, que l'on active ou désactive l'historique
-      fetchSocialThreads();
-  
-      return newIsHistory;
-    });
   };
 
   const handleCloseSidebar = () => {
     setSidebarOpen(false);
   };
   
-
-  const lastAiMessageId = useMemo(() => {
-    const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
-    return lastAiMessage ? lastAiMessage.id : null;
-  }, [messages]);
-
-
-  const variants = {
-    initial: { opacity: 0, x: -50 }, // Légèrement hors de l'écran à gauche
-    animate: { opacity: 1, x: 0 },   // Complètement visible au centre
-    exit: { opacity: 0, x: 50 },     // Glisse vers la droite
-  };
-
-
-  // Ouvrir le menu au clic gauche
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, chatId: string) => {
-    setMenuAnchorEl(event.currentTarget);
-    setSelectedConversation(chatId);
-  };
-
-  // Fermer le menu
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-    setSelectedConversation(null);
-  };
-
-  // Action pour renommer une conversation
-  const handleRename = async () => {
-    handleMenuClose();
-  
-    if (!selectedConversation) {
-      alert("No conversation selected.");
-      return;
-    }
-    const newName = prompt('Enter new name:', '');
-    if (!newName) {
-      alert("Conversation name cannot be empty.");
-      return;
-    }
-    try {
-      // Référence au document Firestore pour la conversation sélectionnée
-      const conversationRef = doc(db, 'chatsessions', selectedConversation);
-      // Mise à jour du champ `name` dans Firestore
-      await updateDoc(conversationRef, { name: newName });
-      // Mise à jour de l'état local après le succès de Firestore
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv.chat_id === selectedConversation ? { ...conv, name: newName } : conv
-        )
-      );
-      alert("Conversation renamed successfully.");
-    } catch (error) {
-      console.error("Failed to rename the conversation:", error);
-      alert("Failed to rename the conversation. Please try again.");
-    }
-  };
-
-  // Action pour supprimer une conversation
-  const handleDelete = async () => {
-    handleMenuClose();
-    if (!selectedConversation) {
-      alert("No conversation selected.");
-      return;
-    }
-    const confirmDelete = window.confirm("Are you sure you want to delete this conversation?");
-    if (!confirmDelete) return;
-    try {
-      // Référence au document Firestore pour la conversation sélectionnée
-      const conversationRef = doc(db, 'chatsessions', selectedConversation);
-      // Suppression du document Firestore
-      await deleteDoc(conversationRef);
-      // Mise à jour de l'état local après succès de la suppression
-      setConversations((prev) => prev.filter((conv) => conv.chat_id !== selectedConversation));
-      alert("Conversation deleted successfully.");
-    } catch (error) {
-      console.error("Failed to delete the conversation:", error);
-      alert("Failed to delete the conversation. Please try again.");
-    }
-  };
-    
-  const handleParametersMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setParametersMenuAnchorEl(event.currentTarget);
-  };
-  
-  const handleParametersMenuClose = () => {
-    setParametersMenuAnchorEl(null);
-  };
-  
-
-  const handleDeleteAccount = () => {
-    console.log('Delete Account clicked');
-    handleParametersMenuClose();
-  };
-
-  // Compute if the latest AI message has a TAK
-  const hasTak = useMemo(() => {
-    const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
-    return lastAiMessage?.TAK && lastAiMessage.TAK.length > 0;
-  }, [messages]);
-
-
-  //fonction qui permet d afficher les anciennes conversations dans la sidebar of historic conversation and not social conversation
-  const fetchCourseOptionsAndChatSessions = async () => {
-    if (user?.id) {
-      const userRef = doc(db, 'users', user.id);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const courseIds = userData.courses || [];
-        const chatSessionIds = userData.chatsessions || [];
-
-        const coursePromises = courseIds.map(async (courseId: string) => {
-          if (typeof courseId === 'string') {
-            const courseRef = doc(db, 'courses', courseId);
-            const courseSnap = await getDoc(courseRef);
-            if (courseSnap.exists()) return { id: courseId, name: courseSnap.data().name };
-          }
-          return null;
-        });
-
-        const courses = await Promise.all(coursePromises);
-        const validCourses = courses.filter((course): course is Course => course !== null);
-
-        // Custom order
-        const customOrder = ['Academic Advisor', 'Course Selection', 'Career Advisor', 'Campus Life'];
-
-        // Filter out unwanted courses and sort by custom order
-        const filteredAndSortedCourses = validCourses
-          .filter((course) => course.name !== 'Study Abroad')
-          .sort((a, b) => customOrder.indexOf(a.name) - customOrder.indexOf(b.name));
-
-        setCourseOptions(filteredAndSortedCourses);
-
-        // Handle current course_id (to display the correct course in dropdown)
-        const currentCourseId = localStorage.getItem('course_id');
-        if (currentCourseId) {
-          const currentCourse = filteredAndSortedCourses.find((course) => course.id === currentCourseId);
-          if (currentCourse) {
-            setSelectedFilter(currentCourse.name);
-          } else {
-            setSelectedFilter('Academic Advisor'); // Default fallback if course_id is not found
-          }
-        }
-
-        // Now handle the chat sessions...
-        const chatPromises = chatSessionIds.map(async (chatId: string) => {
-          if (typeof chatId === 'string') {
-            const chatRef = doc(db, 'chatsessions', chatId);
-            const chatSnap = await getDoc(chatRef);
-            if (chatSnap.exists() && chatSnap.data().name) 
-              return { 
-            chat_id: chatId, 
-            name: chatSnap.data().name,
-            thread_type: chatSnap.data().thread_type || 'Public', // Inclure thread_type avec valeur par défaut
-            topic: chatSnap.data().topic || "Default", // Ajout de `topic` avec une valeur par défaut
-
-            };
-          }
-          return null;
-        });
-
-        const fetchedConversations = await Promise.all(chatPromises);
-        const validConversations = fetchedConversations.filter(
-          (conversation): conversation is Conversation => conversation !== null
-        );
-        setConversations(validConversations.reverse());
-
-        if (validConversations.length > 0) {
-            const latestChatId = validConversations[0].chat_id;
-            setPrimaryChatId(latestChatId);
-            setActiveChatId(latestChatId);
-          }
-
-
-      }
-    }
-  };
-
-  //gere l ouverture du menu de log-out
-  const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setProfileMenuAnchorEl(event.currentTarget);
-  };
-
-  //gere la fermeture du menu de log-out
-  const handleProfileMenuClose = () => {
-    setProfileMenuAnchorEl(null);
-  };
-
-  //gestion du log-out
-  const handleLogout = () => {
-    logout();
-    navigate('/auth/sign-in', { replace: true });
-  };
-
-
-  //pernmet d envoyer le message qu on a choisi dans tak en cliquant sur le composant
-  const handleSendTAKMessage = (TAK_message: string) => {
-    if (TAK_message.trim() === '') return;
-
-    const newMessage: Message = { id: Date.now(), type: 'human', content: TAK_message };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-    onSubmit([...messages, newMessage, loadingMessage], TAK_message);
-  };
-
-
-
-  //permet d envoyer le message qu on a choisi dans le coursemessage en cliquant sur le composant
-  const handleSendCOURSEMessage = (COURSE_message: string) => {
-    if (COURSE_message.trim() === '') return;
-
-    const newMessage: Message = { id: Date.now(), type: 'human', content: COURSE_message };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-    onSubmit([...messages, newMessage, loadingMessage], COURSE_message);
-  };
-
-
-  //ANCIENNE FONCTION A MODIFIER AVEC LA LOGIQUE DE MODIFICATION DU TITLE FROM THE BACK OPENAI
-  const handleSendMessageFromLandingPage = (message: string) => {
-    console.log("handleSendMessageFromLandingPage called with message:", message);
-    console.log("Before adding message, messages.length:", messages.length);
-    console.log("activeChatId:", activeChatId);
-  
-    if (message.trim() !== '') {
-      const wasEmpty = (messages.length === 0);
-      console.log("wasEmpty (was the conversation empty before this message?):", wasEmpty);
-  
-      const newMessage: Message = { id: Date.now(), type: 'human', content: message };
-      const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-  
-      // Créer un nouveau tableau de messages, incluant le message humain et le message "en cours"
-      const newMessagesArray = [...messages, newMessage, loadingMessage];
-      console.log("New messages array length after adding newMessage and loadingMessage:", newMessagesArray.length);
-  
-      // Met à jour l'état des messages
-      setMessages(newMessagesArray);
-  
-      console.log("Calling onSubmit with newMessagesArray and message:", message);
-      onSubmit(newMessagesArray, message);
-  
-      setInputValue('');
-      setIsLandingPageVisible(false);
-    } else {
-      console.log("Message was empty, no action taken.");
-    }
-  };
-
-
-  //fonction qui gere differents etats et les messages avant d aller traiter la reponse par onsubmit
-  const handleSendMessageSocraticLangGraph = (message: string) => {
-    if (message.trim() === '') return;
-
-    // Masquer la LandingPage après l'envoi du premier message
-    setIsLandingPageVisible(false);
-    setRelatedQuestions([]);
-    setShowChat(true);
-    setIsComplete(false);
-    setIsStreaming(true);
-
-    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: message };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-    onSubmit([...messages, newMessage, loadingMessage], message);
-    setInputValue('');
-  };
-
-
-  const handleInputKeyPressSocraticLangGraph = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      if (isStreaming) {
-        console.warn("Cannot send a new message while the AI is responding. Please stop the current response first.");
-        event.preventDefault(); // Prevents sending the message
-      } else {
-        event.preventDefault();
-        handleSendMessageSocraticLangGraph(inputValue);
-      }
-    }
-  };
-
-
-
-  // Fonction pour envoyer le message à l'AI ou à l'API
-  const onSubmit = async (messageHistory: Message[], inputValue: string, isOnboardingMessage: boolean = false) => {
-    setIsStreaming(true); 
-    setHasNewContent(false); // Reset new content detection at the start of each message
-    let answer = '';
-    let answerDocuments: AnswerDocument[] = [];
-    let answerImages: { image_id: string; image_url: string; image_description?: string }[] = [];
-    let relatedQuestionsList: string[] = [];
-    let answerTAK: AnswerTAK[] = [];
-    let answerCHART: AnswerCHART[] = [];
-    let answerCourse: AnswerCourse[] = [];
-    let answerWaiting: AnswerWaiting[] = [];
-    let answerReasoning: ReasoningStep[] = [];
-    let answerREDDIT: AnswerREDDIT[] = [];
-    let answerINSTA: AnswerINSTA[] = [];
-    let answerINSTA2: AnswerINSTA2[] = [];
-    let answerYOUTUBE: AnswerYOUTUBE[] = [];
-    let answerQUORA: AnswerQUORA[] = [];
-    let answerINSTA_CLUB: AnswerINSTA_CLUB[] = [];
-    let answerLINKEDIN: AnswerLINKEDIN[] = [];
-    let answerERROR: AnswerERROR[] = [];
-    let answerACCURACYSCORE: AnswerACCURACYSCORE[] = [];
-    let answerTITLEANDCATEGORY: AnswerTITLEANDCATEGORY[] = [];
-    let flattenedACCURACYSCORE: AnswerACCURACYSCORE[] = [];
-    let error: string | null = null;
-
-
-    const abortController = new AbortController(); // Crée un AbortController
-    cancelConversationRef.current = false; // Réinitialiser l'état d'annulation au début
-
-    try {
-        const chatSessionId = chatIds[0] || 'default_chat_id';
-        const courseId = 'default_course_id';
-        const username = user?.name || 'default_username_OnSubmitFunction';
-        const university = user?.university || 'University Name';
-        const linkedin_profile = user?.linkedin_profile || 'nolinkedinprofile';
-        const year = user?.year || 'Null';
-        const interests = Array.isArray(user?.interests) ? user?.interests : ['No interest']; //Adding new interest into Lucy
-        const student_profile = localStorage.getItem('student_profile') || 'Brief profile description';
-        const major = Array.isArray(user?.major) ? user?.major : ['None_Default'];
-        const minor = Array.isArray(user?.minor) ? user?.minor : ['None_Default'];
-        const faculty = Array.isArray(user?.faculty) ? user?.faculty : ['None_Default'];
-
-        console.log('chatSessionId:', chatSessionId);
-        console.log('username:', username);
-        console.log('university:', university);
-        console.log('interests', interests);
-        console.log('major:', major);
-        console.log('minor:', minor);
-        console.log('year:', year);
-        console.log('faculty:', faculty);
-
-        const lastMessageIndex = messageHistory.length - 1;
-
-        console.log("Voici la valeur de chatSessionID", chatSessionId)
-        console.log("Contenu de conversations:", conversations);
-
-        let currentConversation = null;
-
-        if (isOnboardingMessage) {
-          const newConv = { chat_id: chatSessionId, name: 'New Chat', thread_type: 'Public' };
-          setConversations((prevConversations) => [newConv, ...prevConversations]);
-          currentConversation = newConv; // ✅ tu sais que tu viens de l'ajouter
-        } else {
-          currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
-        }
-
-        const isFirstMessage = currentConversation?.name === 'New Chat';
-
-        console.log("This is the name of the current conversation", currentConversation?.name)
-        console.log("This is the value of isFirstMessage", isFirstMessage)
-        console.log("This is the value for onboardingMessage", isOnboardingMessage)
-
-       
-
-        for await (const packetBunch of sendMessageSocraticLangGraph({
-            message: inputValue,
-            chatSessionId: chatSessionId,
-            courseId: courseId,
-            username: username,
-            university: university,
-            interests: interests || [],
-            student_profile: student_profile,
-            major: major || [],
-            minor: minor || [],
-            year: year,
-            faculty: faculty || [],
-            isFirstMessage: isFirstMessage,
-            user: user,
-            isOnboardingMessage: isOnboardingMessage,
-        },
-        abortController.signal // Passez le signal ici
-      )) {
-
-            // Vérifier si la conversation a été annulée
-            if (cancelConversationRef.current) {
-              console.log("Conversation a été annulée.");
-              abortController.abort(); // Arrête immédiatement la requête
-              break; // Sortir de la boucle pour arrêter le traitement des paquets
-          }
-
-            // Process each packet in the packet bunch
-            if (Array.isArray(packetBunch)) {
-                for (const packet of packetBunch) {
-                    if (typeof packet === 'string') {
-                        setHasNewContent(true); // Detects new content
-                        answer = packet.replace(/\|/g, '');
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
-                        answer = (packet as AnswerPiecePacket).answer_piece;
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'image_data')) {
-                        answerImages.push((packet as any).image_data);
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_TAK_data')) {
-                        answerTAK.push((packet as any).answer_TAK_data);
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_CHART_data')) {
-                        answerCHART.push((packet as any).answer_CHART_data);
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_COURSE_data')) {
-                        answerCourse.push((packet as any).answer_COURSE_data);
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'reasoning_steps')) {
-                        answerReasoning.push((packet as any).reasoning_steps);
-                        console.log("Étapes de raisonnement ajoutées");
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'reddit')) {
-                        answerREDDIT.push((packet as any).reddit);
-                        console.log("Reddit ajoutées");
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'insta')) {
-                        answerINSTA.push((packet as any).insta);
-                        console.log("Insta ajoutées");
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'insta2')) {
-                        answerINSTA2.push((packet as any).insta2);
-                        console.log("Insta2 ajoutées");
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'insta_club')) {
-                        answerINSTA_CLUB.push((packet as any).insta_club);
-                        console.log("Insta club ajoutées");
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'linkedin')) {
-                        answerLINKEDIN.push((packet as any).linkedin);
-                        console.log("Linkedin ajoutées");
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'youtube')) {
-                        answerYOUTUBE.push((packet as any).youtube);
-                        console.log("Youtube ajoutées");
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'quora')) {
-                        answerQUORA.push((packet as any).quora);
-                        console.log("Quora ajoutées");
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'error_back')) {
-                        answerERROR.push((packet as any).error_back);
-                        console.log("Error ajoutées");
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'accuracy_score')) {
-                        answerACCURACYSCORE.push((packet as any).accuracy_score);
-                        console.log("Accuracy score ajoutées");
-
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'classification_title_result')) {
-                        answerTITLEANDCATEGORY.push((packet as any).classification_title_result);
-                        console.log("title and category ajoutées");
-
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
-                        answerWaiting = (packet as any).answer_waiting;
-                    } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
-                        error = (packet as StreamingError).error;
-                    }
-                }
-            } else if (typeof packetBunch === 'object' && packetBunch !== null) {
-                if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_document')) {
-                    answerDocuments.push((packetBunch as AnswerDocumentPacket).answer_document);
-                    console.log('This is a test');
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'image_data')) {
-                    answerImages.push((packetBunch as any).image_data);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_TAK_data')) {
-                    answerTAK.push((packetBunch as any).answer_TAK_data);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reasoning_steps')) {
-                    answerReasoning.push((packetBunch as any).reasoning_steps);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reddit')) {
-                    answerREDDIT.push((packetBunch as any).reddit);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta')) {
-                    answerINSTA.push((packetBunch as any).insta);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta2')) {
-                    answerINSTA2.push((packetBunch as any).insta2);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta_club')) {
-                    answerINSTA_CLUB.push((packetBunch as any).insta_club);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'linkedin')) {
-                    answerLINKEDIN.push((packetBunch as any).linkedin);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'youtube')) {
-                    answerYOUTUBE.push((packetBunch as any).youtube);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'quora')) {
-                    answerQUORA.push((packetBunch as any).quora);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'error_back')) {
-                    answerERROR.push((packetBunch as any).error_back);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'accuracy_score')) {
-                    answerACCURACYSCORE.push((packetBunch as any).accuracy_score);
-
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'classification_title_result')) {
-                    answerTITLEANDCATEGORY.push((packetBunch as any).classification_title_result);
-
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
-                    answerCHART.push((packetBunch as any).answer_CHART_data);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_COURSE_data')) {
-                    answerCourse.push((packetBunch as any).answer_COURSE_data);
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'related_questions')) {
-                    relatedQuestionsList = (packetBunch as any).related_questions;
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_waiting')) {
-                    answerWaiting = (packetBunch as any).answer_waiting;
-                } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'error')) {
-                    error = (packetBunch as StreamingError).error;
-                }
-            }
-
-            console.log("Valeur brute de answerTITLEANDCATEGORY :", answerTITLEANDCATEGORY);
-
-            const flattenedImages = answerImages.flat();
-            const flattenedTAK = answerTAK.flat();
-            const flattenedReasoning = answerReasoning.flat();
-            const flattenedREDDIT = answerREDDIT.flat();
-            const flattenedINSTA = answerINSTA.flat();
-            const flattenedINSTA2 = answerINSTA2.flat();
-            const flattenedINSTA_CLUB = answerINSTA_CLUB.flat();
-            const flattenedLINKEDIN = answerLINKEDIN.flat();
-            const flattenedYOUTUBE = answerYOUTUBE.flat();
-            const flattenedQUORA = answerQUORA.flat();
-            const flattenedERROR = answerERROR.flat();
-            // Log before flattening `answerACCURACYSCORE`
-            console.log("Raw answerACCURACYSCORE received:", answerACCURACYSCORE);
-
-            flattenedACCURACYSCORE = answerACCURACYSCORE.flat();
-
-            const flattenedTITLEANDCATEGORY = answerTITLEANDCATEGORY.flat();
-            console.log("Flattened answerTITLEANDCATEGORY:", flattenedTITLEANDCATEGORY);
-
-
-
-            //permet de pouvoir update le topic de la conversation en cours en fonction de la question de l utilisateur
-            
-            if (flattenedTITLEANDCATEGORY.length > 0) {
-              const { category: newCategory, conversation_title: newTitle } = flattenedTITLEANDCATEGORY[0];
-            
-              // Mise à jour locale du topic et du titre
-              setConversations((prevConversations) =>
-                prevConversations.map((conv) =>
-                  conv.chat_id === chatSessionId
-                    ? { ...conv, topic: newCategory, name: newTitle } // Mise à jour locale
-                    : conv
-                )
-              );
-
-              // Mise à jour locale du topic pour `socialThreads`
-              setSocialThreads((prevSocialThreads) =>
-                prevSocialThreads.map((thread) =>
-                  thread.chat_id === chatSessionId
-                    ? { ...thread, topic: newCategory, name: newTitle } // Mise à jour locale
-                    : thread
-                )
-              );
-            
-              // Mise à jour dans Firestore pour le topic et le titre
-              const updateThreadData = async (chatId: string, data: { topic: string; name: string }) => {
-                try {
-                  const docRef = doc(db, "chatsessions", chatId); // Référence au document Firestore
-                  await updateDoc(docRef, data); // Mise à jour des champs `topic` et `name`
-                  console.log(`Thread ${chatId} updated with topic: ${data.topic} and title: ${data.name}`);
-                } catch (error) {
-                  console.error("Erreur lors de la mise à jour du thread :", error);
-                }
-              };
-            
-              // Appel de la mise à jour persistante
-              updateThreadData(chatSessionId, { topic: newCategory, name: newTitle });
-            }
-
-            //const flattenedTITLEANDCATEGORY = [
-            //  { category: "Financial Aids", conversation_title: "Scholarship Details" }
-            //];
-
-            // Log after flattening `answerACCURACYSCORE`
-            console.log("Flattened answerACCURACYSCORE:", flattenedACCURACYSCORE);
-            const flattenedCHART = answerCHART.flat();
-            const flattenedCourse = answerCourse.flat();
-            const flattenedwaitingdata = answerWaiting.flat();
-
-            // Update the messages if conversation was not cancelled
-            if (!cancelConversationRef.current) {
-                setMessages((prevMessages) => {
-                    const updatedMessages = [...prevMessages];
-                    updatedMessages[lastMessageIndex] = {
-                        ...prevMessages[lastMessageIndex],
-                        type: 'ai',
-                        content: answer,
-                        personaName: 'Lucy',
-                        citedDocuments: answerDocuments,
-                        images: flattenedImages,
-                        TAK: flattenedTAK,
-                        CHART: flattenedCHART,
-                        COURSE: flattenedCourse,
-                        waitingMessages: flattenedwaitingdata,
-                        ReasoningSteps: flattenedReasoning,
-                        REDDIT: flattenedREDDIT,
-                        INSTA: flattenedINSTA,
-                        YOUTUBE: flattenedYOUTUBE,
-                        QUORA: flattenedQUORA,
-                        ERROR: flattenedERROR,
-                        CONFIDENCESCORE: flattenedACCURACYSCORE,
-                        INSTA_CLUB: flattenedINSTA_CLUB,
-                        LINKEDIN: flattenedLINKEDIN,
-                        INSTA2: flattenedINSTA2,
-                    };
-                    return updatedMessages;
-                });
-            }
-        }
-
-        // Mettre à jour les questions liées et arrêter le streaming si non annulé
-        if (!cancelConversationRef.current) {
-          setRelatedQuestions(relatedQuestionsList);
-          setIsStreaming(false);
-        }
-
-        if (!user?.id) {
-          throw new Error("L'ID utilisateur (uid) est manquant dans l'URL.");
-        }
-
-        // Save AI message to backend if conversation is still active
-        // Vérifier l'état de cancelConversationRef.current avant d'appeler la fonction
-        console.log("cancelConversationRef.current:", cancelConversationRef.current);
-        if (!cancelConversationRef.current) {
-            console.log("Conversation active -> Envoi du message AI au backend");
-            await saveMessageAIToBackend({
-                message: answer,
-                chatSessionId: chatSessionId,
-                courseId: courseId,
-                username: 'Lucy',
-                type: 'ai',
-                uid: user?.id,
-                input_message: inputValue,
-                university: university,
-                sources: answerDocuments.map((doc) => ({ 
-                    document_id: doc.document_id,
-                    document_name: doc.document_name,
-                    link: doc.link,
-                    source_type: doc.source_type
-                })),
-                confident_score: flattenedACCURACYSCORE.length > 0 ? parseFloat(flattenedACCURACYSCORE[0].confidenceScore): null, // 👈 Conversion correcte en nombre
-                });
-                //confident_score: confident_score => important
-                //sources: sources / un tableau je pense avec le le titre et le lien des sources. avec answer document je pense => important
-                //reasonning_steps / un tableau 
-                //TAK / une structure de donnne, je ne sais pas comment save pour l instant
-
-        } else {
-          console.log("Conversation annulée -> Le message AI ne sera pas envoyé");
-      }
-    } catch (e: any) {
-        if (e.name === 'AbortError') {
-          console.log('Requête interrompue par l utilisateur.');
-          setIsStreaming(false); // Mettre à jour l'état ici
-          setHasNewContent(false); // Réinitialiser si nécessaire
-          // Optionnel : Ajouter une indication à l'UI pour signaler que la réponse est stoppée
-        } else {
-          console.error('Erreur lors du traitement des messages :', e.message);
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-                id: Date.now(),
-                type: 'error',
-                content: 'An error occurred. Try to send the message again or open a new chat.',
-            },
-        ]);
-        }
-    } finally {
-        setIsStreaming(false); // Ensure streaming is set to false after completion or error
-        if (cancelConversationRef.current) {
-          cancelConversationRef.current = false;
-          setCancelConversation(false);
-          console.log("cancelConversation réinitialisé à false après annulation.");
-      }
-    }
-};
-
-
-useEffect(() => {
-    if (user?.id && user?.onboardingComplete) {
-      fetchCourseOptionsAndChatSessions();
-    }
-  }, [user?.id, user?.onboardingComplete]);
-
-
-
-//------------------------------------------------------------------------------
- // Fonction d'envoi de chaque message onboarding avec gestion des états
- const sendNextOnboardingMessage = async (index: number, fieldToUpdate?: string | Record<string, any>, previousAnswer?: string) => {
-
-    if (index >= onboardingMessages.length) {
-      setIsOnboardingActive(false); // Onboarding terminé
-      // ✅ Marquer onboarding comme terminé dans Firebase et contexte local
-      await updateUserField({ onboardingComplete: true });
-
-        // Récupère la dernière vraie étape
-      const lastStep = onboardingMessages[onboardingMessages.length - 1];
-      const lastMetadata = lastStep.metadata;
-      const lastQuestion = lastStep.question;
-    
-    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: previousAnswer || '' };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-    if (typeof fieldToUpdate === "string") {
-        await updateUserField(fieldToUpdate, previousAnswer);
-      } else if (typeof fieldToUpdate === "object") {
-        await updateUserField(fieldToUpdate);
-      }
-
-    if (user?.id && chatIds[0] && previousAnswer) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, metadata: lastMetadata, message: previousAnswer, type: 'human'});
-    }
-
-    //ICI ON POURRA METTRE LA FONCTION QUI VA APPELER LE BACKEND POUR SAVE LE DERNIER MESSAGE
-
-    onSubmit([...messages, newMessage, loadingMessage], '');
-    setInputValue('');
-      return;
-    }
-
-    // Mise à jour des états selon ta logique existante
-    setIsLandingPageVisible(false);
-    setRelatedQuestions([]);
-    setShowChat(true);
-    setIsComplete(false);
-    setIsStreaming(true);
-  
-    const { question, metadata } = onboardingMessages[index];
-
-    // 🔐 Crée un seul ID partagé
-    const onboardingMessageId = generateUniqueId();
-
-    const loadingMessage: Message = { id: onboardingMessageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata};
-    setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-    if (typeof fieldToUpdate === "string") {
-        await updateUserField(fieldToUpdate, previousAnswer);
-      } else if (typeof fieldToUpdate === "object") {
-        await updateUserField(fieldToUpdate);
-      }
-
-    /*
-    // ✅ Sauvegarde dans le backend après affichage de la question et réception de la réponse
-    if (user?.id && chatIds[0] && previousAnswer) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id,metadata,question,answer: previousAnswer,});
-    }
-    */
-
-    if (user?.id && chatIds[0]) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id,metadata, message: question, type: 'ai'});
-    }
-
-    // ✅ Petite pause avant de commencer le stream
-    await new Promise((resolve) => setTimeout(resolve, 800));
-  
-    await fakeStreamMessage(question, metadata, onboardingMessageId);
-
-
-    setIsStreaming(false);
-  };
-
-
-/*
-  useEffect(() => {
-    const hasMetadata = messages.some(msg => msg.METADATAONBOARDING);
-    if (isOnboardingActive && !hasMetadata) {
-      console.log("🟢 Lancement de l'onboarding à la première question");
-      console.log("📊 Messages actuels :", messages.map(m => m.METADATAONBOARDING));
-      sendNextOnboardingMessage(0);
-    }
-  }, [isOnboardingActive, messages]);
-  */
-
-
-  useEffect(() => {
-    const hasStartedOnboarding = messages.some(msg => msg.METADATAONBOARDING);
-    if (isOnboardingActive && !hasStartedOnboarding && !hasRun.current) {
-      hasRun.current = true; // Empêche le double lancement
-      console.log("🟢 Lancement de l'onboarding à la première question");
-      console.log("📊 Messages actuels :", messages.map(m => m.METADATAONBOARDING));
-      sendNextOnboardingMessage(0);
-    }
-  }, [isOnboardingActive, messages]); 
-
-
-
-  // Fonction qui simule le stream en ajoutant chunk par chunk
-  const fakeStreamMessage = async (messageContent: string, metadata: string, messageId: number) => {
-    const chunks = messageContent.split(' ');
-    let displayedContent = '';
-  
-  
-    // 🟢 Vérifie si le message existe déjà avant de l'ajouter
-    setMessages((prev) => {
-      const existing = prev.some(msg => msg.id === messageId);
-      return existing ? prev : [
-        ...prev,
-        { id: messageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata },
-      ];
-    });
-  
-    for (const chunk of chunks) {
-      displayedContent += chunk + ' ';
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === messageId ? { ...msg, content: displayedContent.trim() } : msg
-        )
-      );
-      if (displayedContent.trim().length > 0 && !hasStartedStreaming) {
-        setHasStartedStreaming(true); // ✅ dès que le premier mot est là on envoie a messageWEB pour dire que le stream a commence et on enleve le three dot de chargement 
-      }
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-  };
-
-  /*
-  const updateUserField = async (fieldName: string, value: any) => {
-    if (!user) return;
-    const userRef = doc(db, "users", user.id);
-    await updateDoc(userRef, {
-      [fieldName]: value,
-    });
-  
-    // Met à jour le contexte utilisateur
-    setUser((prev) => prev ? {
-      ...prev,
-      [fieldName]: value,
-    } : null);
-  };
-  */
-
-  const updateUserField = async (
-    fieldOrObject: string | Record<string, any>,
-    value?: any
-  ) => {
-    if (!user) return;
-  
-    const userRef = doc(db, "users", user.id);
-  
-    const updatePayload =
-      typeof fieldOrObject === "string"
-        ? { [fieldOrObject]: value }
-        : fieldOrObject;
-  
-    await updateDoc(userRef, updatePayload);
-  
-    // Mise à jour du contexte utilisateur local
-    setUser((prev) =>
-      prev ? { ...prev, ...updatePayload } : null
-    );
-  };
-  
-
-
-  const handleSendSCHOOLMessage = async (SCHOOL_message: string) => {
-    const newMessage: Message = { id: Date.now(), type: 'human', content: SCHOOL_message };
-    // Ajoute immédiatement le message humain à l'historique
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    // 🚨 Sauvegarde immédiate du message humain SCHOOL
-    if (user?.id && chatIds[0]) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, message: SCHOOL_message, type: 'human'});
-    }
-  
-    // Envoie immédiatement la deuxième question d'onboarding (index 1)
-    await sendNextOnboardingMessage(1,"faculty", SCHOOL_message );
-  };
-
-
-  const handleSendYEARMessage = async (YEAR_message: string) => {
-    //await updateUserField("year", YEAR_message);
-    const newMessage: Message = { id: Date.now(), type: 'human', content: YEAR_message };
-    // Ajoute immédiatement le message humain à l'historique
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    // 🚨 Sauvegarde immédiate du message humain SCHOOL
-    if (user?.id && chatIds[0]) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, message: YEAR_message, type: 'human'});
-    }
-  
-    // Envoie immédiatement la deuxième question d'onboarding (index 1)
-    await sendNextOnboardingMessage(2,"year",YEAR_message);
-  };
-
-
-  const handleSendLINKEDINMessage = async (LINKEDIN_message: string) => {
-    //await updateUserField("linkedin_url", LINKEDIN_message);
-    const newMessage: Message = { id: Date.now(), type: 'human', content: LINKEDIN_message };
-    
-    // Ajoute immédiatement le message humain à l'historique
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    // 🚨 Sauvegarde immédiate du message humain SCHOOL
-    if (user?.id && chatIds[0]) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, message: LINKEDIN_message, type: 'human'});
-    }
-  
-    // Envoie immédiatement la deuxième question d'onboarding (index 1)
-    await sendNextOnboardingMessage(3,"linkedin_url",LINKEDIN_message );
-  };
-
-
-  const handleSendMAJORMINORMessage = async ({majors,minors,}: {
-    majors: string[];
-    minors: string[];
-  }) => {
-    const contentMAJORMINOR = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;
-    const newMessage: Message = { id: Date.now(), type: 'human', content: contentMAJORMINOR };
-
-    // Ajoute immédiatement le message humain à l'historique
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    // 🚨 Sauvegarde immédiate du message humain SCHOOL
-    if (user?.id && chatIds[0]) {
-        await saveOnboardingStep({chatId: chatIds[0],userId: user.id, message: contentMAJORMINOR, type: 'human'});
-    }
-
-  
-    await sendNextOnboardingMessage(4, { major: majors, minor: minors }, contentMAJORMINOR);
-  };
-
-
-
- const handleSendCOMPLIANCEMessage = async (payload: {
-        termsAccepted: boolean;
-        ageConfirmed: boolean;
-    }) => {
-        const complianceSummary = `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
-      
-    await sendNextOnboardingMessage(5, {complianceAccepted: true,termsAccepted: payload.termsAccepted, ageConfirmed: payload.ageConfirmed}, complianceSummary);
-    };
-
-  
-
-//---------------------------------------
-
-const handleNewConversation = async () => {
-  console.log('NEW CONVERSATION');
-  setCurrentView('chat'); // 🔥 Revenir au chat après la création d'une conversation
-
-  if (isLandingPageVisible) {
-    console.log("Impossible de créer une nouvelle conversation, la landing page est visible.");
-    return;
-  }
-
-  if (isStreaming) {
-    setCancelConversation(true);
-    cancelConversationRef.current = true;
-    console.log("Annulation de la conversation en cours.");
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    console.log("Après le timeout:", cancelConversationRef.current);
-  }
-
-  const university = user?.university || 'University Name'; // Définition de la valeur du champ university
-  const firstMessageContent = messages.length > 0 ? messages[0].content : 'Conversation history';
-  console.log("Contenu du premier message capturé:", firstMessageContent);
-
-  const newChatId = uuidv4();
-  const oldChatId = chatIds[0];
-
-  // Mise à jour immédiate de l'état
-  setIsStreaming(false);
-  setMessages([]);
-  setRelatedQuestions([]);
-  setIsLandingPageVisible(true);
-  setPrimaryChatId(newChatId);
-  setActiveChatId(newChatId);
-
-  // Ajout immédiat de la nouvelle conversation dans la liste
-  setConversations((prevConversations) => [
-    { chat_id: newChatId, name: 'New Chat', thread_type: 'Public'}, //toujours public pour une nouvelle conversation
-    ...prevConversations,
-  ]);
-
-  // Tâches en arrière-plan
-  if (user?.id) {
-    const userRef = doc(db, 'users', user.id);
-
-    try {
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const chatsessions = userData.chatsessions || [];
-
-        // Ajouter le nouvel ID de chat aux sessions
-        chatsessions.push(newChatId);
-        await updateDoc(userRef, { chatsessions });
-
-        // Créer la nouvelle session de chat avec le champ university
-        await setDoc(doc(db, 'chatsessions', newChatId), {
-          chat_id: newChatId,
-          name: 'New Chat',
-          created_at: serverTimestamp(),
-          modified_at: serverTimestamp(),
-          university: university, // Ajout du champ university 
-          thread_type: 'Public', // 🔥 thread_type est bien ajouté ici
-          ReadBy:[user.id] //Ajout du champ readby to kown who see the conversation. Has he is the creator, he saw it
-        });
-        console.log(`Nouvelle session de chat créée avec chat_id: ${newChatId}`);
-
-        // Actualiser la liste des conversations
-        const refreshedUserSnap = await getDoc(userRef);
-        if (refreshedUserSnap.exists()) {
-          const refreshedUserData = refreshedUserSnap.data();
-          const chatSessionIds = refreshedUserData.chatsessions || [];
-          const chatPromises = chatSessionIds.map(async (chatId: string) => {
-            if (typeof chatId === 'string') {
-              const chatRef = doc(db, 'chatsessions', chatId);
-              const chatSnap = await getDoc(chatRef);
-              if (chatSnap.exists() && chatSnap.data().name) {
-                return { chat_id: chatId, name: chatSnap.data().name };
-              }
-            }
-            return null;
-          });
-
-          const fetchedConversations = await Promise.all(chatPromises);
-          const validConversations = fetchedConversations.filter(Boolean);
-
-          setConversations(validConversations.reverse());
-          console.log("Conversations actualisées:", validConversations);
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors de la gestion de l'utilisateur et des chats:", error);
-    }
-  } else {
-    console.error('UID est undefined. Impossible de créer une nouvelle conversation.');
-  }
-};
-
-
-//---------------------------
-const handleConversationClick = async (chat_id: string) => {
-  console.log('On se trouve dans le handleConversationClick')
-  setCurrentView('chat'); // 🔥 Quand on clique sur une conversation, on revient sur le chat
-  setPrimaryChatId(chat_id); // Met à jour le chat_id principal
-  setActiveChatId(chat_id); // Définit la conversation active
-  setRelatedQuestions([]);
-
-  try {
-    // *1️⃣ Met à jour l'état des Social Threads (Marque comme lu)*
-    setSocialThreads((prevThreads) => {
-      const updatedThreads = prevThreads.map((thread) => {
-        if (thread.chat_id === chat_id && !thread.isRead) {
-          return { ...thread, isRead: true };
-        }
-        return thread;
-      });
-
-      // Recalcul du nombre total d'éléments non lus
-      const newUnreadCount = updatedThreads.filter((thread) => !thread.isRead).length;
-      setUnreadCount(newUnreadCount);
-
-      return updatedThreads;
-    });
-
-    // *2️⃣ Récupère l'historique des messages*
-    const chatHistory = await getChatHistory(chat_id);
-    console.log("Chat history retrieved for chat_id", chat_id, ":", chatHistory);
-    setMessages(chatHistory);
-    setShowChat(true);
-
-    // Log immédiatement après avoir défini showChat à true
-    console.log("setShowChat called with true");
-
-    // *3️⃣ Récupère les détails de la conversation*
-    const chatRef = doc(db, 'chatsessions', chat_id);
-    const chatSnap = await getDoc(chatRef);
-
-    if (chatSnap.exists()) {
-      const chatData = chatSnap.data();
-
-      // *4️⃣ Vérifie si la conversation est privée ou publique*
-      const isConversationPrivate = chatData.thread_type === 'Private';
-      setIsPrivate(isConversationPrivate);
-      //console.log('Conversation is now ${isConversationPrivate ? 'Private' : 'Public'}'⁠);
-
-      // *5️⃣ Détermine si c'est un Social Thread*
-      const isChatInSocialThreads = socialThreads.some(thread => thread.chat_id === chat_id);
-      const isChatInConversations = conversations.some(conv => conv.chat_id === chat_id);
-
-      // Un vrai Social Thread est une conversation publique qui *n'est pas* dans les conversations personnelles
-      const isThreadSocial = isChatInSocialThreads && !isChatInConversations;
-
-      // Met à jour l'état de isSocialThread
-      setIsSocialThread(isThreadSocial);
-
-      // Affichage dans la console pour vérification
-      if (isThreadSocial) {
-        console.log('✅ Chat ${chat_id} est un vrai Social Thread');
-      } else if (isChatInSocialThreads && isChatInConversations) {
-        console.log('Chat ${chat_id} est une conversation publique personnelle');
-      } else {
-        console.log('🔒 Chat ${chat_id} est une conversation privée.');
-      }
-
-      // *6️⃣ Ajoute l'utilisateur à ⁠ ReadBy ⁠ s'il ne l'a pas encore lu*
-      const userId = user?.id;
-      const readBy = chatData.ReadBy || [];
-
-      if (!readBy.includes(userId)) {
-        console.log('Ajout de l utilisateur ${userId} à ReadBy pour la conversation ${chat_id}');
-
-        try {
-          // Met à jour Firestore avec un ⁠ Set ⁠ pour éviter les doublons
-          await updateDoc(chatRef, { ReadBy: Array.from(new Set([...readBy, userId])) });
-          console.log('ReadBy mis à jour avec succès dans Firestore');
-        } catch (updateError) {
-          console.error('Erreur lors de la mise à jour de ReadBy dans Firestore :', updateError);
-        }
-      }
-    } else {
-      //console.warn(⁠ No chat session found with chat_id: ${chat_id}. Defaulting to Public. ⁠);
-      setIsPrivate(false); // Par défaut, on considère que c'est public si la donnée est absente
-    }
-  } catch (error) {
-    console.error('Error fetching chat history or thread_type:', error);
-    setPopup({
-      type: 'error',
-      message: 'Failed to fetch chat history. Please try again later.',
-    });
-    setIsPrivate(false); // Défaut à Public en cas d'erreur
-  }
-};
-
-  //permet d ouvir la sidebar (change l etat de ouvir/fermer)
-  const toggleDrawer = () => {
-    setDrawerOpen(!drawerOpen);
-  };
-
-
-  useEffect(() => {
-    if (!chatIdFromUrl) return; // 🔥 Si `chatIdFromUrl` n'existe pas, ne fait rien
-    handleConversationClick(chatIdFromUrl);
-  }, []); // 🔥 Exécuté une seule fois au chargement
-
-
-
-   //PERMET DE CHARGER LES CONVERSATIONS LORSQU ELLES EXISTENT QUAND ON NAVIGATE SUR LA PAGE
-   /*
-   useEffect(() => { 
-    const loadMessagesFromLocalStorageChatId = async () => {
-      const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
-      if (storedChatId) await handleConversationClick(storedChatId);
-      setIsLandingPageVisible(false);
-    };
-    loadMessagesFromLocalStorageChatId();
-  }, []);
-  */
-
-/*
-  useEffect(() => { 
-    const loadMessagesFromLocalStorageChatId = async () => {
-      const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
-      if (storedChatId) await handleConversationClick(storedChatId);
-      
-      const shouldShowLanding = !isOnboardingActive && messages.length === 0;
-      setIsLandingPageVisible(shouldShowLanding);
-    };
-  
-    loadMessagesFromLocalStorageChatId();
-  }, [activeChatId, chatIds, messages.length, isOnboardingActive]);
-  */
-
-
-  useEffect(() => {
-    const loadMessagesFromLocalStorageChatId = async () => {
-      const storedChatId = chatIds[0];
-      if (storedChatId && messages.length === 0 && !isOnboardingActive) {
-        try {
-          await handleConversationClick(storedChatId);
-          setIsLandingPageVisible(false);
-        } catch (error) {
-          console.error("Erreur dans loadMessagesFromLocalStorageChatId:", error);
-        }
-      }
-    };
-  
-    loadMessagesFromLocalStorageChatId();
-  }, [chatIds, isOnboardingActive]);
-
-
-
-
-  const handleSourceClick = (link: string) => {
-    window.open(link, "_blank", "noopener,noreferrer"); // Ouvre dans un nouvel onglet
-};
-
-
-  const handleSubmitWrongAnswerFeedback = async (
-    feedback: string,
-    aiMessageContent: string | null,
-    humanMessageContent: string | null,
-    ratings: { relevance?: number; accuracy?: number; format?: number; sources?: number; overall_satisfaction?: number }
-  ) => {
-    const uid = user?.id || 'default_uid';
-    const chatId = chatIds[0] || 'default_chat_id';
-  
-    await submitFeedbackWrongAnswer({
-      userId: uid,
-      chatId,
-      aiMessageContent: aiMessageContent || 'default_ai_message',
-      humanMessageContent: humanMessageContent || 'default_human_message',
-      feedback,
-      ...ratings,
-    });
-  
-    setSnackbarOpen(true);
-    handleCloseWrongAnswerModal();
-  };
-
-  const handleWrongAnswerClick = (index: number) => {
-    const currentMessage = messages[index];
-    const previousMessage = index > 0 ? messages[index - 1] : null;
-    setSelectedAiMessage(currentMessage.content);
-    setSelectedHumanMessage(previousMessage ? previousMessage.content : null);
-    setModalOpen(true);
-    //setSnackbarOpen(true);
-  };
-
-  const handleFeedbackClick = async (index: number) => {
-    const currentMessage = messages[index];
-    const previousMessage = index > 0 ? messages[index - 1] : null;
-    const uid = user?.id || 'default_uid';
-    const chatId = chatIds[0] || 'default_chat_id';
-
-
-    await submitFeedbackGoodAnswer({
-      userId: uid,
-      chatId,
-      aiMessageContent: currentMessage.content || 'default_ai_message',
-      humanMessageContent: previousMessage ? previousMessage.content : 'default_human_message',
-      feedback: 'positive',
-    });
-
-    setSnackbarOpen(true);
-  };
-
-  const handleCloseWrongAnswerModal = () => {
-    setModalOpen(false);
-  };
-
-  //------------------------------------------------------------
 
 
 
@@ -1772,10 +253,9 @@ const handleConversationClick = async (chat_id: string) => {
             overflow: 'hidden', // Désactive le scroll interne
           }}
         >
-          
 
 
-
+          {/* Sidebar with menu conversation history or socialThreads */}
           <Drawer
             variant={isSmallScreen ? "temporary" : "persistent"}
             anchor="left"
@@ -1823,7 +303,7 @@ const handleConversationClick = async (chat_id: string) => {
                         className="rounded-full object-cover cursor-pointer"
                         //onClick={(event) =>handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                         onClick={(event) => {
-                            if (isOnboardingActive) {
+                            if (!user?.onboardingComplete) { // quand l onboarding n est pas fini
                               setShowOnboardingProfilePopup(true);
                               return
                             } else {
@@ -1899,7 +379,7 @@ const handleConversationClick = async (chat_id: string) => {
                     color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                     cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
                   }}
-                  disabled={isLandingPageVisible || isOnboardingActive}
+                  disabled={isLandingPageVisible || !user?.onboardingComplete}
                 >
                   <MapsUgcRoundedIcon />
                 </IconButton>
@@ -2215,7 +695,7 @@ const handleConversationClick = async (chat_id: string) => {
                             //onClick={(e) => {e.stopPropagation();handleMenuOpen(e, conversation.chat_id);}}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (isOnboardingActive) {
+                                if (!user?.onboardingComplete) {
                                   setShowOnboardingModifyConvPopup(true); // Affiche la popup d'onboarding
                                   return; // Empêche explicitement l'ouverture du menu contextuel
                                 }
@@ -2278,7 +758,7 @@ const handleConversationClick = async (chat_id: string) => {
                             role="button"
                             tabIndex={0}
                             onClick={() => {
-                                if (isOnboardingActive) {
+                                if (!user?.onboardingComplete) {
                                   setShowOnboardingSocialThreadPopup(true);
                                 } else {
                                   handleConversationClick(thread.chat_id);
@@ -2510,7 +990,7 @@ const handleConversationClick = async (chat_id: string) => {
                           color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                           cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
                         }}
-                        disabled={isLandingPageVisible || isOnboardingActive}
+                        disabled={isLandingPageVisible || !user?.onboardingComplete}
                       >
                         <MapsUgcRoundedIcon />
                       </IconButton>
@@ -2565,7 +1045,7 @@ const handleConversationClick = async (chat_id: string) => {
               </div>
               </section>
 
-              {isOnboardingActive && (
+              {!user?.onboardingComplete && (
                 <div className="flex-1">
                     <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
@@ -2594,7 +1074,7 @@ const handleConversationClick = async (chat_id: string) => {
                         color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                         cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
                       }}
-                      disabled={isLandingPageVisible || isOnboardingActive}
+                      disabled={isLandingPageVisible || !user?.onboardingComplete}
                     >
                       <MapsUgcRoundedIcon />
                     </IconButton>
@@ -2605,7 +1085,7 @@ const handleConversationClick = async (chat_id: string) => {
                     <IconButton
                       //onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                       onClick={(event) => {
-                        if (isOnboardingActive) {
+                        if (!user?.onboardingComplete) {
                           setShowOnboardingProfilePopup(true);
                           return
                         } else {
@@ -2995,7 +1475,7 @@ const handleConversationClick = async (chat_id: string) => {
             )}
             
 
-            {currentView === 'chat' && !isLandingPageVisible && !isOnboardingActive && (!hasTak || inputValue.trim() !== "") && (
+            {currentView === 'chat' && !isLandingPageVisible && user?.onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
             <>
               {isSmallScreen ? (
                 // VERSION MOBILE AVEC MODIFICATIONS
@@ -3171,7 +1651,8 @@ const handleConversationClick = async (chat_id: string) => {
                       }
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
-                      onKeyPress={handleInputKeyPressSocraticLangGraph}
+                     // onKeyPress={handleInputKeyPressSocraticLangGraph}
+                      onKeyDown = {handleInputKeyPressSocraticLangGraph}
                       InputProps={{
                         startAdornment: (
                           !isSocialThread && (

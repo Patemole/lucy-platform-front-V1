@@ -20,7 +20,7 @@ export const useAuth = () => {
   const navigate = useNavigate();
 
 
-
+//Fonction login utilise actuellement 
   const login = (userData) => {
     console.log("useAuth: Login appelé avec:", userData);
     setUser(userData);
@@ -29,6 +29,7 @@ export const useAuth = () => {
   };
 
 
+  //Fonction logout utilise actuellement 
   const logout = async () => {
     try {
       console.log("useAuth: Tentative de déconnexion.");
