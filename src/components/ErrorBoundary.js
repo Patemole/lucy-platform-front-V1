@@ -33,10 +33,10 @@ class ErrorBoundary extends React.Component {
           }}
         >
           <Typography variant="h4" color="error">
-            Oups! Quelque chose s'est mal passé.
+            Oops! Something went wrong.
           </Typography>
           <Typography variant="body1">
-            Veuillez rafraîchir la page ou réessayer plus tard.
+            Please refresh the page or try again later.
           </Typography>
         </Box>
       );

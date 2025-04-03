@@ -1,4 +1,4 @@
-import React, { useState, useRef,} from 'react';
+import React, { useState, useEffect, useRef,} from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../auth/firebase';
 import { doc, updateDoc} from 'firebase/firestore';
@@ -28,6 +28,7 @@ import TopHeader from './components/TopHeader';
 import Popups from './components/Popups';
 import ChatContent from './components/ChatContent';
 import RelatedQuestions from './components/RelatedQuestions';
+import { useAppInitialization } from '../useAppInitialization'; // adapte le chemin si besoin
 
 
 //For Topic of the conversations
@@ -44,6 +45,8 @@ const topicColors: { [key: string]: string } = {
 const drawerWidth = 270;
 
 const OnboardingLucyQuestions: React.FC = ()=> {
+
+  const { initializeApp } = useAppInitialization();
 
   //1. Paramètres graphiques et responsivité
   const theme = useTheme();
@@ -119,6 +122,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const [hasNewContent, setHasNewContent] = useState(false);
 
 
+
   //from userprofile
   const {handleProfileMenuClick,handleLogout,handleDeleteAccount,handleProfileMenuClose, handleParametersMenuClick, handleParametersMenuClose } = useUserProfile({setEvents,setProfileMenuAnchorEl,setParametersMenuAnchorEl,setProfilePicture,});
 
@@ -134,6 +138,16 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   //Passing variables like setInputValue needed to run correclty and output the functions
   const {handleSendSCHOOLMessage,handleSendYEARMessage,handleSendLINKEDINMessage,handleSendMAJORMINORMessage,handleSendCOMPLIANCEMessage,} = useOnboarding({setInputValue,setRelatedQuestions,setIsComplete,setIsStreaming,onSubmit,generateUniqueId,hasStartedStreaming,setHasStartedStreaming,});
 
+
+  useEffect(() => {
+    const init = async () => {
+      if (user?.id && user?.university) {
+        console.log('🌐 Initialisation du dashboard depuis l’URL directe');
+        await initializeApp();
+      }
+    };
+    init();
+  }, [user?.id, user?.university]);
   
 
   const onboardingMessages = [

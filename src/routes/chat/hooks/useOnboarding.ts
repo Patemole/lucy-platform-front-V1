@@ -6,7 +6,7 @@ import { saveOnboardingStep } from '../../../api/chat';
 import { Message, StudentProfile } from '../../../interfaces/interfaces_eleve';
 import { useAuth } from '../../../auth/hooks/useAuth';
 import { useChat } from '../../../auth/hooks/useChat';
-const hasRun = useRef(false);
+
 
 // Hook principal
 export const useOnboarding = ({
@@ -30,8 +30,9 @@ export const useOnboarding = ({
 }) => {
   const { user, setUser, chatIds } = useAuth();
   const { messages, setMessages, isLandingPageVisible, setIsLandingPageVisible } = useChat();
+  const hasRun = useRef(false);
 
-
+/*
   useEffect(() => {
     const hasStartedOnboarding = messages.some(msg => msg.METADATAONBOARDING);
     if (user?.onboardingComplete && !hasStartedOnboarding && !hasRun.current) {
@@ -41,6 +42,20 @@ export const useOnboarding = ({
       sendNextOnboardingMessage(0);
     }
   }, [user?.onboardingComplete, messages]); 
+  */
+
+  useEffect(() => {
+    const shouldStart = !hasRun.current && user?.onboardingComplete === false;
+    const hasNoMetadata = messages.every(msg => !msg.METADATAONBOARDING);
+  
+    console.log("🧪 Onboarding check -> shouldStart:", shouldStart, "| hasNoMetadata:", hasNoMetadata);
+  
+    if (shouldStart && hasNoMetadata) {
+      hasRun.current = true;
+      console.log("🚀 Onboarding started");
+      sendNextOnboardingMessage(0);
+    }
+  }, [user?.onboardingComplete, messages.length]);
 
 
   const onboardingMessages = [

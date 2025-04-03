@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef} from 'react';
 import { useEffect} from 'react';
 import { useAuth } from '../../../auth/hooks/useAuth';
 import { useChat } from '../../../auth/hooks/useChat';
@@ -41,7 +41,10 @@ export const useConversations = ({
   const [loadingSocialThreads, setLoadingSocialThreads] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
 
+  const hasInitialized = useRef(false);
 
+
+  
     //Permet de charger les messages de la derniere conversation en cours quand on charge la page
     useEffect(() => { 
         const loadMessagesFromLocalStorageChatId = async () => {
@@ -54,6 +57,26 @@ export const useConversations = ({
     
         loadMessagesFromLocalStorageChatId();
     }, [chatIds[0], messages.length, user?.onboardingComplete]);
+    
+
+
+    //This is a test. 
+    /*
+    useEffect(() => {
+        if (hasInitialized.current) return;
+      
+        const loadMessagesFromLocalStorageChatId = async () => {
+          const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
+          if (storedChatId) await handleConversationClick(storedChatId);
+      
+          const shouldShowLanding = !user?.onboardingComplete && messages.length === 0;
+          setIsLandingPageVisible(shouldShowLanding);
+          hasInitialized.current = true;
+        };
+      
+        loadMessagesFromLocalStorageChatId();
+      }, [user?.onboardingComplete]);
+      */
 
 
     //Load at first conversation history and after social thread and listen for every new social threds to add in real time
@@ -87,6 +110,19 @@ export const useConversations = ({
           fetchCourseOptionsAndChatSessions();
         }
       }, [user?.id, user?.onboardingComplete]);
+
+
+
+
+
+    //Permet de charger les conversations historique et social threads avant d etre redirige vers le dashboard
+    const loadChatDataBeforeRedirect = async () => {
+        if (!user?.id || !user?.university) return;
+      
+        console.log("⏳ Loading conversations and social threads before redirect...");
+        await fetchCourseOptionsAndChatSessions();
+        fetchSocialThreads(); // Optional: if you want to listen in real-time after load
+      };
 
 
      // Fonction pour formater la date des conversations (social threads and conversations history)
@@ -144,6 +180,8 @@ export const useConversations = ({
         );
     
         console.log(`📌 Après filtrage manuel, ${filteredThreads.length} conversations sont affichées`);
+
+        console.log("📡 SocialThreads length:", socialThreads.length);
     
         setSocialThreads(filteredThreads);
     
@@ -516,6 +554,7 @@ export const useConversations = ({
         handleConversationClick,
         handleNewConversation,
         updateThreadTypeLocally,
+        loadChatDataBeforeRedirect,
       };
 };
 

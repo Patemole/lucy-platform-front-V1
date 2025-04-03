@@ -72,6 +72,8 @@ type SidebarProps = {
 
     const drawerWidth = 270;
 
+    
+
 
     return(
 
@@ -570,6 +572,7 @@ type SidebarProps = {
                         </Box>
                         ) : socialThreads.length > 0 ? (
                         socialThreads.map((thread) => {
+                            console.log("💬 Sidebar socialThreads:", socialThreads);
                             const topic = thread.topic || "Default";
                             const color = topicColors[topic] || topicColors["Default"];
                             return (
