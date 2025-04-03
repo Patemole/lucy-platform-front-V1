@@ -35,7 +35,7 @@ import OnboardingPage from './routes/SignIn_Sign_up_Onboarding/onboardingPage';
 import ResetPassword from "./routes/SignIn_Sign_up_Onboarding/ResetPassword";
 import LtiLogin from "./routes/SignIn_Sign_up_Onboarding/LtiLogin";
 import UniversityWaitlist from "./routes/SignIn_Sign_up_Onboarding/UniversityWaitlist";
-import OnboardingLucyQuestions from "./routes/SignIn_Sign_up_Onboarding/onboardingLucyQuestions";
+import OnboardingLucyQuestions from "./routes/chat/onboardingLucyQuestions";
 
 //Compliance document pages
 import DataPrivacy from './routes/compliance_document/DataPrivacy';

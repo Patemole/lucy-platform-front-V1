@@ -41,6 +41,72 @@ export interface AuthContextType {
 }
 
 
+// Type du contexte
+export interface ChatContextType {
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  conversations: Conversation[];
+  setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>;
+  isLandingPageVisible: boolean;
+  setIsLandingPageVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  socialThreads: SocialThread[];
+  setSocialThreads: React.Dispatch<React.SetStateAction<SocialThread[]>>;
+  isSocialThread: boolean;
+  setIsSocialThread: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+
+export interface Conversation {
+  chat_id: string;
+  name: string;
+  thread_type: string;
+  topic?: string;
+}
+
+
+export interface Message {
+  id: number;
+  type: 'human' | 'ai' | 'error';
+  content: string;
+  personaName?: string;
+  citedDocuments?: AnswerDocument[];
+  fileType?: 'pdf' | 'mp4';
+  images?: AnswerImage[] | null; // Utilisation de la nouvelle interface AnswerImage
+  TAK?: AnswerTAK[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
+  COURSE?: AnswerCourse[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
+  waitingMessages?: AnswerWaiting[]| null;
+  CHART?: AnswerCHART[] | null; // Ajout de AnswerChart pour gérer les graphiques
+  ReasoningSteps?: ReasoningStep[] | null; // Utiliser un tableau de ReasoningStep pour plus de clarté
+  REDDIT?: AnswerREDDIT[] | null;
+  INSTA?: AnswerINSTA[] | null;
+  YOUTUBE?: AnswerYOUTUBE[] | null;
+  QUORA?: AnswerQUORA[] | null;
+  ERROR?: AnswerERROR[] | null;
+  CONFIDENCESCORE?: AnswerACCURACYSCORE[] | null;
+  INSTA_CLUB?: AnswerINSTA_CLUB[] | null;
+  LINKEDIN?: AnswerLINKEDIN[] | null;
+  INSTA2?: AnswerINSTA2[] | null;
+  METADATAONBOARDING?: string; // THE DATA FROM THE ONBOARDING, CAN BE SCHOOL, MAJOR, MINOR...
+};
+
+
+
+//----------------------------//
+
+
+export interface AnswerDocumentPacket {
+  answer_document: AnswerDocument
+}
+
+export interface AnswerPiecePacket {
+  answer_piece: string;
+}
+
+export interface StreamingError {
+  error: string;
+}
+
+
 
 export interface AnswerDocument {
     document_id: string;
@@ -60,12 +126,7 @@ export interface SocialThread {
   isRead?: boolean; // Ajout de la propriété isRead
 }
 
-export interface Conversation {
-  chat_id: string;
-  name: string;
-  thread_type: string;
-  topic?: string;
-}
+
 
 
 export interface AnswerImage {
@@ -168,30 +229,7 @@ export interface EventStudentProfile {
   banner: string;
 }
 
-export interface Message {
-    id: number;
-    type: 'human' | 'ai' | 'error';
-    content: string;
-    personaName?: string;
-    citedDocuments?: AnswerDocument[];
-    fileType?: 'pdf' | 'mp4';
-    images?: AnswerImage[] | null; // Utilisation de la nouvelle interface AnswerImage
-    TAK?: AnswerTAK[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
-    COURSE?: AnswerCourse[] | null; // Ajout de l'interface AnswerTAK pour gérer les réponses spécifiques
-    waitingMessages?: AnswerWaiting[]| null;
-    CHART?: AnswerCHART[] | null; // Ajout de AnswerChart pour gérer les graphiques
-    ReasoningSteps?: ReasoningStep[] | null; // Utiliser un tableau de ReasoningStep pour plus de clarté
-    REDDIT?: AnswerREDDIT[] | null;
-    INSTA?: AnswerINSTA[] | null;
-    YOUTUBE?: AnswerYOUTUBE[] | null;
-    QUORA?: AnswerQUORA[] | null;
-    ERROR?: AnswerERROR[] | null;
-    CONFIDENCESCORE?: AnswerACCURACYSCORE[] | null;
-    INSTA_CLUB?: AnswerINSTA_CLUB[] | null;
-    LINKEDIN?: AnswerLINKEDIN[] | null;
-    INSTA2?: AnswerINSTA2[] | null;
-    METADATAONBOARDING?: string; // THE DATA FROM THE ONBOARDING, CAN BE SCHOOL, MAJOR, MINOR...
-  };
+
 
 export interface Course {
     id: string;
@@ -286,4 +324,9 @@ export interface AnswerCHART {
 export interface ReasoningStep {
   step: number;                  // Numéro de l'étape
   description: string;           // Description de l'étape
+}
+
+export interface PopupSpec {
+    type: "success" | "error";
+    message: string;
 }

@@ -12,11 +12,12 @@ export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 // Fournisseur du contexte d'authentification
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  //const [user, setUser] = useState(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuth, setIsAuth] = useState(false);
   const [loading, setLoading] = useState(true);
   const [chatIds, setChatIds] = useState<string[]>([]);
+
+
 
   useEffect(() => {
     // Liste des routes publiques pour lesquelles l'authentification n'est pas nécessaire
@@ -202,11 +203,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Fonction de login (gérée par onAuthStateChanged)
+  //Fonction qui ne sert a rien, a supprimer
   const login = () => {
     setIsAuth(true);
   };
 
   // Fonction de logout pour réinitialiser l'état de l'utilisateur
+  //Fonction qui ne sert a rien, a supprimer
   const logout = async () => {
     try {
       console.log("AuthProvider: Tentative de déconnexion.");
@@ -230,6 +233,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [user, isAuth, loading, chatIds]);
 
+
+  
   return (
     <AuthContext.Provider value={{
       user,
