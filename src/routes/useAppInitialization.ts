@@ -62,6 +62,7 @@ export const useAppInitialization = () => {
       if (latestChatId) {
         await handleConversationClick(latestChatId);
         setPrimaryChatId(latestChatId);
+        setIsLandingPageVisible(false);
         console.log("✅ Chargé le chat actif :", latestChatId);
       } else {
         setMessages([]);
