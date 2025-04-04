@@ -352,96 +352,33 @@ export const useConversations = ({
 
     const handleConversationClick = async (chat_id: string) => {
         console.log('On se trouve dans le handleConversationClick')
-        setCurrentView('chat'); // 🔥 Quand on clique sur une conversation, on revient sur le chat
-        setPrimaryChatId(chat_id); // Met à jour le chat_id principal
-        setActiveChatId(chat_id); // Définit la conversation active
+        setCurrentView('chat');
+        setPrimaryChatId(chat_id);
+        setActiveChatId(chat_id);
         setRelatedQuestions([]);
+        setIsLandingPageVisible(false);
     
         try {
-        // *1️⃣ Met à jour l'état des Social Threads (Marque comme lu)*
-        setSocialThreads((prevThreads: any) => {
+          setSocialThreads((prevThreads: any) => {
             const updatedThreads = prevThreads.map((thread: any) => {
-            if (thread.chat_id === chat_id && !thread.isRead) {
+              if (thread.chat_id === chat_id && !thread.isRead) {
                 return { ...thread, isRead: true };
-            }
-            return thread;
+              }
+              return thread;
             });
-    
-            // Recalcul du nombre total d'éléments non lus
+        
             const newUnreadCount = updatedThreads.filter((thread: any) => !thread.isRead).length;
             setUnreadCount(newUnreadCount);
-    
+        
             return updatedThreads;
-        });
-    
-        // *2️⃣ Récupère l'historique des messages*
-        const chatHistory = await getChatHistory(chat_id);
-        console.log("Chat history retrieved for chat_id", chat_id, ":", chatHistory);
-        setMessages(chatHistory);
-        //setShowChat(true);
-        setIsLandingPageVisible(true)
-    
-        // Log immédiatement après avoir défini showChat à true
-        console.log("setShowChat called with true");
-    
-        // *3️⃣ Récupère les détails de la conversation*
-        const chatRef = doc(db, 'chatsessions', chat_id);
-        const chatSnap = await getDoc(chatRef);
-    
-        if (chatSnap.exists()) {
-            const chatData = chatSnap.data();
-    
-            // *4️⃣ Vérifie si la conversation est privée ou publique*
-            const isConversationPrivate = chatData.thread_type === 'Private';
-            setIsPrivate(isConversationPrivate);
-            //console.log('Conversation is now ${isConversationPrivate ? 'Private' : 'Public'}'⁠);
-    
-            // *5️⃣ Détermine si c'est un Social Thread*
-            const isChatInSocialThreads = socialThreads.some(thread => thread.chat_id === chat_id);
-            const isChatInConversations = conversations.some(conv => conv.chat_id === chat_id);
-    
-            // Un vrai Social Thread est une conversation publique qui *n'est pas* dans les conversations personnelles
-            const isThreadSocial = isChatInSocialThreads && !isChatInConversations;
-    
-            // Met à jour l'état de isSocialThread
-            setIsSocialThread(isThreadSocial);
-    
-            // Affichage dans la console pour vérification
-            if (isThreadSocial) {
-            console.log('✅ Chat ${chat_id} est un vrai Social Thread');
-            } else if (isChatInSocialThreads && isChatInConversations) {
-            console.log('Chat ${chat_id} est une conversation publique personnelle');
-            } else {
-            console.log('🔒 Chat ${chat_id} est une conversation privée.');
-            }
-    
-            // *6️⃣ Ajoute l'utilisateur à ⁠ ReadBy ⁠ s'il ne l'a pas encore lu*
-            const userId = user?.id;
-            const readBy = chatData.ReadBy || [];
-    
-            if (!readBy.includes(userId)) {
-            console.log('Ajout de l utilisateur ${userId} à ReadBy pour la conversation ${chat_id}');
-    
-            try {
-                // Met à jour Firestore avec un ⁠ Set ⁠ pour éviter les doublons
-                await updateDoc(chatRef, { ReadBy: Array.from(new Set([...readBy, userId])) });
-                console.log('ReadBy mis à jour avec succès dans Firestore');
-            } catch (updateError) {
-                console.error('Erreur lors de la mise à jour de ReadBy dans Firestore :', updateError);
-            }
-            }
-        } else {
-            //console.warn(⁠ No chat session found with chat_id: ${chat_id}. Defaulting to Public. ⁠);
-            setIsPrivate(false); // Par défaut, on considère que c'est public si la donnée est absente
-        }
+          });
+        
+          const chatHistory = await getChatHistory(chat_id);
+          console.log("Chat history retrieved for chat_id", chat_id, ":", chatHistory);
+          setMessages(chatHistory);
         } catch (error) {
-        console.error('Error fetching chat history or thread_type:', error);
-        /*setPopup({
-            type: 'error',
-            message: 'Failed to fetch chat history. Please try again later.',
-        });
-        */
-        setIsPrivate(false); // Défaut à Public en cas d'erreur
+          console.error('Error fetching chat history or thread_type:', error);
+          setIsPrivate(false); // Défaut à Public en cas d'erreur
         }
     };
 
@@ -449,25 +386,16 @@ export const useConversations = ({
 
     const handleNewConversation = async () => {
         console.log('NEW CONVERSATION');
-        setCurrentView('chat'); // 🔥 Revenir au chat après la création d'une conversation
-    
-        if (isLandingPageVisible) {
-        console.log("Impossible de créer une nouvelle conversation, la landing page est visible.");
-        return;
-        }
+        setCurrentView('chat');
     
         if (isStreaming) {
-        setCancelConversation(true);
-        cancelConversationRef.current = true;
-        console.log("Annulation de la conversation en cours.");
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        console.log("Après le timeout:", cancelConversationRef.current);
+          setCancelConversation(true);
+          cancelConversationRef.current = true;
+          console.log("Annulation de la conversation en cours.");
+          await new Promise((resolve) => setTimeout(resolve, 0));
         }
     
-        const university = user?.university || 'University Name'; // Définition de la valeur du champ university
-        const firstMessageContent = messages.length > 0 ? messages[0].content : 'Conversation history';
-        console.log("Contenu du premier message capturé:", firstMessageContent);
-    
+        const university = user?.university || 'University Name';
         const newChatId = uuidv4();
         const oldChatId = chatIds[0];
     
@@ -481,8 +409,8 @@ export const useConversations = ({
     
         // Ajout immédiat de la nouvelle conversation dans la liste
         setConversations((prevConversations) => [
-        { chat_id: newChatId, name: 'New Chat', thread_type: 'Public'}, //toujours public pour une nouvelle conversation
-        ...prevConversations,
+          { chat_id: newChatId, name: 'New Chat', thread_type: 'Public'},
+          ...prevConversations,
         ]);
     
         // Tâches en arrière-plan
