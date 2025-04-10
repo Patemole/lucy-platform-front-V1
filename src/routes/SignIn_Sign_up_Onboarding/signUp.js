@@ -10,6 +10,9 @@ import Avatar from '@mui/material/Avatar';
 import lucyLogo from '../../logo_lucy.png';
 import config from '../../config';
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import { v4 as uuidv4 } from 'uuid';
+import { setPrimaryChatId } from '../../auth/firebase';
+import { sendWelcomeEmail } from '../../utils/emailUtils';
 
 
 const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
@@ -253,35 +256,87 @@ export default function SignUp() {
       const user = userCredential.user;
       const timestamp = Timestamp.now();
 
-      console.log("[Step 4] Storing user data in Firestore");
-      await setDoc(doc(db, "users", user.uid), {
+      // Données de base pour tous les utilisateurs
+      const userData = {
         uid: user.uid,
-        //name: `${firstName} ${lastName}`,
         name: firstName,
         email,
         university: subdomain,
         role: subdomain === 'admin' ? "admin" : "student",
         createdAt: timestamp,
-      });
+      };
 
-      console.log("[Step 5] Updating context with user data");
-      login({
-        id: user.uid,
-        name: firstName,
-        email,
-        university: subdomain,
-        role: subdomain === 'admin' ? "admin" : "student",
-        createdAt: timestamp,
-      });
+      // Si c'est upenn, ajouter les données d'onboarding par défaut
+      if (subdomain === 'upenn') {
+        console.log("[Step 4] User from upenn, adding default onboarding data");
+        
+        // Génération d'un nouveau chatId
+        const chatId = uuidv4();
+        
+        // Données d'onboarding par défaut pour upenn
+        Object.assign(userData, {
+          role: "student",
+          faculty: ["College of Arts & Sciences"], // Faculté par défaut
+          year: "Freshman", // Année par défaut
+          academic_advisor: "",
+          major: ["Undecided"],
+          minor: [""],
+          interests: ["Clubs", "Internships", "Sports", "Technology", "Networking"], // Intérêts par défaut
+          registered_club_status: "no",
+          registered_clubs: "",
+          onboardingComplete: true, // Important: mettre à true pour éviter les popups d'onboarding
+          onboardingMessageSent: false,
+          chatsessions: [chatId],
+        });
+        
+        // Création de la session de chat
+        await setDoc(doc(db, "chatsessions", chatId), {
+          chat_id: chatId,
+          name: "New Chat",
+          created_at: serverTimestamp(),
+          modified_at: serverTimestamp(),
+          userId: user.uid, // Ajout de l'association avec l'utilisateur 
+        });
+        
+        // Définir le chat primaire pour upenn seulement
+        setPrimaryChatId(chatId);
+        
+        try {
+          // Envoi d'email de bienvenue (uniquement pour upenn à ce stade)
+          await sendWelcomeEmail(email, firstName, subdomain);
+        } catch (emailError) {
+          console.error("Error sending welcome email:", emailError);
+          // Continue le processus même si l'envoi d'email échoue
+        }
+      }
 
-      console.log("[Step 6] Redirecting user to appropriate dashboard");
-      const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding/learningStyleSurvey/${courseId || ''}`;
-      navigate(redirectUrl);
+      // Enregistrer l'utilisateur dans Firestore
+      console.log("[Step 5] Storing user data in Firestore");
+      await setDoc(doc(db, "users", user.uid), userData);
+
+      // Mettre à jour le contexte utilisateur
+      console.log("[Step 6] Updating context with user data");
+      login(userData);
+
+      // Redirection
+      console.log("[Step 7] Redirecting user to appropriate destination");
+      if (subdomain === 'admin') {
+        navigate('/dashboard/admin');
+      } else if (subdomain === 'upenn') {
+        navigate(`/dashboard/student/${user.uid}`);
+      } else {
+        // Pour les autres universités, on va à la page d'onboarding
+        // Sans exécuter aucune des logiques spécifiques à upenn
+        navigate(`/onboarding/learningStyleSurvey/${courseId || ''}`);
+      }
     } catch (error) {
       console.error("[Error] An error occurred:", error);
       const newErrors = {};
       if (error.code === 'auth/email-already-in-use') {
         newErrors.email = 'Email address already in use!';
+      } else {
+        // Capture générique d'erreur pour ne pas laisser l'utilisateur sans feedback
+        newErrors.email = 'An error occurred during registration. Please try again.';
       }
       setErrors(newErrors);
       setIsLoading(false);
