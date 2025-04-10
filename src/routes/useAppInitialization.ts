@@ -15,22 +15,19 @@ export const useAppInitialization = () => {
 
   // useConversations : nécessaire pour charger les threads/messages
   const {
-    fetchCourseOptionsAndChatSessions,
+    fetchChatSessions,
     fetchSocialThreads,
-    handleConversationClick,
+    loadInitialMessages,
   } = useConversations({
     isStreaming: false,
     setSelectedFilter: noop,
     setIsPrivate: noop,
-    setCurrentView: noop,
     setRelatedQuestions: noop,
     setUnreadCount: noop,
-    setActiveChatId: noop,
     cancelConversationRef: noopRef,
     setCancelConversation: noop,
     setIsStreaming: noop,
   });
-
 
   const { fetchProfilePicture } = useUserProfile({
     setEvents: noop,
@@ -43,36 +40,37 @@ export const useAppInitialization = () => {
   const initializeApp = useCallback(async () => {
     if (!user?.id || !user?.university) return;
 
-    console.log("🚀 Initializing app for user:", user.id);
+    console.log("🚀 Initialisation de l'app pour l'utilisateur:", user.id);
 
     try {
-      // Étape 1 – photo de profil et historiques
+      // Étape 1 - Chargement parallèle du profil et des conversations
       await Promise.all([
         fetchProfilePicture(),
-        fetchCourseOptionsAndChatSessions(),
+        fetchChatSessions(),
       ]);
 
-      // Étape 2 – social threads en écoute
+      // Étape 2 - Mise en place de l'écoute des social threads
       fetchSocialThreads();
-     
-      console.log("📡 This is after socialthread");
+      console.log("📡 Social threads en écoute");
 
-      // Étape 3 – messages de la dernière conversation
+      // Étape 3 - Chargement des messages de la dernière conversation
       const latestChatId = chatIds?.[0];
       if (latestChatId) {
-        await handleConversationClick(latestChatId);
-        setPrimaryChatId(latestChatId);
-        setIsLandingPageVisible(false);
-        console.log("✅ Chargé le chat actif :", latestChatId);
+        await loadInitialMessages(latestChatId);
+        console.log("✅ Messages initiaux chargés pour:", latestChatId);
       } else {
+        // Pas de conversation existante, afficher la landing page
         setMessages([]);
         setIsLandingPageVisible(true);
-        console.log("📭 Aucun chat précédent. Affichage de la landing page.");
+        console.log("📭 Aucune conversation existante - Affichage landing page");
       }
 
-      console.log("✅ App initialization finished.");
+      console.log("✅ Initialisation complète de l'application");
     } catch (error) {
-      console.error("❌ Failed to initialize app:", error);
+      console.error("❌ Erreur lors de l'initialisation:", error);
+      // En cas d'erreur, on affiche quand même la landing page
+      setMessages([]);
+      setIsLandingPageVisible(true);
     }
   }, [user?.id, user?.university, chatIds]);
 

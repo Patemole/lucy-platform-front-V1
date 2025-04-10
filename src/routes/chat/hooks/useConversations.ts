@@ -14,10 +14,8 @@ export const useConversations = ({
   isStreaming,
   setSelectedFilter,
   setIsPrivate,
-  setCurrentView,
   setRelatedQuestions,
   setUnreadCount,
-  setActiveChatId,
   cancelConversationRef,
   setCancelConversation,
   setIsStreaming
@@ -26,11 +24,8 @@ export const useConversations = ({
   isStreaming: boolean;
   setSelectedFilter: (val: string) => void;
   setIsPrivate: (val: boolean) => void;
-  setCurrentView: (val: 'chat' | 'events') => void;
   setRelatedQuestions: (val: string[]) => void;
   setUnreadCount: (val: number) => void;
-  //setPopup: (val: { type: string; message: string }) => void;
-  setActiveChatId: (val: string) => void;
   cancelConversationRef: React.MutableRefObject<boolean>;
   setCancelConversation: (val: boolean) => void;
   setIsStreaming: (val: boolean) => void;
@@ -44,7 +39,7 @@ export const useConversations = ({
   const hasInitialized = useRef(false);
 
 
-  
+    //A SUPPRIMER COMME ON A USEAPPINITIALISATION
     //Permet de charger les messages de la derniere conversation en cours quand on charge la page
     useEffect(() => { 
         const loadMessagesFromLocalStorageChatId = async () => {
@@ -59,33 +54,15 @@ export const useConversations = ({
     }, [chatIds[0], messages.length, user?.onboardingComplete]);
     
 
-
-    //This is a test. 
-    /*
-    useEffect(() => {
-        if (hasInitialized.current) return;
-      
-        const loadMessagesFromLocalStorageChatId = async () => {
-          const storedChatId = chatIds[0] || 'default_chat_id_loadMessages';
-          if (storedChatId) await handleConversationClick(storedChatId);
-      
-          const shouldShowLanding = !user?.onboardingComplete && messages.length === 0;
-          setIsLandingPageVisible(shouldShowLanding);
-          hasInitialized.current = true;
-        };
-      
-        loadMessagesFromLocalStorageChatId();
-      }, [user?.onboardingComplete]);
-      */
-
-
+    
+    //A SUPPRIMER COMME ON A USEAPPINITIALISATION
     //Load at first conversation history and after social thread and listen for every new social threds to add in real time
     useEffect(() => {
         const loadConversationsAndThreads = async () => {
           if (!user?.id || !user?.university) return;
       
           console.log("🧩 Chargement des conversations classiques...");
-          await fetchCourseOptionsAndChatSessions();
+          await fetchChatSessions();
       
           console.log("🌐 Chargement des social threads...");
           const unsubscribe = fetchSocialThreads();
@@ -107,22 +84,98 @@ export const useConversations = ({
 
     useEffect(() => {
         if (user?.id && user?.onboardingComplete) {
-          fetchCourseOptionsAndChatSessions();
+          fetchChatSessions();
         }
       }, [user?.id, user?.onboardingComplete]);
 
 
 
+//----------------------------------INITIALISATION DE L APP----------------------------------
 
 
-    //Permet de charger les conversations historique et social threads avant d etre redirige vers le dashboard
-    const loadChatDataBeforeRedirect = async () => {
-        if (!user?.id || !user?.university) return;
+    //fonction qui permet d afficher les anciennes conversations dans la sidebar of historic conversation and not social conversation
+    //recuperation des conversations (titre, type, topic) dans la collection chatsessions de firebase
+    const fetchChatSessions = async () => {
+        if (user?.id) {
+        const userRef = doc(db, 'users', user.id);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const chatSessionIds = userData.chatsessions || [];
+
+            // Traiter uniquement les sessions de chat
+            const chatPromises = chatSessionIds.map(async (chatId: string) => {
+            if (typeof chatId === 'string') {
+                const chatRef = doc(db, 'chatsessions', chatId);
+                const chatSnap = await getDoc(chatRef);
+                if (chatSnap.exists() && chatSnap.data().name) 
+                return { 
+                chat_id: chatId, 
+                name: chatSnap.data().name,
+                thread_type: chatSnap.data().thread_type || 'Public',
+                topic: chatSnap.data().topic || "Default",
+                };
+            }
+            return null;
+            });
+
+            const fetchedConversations = await Promise.all(chatPromises);
+            const validConversations = fetchedConversations.filter(
+            (conversation): conversation is Conversation => conversation !== null
+            );
+            setConversations(validConversations.reverse());
+
+            if (validConversations.length > 0) {
+                const latestChatId = validConversations[0].chat_id;
+                setPrimaryChatId(latestChatId);
+            }
+        }
+        }
+    };
+
+
+
+    const loadInitialMessages = async (chatId: string) => {
+        try {
+          // Récupération de l'historique des messages
+          const chatHistory = await getChatHistory(chatId);
+          setMessages(chatHistory);
+          
+          // Récupération des détails de la conversation
+          const chatRef = doc(db, 'chatsessions', chatId);
+          const chatSnap = await getDoc(chatRef);
       
-        console.log("⏳ Loading conversations and social threads before redirect...");
-        await fetchCourseOptionsAndChatSessions();
-        fetchSocialThreads(); // Optional: if you want to listen in real-time after load
+          if (chatSnap.exists()) {
+            const chatData = chatSnap.data();
+            
+            // Configuration du type de thread (privé/public)
+            const isConversationPrivate = chatData.thread_type === 'Private';
+            setIsPrivate(isConversationPrivate);
+      
+            // Mise à jour du statut de lecture
+            const userId = user?.id;
+            const readBy = chatData.ReadBy || [];
+            
+            if (!readBy.includes(userId)) {
+              await updateDoc(chatRef, { 
+                ReadBy: Array.from(new Set([...readBy, userId])) 
+              });
+            }
+          }
+      
+          // Mise à jour des états
+          setPrimaryChatId(chatId);
+          //setActiveChatId(chatId);
+          setIsLandingPageVisible(false);
+      
+        } catch (error) {
+          console.error('Erreur lors du chargement des messages initiaux:', error);
+          setIsPrivate(false); // Par défaut en public en cas d'erreur
+        }
       };
+
+    
 
 
      // Fonction pour formater la date des conversations (social threads and conversations history)
@@ -137,17 +190,6 @@ export const useConversations = ({
         }
     };
 
-    // Open the menu in a conversation to rename or delete the conversation
-    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, chatId: string) => {
-        setMenuAnchorEl(event.currentTarget);
-        setSelectedConversation(chatId);
-    };
-
-    //  Class the menu in a conversation to rename or delete the conversation
-    const handleMenuClose = () => {
-        setMenuAnchorEl(null);
-        setSelectedConversation(null);
-    };
 
     const fetchSocialThreads = () => {
         setLoadingSocialThreads(true);
@@ -213,6 +255,10 @@ export const useConversations = ({
       };
 
 
+
+
+//----------------------------------CONFIGURATION DE LA CONVERSATION----------------------------------
+
     // Action pour renommer une conversation
     const handleRename = async () => {
         handleMenuClose();
@@ -269,133 +315,42 @@ export const useConversations = ({
 
 
 
-    //fonction qui permet d afficher les anciennes conversations dans la sidebar of historic conversation and not social conversation
-    const fetchCourseOptionsAndChatSessions = async () => {
-        if (user?.id) {
-        const userRef = doc(db, 'users', user.id);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-            const userData = userSnap.data();
-            const courseIds = userData.courses || [];
-            const chatSessionIds = userData.chatsessions || [];
-
-            const coursePromises = courseIds.map(async (courseId: string) => {
-            if (typeof courseId === 'string') {
-                const courseRef = doc(db, 'courses', courseId);
-                const courseSnap = await getDoc(courseRef);
-                if (courseSnap.exists()) return { id: courseId, name: courseSnap.data().name };
-            }
-            return null;
-            });
-
-            const courses = await Promise.all(coursePromises);
-            const validCourses = courses.filter((course): course is Course => course !== null);
-
-            // Custom order
-            const customOrder = ['Academic Advisor', 'Course Selection', 'Career Advisor', 'Campus Life'];
-
-            // Filter out unwanted courses and sort by custom order
-            const filteredAndSortedCourses = validCourses
-            .filter((course) => course.name !== 'Study Abroad')
-            .sort((a, b) => customOrder.indexOf(a.name) - customOrder.indexOf(b.name));
-
-            //setCourseOptions(filteredAndSortedCourses);
-
-            // Handle current course_id (to display the correct course in dropdown)
-            const currentCourseId = localStorage.getItem('course_id');
-            if (currentCourseId) {
-            const currentCourse = filteredAndSortedCourses.find((course) => course.id === currentCourseId);
-            if (currentCourse) {
-                setSelectedFilter(currentCourse.name);
-            } else {
-                setSelectedFilter('Academic Advisor'); // Default fallback if course_id is not found
-            }
-            }
-
-            // Now handle the chat sessions...
-            const chatPromises = chatSessionIds.map(async (chatId: string) => {
-            if (typeof chatId === 'string') {
-                const chatRef = doc(db, 'chatsessions', chatId);
-                const chatSnap = await getDoc(chatRef);
-                if (chatSnap.exists() && chatSnap.data().name) 
-                return { 
-                chat_id: chatId, 
-                name: chatSnap.data().name,
-                thread_type: chatSnap.data().thread_type || 'Public', // Inclure thread_type avec valeur par défaut
-                topic: chatSnap.data().topic || "Default", // Ajout de `topic` avec une valeur par défaut
-
-                };
-            }
-            return null;
-            });
-
-            const fetchedConversations = await Promise.all(chatPromises);
-            const validConversations = fetchedConversations.filter(
-            (conversation): conversation is Conversation => conversation !== null
-            );
-            setConversations(validConversations.reverse());
-
-            if (validConversations.length > 0) {
-                const latestChatId = validConversations[0].chat_id;
-                setPrimaryChatId(latestChatId);
-                setActiveChatId(latestChatId);
-            }
-
-
-        }
-        }
-    };
-
-
-
-
-    const handleConversationClick = async (chat_id: string) => {
-        console.log('On se trouve dans le handleConversationClick')
-        setCurrentView('chat');
-        setPrimaryChatId(chat_id);
-        setActiveChatId(chat_id);
-        setRelatedQuestions([]);
-        setIsLandingPageVisible(false);
+        // Open the menu in a conversation to rename or delete the conversation
+     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, chatId: string) => {
+            setMenuAnchorEl(event.currentTarget);
+            setSelectedConversation(chatId);
+        };
     
-        try {
-          setSocialThreads((prevThreads: any) => {
-            const updatedThreads = prevThreads.map((thread: any) => {
-              if (thread.chat_id === chat_id && !thread.isRead) {
-                return { ...thread, isRead: true };
-              }
-              return thread;
-            });
-        
-            const newUnreadCount = updatedThreads.filter((thread: any) => !thread.isRead).length;
-            setUnreadCount(newUnreadCount);
-        
-            return updatedThreads;
-          });
-        
-          const chatHistory = await getChatHistory(chat_id);
-          console.log("Chat history retrieved for chat_id", chat_id, ":", chatHistory);
-          setMessages(chatHistory);
-        } catch (error) {
-          console.error('Error fetching chat history or thread_type:', error);
-          setIsPrivate(false); // Défaut à Public en cas d'erreur
-        }
-    };
+        //  Class the menu in a conversation to rename or delete the conversation
+    const handleMenuClose = () => {
+            setMenuAnchorEl(null);
+            setSelectedConversation(null);
+        };
 
 
 
+
+    //Permet de créer une nouvelle conversation
     const handleNewConversation = async () => {
         console.log('NEW CONVERSATION');
-        setCurrentView('chat');
+        //setCurrentView('chat'); // 🔥 Revenir au chat après la création d'une conversation
     
-        if (isStreaming) {
-          setCancelConversation(true);
-          cancelConversationRef.current = true;
-          console.log("Annulation de la conversation en cours.");
-          await new Promise((resolve) => setTimeout(resolve, 0));
+        //securite pour ne pas créer une nouvelle conversation si la landing page est visible
+        if (isLandingPageVisible) {
+        console.log("Impossible de créer une nouvelle conversation, la landing page est visible.");
+        return;
         }
     
-        const university = user?.university || 'University Name';
+        //Gerer si on clique sur une nouvelle conversation alors qu une conversation est en cours
+        if (isStreaming) {
+        setCancelConversation(true);
+        cancelConversationRef.current = true;
+        console.log("Annulation de la conversation en cours.");
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        console.log("Après le timeout:", cancelConversationRef.current);
+        }
+
+    
         const newChatId = uuidv4();
         const oldChatId = chatIds[0];
     
@@ -405,15 +360,15 @@ export const useConversations = ({
         setRelatedQuestions([]);
         setIsLandingPageVisible(true);
         setPrimaryChatId(newChatId);
-        setActiveChatId(newChatId);
     
         // Ajout immédiat de la nouvelle conversation dans la liste
         setConversations((prevConversations) => [
-          { chat_id: newChatId, name: 'New Chat', thread_type: 'Public'},
-          ...prevConversations,
+        { chat_id: newChatId, name: 'New Chat', thread_type: 'Public'}, //toujours public pour une nouvelle conversation
+        ...prevConversations,
         ]);
     
-        // Tâches en arrière-plan
+
+        //Ajout de la nouvelle conversation dans firebase
         if (user?.id) {
         const userRef = doc(db, 'users', user.id);
     
@@ -433,13 +388,14 @@ export const useConversations = ({
                 name: 'New Chat',
                 created_at: serverTimestamp(),
                 modified_at: serverTimestamp(),
-                university: university, // Ajout du champ university 
-                thread_type: 'Public', // 🔥 thread_type est bien ajouté ici
+                university: user?.university || 'University Name', // Ajout du champ university 
+                thread_type: 'Public', // 🔥 toujours public pour une nouvelle conversation
                 ReadBy:[user.id] //Ajout du champ readby to kown who see the conversation. Has he is the creator, he saw it
             });
             console.log(`Nouvelle session de chat créée avec chat_id: ${newChatId}`);
     
             // Actualiser la liste des conversations
+            /*
             const refreshedUserSnap = await getDoc(userRef);
             if (refreshedUserSnap.exists()) {
                 const refreshedUserData = refreshedUserSnap.data();
@@ -461,7 +417,9 @@ export const useConversations = ({
                 setConversations(validConversations.reverse());
                 console.log("Conversations actualisées:", validConversations);
             }
+                */
             }
+            
         } catch (error) {
             console.error("Erreur lors de la gestion de l'utilisateur et des chats:", error);
         }
@@ -470,19 +428,107 @@ export const useConversations = ({
         }
     };
 
+
+
+    //Quand on clique sur une conversation, on charge les messages et on actualise les états
+    const handleConversationClick = async (chat_id: string) => {
+        console.log('On se trouve dans le handleConversationClick')
+        
+        try {
+            // 1. Vérification du chat_id
+            if (!chat_id) {
+                console.error('Chat ID invalide');
+                return;
+            }
+
+            // 2. Mise à jour des états de base
+            setPrimaryChatId(chat_id);
+            setRelatedQuestions([]);
+            
+            // 3. Récupération des messages
+            const chatHistory = await getChatHistory(chat_id);
+            console.log("Chat history retrieved for chat_id", chat_id, ":", chatHistory);
+            setMessages(chatHistory);
+            
+            // 4. Gestion de la landing page en fonction des messages
+            setIsLandingPageVisible(chatHistory.length === 0);
+
+            // 5. Mise à jour des social threads et compteur non lus
+            setSocialThreads((prevThreads: any) => {
+                const updatedThreads = prevThreads.map((thread: any) => {
+                    if (thread.chat_id === chat_id && !thread.isRead) {
+                        return { ...thread, isRead: true };
+                    }
+                    return thread;
+                });
+                
+                const newUnreadCount = updatedThreads.filter((thread: any) => !thread.isRead).length;
+                setUnreadCount(newUnreadCount);
+                return updatedThreads;
+            });
+
+            // 6. Récupération et gestion des détails de la conversation
+            const chatRef = doc(db, 'chatsessions', chat_id);
+            const chatSnap = await getDoc(chatRef);
+
+            if (chatSnap.exists()) {
+                const chatData = chatSnap.data();
+
+                // Configuration du type de thread
+                const isConversationPrivate = chatData.thread_type === 'Private';
+                setIsPrivate(isConversationPrivate);
+
+                // Détermination du type de thread (social ou non)
+                const isChatInSocialThreads = socialThreads.some(thread => thread.chat_id === chat_id);
+                const isChatInConversations = conversations.some(conv => conv.chat_id === chat_id);
+                const isThreadSocial = isChatInSocialThreads && !isChatInConversations;
+                setIsSocialThread(isThreadSocial);
+
+                // Gestion du statut de lecture
+                if (user?.id) {
+                    const readBy = chatData.ReadBy || [];
+                    if (!readBy.includes(user.id)) {
+                        try {
+                            await updateDoc(chatRef, { 
+                                ReadBy: Array.from(new Set([...readBy, user.id])) 
+                            });
+                        } catch (updateError) {
+                            console.error('Erreur lors de la mise à jour de ReadBy:', updateError);
+                        }
+                    }
+                }
+            } else {
+                // Valeurs par défaut si la conversation n'existe pas
+                setIsPrivate(false);
+                setIsSocialThread(false);
+            }
+
+        } catch (error) {
+            console.error('Erreur lors du chargement de la conversation:', error);
+            // Gestion des erreurs et valeurs par défaut
+            setIsPrivate(false);
+            setIsSocialThread(false);
+            setMessages([]);
+            setIsLandingPageVisible(true);
+        }
+    };
+
+
+
+
     return {
         formatDate,
         handleMenuOpen,
         handleMenuClose,
         fetchSocialThreads,
-        fetchCourseOptionsAndChatSessions,
+        fetchChatSessions,
         handlePrivacyChange,
         handleRename,
         handleDelete,
         handleConversationClick,
         handleNewConversation,
         updateThreadTypeLocally,
-        loadChatDataBeforeRedirect,
+        loadInitialMessages,
       };
 };
 
