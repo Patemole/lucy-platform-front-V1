@@ -302,7 +302,6 @@ export default function SignUp() {
       });
 
       console.log("[Step 7] Initialisation before navigate...");
-      //await loadChatDataBeforeRedirect(); // ⬅️ on charge les conversations + social threads
       await initializeApp();
 
       console.log("[Step 7] Redirecting user to onboarding page");
