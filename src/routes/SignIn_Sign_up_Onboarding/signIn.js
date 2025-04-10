@@ -14,7 +14,7 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 
 
 const allowedDomains = {
-  upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
+  //upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
   harvard: [/^.+@([a-zA-Z0-9._-]+\.)*harvard\.edu$/i, /^.+@my-lucy\.com$/i],
   mit: [/^.+@([a-zA-Z0-9._-]+\.)*mit\.edu$/i, /^.+@my-lucy\.com$/i],
   lasell: [/^.+@([a-zA-Z0-9._-]+\.)*lasell\.edu$/i, /^.+@my-lucy\.com$/i],
@@ -43,7 +43,7 @@ const allowedDomains = {
 
 const getErrorMessage = (subdomain) => {
   const universityNames = {
-    upenn: 'Upenn email',
+    //upenn: 'Upenn email',
     harvard: 'Harvard email',
     mit: 'MIT email',
     lasell: 'Lasell email',
@@ -84,6 +84,9 @@ const isEmail = (email) =>
 const getAllowedDomains = (subdomain) => allowedDomains[subdomain] || [];
 
 const isAllowedEmail = (email, subdomain) => {
+  if (subdomain === 'upenn') {
+    return true; // Accepte toutes les adresses email pour UPenn
+  }
   const domains = getAllowedDomains(subdomain);
   return domains.some((regex) => regex.test(email));
 };
