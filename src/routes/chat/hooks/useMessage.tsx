@@ -127,7 +127,15 @@ export const useMessage = ({
         setAbortController(abortController);
 
         try {
-            const chatSessionId = chatIds[0] || 'default_chat_id';
+            const chatSessionId = useChatStore.getState().currentChatId;
+
+            if (!chatSessionId) {
+                console.error("onSubmit: currentChatId is null. Cannot send message.");
+                setIsStreaming(false);
+                setAbortController(null);
+                return;
+            }
+
             const courseId = 'default_course_id';
             const username = user?.name || 'default_username_OnSubmitFunction';
             const university = user?.university || 'University Name';
@@ -321,41 +329,10 @@ export const useMessage = ({
 
 
                 //permet de pouvoir update le topic de la conversation en cours en fonction de la question de l utilisateur
-                
                 if (flattenedTITLEANDCATEGORY.length > 0) {
-                const { category: newCategory, conversation_title: newTitle } = flattenedTITLEANDCATEGORY[0];
-                
-                // Mise à jour locale du topic et du titre
-                const currentConversationsForUpdate = useChatStore.getState().conversations;
-                const updatedConversations = currentConversationsForUpdate.map((conv: Conversation) =>
-                    conv.chat_id === chatSessionId
-                        ? { ...conv, topic: newCategory, name: newTitle } // Mise à jour locale
-                        : conv
-                );
-                setConversations(updatedConversations);
-
-                // Mise à jour locale du topic pour `socialThreads`
-                const currentSocialThreadsForUpdate = useChatStore.getState().socialThreads;
-                const updatedSocialThreads = currentSocialThreadsForUpdate.map((thread: SocialThread) =>
-                    thread.chat_id === chatSessionId
-                        ? { ...thread, topic: newCategory, name: newTitle } // Mise à jour locale
-                        : thread
-                );
-                setSocialThreads(updatedSocialThreads);
-                
-                // Mise à jour dans Firestore pour le topic et le titre
-                const updateThreadData = async (chatId: string, data: { topic: string; name: string }) => {
-                    try {
-                    const docRef = doc(db, "chatsessions", chatId); // Référence au document Firestore
-                    await updateDoc(docRef, data); // Mise à jour des champs `topic` et `name`
-                    console.log(`Thread ${chatId} updated with topic: ${data.topic} and title: ${data.name}`);
-                    } catch (error) {
-                    console.error("Erreur lors de la mise à jour du thread :", error);
-                    }
-                };
-                
-                // Appel de la mise à jour persistante
-                updateThreadData(chatSessionId, { topic: newCategory, name: newTitle });
+                  const { category: newCategory, conversation_title: newTitle } = flattenedTITLEANDCATEGORY[0];
+                  // Utiliser l'action du store qui gère la mise à jour optimiste et Firestore
+                  useChatStore.getState().updateConversationTitleAndTopic(chatSessionId, newTitle, newCategory);
                 }
 
                 //const flattenedTITLEANDCATEGORY = [
@@ -593,7 +570,7 @@ export const useMessage = ({
         ratings: { relevance?: number; accuracy?: number; format?: number; sources?: number; overall_satisfaction?: number }
     ) => {
         const uid = user?.id || 'default_uid';
-        const chatId = chatIds[0] || 'default_chat_id';
+        const chatId = useChatStore.getState().currentChatId || 'default_chat_id';
     
         await submitFeedbackWrongAnswer({
         userId: uid,
@@ -623,7 +600,7 @@ export const useMessage = ({
         const currentMessage = messages[index];
         const previousMessage = index > 0 ? messages[index - 1] : null;
         const uid = user?.id || 'default_uid';
-        const chatId = chatIds[0] || 'default_chat_id';
+        const chatId = useChatStore.getState().currentChatId || 'default_chat_id';
 
 
         await submitFeedbackGoodAnswer({
