@@ -551,7 +551,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       conversations: [newConversation, ...state.conversations],
       currentChatId: newChatId,
       messages: [],
-      isLandingPageVisible: false,
+      isLandingPageVisible: true,
       isCurrentChatPrivate: true,
       isSocialThreadActive: false,
       isLoadingConversations: false,
