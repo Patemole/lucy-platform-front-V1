@@ -33,7 +33,6 @@ interface ChatContentProps {
     handleSendMAJORMINORMessage: (data: { majors: string[]; minors: string[] }) => void;
     handleSendCOMPLIANCEMessage: (data: { termsAccepted: boolean; ageConfirmed: boolean }) => void;
     hasStartedStreaming: boolean;
-    updateThreadTypeLocally: (threadType: string) => void;
     handlePrivacyChange: (newState: boolean) => void;
     setIsAtBottom: (val: boolean) => void;
     setNewMessagesCount: React.Dispatch<React.SetStateAction<number>>;
@@ -64,7 +63,6 @@ interface ChatContentProps {
     handleSendMAJORMINORMessage,
     handleSendCOMPLIANCEMessage,
     hasStartedStreaming,
-    updateThreadTypeLocally,
     handlePrivacyChange,
     setIsAtBottom,
     setNewMessagesCount,
@@ -79,7 +77,6 @@ interface ChatContentProps {
             <LandingPage 
             onSend={handleSendMessageFromLandingPage} 
             onPrivacyChange={handlePrivacyChange} 
-            updateThreadTypeLocally={updateThreadTypeLocally}
             />
         </>
         ) : (

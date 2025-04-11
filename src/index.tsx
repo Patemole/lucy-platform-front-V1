@@ -2,29 +2,20 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import { AuthProvider } from './auth/context/AuthContext';
-import { ChatProvider } from './auth/context/ChatContext';
+// Les imports de AuthProvider et ChatProvider ne sont plus nécessaires
+// import { AuthProvider } from './auth/context/AuthContext'; 
+// import { ChatProvider } from './auth/context/ChatContext';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
-/*
-root.render(
-  <React.StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </React.StrictMode>
-);
-*/
 
+// Le rendu simplifié sans les anciens Providers
 root.render(
-    <AuthProvider>
-      <ChatProvider>
-      <App />
-      </ChatProvider>
-    </AuthProvider>
+  <React.StrictMode> {/* Optionnel mais recommandé */}
+    <App />
+  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

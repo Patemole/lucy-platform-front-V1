@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../auth/hooks/useAuth';
+import useAuthStore from '../stores/useAuthStore'; // Importer le store Zustand
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 
 const PrivateRoute: React.FC = () => {
-    const { isAuth, loading, user } = useAuth(); // Utilisez `user` depuis le contexte
+    // Utiliser useAuthStore pour récupérer l'état
+    const { isAuthenticated: isAuth, isLoading: loading, user } = useAuthStore(); 
     const location = useLocation();
 
     useEffect(() => {
@@ -25,24 +26,22 @@ const PrivateRoute: React.FC = () => {
     }
 
     // Redirige si l'utilisateur n'est pas authentifié
-    if (!isAuth || !user) {
-        console.log("PrivateRoute: Utilisateur non authentifié, redirection vers /auth/sign-in.");
-        return <Navigate to="/auth/sign-in" />;
+    // On vérifie `isAuth` qui vient maintenant du store
+    if (!isAuth) {
+        console.log("PrivateRoute: Utilisateur non authentifié (isAuth=", isAuth, "), redirection vers /auth/sign-in.");
+        // Redirige vers sign-in mais garde la location d'origine pour un potentiel retour
+        return <Navigate to="/auth/sign-in" state={{ from: location }} replace />;
     }
 
-    // Redirige depuis `/` vers le tableau de bord de l'utilisateur
-    if (location.pathname === '/') {
-        if (user?.id) {
-            console.log(`PrivateRoute: Redirection vers /onboarding-with-lucy/${user.id}`);
-            return <Navigate to={`/onboarding-with-lucy/${user.id}`} />;
-        } else {
-            console.log("PrivateRoute: UID non disponible, redirection vers /auth/sign-in.");
-            return <Navigate to="/auth/sign-in" />;
-        }
+    // Redirige depuis `/` vers le tableau de bord de l'utilisateur si authentifié
+    if (location.pathname === '/' && user?.id) {
+        console.log(`PrivateRoute: Redirection de '/' vers /onboarding-with-lucy/${user.id}`);
+        return <Navigate to={`/onboarding-with-lucy/${user.id}`} replace />;
     }
-
-    console.log("PrivateRoute: Utilisateur authentifié, accès aux routes protégées.");
-    return <Outlet />;
+    
+    // Si l'utilisateur est authentifié et n'est pas sur `/` ou si la redirection n'est pas nécessaire
+    console.log("PrivateRoute: Utilisateur authentifié (isAuth=", isAuth, "), accès aux routes protégées.");
+    return <Outlet />; // Affiche le composant enfant correspondant à la route
 };
 
 export default PrivateRoute;

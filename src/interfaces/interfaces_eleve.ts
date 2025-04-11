@@ -87,6 +87,7 @@ export interface Message {
   LINKEDIN?: AnswerLINKEDIN[] | null;
   INSTA2?: AnswerINSTA2[] | null;
   METADATAONBOARDING?: string; // THE DATA FROM THE ONBOARDING, CAN BE SCHOOL, MAJOR, MINOR...
+  isLoading?: boolean; // Ajouté pour gérer l'état de chargement optimiste
 };
 
 

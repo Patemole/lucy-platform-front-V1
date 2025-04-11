@@ -29,10 +29,9 @@ import config from '../../config';
 interface LandingPageProps {
   onSend: (message: string) => void;
   onPrivacyChange: (isPrivate: boolean) => void; // Nouvelle prop pour gérer l'état de confidentialité
-  updateThreadTypeLocally: (threadType: string) => void; // Utilise uniquement threadType
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, updateThreadTypeLocally }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
@@ -300,7 +299,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
     'Academic Info': [
       'How can I get involved in research opportunities as an undergraduate',
       'What options are available for me to study abroad in Europe?',
-      'What tutoring or academic support services do I have if I’m struggling in my courses?',
+      'What tutoring or academic support services do I have if I'm struggling in my courses?',
       'What resources are available for me to pursue independent study projects?',
     ],
     'Events': [
@@ -310,7 +309,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
       'Are there opportunities for me to host or lead events on campus?',
     ],
     'Policies': [
-      'What’s the process for changing my major or adding a minor?',
+      'What's the process for changing my major or adding a minor?',
       'How can I get clarification on degree requirements and academic advising?',
       'Are there procedures in place for taking a leave of absence or withdrawing from the university?',
       'How do I appeal a grade or academic decision if I feel it was unfair?',
@@ -464,32 +463,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange, upda
                   <IconButton
                     onClick={async () => {
                       try {
-                        const newPrivacyState = !isPrivate; 
-                        setIsPrivate(newPrivacyState); 
-
-                        // Appeler la fonction du parent pour mettre à jour son état
-                        if (typeof onPrivacyChange === 'function') {
-                            onPrivacyChange(newPrivacyState);
-                        }
+                        const newPrivacyState = !isPrivate;
+                        setIsPrivate(newPrivacyState);
+                        onPrivacyChange(newPrivacyState);
 
                         const currentThreadType = newPrivacyState ? 'Private' : 'Public';
-
-                        // Appeler la fonction pour mettre à jour localement
-                        if (typeof updateThreadTypeLocally === 'function') {
-                            updateThreadTypeLocally(currentThreadType);
-                        }
-
                         const chatSessionId = chatIds[0] || 'default_chat_id';
-              
-                        // On récupère la référence du document dans chatsessions
-                        const docRef = doc(db, 'chatsessions', chatSessionId);
-              
-                        // Mise à jour du champ thread_type
-                        await updateDoc(docRef, { thread_type: currentThreadType });
-              
-                        console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
+
+                        if (chatSessionId && chatSessionId !== 'default_chat_id') {
+                          const docRef = doc(db, 'chatsessions', chatSessionId);
+                          try {
+                            await updateDoc(docRef, { thread_type: currentThreadType });
+                            console.log(`Thread type updated to ${currentThreadType} for chat_id ${chatSessionId}`);
+                          } catch (error) {
+                            console.error('Error updating thread type:', error);
+                          }
+                        } else {
+                          console.warn('Invalid or default chatSessionId, cannot update Firestore.');
+                        }
                       } catch (error) {
-                        console.error('Erreur lors de la mise à jour du thread_type :', error);
+                        console.error('Erreur lors de la mise à jour globale du thread_type :', error);
                       }
                     }}
                     edge="start"
