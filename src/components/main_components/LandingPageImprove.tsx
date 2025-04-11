@@ -21,45 +21,38 @@ import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
 import { doc, updateDoc} from 'firebase/firestore';
 import { db } from '../../auth/firebase';
-import { useAuth } from '../../auth/hooks/useAuth';
+import useChatStore from '../../stores/useChatStore';
 import config from '../../config';
 
 
 
 interface LandingPageProps {
   onSend: (message: string) => void;
-  onPrivacyChange: (isPrivate: boolean) => void; // Nouvelle prop pour gérer l'état de confidentialité
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
 
   const [inputValue, setInputValue] = useState('');
-  const { chatIds} = useAuth();
   const [isTyping, setIsTyping] = useState(true);
   const [placeholderText, setPlaceholderText] = useState('');
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [isHoveringQuestions, setIsHoveringQuestions] = useState(false);
-  //const [showCursor, setShowCursor] = useState(true);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const subdomain = config.subdomain;
 
+  const { conversations, currentChatId, updateConversationPrivacy } = useChatStore();
 
-  // État pour la confidentialité (Public/Private)
-  //const [isPrivate, setIsPrivate] = React.useState(false); // Par défaut, en mode Public
-  const [isPrivate, setIsPrivate] = useState(false);
-
+  const currentConversation = conversations.find(c => c.chat_id === currentChatId);
+  const isCurrentlyPrivate = currentConversation?.thread_type === 'Private' || false;
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Texte initial à taper
   const initialText = 'Ask Lucy...';
 
-
-  // Exemple de questions à défiler
   const tickerQuestions = [
     { question: "What are the event of the week?", topic: "Events" },
     { question: "Are there study abroad opportunities?", topic: "Policies" },
@@ -94,7 +87,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
 
 
 
-  // Fonction pour envoyer le message
   const handleSend = () => {
     const message = inputValue.trim();
     console.log('Button clicked');
@@ -112,11 +104,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
     }
   };
 
-  React.useEffect(() => {
-    console.log("Privacy state changed:", isPrivate ? "Private" : "Public");
-  }, [isPrivate]);
-
-  // Gestion de la touche Entrée
   const handleKeyPress = (event: KeyboardEvent) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       handleSend();
@@ -125,53 +112,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
   };
 
   const handlePlaceholderClick = () => {
-    setShowPlaceholder(false); // Cache immédiatement le placeholder au clic
+    setShowPlaceholder(false);
   };
 
- /*
-  // Gestion du survol des boutons
-  const handleButtonMouseEnter = (buttonText: string) => {
-    setActiveButton(buttonText);
-    setPlaceholderText('Ask Lucy...');
-  };
-  
-
-  // Gestion du clic sur un bouton
-  const handleButtonClick = (buttonText: string) => {
-    setActiveButton(buttonText);
-    setPlaceholderText('Ask Lucy...');
-  };
-
-  // Gestion du survol d'une question
-  const handleQuestionHover = (question: string) => {
+  const handleQuestionClick = (question: string) => {
     setInputValue(question);
   };
-  */
-
-  /*
-  // Gestion du clic sur une question
-  const handleQuestionClick = (question: string) => {
-    onSend(question);
-    setInputValue('');
-    setActiveButton(null);
-    setPlaceholderText('Ask Lucy...');
-  };
-  */
-
-  const handleQuestionClick = (question: string) => {
-    //setPlaceholderText(question); // ✅ Met la question dans le placeholder
-    setInputValue(question); // ✅ Assure que l'input reste vide pour ne pas perturber la saisie
-  };
   
 
-  // Gestion du changement dans le champ de saisie
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     console.log('Current input value in handleInputChange:', value);
     setInputValue(value);
   };
 
-  // Animation de saisie pour le texte initial
   useEffect(() => {
     let index = 0;
     let currentText = '';
@@ -195,7 +149,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
     };
   }, []);
 
-  // Réinitialiser l'état lorsque le champ est vide
   useEffect(() => {
     if (!isTyping && inputValue.trim() === '') {
       setActiveButton(null);
@@ -203,7 +156,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
     }
   }, [inputValue, isTyping]);
 
-  // Gestion du clic à l'extérieur pour réinitialiser les états
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -225,7 +177,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
     };
   }, [isHoveringQuestions]);
 
-  // Définition des boutons
   const allButtons = [
     {
       label: 'Academic Info',
@@ -254,13 +205,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
     },
   ];
 
-  // Filtrer les boutons en fonction de la taille de l'écran
   const buttons = isSmallScreen
     ? allButtons.filter((button) => button.label !== 'Admission')
     : allButtons;
 
-  // Questions mappées à chaque bouton
-  
   const questionsMap: { [key: string]: string[] } = {
     'Academic Info': [
       'What are the most popular majors or programs?',
@@ -294,40 +242,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
     ],
   };
   
-/*
-  const questionsMap: { [key: string]: string[] } = {
-    'Academic Info': [
-      'How can I get involved in research opportunities as an undergraduate',
-      'What options are available for me to study abroad in Europe?',
-      'What tutoring or academic support services do I have if I'm struggling in my courses?',
-      'What resources are available for me to pursue independent study projects?',
-    ],
-    'Events': [
-      'How do I book an in-person campus tour for my family visiting me?',
-      'What major campus events should I look out for this semester?',
-      'Which student clubs or organizations are currently active on campus, and how do I join them?',
-      'Are there opportunities for me to host or lead events on campus?',
-    ],
-    'Policies': [
-      'What's the process for changing my major or adding a minor?',
-      'How can I get clarification on degree requirements and academic advising?',
-      'Are there procedures in place for taking a leave of absence or withdrawing from the university?',
-      'How do I appeal a grade or academic decision if I feel it was unfair?',
-    ],
-    'Facilities': [
-      'What housing options are available for upperclassment?',
-      'Are the gym and fitness facilities accessible to all students?',
-      'How do I report maintenance issues in my housing?',
-      'What should I do if I encounter issues with roommate conflicts or community living challenges?',
-    ],
-    'Financial Aid': [
-      'How do I apply for financial aid for the next academic year?',
-      'What is the work-study program like?',
-      'Are there additional scholarships available for current students, and how do I apply?',
-      'What should I do if my financial situation changes during the academic year?',
-    ],
-  };
-  */
 
   return (
     <Box
@@ -340,10 +254,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
       position="relative"
       overflow="hidden"
       sx={{
-        backgroundColor: isSmallScreen ? '#F0F4FA' : 'transparent', // Couleur pour les petits écrans
+        backgroundColor: isSmallScreen ? '#F0F4FA' : 'transparent',
       }}
     >
-      {/* Arrière-plan Spline - affiché uniquement sur les grands écrans */}
       {isLargeScreen && (
         <section aria-label="3D background" aria-hidden="true" role="presentation">
         <iframe
@@ -362,30 +275,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
         </section>
       )}
 
-      {/*
-      {/* Ticker des questions optimisé *
-      <div className="w-full bg-gray-100 py-2 mb-4 overflow-hidden">
-        <Marquee gradient={false} speed={40}>
-          {tickerQuestions.map((question, index) => (
-            <div
-              key={index}
-              className="mx-2 px-4 py-2 bg-white rounded-lg shadow-md text-sm text-blue-900 font-semibold cursor-pointer hover:bg-blue-100 transition"
-            >
-              {question}
-            </div>
-          ))}
-        </Marquee>
-      </div>
-      */}
-
-
-      {/* Ticker des questions optimisé avec topics et fond adouci */}
       <section aria-label="Sample questions ticker" className="hidden sm:flex justify-center w-full mb-4">
 
         <div className="max-w-5xl w-full bg-gray-100 py-2 px-4 rounded-lg">
           <Marquee gradient={false} speed={40}>
             {tickerQuestions.map((questionObj, index) => {
-              const topic = questionObj.topic || "Default"; // Assure un fallback si le topic est absent
+              const topic = questionObj.topic || "Default";
               const color = topicColors[topic] || topicColors["Default"];
 
               return (
@@ -393,22 +288,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
                   key={index}
                   type="button"
                   className="mx-2 flex items-center px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer hover:bg-gray-200 transition pb-1"
-                  style={{ backgroundColor: "##F7F9FC" }} // Fond plus doux
-                  onClick={() => handleQuestionClick(questionObj.question)} // ✅ Met à jour seulement le placeholder
+                  style={{ backgroundColor: "##F7F9FC" }}
+                  onClick={() => handleQuestionClick(questionObj.question)}
                 >
-                  {/* Rectangle du topic avec fond clair */}
                   <span
                     className="mr-2 px-3 py-1 rounded-lg text-xs font-bold"
                     style={{
-                      color: color, // Texte coloré
-                      backgroundColor: `${color}20`, // Fond plus clair
+                      color: color,
+                      backgroundColor: `${color}20`,
                       whiteSpace: "nowrap",
                     }}
                   >
                     {topic}
                   </span>
 
-                  {/* Question */}
                   <span className="text-blue-900">{questionObj.question}</span>
                 </button>
               );
@@ -420,7 +313,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
 
       
   
-      {/* Contenu principal de la landing page */}
       <Box
         component="main"
         ref={containerRef}
@@ -438,10 +330,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
           sx={{
             color: '#011F5B',
             maxWidth: '100%',
-            mb: 2, // Ajoute une marge inférieure de 4 unités de spacing (par défaut 4 * 8px = 32px)
+            mb: 2,
             wordBreak: 'break-word',
             ...(isSmallScreen && {
-              fontSize: '1.5rem', // Taille ajustée pour les petits écrans
+              fontSize: '1.5rem',
             }),
           }}
         >
@@ -453,43 +345,31 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
           variant="outlined"
           value={inputValue}
           onChange={handleInputChange}
-          onMouseDown={handlePlaceholderClick}  // Capture le clic sur le placeholder
+          onMouseDown={handlePlaceholderClick}
           onKeyPress={handleKeyPress}
-          //placeholder={isTyping ? '' : `${placeholderText}${showCursor ? '|' : ''}`}
           placeholder={isTyping ? '' : `${placeholderText}`}
           InputProps={{
             startAdornment: (
                 <InputAdornment position="start">
                   <IconButton
                     onClick={async () => {
+                      if (!currentChatId) {
+                        console.warn("Cannot change privacy: No active chat selected.");
+                        return;
+                      }
+                      const newPrivacyState = !isCurrentlyPrivate;
+                      console.log(`LandingPage: Toggling privacy for chat ${currentChatId} to ${newPrivacyState ? 'Private' : 'Public'}`);
                       try {
-                        const newPrivacyState = !isPrivate;
-                        setIsPrivate(newPrivacyState);
-                        onPrivacyChange(newPrivacyState);
-
-                        const currentThreadType = newPrivacyState ? 'Private' : 'Public';
-                        const chatSessionId = chatIds[0] || 'default_chat_id';
-
-                        if (chatSessionId && chatSessionId !== 'default_chat_id') {
-                          const docRef = doc(db, 'chatsessions', chatSessionId);
-                          try {
-                            await updateDoc(docRef, { thread_type: currentThreadType });
-                            console.log(`Thread type updated to ${currentThreadType} for chat_id ${chatSessionId}`);
-                          } catch (error) {
-                            console.error('Error updating thread type:', error);
-                          }
-                        } else {
-                          console.warn('Invalid or default chatSessionId, cannot update Firestore.');
-                        }
+                        await updateConversationPrivacy(currentChatId, newPrivacyState);
                       } catch (error) {
-                        console.error('Erreur lors de la mise à jour globale du thread_type :', error);
+                        console.error('Error calling updateConversationPrivacy:', error);
                       }
                     }}
                     edge="start"
-                    aria-label={isPrivate ? "Set to Public" : "Set to Private"}
+                    aria-label={isCurrentlyPrivate ? "Set to Public" : "Set to Private"}
                     sx={{
-                      backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5',
-                      color: isPrivate ? '#6F6F6F' : '#3155CC',
+                      backgroundColor: isCurrentlyPrivate ? '#E0E0E0' : '#D6DDF5',
+                      color: isCurrentlyPrivate ? '#6F6F6F' : '#3155CC',
                       borderRadius: '12px',
                       padding: '6px 12px',
                       marginLeft: '8px',
@@ -501,8 +381,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
                       width: '80px',
                       height: '35px',
                       '&:hover': {
-                        backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
-                        color: isPrivate ? '#5A5A5A' : '#4A0B8A',
+                        backgroundColor: isCurrentlyPrivate ? '#D5D5D5' : '#C4A4D8',
+                        color: isCurrentlyPrivate ? '#5A5A5A' : '#4A0B8A',
                       },
                     }}
                     ref={(el) => {
@@ -511,7 +391,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
                       }
                     }}
                   >
-                    {isPrivate ? (
+                    {isCurrentlyPrivate ? (
                       <>
                         <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
                         <Typography variant="caption" sx={{ color: '#000' }}>
@@ -565,9 +445,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
           }}
         />
 
-        {/* Affichage conditionnel pour Holy Family seulement */}
-      {/* Affichage conditionnel pour Holy Family seulement */}
-      {subdomain === 'holyfamily' && (
+        {subdomain === 'holyfamily' && (
         <Box
           sx={{
             display: 'flex',
@@ -596,21 +474,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
         </Box>
       )}
 
-        {/* Afficher les inspirations sous le placeholder sur petit écran */}
         {isSmallScreen && (
           <Box mt={2}>
-            {/*
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: "#011F5B", mb: 1, textAlign: "center" }}>
-              Need inspiration?
-            </Typography>
-            */}
-
-            {/* Affichage des catégories */}
             <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1}>
               {Object.keys(questionsMap).map((category) => (
                 <Typography
                   key={category}
-                  onClick={() => setSelectedCategory(selectedCategory === category ? null : category)} // Toggle de la catégorie
+                  onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
                   sx={{
                     cursor: "pointer",
                     fontSize: "0.9rem",
@@ -627,7 +497,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend, onPrivacyChange }) =>
               ))}
             </Box>
 
-            {/* Affichage des questions si une catégorie est sélectionnée */}
             {selectedCategory && (
               <Box mt={2}>
                 {questionsMap[selectedCategory].map((question, index) => (

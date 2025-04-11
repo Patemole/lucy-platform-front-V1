@@ -76,7 +76,6 @@ interface ChatContentProps {
         <>
             <LandingPage 
             onSend={handleSendMessageFromLandingPage} 
-            onPrivacyChange={handlePrivacyChange} 
             />
         </>
         ) : (
