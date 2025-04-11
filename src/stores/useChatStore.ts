@@ -143,7 +143,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   // --- Public Actions ---
 
   setMessagesList: (messages: Message[]) => {
-    set({ messages, isLandingPageVisible: messages.length === 0 });
+    set({ messages }); // Ne fait que mettre à jour les messages
   },
 
   addOptimisticMessage: (humanMessageContent: string) => {
@@ -166,7 +166,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     };
 
     const newMessages = [...get().messages, humanMessage, loadingAiMessage];
-    set({ messages: newMessages, isLandingPageVisible: false, isStreamingResponse: true });
+    set({ messages: newMessages, isStreamingResponse: true });
     return newMessages; // Return the updated array for potential use in onSubmit
   },
 
@@ -249,136 +249,135 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         const currentMessages = state.messages;
         // Trouve le dernier message AI marqué comme isLoading
         const lastMessageIndex = currentMessages.findIndex(m => m.type === 'ai' && m.isLoading === true);
+
         if (lastMessageIndex === -1) {
           console.warn("finalizeAiMessage: No loading AI message found to finalize.");
-          return { isStreamingResponse: false }; // Should not happen often
+          return {}; // Rien à faire
         }
 
         const updatedMessages = [...currentMessages];
-        updatedMessages[lastMessageIndex] = {
-            ...updatedMessages[lastMessageIndex],
-            content: aiMessageContent.replace(/\|/g, ''), // Final content, remove delimiters
-            ...metadata, // Apply all final metadata
-            isLoading: false, // Mark as complete
+        const finalAiMessage: Message = {
+            ...updatedMessages[lastMessageIndex], // Copie le message existant (avec métadonnées accumulées)
+            content: aiMessageContent, // Met à jour le contenu final
+            isLoading: false, // Marque comme non en chargement
+            ...metadata, // Fusionne les métadonnées finales (au cas où)
         };
-        return { messages: updatedMessages, isStreamingResponse: false };
+
+        updatedMessages[lastMessageIndex] = finalAiMessage;
+
+        return { messages: updatedMessages, isStreamingResponse: false, relatedQuestions: [] }; // Fin du streaming, reset related questions
     });
 
-    // Save the finalized AI message to the backend
-    if (currentChatId && user?.id && user?.university) {
-         // Trouve le dernier message humain avant le message AI finalisé
-         const lastHumanMessage = get().messages.slice(0, -1).reverse().find(m => m.type === 'human')?.content || '';
+    // Sauvegarde finale en backend
+    if (currentChatId && user?.id) {
         try {
-             console.log("ChatStore: Saving finalized AI message to backend...");
-             await saveMessageAIToBackend({
-                message: aiMessageContent.replace(/\|/g, ''), // Use cleaned content
-                chatSessionId: currentChatId,
-                courseId: 'default_course_id', // Or get dynamically if available
-                username: 'Lucy', // Persona name
-                type: 'ai',
-                uid: user.id,
-                input_message: lastHumanMessage, // Pass the preceding human message
-                university: user.university,
-                // Pass other relevant metadata if needed by backend (sources, confidence score etc.)
-                // REMOVED sources as it's not expected by the backend function
-                /* sources: metadata.citedDocuments?.map(doc => ({
-                    document_id: doc.document_id,
-                    link: doc.link,
-                    document_name: doc.document_name,
-                    source_type: doc.source_type
-                })),*/
-                // REMOVED confident_score as it's not expected by the backend function
-                /* confident_score: metadata.CONFIDENCESCORE?.[0]?.confidenceScore, */
-             });
-             console.log("ChatStore: Finalized AI message saved successfully.");
+            // ---> CORRECTION Linter Error 1 : Revenir à l'appel API original <---
+            // Récupérer le dernier message AI finalisé
+            const finalAiMessage = get().messages.slice().reverse().find(m => m.type === 'ai' && !m.isLoading);
+            // Récupérer le message humain qui le précède
+            const lastHumanMessage = get().messages.slice(0, get().messages.length - 1).reverse().find(m => m.type === 'human')?.content || '';
+
+            if (finalAiMessage) {
+                console.log("ChatStore: Saving finalized AI message to backend...");
+                await saveMessageAIToBackend({
+                   message: finalAiMessage.content, // Utiliser le contenu final
+                   chatSessionId: currentChatId,
+                   courseId: 'default_course_id', // Ou récupérer dynamiquement si nécessaire
+                   username: 'Lucy', // Nom du persona
+                   type: 'ai',
+                   uid: user.id,
+                   input_message: lastHumanMessage,
+                   university: user.university || '',
+                   // Inclure d'autres métadonnées si attendues par l'API
+                   // (Ex: sources, confidence score, etc. si finalAiMessage les contient)
+                   // sources: finalAiMessage.citedDocuments?.map(doc => ({...})),
+                   // confident_score: finalAiMessage.CONFIDENCESCORE?.[0]?.confidenceScore,
+                });
+                 console.log("ChatStore: Finalized AI message saved successfully.");
+            } else {
+                 console.warn("finalizeAiMessage: Last AI message not found for saving.");
+            }
         } catch (error) {
-             console.error("ChatStore: Failed to save finalized AI message:", error);
-             get()._setError("Failed to save AI response.");
+            console.error("finalizeAiMessage: Failed to save AI message to backend:", error);
+            get()._setError("Failed to save response.");
         }
-    } else {
-        console.warn("ChatStore: Cannot save AI message - missing chatId, userId, or university.");
     }
   },
 
-   clearChatState: () => {
-        set({
-            messages: [],
-            conversations: [],
-            socialThreads: [],
-            currentChatId: null,
-            isLandingPageVisible: true,
-            isSocialThreadActive: false,
-            isCurrentChatPrivate: false,
-            isLoadingMessages: false,
-            isLoadingConversations: false,
-            isLoadingSocialThreads: false,
-            isStreamingResponse: false,
-            unreadSocialThreadsCount: 0,
-            relatedQuestions: [],
-            error: null,
-        });
-        console.log("ChatStore: State cleared.");
-    },
-
+  clearChatState: () => {
+    console.log("[ChatStore] Clearing chat state (logout or error).");
+    set({
+      messages: [],
+      conversations: [],
+      socialThreads: [],
+      currentChatId: null,
+      isLandingPageVisible: true, // Réinitialiser sur la landing page
+      isSocialThreadActive: false,
+      isCurrentChatPrivate: false,
+      isLoadingMessages: false,
+      isLoadingConversations: false,
+      isLoadingSocialThreads: false,
+      isStreamingResponse: false,
+      unreadSocialThreadsCount: 0,
+      relatedQuestions: [],
+      error: null,
+      abortController: null,
+    });
+  },
 
   // --- Data Fetching Actions ---
 
   fetchConversations: async () => {
-    const { user, chatIds } = useAuthStore.getState();
-    if (!user?.id || !chatIds || chatIds.length === 0) {
-        console.log("fetchConversations: No user or chatIds found.");
-        set({ conversations: [], isLoadingConversations: false });
-        return;
-    }
-    set({ isLoadingConversations: true });
-    try {
-      // Utilisation d'une requête Firestore optimisée si possible
-      // Alternative: Itérer sur les chatIds si la requête n'est pas viable (trop d'IDs)
-      if (chatIds.length > 30) { // Firestore 'in' query limit is 30
-          console.warn("fetchConversations: Fetching more than 30 chats individually.");
-          const chatPromises = chatIds.map(async (chatId: string) => {
-              if (typeof chatId === 'string') {
-                  const chatRef = doc(db, 'chatsessions', chatId);
-                  const chatSnap = await getDoc(chatRef);
-                  if (chatSnap.exists()) {
-                      const data = chatSnap.data();
-                      return {
-                          chat_id: chatId,
-                          name: data.name || 'Unnamed Chat', // Provide default name
-                          thread_type: data.thread_type || 'Public',
-                          topic: data.topic || "Default",
-                      } as Conversation; // Cast to Conversation
-                  }
-              }
-              return null;
-          });
-           const fetchedConversations = (await Promise.all(chatPromises))
-                                        .filter((c): c is Conversation => c !== null); // Type guard
-           set({ conversations: fetchedConversations, isLoadingConversations: false });
-           console.log("ChatStore: Conversations fetched individually.", fetchedConversations);
+    const { _setIsLoadingConversations, setConversations, _setError } = get();
+    const userId = useAuthStore.getState().user?.id;
+    const university = useAuthStore.getState().user?.university;
 
-      } else {
-          const q = query(collection(db, 'chatsessions'), where('chat_id', 'in', chatIds));
-          const querySnapshot = await getDocs(q);
-          const fetchedConversations = querySnapshot.docs.map(docSnap => {
-              const data = docSnap.data();
-              return {
-                  chat_id: docSnap.id,
-                  name: data.name || 'Unnamed Chat',
-                  thread_type: data.thread_type || 'Public',
-                  topic: data.topic || 'Default',
-              } as Conversation; // Cast to Conversation
-          });
-           set({ conversations: fetchedConversations, isLoadingConversations: false });
-           console.log("ChatStore: Conversations fetched via 'in' query.", fetchedConversations);
-      }
+    if (!userId || !university) {
+      console.warn("[ChatStore] Cannot fetch conversations: userId or university missing.");
+      setConversations([]); // Reset conversations
+      _setError("User information missing to fetch conversations.");
+      return;
+    }
+
+    console.log(`[ChatStore] Fetching conversations for user ${userId} in ${university}`);
+    _setIsLoadingConversations(true);
+    try {
+      const conversationsRef = collection(db, 'chatsessions');
+      const q = query(
+        conversationsRef,
+        where('user_ids', 'array-contains', userId), // Conversations where user is a member
+        where('university', '==', university),
+        orderBy('modified_at', 'desc') // Trier par date de modification décroissante
+      );
+
+      const querySnapshot = await getDocs(q);
+      const fetchedConversations: Conversation[] = querySnapshot.docs.map(doc => {
+         // ---> CORRECTION Linter Error 2 : Ajouter thread_type <---
+         const data = doc.data();
+         const isPrivate = data.is_private !== undefined ? data.is_private : true;
+         return {
+             chat_id: doc.id,
+             name: data.name || 'Untitled Conversation',
+             last_message_preview: data.last_message_preview || '',
+             modified_at: (data.modified_at as Timestamp)?.toDate(),
+             is_private: isPrivate,
+             thread_type: isPrivate ? 'Private' : 'Public', // Déduire thread_type
+             topic: data.topic || 'General', // Ajouter un topic par défaut si nécessaire
+             // Ajoutez d'autres champs nécessaires depuis le document Firestore
+         };
+      });
+
+      console.log(`[ChatStore] Fetched ${fetchedConversations.length} conversations.`);
+      setConversations(fetchedConversations);
 
     } catch (error) {
-      console.error("ChatStore: Error fetching conversations:", error);
-      set({ error: "Failed to load conversations.", isLoadingConversations: false });
+      console.error("[ChatStore] Error fetching conversations:", error);
+      _setError("Failed to load conversation history.");
+      setConversations([]); // Reset on error
+    } finally {
+      _setIsLoadingConversations(false);
     }
   },
-
 
   fetchSocialThreads: () => {
     // Log au début de l'action
@@ -458,120 +457,64 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     return unsubscribe; // Return the unsubscribe function for cleanup
   },
 
-
   loadChatMessages: async (chatId: string) => {
-     if (!chatId) {
-         console.warn("loadChatMessages: chatId is invalid.");
-         return;
-     }
-    console.log(`loadChatMessages: Loading messages for chatId: ${chatId}`);
-    set({ isLoadingMessages: true, currentChatId: chatId, error: null, relatedQuestions: [] }); // Reset related questions
+    const { _setIsLoadingMessages, setMessagesList, _setError, _setCurrentChatId } = get();
+    console.log(`[ChatStore] Loading messages for chatId: ${chatId}`);
+
+    if (!chatId) {
+      console.warn("[ChatStore] loadChatMessages called with null/empty chatId.");
+      setMessagesList([]);
+      _setCurrentChatId(null); // Assure la cohérence
+      return;
+    }
+
+    _setIsLoadingMessages(true);
+    _setCurrentChatId(chatId); // Met à jour le chat actif dès le début du chargement
+    setMessagesList([]); // Vide la liste actuelle avant de charger (c'est ok car setActiveChat gère la landing page)
 
     try {
-      // 1. Fetch message history
-      const chatHistory = await getChatHistory(chatId);
-      console.log(`loadChatMessages: Fetched ${chatHistory.length} messages for ${chatId}.`);
+      // Utiliser l'API backend pour récupérer l'historique
+      const historyData = await getChatHistory(chatId);
+      console.log(`[ChatStore] Received message history for ${chatId}:`, historyData);
 
-      // 2. Fetch conversation details
-      const chatRef = doc(db, 'chatsessions', chatId);
-      const chatSnap = await getDoc(chatRef);
-      let isPrivate = false;
-      let isSocial = false;
-      let conversationTitle = 'Chat'; // Default title
+      // Transformer les données de l'API en format Message[] si nécessaire
+      // ---> CORRECTION Linter Error 3 : Supposer que historyData est Message[] <---
+      const formattedMessages: Message[] = historyData || [];
 
-      if (chatSnap.exists()) {
-        const chatData = chatSnap.data();
-        isPrivate = chatData.thread_type === 'Private';
-        conversationTitle = chatData.name || 'Chat';
-
-        // Determine if it's a social thread
-        const { socialThreads, conversations } = get();
-        const isChatInSocial = socialThreads.some(thread => thread.chat_id === chatId);
-        const isChatInUserConvos = conversations.some(conv => conv.chat_id === chatId);
-        isSocial = isChatInSocial; // A thread can be social even if in user convos
-
-        // 3. Update ReadBy status for the current user
-        const { user } = useAuthStore.getState();
-        if (user?.id && isChatInSocial) { // Only mark as read if it's a social thread
-          const readBy = Array.isArray(chatData.ReadBy) ? chatData.ReadBy : [];
-          if (!readBy.includes(user.id)) {
-            // Update Firestore document (async, no need to wait)
-            updateDoc(chatRef, {
-              ReadBy: Array.from(new Set([...readBy, user.id]))
-            }).then(() => {
-               console.log(`loadChatMessages: Marked social thread ${chatId} as read for user ${user.id}`);
-               // Update local state immediately for responsiveness
-               set(state => {
-                  const threadIndex = state.socialThreads.findIndex(t => t.chat_id === chatId);
-                  if (threadIndex > -1 && !state.socialThreads[threadIndex].isRead) {
-                      const updatedSocialThreads = [...state.socialThreads];
-                      updatedSocialThreads[threadIndex] = { ...updatedSocialThreads[threadIndex], isRead: true };
-                      return {
-                          socialThreads: updatedSocialThreads,
-                          unreadSocialThreadsCount: Math.max(0, state.unreadSocialThreadsCount - 1)
-                      };
-                  }
-                  return {};
-               });
-            }).catch(err => console.error("Failed to update ReadBy status:", err));
-          }
-        }
-      } else {
-          console.warn(`loadChatMessages: No document found for chatId: ${chatId}`);
-          // Potentially handle this case, maybe clear state or show error
-          set({ error: "Chat not found.", isLoadingMessages: false, messages: [], isLandingPageVisible: true });
-          return;
-      }
-
-      // 4. Update state
-      const { user } = useAuthStore.getState(); // Get user state
-      // Check if onboarding is complete BEFORE setting isLandingPageVisible
-      const shouldShowLanding = user?.onboardingComplete !== false && chatHistory.length === 0;
-
-      set({
-        messages: chatHistory,
-        isLandingPageVisible: shouldShowLanding, // NEW LOGIC: Only show if onboarding done AND chat empty
-        isCurrentChatPrivate: isPrivate,
-        isSocialThreadActive: isSocial,
-        isLoadingMessages: false,
-      });
-      console.log(`loadChatMessages: Chat ${chatId} ("${conversationTitle}") loaded. Landing: ${shouldShowLanding}, Private: ${isPrivate}, Social: ${isSocial}, OnboardingComplete: ${user?.onboardingComplete}`);
+      setMessagesList(formattedMessages);
 
     } catch (error) {
-      console.error(`ChatStore: Error loading chat messages for ${chatId}:`, error);
-      set({ error: "Failed to load messages.", isLoadingMessages: false, messages: [], isLandingPageVisible: true });
+      console.error(`[ChatStore] Error loading messages for chatId ${chatId}:`, error);
+      _setError(`Failed to load messages for chat ${chatId}.`);
+      setMessagesList([]); // Reset messages on error
+      // Ne pas remettre currentChatId à null ici, l'utilisateur est toujours sur ce chat même si les messages n'ont pas chargé
+    } finally {
+      _setIsLoadingMessages(false);
     }
   },
 
   setActiveChat: (chatId: string | null) => {
-      if (chatId === get().currentChatId) {
-          console.log(`setActiveChat: Chat ${chatId} is already active.`);
-          return; // Avoid reloading if already active
-      }
-       if (get().isStreamingResponse) {
-            console.warn("setActiveChat: Switched chat while AI was responding. Stopping stream indicator.");
-            set({ isStreamingResponse: false }); // Stop streaming indicator
-            // Consider adding stream cancellation logic here if necessary
-        }
-       if (chatId) {
-           // Ensure messages are loaded for the new chat ID
-           get().loadChatMessages(chatId);
-       } else {
-           // Clearing the active chat (e.g., going back to landing or dashboard)
-           set({
-               currentChatId: null,
-               messages: [],
-               isLandingPageVisible: true,
-               isSocialThreadActive: false,
-               isCurrentChatPrivate: false,
-               relatedQuestions: [],
-               isLoadingMessages: false, // Ensure loading stops
-               error: null,
-           });
-           console.log("setActiveChat: Active chat cleared.");
-       }
-  },
+    const currentId = get().currentChatId;
+    const { setMessages, setIsLandingPageVisible } = get(); // Utiliser setMessages directement
 
+    if (chatId === currentId) {
+      console.log(`[ChatStore] Chat ${chatId} is already active.`);
+      return; // Ne rien faire si le chat est déjà actif
+    }
+
+    console.log(`[ChatStore] Setting active chat to: ${chatId}`);
+
+    if (chatId) {
+      // Si on active un nouveau chat
+      setIsLandingPageVisible(false); // Cacher la landing page
+      get().loadChatMessages(chatId); // Charger les messages (ce qui mettra aussi à jour currentChatId)
+    } else {
+      // Si on désactive le chat (retour à la landing page)
+      setIsLandingPageVisible(true); // Afficher la landing page
+      get()._setCurrentChatId(null); // Mettre l'ID à null
+      setMessages([]); // Vider les messages
+    }
+  },
 
   // --- Conversation Management Actions ---
 
@@ -608,10 +551,10 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       conversations: [newConversation, ...state.conversations],
       currentChatId: newChatId,
       messages: [],
-      isLandingPageVisible: true, // Afficher landing pour nouveau chat initialement
+      isLandingPageVisible: false,
       isCurrentChatPrivate: true,
       isSocialThreadActive: false,
-      isLoadingConversations: false, // Fin du loading spécifique à la création
+      isLoadingConversations: false,
       error: null
     }));
 
@@ -625,8 +568,11 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         modified_at: currentTime,
         university: user.university,
         thread_type: 'Private', // New chats default to Private for the user
-        ReadBy: [user.id] // Creator has read it
+        user_ids: [user.id], // Assurer que le créateur est membre
+        is_private: true, // Cohérent avec thread_type
+        last_message_preview: 'Conversation started.', // Placeholder
       });
+      // 2. Add the chatId to the user's document in AuthStore (and Firestore)
       await useAuthStore.getState().addChatIdToStoreAndFirestore(newChatId); // S'assurer que CELLE-CI a aussi un rollback
       console.log(`addNewConversation: Successfully created and activated private chat ${newChatId}`);
       return newChatId;

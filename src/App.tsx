@@ -124,6 +124,7 @@ const App: React.FC = () => {
     const logoutUser = useAuthStore((state) => state.logoutUser);
     const user = useAuthStore((state) => state.user);
    
+    
     useEffect(() => {
         // Appelle l'initialisation de l'écouteur Firebase au montage de l'App
         const unsubscribe = initializeAuthListener();

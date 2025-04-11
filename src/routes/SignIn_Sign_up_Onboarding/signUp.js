@@ -10,6 +10,7 @@ import {
 import { auth, db } from '../../auth/firebase';
 import { doc, setDoc, getDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import useAuthStore from '../../stores/useAuthStore'; // Import the Zustand store
+import useChatStore from '../../stores/useChatStore'; // Import the Chat store
 import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
 import CircularProgress from '@mui/material/CircularProgress'; // Import CircularProgress
@@ -241,7 +242,7 @@ export default function SignUp() {
 
       console.log("[Step 5] Creating Firestore documents (user and chat session)...");
       const userDocRef = doc(db, "users", newUser.uid);
-      await setDoc(userDocRef, {
+      const userData = {
         uid: newUser.uid,
         name: firstName,
         email: email,
@@ -250,28 +251,45 @@ export default function SignUp() {
         createdAt: timestamp,
         onboardingComplete: false,
         chatsessions: [chatId],
-      });
+      };
+      await setDoc(userDocRef, userData);
 
       const chatDocRef = doc(db, "chatsessions", chatId);
-      await setDoc(chatDocRef, {
+      const chatData = {
         chat_id: chatId,
-        name: `${firstName}'s Onboarding`,
-        created_at: serverTimestamp(),
-        modified_at: serverTimestamp(),
-      });
-      console.log("✅ Firestore documents created successfully.");
+        name: `${firstName} Onboarding`,
+        created_at: timestamp,
+        modified_at: timestamp,
+        is_private: true,
+        user_ids: [newUser.uid],
+        last_message_preview: "Welcome! Let's get you started.",
+        university: subdomain,
+        thread_type: 'Private',
+        topic: 'Onboarding',
+      };
+      await setDoc(chatDocRef, chatData);
+      console.log("✅ Firestore documents created manually.");
 
-      console.log("[Step 6] Global listener will handle state update.");
+      console.log(`[Step 6a] Setting active chat in ChatStore to: ${chatId}`);
+      useChatStore.getState().setActiveChat(chatId);
+      const newConversationObject = {
+          chat_id: chatId,
+          name: chatData.name,
+          thread_type: chatData.thread_type,
+          topic: chatData.topic,
+      };
+      useChatStore.setState(state => ({
+          conversations: [newConversationObject, ...state.conversations]
+      }));
+      console.log(`[Step 6b] Optimistically added conversation to ChatStore list.`);
 
-      console.log("[Step 7] Redirecting user...");
-      const redirectUrl = subdomain === 'admin'
-        ? '/dashboard/admin'
-        : `/onboarding-with-lucy/${newUser.uid || 'defaultId'}`;
-
-      navigate(redirectUrl, { replace: true });
+      console.log(`[Step 7] Navigating to onboarding page for user ${newUser.uid}... (after 300ms delay)`);
+      setTimeout(() => {
+        navigate(`/onboarding-with-lucy/${newUser.uid}`, { replace: true });
+      }, 300);
 
     } catch (error) {
-      console.error("[Error] Email/Password Sign Up failed:", error);
+      console.error("❌ Sign Up failed:", error);
       const newErrors = {};
       if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
         newErrors.email = 'This email address is already in use. Please sign in or use a different email.';
