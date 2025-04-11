@@ -186,6 +186,9 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         const updatedMessages = [...currentMessages];
         const currentAiMessage = updatedMessages[lastMessageIndex];
 
+        // ---> MODIFICATION : Déterminer si c'est la première mise à jour pour ce message <--- 
+        const isFirstUpdate = currentAiMessage.isLoading === true;
+
         let newContent = currentAiMessage.content;
         let newMetadata: Partial<Message> = {};
 
@@ -235,6 +238,8 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
             ...currentAiMessage,
             content: newContent.replace(/\|/g, ''), // Remove potential delimiters and update content
             ...newMetadata, // Merge new metadata
+            // ---> MODIFICATION : Mettre isLoading à false dès la première update <--- 
+            isLoading: isFirstUpdate ? false : currentAiMessage.isLoading, // Set to false on first update, keep current state otherwise (should be false after first)
         };
 
         return { messages: updatedMessages };
