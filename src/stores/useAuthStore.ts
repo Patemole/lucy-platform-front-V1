@@ -29,7 +29,6 @@ interface AuthState {
   isFetchingUserData: boolean; // Pour le chargement spécifique des données Firestore
   error: string | null;
   chatIds: string[];
-  primaryChatId: string | null; // On stocke aussi le chat principal
 
   // Actions internes pour modifier l'état
   _setUserAndAuth: (user: User | null, firebaseUser?: any) => void; // Renommée pour clarté
@@ -37,13 +36,11 @@ interface AuthState {
   _setFetchingUserData: (fetching: boolean) => void;
   _setError: (error: string | null) => void;
   _setChatIds: (chatIds: string[]) => void;
-  _setPrimaryChatId: (chatId: string | null) => void;
 
   // Actions publiques utilisables par les composants
   fetchUserData: (userId: string) => Promise<void>;
   addChatIdToStoreAndFirestore: (chatId: string) => Promise<void>; // Renommée pour clarté
   removeChatIdFromStore: (chatId: string) => void; // Simplifié, la suppression Firestore se fait ailleurs si besoin
-  setPrimaryChatId: (chatId: string) => void; // Renommée pour clarté
   logoutUser: () => Promise<void>;
   updateUserProfileInStore: (updatedProfileData: Partial<User>) => void; // Pour les mises à jour locales
 
@@ -59,14 +56,12 @@ const useAuthStore = create<AuthState>((set, get) => ({
   isFetchingUserData: false,
   error: null,
   chatIds: [],
-  primaryChatId: null,
 
   // --- Actions Internes (pour le store lui-même) ---
   _setLoading: (loading) => set({ isLoading: loading }),
   _setFetchingUserData: (fetching) => set({ isFetchingUserData: fetching }),
   _setError: (error) => set({ error: error, isLoading: false, isFetchingUserData: false }),
   _setChatIds: (chatIds) => set({ chatIds }),
-  _setPrimaryChatId: (chatId) => set({ primaryChatId: chatId }),
 
   _setUserAndAuth: (userData, firebaseUser = null) => {
      // Si on reçoit null, c'est une déconnexion
@@ -78,27 +73,23 @@ const useAuthStore = create<AuthState>((set, get) => ({
         isFetchingUserData: false,
         error: null,
         chatIds: [],
-        primaryChatId: null,
       });
       console.log("AuthStore: Utilisateur déconnecté (via _setUserAndAuth)");
     } else {
        // Sinon, c'est une connexion ou une mise à jour
        // On récupère les chat sessions directement depuis userData si elles y sont
        const chatSessions = userData.chatsessions || []; // Assurez-vous que 'chatsessions' est dans votre type User si nécessaire
-       const lastChatId = chatSessions.length > 0 ? chatSessions[chatSessions.length - 1] : null;
 
        set({
         user: userData,
         isAuthenticated: true,
-        isLoading: false, // Fin du chargement initial si on a un user
-        isFetchingUserData: false, // Fin du chargement des données user
+        isLoading: false,
+        isFetchingUserData: false,
         error: null,
         chatIds: chatSessions,
-        primaryChatId: lastChatId,
       });
       console.log("AuthStore: Utilisateur authentifié/mis à jour:", userData);
       console.log("AuthStore: Chat IDs mis à jour:", chatSessions);
-      console.log("AuthStore: Primary Chat ID défini:", lastChatId);
     }
   },
 
@@ -184,15 +175,10 @@ const useAuthStore = create<AuthState>((set, get) => ({
 
     // Sauvegarde état avant modif optimiste
     const originalChatIds = [...chatIds];
-    const originalPrimaryChatId = get().primaryChatId; // Sauvegarder aussi au cas où on le modifie
 
     // Mise à jour optimiste UI
     const newChatIds = [...chatIds, chatId];
     _setChatIds(newChatIds);
-    // Mettre à jour le primaryChatId si c'est le premier chat (optimiste aussi)
-    if(newChatIds.length === 1) {
-      get()._setPrimaryChatId(chatId);
-    }
 
     try {
         const userDocRef = doc(db, 'users', user.id);
@@ -217,13 +203,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
         _setError("Erreur lors de la sauvegarde de la nouvelle conversation.");
         // !! ROLLBACK !!
         _setChatIds(originalChatIds); // Restaurer la liste originale
-        // Restaurer aussi le primaryChatId s'il avait été changé
-        if(originalChatIds.length === 0 && originalPrimaryChatId !== null) {
-             get()._setPrimaryChatId(originalPrimaryChatId); // Remettre l'ancien primary (qui était null)
-        } else if (newChatIds.length === 1 && originalChatIds.length === 0) {
-             get()._setPrimaryChatId(null); // Si on avait ajouté le premier et qu'on rollback, il redevient null
-        }
-        // Note: Pas besoin d'appeler removeChatIdFromStore ici, on a juste remis l'ancien tableau.
     }
 },
 
@@ -234,22 +213,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
     console.log(`AuthStore: ChatId ${chatId} retiré du store local.`);
     // Note : La suppression de Firestore devrait être gérée séparément,
     // peut-être déclenchée par une action utilisateur spécifique.
-     // Si on supprime le chat primaire, il faut en choisir un autre ou mettre à null
-     if(get().primaryChatId === chatId) {
-         const newPrimary = newChatIds.length > 0 ? newChatIds[newChatIds.length - 1] : null;
-         set({ primaryChatId: newPrimary });
-         console.log(`AuthStore: Primary chat ID mis à jour à ${newPrimary} après suppression.`);
-     }
-  },
-
-  setPrimaryChatId: (chatId) => {
-      if (get().chatIds.includes(chatId)) {
-           set({ primaryChatId: chatId });
-           console.log(`AuthStore: Primary chat ID mis à jour à ${chatId}.`);
-      } else {
-          console.warn(`AuthStore: Tentative de définir un primary chat ID (${chatId}) qui n'existe pas dans la liste.`);
-      }
-
   },
 
   logoutUser: async () => {

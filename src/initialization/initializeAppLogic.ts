@@ -58,10 +58,9 @@ export const initializeAppLogic = async (): Promise<void> => {
     socialThreadsUnsubscribe = chatStore.fetchSocialThreads();
     console.log(`[initializeAppLogic] Social threads listener initialized.`);
 
-    // 5. Déterminer et charger le chat initial
-    //    Utilise TOUJOURS les chatIds récupérés au début de la fonction.
-    const initialChatId = chatIds && chatIds.length > 0 ? chatIds[0] : null;
-    console.log(`[initializeAppLogic] Determined initialChatId: ${initialChatId} (based on initial chatIds list)`);
+    // 5. Déterminer et charger le chat initial en utilisant le DERNIER chatId de l'utilisateur
+    const initialChatId = chatIds.length > 0 ? chatIds[chatIds.length - 1] : null; // <--- Utilise le dernier ID de la liste
+    console.log(`[initializeAppLogic] Determined initialChatId: ${initialChatId} (based on last ID in AuthStore's chatIds)`);
 
     if (initialChatId) {
       console.log(`[initializeAppLogic] Loading initial chat messages for chatId: ${initialChatId}`);
