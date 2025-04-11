@@ -1,17 +1,22 @@
 import * as React from 'react';
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createUserWithEmailAndPassword, OAuthProvider, signInWithPopup} from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  OAuthProvider,
+  signInWithPopup,
+  AuthErrorCodes // Import specific error codes for better handling
+} from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
 import { doc, setDoc, getDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
-import { useAuth } from '../../auth/hooks/useAuth';
+import useAuthStore from '../../stores/useAuthStore'; // Import the Zustand store
 import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress'; // Import CircularProgress
 import lucyLogo from '../../logo_lucy.png';
 import config from '../../config';
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { v4 as uuidv4 } from 'uuid';
-import { useAppInitialization } from '../useAppInitialization'; // adapte le chemin si besoin
 import { useRef } from 'react';
 
 
@@ -92,190 +97,154 @@ const getErrorMessage = (subdomain) => {
 };
 
 export default function SignUp() {
-  const { isAuth, loading, user, setPrimaryChatId,setIsAuth } = useAuth();
+  const [errors, setErrors] = React.useState({});
+  const [emailError, setEmailError] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSSOLoading, setIsSSOLoading] = React.useState(false);
+
+  const isLoadingAuth = useAuthStore((state) => state.isLoading);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   const theme = useTheme();
-  const { login } = useAuth(); // Utiliser la fonction `login` du contexte
   const navigate = useNavigate();
   const location = useLocation();
-  const [errors, setErrors] = React.useState({});
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [emailError, setEmailError] = React.useState('');
+
   const subdomain = config.subdomain;
   const courseId = location.pathname.split('/sign-up/')[1] || '';
-  const [shouldRedirect, setShouldRedirect] = useState(true); // Par défaut, on redirige
-  //const provider = new OAuthProvider("oidc.holyfamily"); // 🔥 Utiliser le Provider ID configuré dans Firebase
-  //const auth = getAuth(); // Récupère directement l'instance Firebase Auth
 
-  const { initializeApp } = useAppInitialization();
+  useEffect(() => {
+    if (!isLoadingAuth && isAuthenticated) {
+      console.log("SignUp Page: User already authenticated via Zustand, redirecting.");
+      const userId = useAuthStore.getState().user?.id;
+      navigate(`/onboarding-with-lucy/${userId || 'defaultId'}`, { replace: true });
+    }
+  }, [isLoadingAuth, isAuthenticated, navigate]);
 
+  async function handleSignUpWithSSO() {
+    setErrors({});
+    setIsSSOLoading(true);
+    setIsLoading(false);
+    console.log("🚀 Initiating SSO Sign Up / Sign In process...");
 
-  console.log("subdomain is ", subdomain);
-
-    // Redirect if user is already authenticated
-    /*
-    useEffect(() => {
-      if (!loading && isAuth && user && shouldRedirect ) {
-        console.log("User authenticated, redirecting...");
-        navigate(`/onboarding-with-lucy/${user?.id || 'defaultId'}`, { replace: true });
-      }
-    }, [loading, isAuth, user, shouldRedirect, navigate]);
-    */
-
-
-    useEffect(() => {
-      const handleRedirect = async () => {
-        if (!loading && isAuth && user && shouldRedirect) {
-          await initializeApp(); // ⬅️ charge toutes les données
-          navigate(`/onboarding-with-lucy/${user?.id || 'defaultId'}`, { replace: true });
-        }
-      };
-      handleRedirect();
-    }, [loading, isAuth, user, shouldRedirect, navigate]);
-
-
-
-
-
-
-  async function signInWithSSO() {
     try {
-      console.log("🚀 Début du processus de connexion SSO...");
-      setShouldRedirect(false); // Désactive temporairement le useEffect
-  
-      // 🔥 Récupérer le sous-domaine (université)
       const university = config.subdomain;
-      console.log("🔍 Université détectée :", university);
-  
       if (!university) {
-        console.error("❌ Erreur : Université non reconnue.");
-        return;
+        throw new Error("University configuration (subdomain) is missing.");
       }
-  
-      // 🔥 Construire dynamiquement le provider Firebase
-      const providerId = `oidc.${university}`;
-      console.log("🛠️ Construction du provider Firebase avec OIDC :", providerId);
-  
-      const provider = new OAuthProvider(providerId);
-  
-      console.log("🔄 Début de l'authentification avec Firebase...");
-  
-      // 🔥 Démarrer l'authentification avec Firebase
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
 
-       // 👉 Ajoute ton code exactement ici :
-      const credential = OAuthProvider.credentialFromResult(result);
-      const idToken = credential.idToken;
-      const payload = JSON.parse(atob(idToken.split('.')[1]));
-      console.log("📝 Payload complet du provider OIDC :", payload);
-      console.log("🔑 Identifiant (sub) du provider SSO :", payload.sub);
-      // Fin de l'ajout 👈
-  
-      console.log("✅ Utilisateur connecté via SSO :", user.email, " | UID :", user.uid);
-  
-      // 🔥 Vérifier si l'utilisateur existe déjà dans Firestore
-      const userRef = doc(db, "users", user.uid);
-      console.log("📡 Vérification de l'existence de l'utilisateur dans Firestore...");
-  
+      const providerId = `oidc.${university}`;
+      const provider = new OAuthProvider(providerId);
+      console.log(`🛠️ Using OIDC provider: ${providerId}`);
+
+      const result = await signInWithPopup(auth, provider);
+      const ssoUser = result.user;
+      console.log(`✅ SSO authentication successful: ${ssoUser.email} (UID: ${ssoUser.uid})`);
+
+      try {
+        const credential = OAuthProvider.credentialFromResult(result);
+        if (credential?.idToken) {
+            const payload = JSON.parse(atob(credential.idToken.split('.')[1]));
+            console.log("📝 OIDC Token Payload:", payload);
+            console.log("🔑 Provider User Identifier (sub):", payload.sub);
+        }
+      } catch (tokenError) {
+          console.warn("⚠️ Could not parse OIDC token details:", tokenError);
+      }
+
+      const userRef = doc(db, "users", ssoUser.uid);
+      console.log("📡 Checking Firestore for existing user document...");
       const userSnap = await getDoc(userRef);
-  
+
       if (!userSnap.exists()) {
-        console.log("🆕 Nouvel utilisateur détecté. Création d'un compte Firestore...");
-  
-        // 🚀 Nouvel utilisateur → Création du compte Firestore et redirection vers onboarding
+        console.log("🆕 New user via SSO. Creating Firestore document...");
+        const initialChatId = uuidv4();
+
         await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName || "",
+          uid: ssoUser.uid,
+          email: ssoUser.email || '',
+          name: ssoUser.displayName || "New User",
           university,
+          role: university === 'admin' ? 'admin' : 'student',
           onboardingComplete: false,
           createdAt: serverTimestamp(),
+          chatsessions: [initialChatId],
         });
-  
-        console.log("✅ Compte Firestore créé avec succès.");
-  
-        // 🔥 Mettre à jour le contexte utilisateur avec useAuth
-        login({
-          id: user.uid,
-          name: user.displayName || "",
-          email: user.email,
-          university,
-          onboardingComplete: false,
+
+        await setDoc(doc(db, "chatsessions", initialChatId), {
+          chat_id: initialChatId,
+          name: `${ssoUser.displayName || "New User"} Onboarding`,
+          created_at: serverTimestamp(),
+          modified_at: serverTimestamp(),
         });
-  
-        console.log("🔄 Redirection vers l'onboarding...");
-        navigate(`/onboarding/learningStyleSurvey`);
+
+        console.log("✅ Firestore document and initial chat created for new SSO user.");
+        navigate(`/onboarding-with-lucy/${ssoUser.uid || 'defaultId'}`, { replace: true });
+
       } else {
-        console.log("🔄 Utilisateur existant trouvé dans Firestore. Récupération des données...");
-  
-        // 🔥 Utilisateur existant → Récupérer ses infos et rediriger vers le dashboard
-        const userData = userSnap.data();
-        console.log("✅ Données utilisateur Firestore :", userData);
-  
-        //login(userData);
-        login({
-          id: userData.uid, // Assure la cohérence avec le SSO
-          name: userData.name || "",
-          email: userData.email,
-          university: userData.university,
-          onboardingComplete: userData.onboardingComplete,
-        });
-        console.log("🔄 Redirection vers le dashboard...");
-        navigate(`/dashboard/student/${userData.uid}`);
-
-        // 🔥 Réactive la redirection après un court délai pour éviter qu'elle reste bloquée
-        setTimeout(() => {
-          setShouldRedirect(true);
-        }, 100); // Petit délai pour s'assurer que l'état se met bien à jour
-
+        console.log("🔄 Existing user signed in via SSO. Firestore document already exists.");
       }
+
+      console.log("AuthStore listener will now handle the global state update.");
+
     } catch (error) {
-      console.error("❌ Erreur lors de la connexion SSO :", error);
+      console.error("❌ SSO Sign Up / Sign In failed:", error);
+      setErrors({ general: `Sign Up failed. Please try again or use email/password. (${error.code || error.message})` });
+    } finally {
+      setIsSSOLoading(false);
     }
   }
-  
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log("[Step 1] Form submission triggered");
     setErrors({});
+    setEmailError('');
     setIsLoading(true);
-  
+    setIsSSOLoading(false);
+    console.log("[Step 1] Email/Password form submission initiated.");
+
     const data = new FormData(event.currentTarget);
-    const firstName = data.get('firstName');
-    const email = data.get('email');
-    const password = data.get('password');
+    const firstName = data.get('firstName')?.toString().trim() || '';
+    const email = data.get('email')?.toString().trim() || '';
+    const password = data.get('password')?.toString() || '';
+
     const newErrors = {};
-  
-    // Validation des champs
     if (!firstName) newErrors.firstName = 'First name is required';
-    if (!email) newErrors.email = 'Email is required';
-    else if (!isAllowedEmail(email, subdomain)) newErrors.email = getErrorMessage(subdomain);
-    if (!password) newErrors.password = 'Password is required';
-    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-  
+    if (!email) {
+        newErrors.email = 'Email is required';
+    } else if (!isEmail(email)) {
+        newErrors.email = 'Please provide a valid email address';
+    } else if (!isAllowedEmail(email, subdomain)) {
+        newErrors.email = getErrorMessage(subdomain);
+    }
+    if (!password) {
+        newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters long';
+    }
+
     if (Object.keys(newErrors).length > 0) {
-      console.log("[Step 2] Validation errors:", newErrors);
+      console.warn("[Step 2] Validation errors found:", newErrors);
       setErrors(newErrors);
       setIsLoading(false);
       return;
     }
-  
+
     try {
-      console.log("[Step 3] Creating user with Firebase Authentication");
+      console.log("[Step 3] Creating user with Firebase Auth...");
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const newUser = userCredential.user;
       const timestamp = Timestamp.now();
-  
-      console.log("[Step 4] Creating onboarding chat session");
+      console.log(`✅ Firebase Auth user created: ${newUser.email} (UID: ${newUser.uid})`);
+
+      console.log("[Step 4] Creating initial chat session ID...");
       const chatId = uuidv4();
-      setPrimaryChatId(chatId);
-  
-      console.log("[Step 5] Storing user data in Firestore");
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
+
+      console.log("[Step 5] Creating Firestore documents (user and chat session)...");
+      const userDocRef = doc(db, "users", newUser.uid);
+      await setDoc(userDocRef, {
+        uid: newUser.uid,
         name: firstName,
-        email,
+        email: email,
         university: subdomain,
         role: subdomain === 'admin' ? "admin" : "student",
         createdAt: timestamp,
@@ -283,54 +252,46 @@ export default function SignUp() {
         chatsessions: [chatId],
       });
 
-      await setDoc(doc(db, "chatsessions", chatId), {
+      const chatDocRef = doc(db, "chatsessions", chatId);
+      await setDoc(chatDocRef, {
         chat_id: chatId,
-        name: `${firstName} Onboarding`,
+        name: `${firstName}'s Onboarding`,
         created_at: serverTimestamp(),
         modified_at: serverTimestamp(),
       });
+      console.log("✅ Firestore documents created successfully.");
 
-      console.log("[Step 6] Updating context with user data");
-      await login({
-        id: user.uid,
-        name: firstName,
-        email,
-        university: subdomain,
-        role: subdomain === 'admin' ? "admin" : "student",
-        createdAt: timestamp,
-        onboardingComplete: false,
-      });
+      console.log("[Step 6] Global listener will handle state update.");
 
-      console.log("[Step 7] Initialisation before navigate...");
-      await initializeApp();
+      console.log("[Step 7] Redirecting user...");
+      const redirectUrl = subdomain === 'admin'
+        ? '/dashboard/admin'
+        : `/onboarding-with-lucy/${newUser.uid || 'defaultId'}`;
 
-      console.log("[Step 7] Redirecting user to onboarding page");
-      const redirectUrl = subdomain === 'admin' ? '/dashboard/admin' : `/onboarding-with-lucy/${user.uid || 'defaultId'}`;
-      //navigate(`/dashboard/student/${result.user.uid || 'defaultId'}`, { replace: true });
-      //navigate(redirectUrl);
-      setTimeout(() => {
-        navigate(redirectUrl, {replace: true});
-      }, 300);
-
+      navigate(redirectUrl, { replace: true });
 
     } catch (error) {
-      console.error("[Error] An error occurred:", error);
+      console.error("[Error] Email/Password Sign Up failed:", error);
       const newErrors = {};
-      if (error.code === 'auth/email-already-in-use') {
-        newErrors.email = 'Email address already in use!';
+      if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
+        newErrors.email = 'This email address is already in use. Please sign in or use a different email.';
+      } else if (error.code === AuthErrorCodes.WEAK_PASSWORD) {
+         newErrors.password = 'Password is too weak. Please use a stronger password.';
+      } else {
+        newErrors.general = `Sign Up failed. Please try again. (${error.code || error.message})`;
       }
       setErrors(newErrors);
+    } finally {
       setIsLoading(false);
     }
   };
 
-
   const handleEmailBlur = (event) => {
-    const email = event.target.value;
+    const email = event.target.value.trim();
     if (!email) {
       setEmailError('');
     } else if (!isEmail(email)) {
-      setEmailError('Please provide a valid email');
+      setEmailError('Please provide a valid email address');
     } else if (!isAllowedEmail(email, subdomain)) {
       setEmailError(getErrorMessage(subdomain));
     } else {
@@ -340,7 +301,6 @@ export default function SignUp() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-
       <header aria-label="University branding" className="absolute top-4 left-4">
         <img src={theme.logo} alt="University Logo" className="h-12" />
       </header>
@@ -349,79 +309,101 @@ export default function SignUp() {
         <h1 className="text-xl font-semibold text-center mb-4">Create your account</h1>
         <p className="text-gray-500 text-center mb-8 text-sm">Welcome! Sign-up with your university credentials.</p>
 
-        {/* Bouton SSO */}
         <button
           type="button"
-          onClick={signInWithSSO}
-          className="w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300"
+          onClick={handleSignUpWithSSO}
+          disabled={isLoading || isSSOLoading}
+          className={`w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300 ${isLoading || isSSOLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          <AccountBalanceIcon sx={{ fontSize: 20 }} /> {/* Icône université */}
-          <span className="font-medium">Sign Up with SSO</span>
+          <AccountBalanceIcon sx={{ fontSize: 20 }} />
+          {isSSOLoading ? <CircularProgress size={20} color="inherit" /> : 'Sign Up with SSO'}
         </button>
 
-        
-        {/* Séparateur avec "OR" */}
         {subdomain !== 'holyfamily' && (
-        <div className="flex items-center my-6">
-          <div className="flex-grow border-t border-gray-300"></div>
-          <span className="mx-4 text-gray-500 text-xs font-semibold">OR</span>
-          <div className="flex-grow border-t border-gray-300"></div>
-        </div>
+          <div className="flex items-center my-6">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="mx-4 text-gray-500 text-xs font-semibold">OR</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
         )}
 
-      
         <form onSubmit={handleSubmit} noValidate>
-          <div className="mb-6">
+          {errors.general && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
+
           {subdomain !== 'holyfamily' && (
-            <div>
+            <div className="mb-6">
               <label htmlFor="firstname" className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
-              <input id="firstname" type="text" name="firstName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="First Name" />
-              {errors.firstName && <p className="text-xs text-red-600 mt-1">{errors.firstName}</p>}
+              <input
+                id="firstname"
+                type="text"
+                name="firstName"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                placeholder="First Name"
+                aria-invalid={!!errors.firstName}
+                aria-describedby={errors.firstName ? "firstname-error" : undefined}
+              />
+              {errors.firstName && <p id="firstname-error" role="alert" className="text-xs text-red-600 mt-1">{errors.firstName}</p>}
             </div>
           )}
 
-            {/*
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Last Name</label>
-              <input type="text" name="lastName" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Last Name" />
-              {errors.lastName && <p className="text-xs text-red-600 mt-1">{errors.lastName}</p>}
+          {subdomain !== 'holyfamily' && (
+            <div className="mb-6">
+              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                required
+                onBlur={handleEmailBlur}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                placeholder="Your university email address"
+                aria-invalid={!!errors.email || !!emailError}
+                aria-describedby={errors.email ? "email-error-submit" : (emailError ? "email-error-blur" : undefined)}
+              />
+              {emailError && <p id="email-error-blur" role="alert" className="text-xs text-red-600 mt-1">{emailError}</p>}
+              {errors.email && !emailError && <p id="email-error-submit" role="alert" className="text-xs text-red-600 mt-1">{errors.email}</p>}
             </div>
-            */}
-          </div>
-            
-          {subdomain !== 'holyfamily' && (
-          <div className="mb-6">
-            <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
-            <input id="email" type="email" name="email" onBlur={handleEmailBlur} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Email address" />
-            {emailError && <p className="text-xs text-red-600 mt-1">{emailError}</p>}
-            {errors.email && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.email}</p>}
-          </div>
-          )}
-          
-          
-          {subdomain !== 'holyfamily' && (
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">Password</label>
-            <input id="password" type="password" name="password" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500" placeholder="Password" />
-            {errors.password && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.password}</p>}
-          </div>
           )}
 
           {subdomain !== 'holyfamily' && (
-          <button type="submit" disabled={isLoading} className="w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300">
-            {isLoading ? <span>Loading...</span> : <span>Continue &rarr;</span>}
-          </button>
+            <div className="mb-6">
+              <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                required
+                minLength={6}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                placeholder="Create a password (min. 6 characters)"
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? "password-error" : undefined}
+              />
+              {errors.password && <p id="password-error" role="alert" className="text-xs text-red-600 mt-1">{errors.password}</p>}
+            </div>
           )}
-        
-          <p className="mt-8 text-xs text-center text-gray-600">Already have an account? <a href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} className="text-blue-600 underline hover:underline">Sign in</a></p>
+
+          {subdomain !== 'holyfamily' && (
+            <button
+              type="submit"
+              disabled={isLoading || isSSOLoading}
+              className={`w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 transition duration-150 ease-in-out ${isLoading || isSSOLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {isLoading ? <CircularProgress size={20} color="inherit" /> : 'Continue \u2192'}
+            </button>
+          )}
+
+          <p className="mt-8 text-xs text-center text-gray-600">
+            Already have an account?{' '}
+            <a href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} className="text-blue-600 underline hover:text-blue-800">
+              Sign in
+            </a>
+          </p>
 
           <div className="mt-8 flex items-center justify-center">
             <p className="text-xs text-gray-600 mr-2">Powered by Lucy</p>
-            <Avatar
-              src={lucyLogo}
-              alt="Lucy Logo"
-              sx={{ width: 20, height: 20 }}
-            />
+            <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
           </div>
         </form>
       </main>

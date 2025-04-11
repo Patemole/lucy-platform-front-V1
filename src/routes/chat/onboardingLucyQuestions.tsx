@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef,} from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../auth/firebase';
 import { doc, updateDoc} from 'firebase/firestore';
-import { useAuth } from '../../auth/hooks/useAuth';
-import { useChat } from '../../auth/hooks/useChat';
+import useAuthStore from '../../stores/useAuthStore';
+import useChatStore from '../../stores/useChatStore';
 import {EventStudentProfile, SocialThread} from '../../interfaces/interfaces_eleve';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
@@ -28,7 +28,6 @@ import TopHeader from './components/TopHeader';
 import Popups from './components/Popups';
 import ChatContent from './components/ChatContent';
 import RelatedQuestions from './components/RelatedQuestions';
-import { useAppInitialization } from '../useAppInitialization'; // adapte le chemin si besoin
 
 
 //For Topic of the conversations
@@ -46,49 +45,69 @@ const drawerWidth = 270;
 
 const OnboardingLucyQuestions: React.FC = ()=> {
 
-  const { initializeApp } = useAppInitialization();
-
   //1. Paramètres graphiques et responsivité
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
 
-  //2. Contexte utilisateur et Authentification
-  const { user, chatIds } = useAuth();
-  const { conversations, setConversations, messages, isLandingPageVisible} = useChat();
+  //2. Contexte utilisateur et Authentification (Utilisation des stores Zustand)
+  const { user, chatIds } = useAuthStore(); // Use Zustand store
+  const {
+    conversations,
+    setConversations,
+    messages,
+    isLandingPageVisible,
+    setMessages,
+    setIsLandingPageVisible,
+    isSocialThreadActive,
+    setIsSocialThreadActive,
+    isCurrentChatPrivate: isPrivate, // Renaming for consistency if needed
+    _setIsCurrentChatPrivate: setIsPrivate,
+    addNewConversation,
+    renameConversation,
+    deleteConversation,
+    updateConversationPrivacy,
+    setActiveChat,
+    isStreamingResponse: isStreaming, // Renamed in store
+    _setIsStreamingResponse: setIsStreaming, // Action in store
+    unreadSocialThreadsCount: unreadCount, // Renamed in store
+    _setUnreadSocialThreadsCount: setUnreadCount, // Action in store
+    relatedQuestions, // From store
+    _setRelatedQuestions: setRelatedQuestions, // Action in store
+    abortController, // From store
+    setAbortController, // Action in store
+    fetchConversations, // Action from store
+    fetchSocialThreads, // Action from store
+    loadChatMessages, // Action from store
+    clearChatState, // Action from store
+    updateConversationTitleAndTopic, // Action from store
+    markSocialThreadAsRead // Action from store
+  } = useChatStore(); // Use Zustand store
 
-  //3. Messages et gestion du Chat
-  //const [messages, setMessages] = useState<Message[]>([]);
-  const [isComplete, setIsComplete] = useState(false);
-  const [inputValue, setInputValue] = useState('');
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [hasStartedStreaming, setHasStartedStreaming] = useState(false);
-  const [activeChatId, setActiveChatId] = useState<string | null>(localStorage.getItem('chat_id')); // TODO : Changer pour ne plus avoir localStorage
-  const [cancelConversation, setCancelConversation] = useState(false);
-  const cancelConversationRef = useRef(false);
-  const [selectedAiMessage, setSelectedAiMessage] = useState<string | null>(null);
-  const [selectedHumanMessage, setSelectedHumanMessage] = useState<string | null>(null);
-  const [relatedQuestions, setRelatedQuestions] = useState<string[]>([]);
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const [newMessagesCount, setNewMessagesCount] = useState(0);
-  const scrollableDivRef = useRef<HTMLDivElement>(null);
-  const endDivRef = useRef<HTMLDivElement>(null);
+  //3. Messages et gestion du Chat - some states might be directly from store now
+  const [isComplete, setIsComplete] = useState(false); // Keep local UI state if not in store
+  const [inputValue, setInputValue] = useState(''); // Keep local UI state
+  const [hasStartedStreaming, setHasStartedStreaming] = useState(false); // Keep local UI state
+  const [activeChatId, setActiveChatId] = useState<string | null>(() => chatIds[0] || null); // Initialize from store, avoid localStorage directly here if possible
+  const [cancelConversation, setCancelConversation] = useState(false); // Keep local UI state
+  const cancelConversationRef = useRef(false); // Keep local ref
+  const [selectedAiMessage, setSelectedAiMessage] = useState<string | null>(null); // Keep local UI state
+  const [selectedHumanMessage, setSelectedHumanMessage] = useState<string | null>(null); // Keep local UI state
+  const [isAtBottom, setIsAtBottom] = useState(true); // Keep local UI state
+  const [newMessagesCount, setNewMessagesCount] = useState(0); // Keep local UI state
+  const scrollableDivRef = useRef<HTMLDivElement>(null); // Keep local ref
+  const endDivRef = useRef<HTMLDivElement>(null); // Keep local ref
 
   //4. Onboarding
-  //const [isOnboardingActive, setIsOnboardingActive] = useState(false);
-  const hasMetadataOnboarding = messages.some(msg => msg.METADATAONBOARDING);
-  const [showOnboardingSocialThreadPopup, setShowOnboardingSocialThreadPopup] = useState(false);
-  const [ShowOnboardingProfilePopup, setShowOnboardingProfilePopup] = useState(false);
-  const [showOnboardingModifyConvPopup, setShowOnboardingModifyConvPopup] = useState(false);
+  const hasMetadataOnboarding = Array.isArray(messages) && messages.some(msg => msg.METADATAONBOARDING);
+  const [showOnboardingSocialThreadPopup, setShowOnboardingSocialThreadPopup] = useState(false); // Keep local UI state
+  const [ShowOnboardingProfilePopup, setShowOnboardingProfilePopup] = useState(false); // Keep local UI state
+  const [showOnboardingModifyConvPopup, setShowOnboardingModifyConvPopup] = useState(false); // Keep local UI state
 
   //5. Conversations et Social Threads
-  //const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isHistory, setIsHistory] = useState(true);
-  const [socialThreads, setSocialThreads] = useState<SocialThread[]>([]);
-  const [loadingSocialThreads, setLoadingSocialThreads] = useState(false);
-  const [isSocialThread, setIsSocialThread] = useState(false);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [isPrivate, setIsPrivate] = useState(false); // false = Public, true = Private
+  const [isHistory, setIsHistory] = useState(true); // Keep local UI state
+  const { socialThreads } = useChatStore(); // Get social threads from store
+  const [isSocialThread, setIsSocialThread] = useState(false); // Use isSocialThreadActive from store?
 
   //6. Événements et gestion du Calendrier
   const [events, setEvents] = useState<EventStudentProfile[]>([]);
@@ -98,7 +117,6 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
 
   //7. UI, Modales et Menus
-  //const [isLandingPageVisible, setIsLandingPageVisible] = useState(!isOnboardingActive && messages.length === 0);
   const [modalOpen, setModalOpen] = useState(false);
   const [openModal, setOpenModal] = useState(false); // potentiellement doublon avec modalOpen
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -130,25 +148,88 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const {toggleDrawer,hasTak,lastAiMessageId} = useUIState({isSmallScreen,messages,drawerOpen,scrollableDivRef,setDrawerOpen,setOnlineUsers,setIsAtBottom,setNewMessagesCount,setParametersMenuAnchorEl,});
 
   //from conversations
-  const {formatDate, handleMenuOpen,handleMenuClose, handlePrivacyChange, handleRename, handleDelete, handleConversationClick, handleNewConversation, updateThreadTypeLocally,} = useConversations({isStreaming, setSelectedFilter,setIsPrivate,setCurrentView,setRelatedQuestions,setUnreadCount,setActiveChatId,cancelConversationRef,setCancelConversation,setIsStreaming,});
+  const {
+    formatDate,
+    menuAnchorEl: conversationsMenuAnchorEl,
+    selectedConversationIdForMenu,
+    handleMenuOpen,
+    handleMenuClose,
+    handleConversationClick,
+    handleNewConversationClick,
+    handleRenameClick,
+    handleDeleteClick,
+    handlePrivacyToggleClick,
+  } = useConversations();
 
   //from useMessage
-  const {onSubmit, handleSendMessageFromLandingPage, handleSendTAKMessage, handleSendCOURSEMessage, handleSendMessageSocraticLangGraph, handleInputKeyPressSocraticLangGraph, scrollToBottom, scrollToBottomNewMessage, handleSourceClick, handleSubmitWrongAnswerFeedback, handleWrongAnswerClick, handleFeedbackClick, handleCloseWrongAnswerModal,} = useMessage({generateUniqueId,inputValue, setInputValue, isStreaming, setIsStreaming, setHasNewContent, scrollableDivRef, setIsComplete, setRelatedQuestions, isAtBottom, setIsAtBottom, setNewMessagesCount, endDivRef, cancelConversationRef, setCancelConversation, setSelectedAiMessage, setSelectedHumanMessage, setModalOpen, setSnackbarOpen,});
+  const {
+      onSubmit,
+      handleSendMessageFromLandingPage,
+      handleSendTAKMessage,
+      handleSendCOURSEMessage,
+      handleSendMessageSocraticLangGraph,
+      handleInputKeyPressSocraticLangGraph,
+      scrollToBottom,
+      scrollToBottomNewMessage,
+      handleSourceClick,
+      handleSubmitWrongAnswerFeedback,
+      handleWrongAnswerClick,
+      handleFeedbackClick,
+      handleCloseWrongAnswerModal,
+  } = useMessage({
+      generateUniqueId,
+      inputValue,
+      setInputValue,
+      setHasNewContent,
+      scrollableDivRef,
+      isAtBottom,
+      setIsAtBottom,
+      setNewMessagesCount,
+      endDivRef,
+      setSelectedAiMessage,
+      setSelectedHumanMessage,
+      setModalOpen,
+      setSnackbarOpen,
+  });
 
-  //Passing variables like setInputValue needed to run correclty and output the functions
-  const {handleSendSCHOOLMessage,handleSendYEARMessage,handleSendLINKEDINMessage,handleSendMAJORMINORMessage,handleSendCOMPLIANCEMessage,} = useOnboarding({setInputValue,setRelatedQuestions,setIsComplete,setIsStreaming,onSubmit,generateUniqueId,hasStartedStreaming,setHasStartedStreaming,});
+  //from onboarding
+  const {
+      handleSendSCHOOLMessage,
+      handleSendYEARMessage,
+      handleSendLINKEDINMessage,
+      handleSendMAJORMINORMessage,
+      handleSendCOMPLIANCEMessage,
+  } = useOnboarding({
+      generateUniqueId,
+      hasStartedStreaming,
+      setHasStartedStreaming,
+      onSubmit,
+  });
 
+  const chatSessionId = chatIds[0] || 'default_chat_id';
 
-  useEffect(() => {
-    const init = async () => {
-      if (user?.id && user?.university) {
-        console.log('🌐 Initialisation du dashboard depuis l’URL directe');
-        await initializeApp();
-      }
-    };
-    init();
-  }, [user?.id, user?.university]);
-  
+  /*
+   * NOTE: L'initialisation de l'application a été centralisée
+   * --------------------------------------------------------
+   * L'ancien useEffect qui appelait initializeApp() a été supprimé car l'initialisation
+   * est maintenant gérée au niveau global dans App.tsx:
+   * 
+   * 1. Quand l'application démarre, App.tsx initialise l'écouteur d'authentification Firebase
+   *    via useAuthStore.initializeAuthListener()
+   * 
+   * 2. Une fois l'utilisateur authentifié et ses données chargées, un useEffect dans App.tsx 
+   *    déclenche automatiquement initializeAppLogic() 
+   * 
+   * 3. initializeAppLogic() (dans src/initialization/initializeAppLogic.ts) effectue toutes
+   *    les initialisations nécessaires :
+   *    - Chargement du profil utilisateur
+   *    - Récupération des conversations
+   *    - Configuration des écouteurs pour les threads sociaux
+   *    - Chargement des messages initiaux
+   * 
+   * Cette approche centralisée garantit que l'initialisation se produit une seule fois
+   * lors du démarrage de l'application, quel que soit le composant affiché en premier.
+   */
 
   const onboardingMessages = [
     { question: "What is your current school?", metadata: "SCHOOL" },
@@ -193,7 +274,8 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   };
   
 
-
+  // Récupérer l'état de chargement directement depuis le store
+  const isLoadingSocialThreads = useChatStore((state) => state.isLoadingSocialThreads);
 
  return (
     <ThemeProvider theme={theme}>
@@ -246,18 +328,18 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             handleLogout={handleLogout}
             handleDialogOpen={handleDialogOpen}
             conversations={conversations}
-            handleNewConversation={handleNewConversation}
+            handleNewConversation={handleNewConversationClick}
             setShowOnboardingProfilePopup={setShowOnboardingProfilePopup}
             handleConversationClick={handleConversationClick}
-            activeChatId={activeChatId}
+            activeChatId={useChatStore.getState().currentChatId}
             unreadCount={unreadCount}
-            menuAnchorEl={menuAnchorEl}
+            menuAnchorEl={conversationsMenuAnchorEl}
             handleMenuOpen={handleMenuOpen}
             handleMenuClose={handleMenuClose}
-            handleRename={handleRename}
-            handleDelete={handleDelete}
+            handleRename={handleRenameClick}
+            handleDelete={handleDeleteClick}
             socialThreads={socialThreads}
-            loadingSocialThreads={loadingSocialThreads}
+            loadingSocialThreads={isLoadingSocialThreads}
             topicColors={topicColors}
             setShowOnboardingModifyConvPopup={setShowOnboardingModifyConvPopup}
             setShowOnboardingSocialThreadPopup={setShowOnboardingSocialThreadPopup}
@@ -277,7 +359,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
               isSmallScreen={isSmallScreen}
               drawerOpen={drawerOpen}
               toggleDrawer={toggleDrawer}
-              handleNewConversation={handleNewConversation}
+              handleNewConversation={handleNewConversationClick}
               user={user}
               profilePicture={profilePicture}
               onlineUsers={onlineUsers}
@@ -326,8 +408,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
             handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
             hasStartedStreaming={hasStartedStreaming}
-            updateThreadTypeLocally={updateThreadTypeLocally}
-            handlePrivacyChange={handlePrivacyChange}
+            handlePrivacyChange={handlePrivacyToggleClick}
             setIsAtBottom={setIsAtBottom}
             setNewMessagesCount={setNewMessagesCount}
           />
@@ -440,7 +521,32 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                         alignItems: 'center',
                         gap: '4px',
                       }}
-                      onClick={() => setIsPrivate(false)}
+                      onClick={async () => {
+                        try {
+                          const newPrivacyState = !isPrivate;
+                          setIsPrivate(newPrivacyState);
+
+                          const currentThreadType = newPrivacyState ? 'Private' : 'Public';
+                          const chatSessionId = chatIds[0] || 'default_chat_id';
+
+                          // 1. Mise à jour Firestore (logique existante)
+                          const docRef = doc(db, 'chatsessions', chatSessionId);
+                          await updateDoc(docRef, { thread_type: currentThreadType });
+                          console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
+
+                          // 2. Mise à jour du store Zustand
+                          const currentConversations = useChatStore.getState().conversations; // Récupérer l'état actuel
+                          const updatedConversations = currentConversations.map((conv) => // Créer le nouveau tableau
+                            conv.chat_id === chatSessionId
+                              ? { ...conv, thread_type: currentThreadType } // Mettre à jour l'élément concerné
+                              : conv
+                          );
+                          setConversations(updatedConversations); // Passer le nouveau tableau à l'action du store
+
+                        } catch (error) {
+                          console.error('Erreur lors de la mise à jour du thread_type :', error);
+                        }
+                      }}
                     >
                       <LockOpenIcon fontSize="small" style={{ color: !isPrivate ? '#3155CC' : '#6F6F6F' }} /> Public
                     </button>
@@ -459,7 +565,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                         alignItems: 'center',
                         gap: '4px',
                       }}
-                      onClick={() => setIsPrivate(true)}
+                      onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', true)}
                     >
                       {/*<LockIcon fontSize="small" style={{ color: isPrivate ? '#6F6F6F' : '#3155CC' }} /> Private*/}
                       <LockIcon fontSize="small" style={{ color: '#6F6F6F' }} /> Private
@@ -468,7 +574,18 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                     {/* Bouton d'envoi (cercle identique à celui de desktop, mais avec flèche vers le haut) */}
                     <button
                       className="rounded-full flex items-center justify-center"
-                      onClick={() => handleSendMessageSocraticLangGraph(inputValue)}
+                      onClick={() => {
+                        if (isStreaming) {
+                          if (abortController) {
+                            console.log("Onboarding: Stopping stream via button click...");
+                            abortController.abort();
+                            setAbortController(null);
+                            setIsStreaming(false);
+                          }
+                        } else {
+                          handleSendMessageSocraticLangGraph(inputValue);
+                        }
+                      }}
                       style={{
                         width: '30px',
                         height: '30px',
@@ -549,67 +666,9 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                         startAdornment: (
                           !isSocialThread && (
                             <InputAdornment position="start">
-                              <IconButton
-                                onClick={async () => {
-                                  try {
-                                    const newPrivacyState = !isPrivate;
-                                    setIsPrivate(newPrivacyState);
-                                    const currentThreadType = newPrivacyState ? 'Private' : 'Public';
-                                    const chatSessionId = chatIds[0] || 'default_chat_id';
-                                    const docRef = doc(db, 'chatsessions', chatSessionId);
-                                    await updateDoc(docRef, { thread_type: currentThreadType });
-                                    console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
-                                    setConversations((prevConversations) =>
-                                      prevConversations.map((conv) =>
-                                        conv.chat_id === chatSessionId
-                                          ? { ...conv, thread_type: currentThreadType }
-                                          : conv
-                                      )
-                                    );
-                                  } catch (error) {
-                                    console.error('Erreur lors de la mise à jour du thread_type :', error);
-                                  }
-                                }}
-                                edge="start"
-                                aria-label={isPrivate ? "Set to Public" : "Set to Private"}
-                                sx={{
-                                  backgroundColor: isPrivate ? '#E0E0E0' : '#D6DDF5',
-                                  color: isPrivate ? '#6F6F6F' : '#3155CC',
-                                  borderRadius: '12px',
-                                  padding: '4px 8px',
-                                  marginRight: '8px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  cursor: 'pointer',
-                                  width: '80px',
-                                  height: '30px',
-                                  '&:hover': {
-                                    backgroundColor: isPrivate ? '#D5D5D5' : '#C4A4D8',
-                                    color: isPrivate ? '#5A5A5A' : '#4A0B8A',
-                                  },
-                                }}
-                                ref={(el) => {
-                                  if (el) {
-                                    console.log("Background color applied:", getComputedStyle(el).backgroundColor);
-                                  }
-                                }}
-                              >
-                                {isPrivate ? (
-                                  <>
-                                    <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                                    <Typography variant="caption" sx={{ color: '#000' }}>
-                                      Private
-                                    </Typography>
-                                  </>
-                                ) : (
-                                  <>
-                                    <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                                    <Typography variant="caption" sx={{ color: '#3155CC' }}>
-                                      Public
-                                    </Typography>
-                                  </>
-                                )}
+                              <IconButton onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}>
+                                {isPrivate ? <LockIcon/> : <LockOpenIcon/>}
+                                <Typography variant="caption">{isPrivate ? 'Private' : 'Public'}</Typography>
                               </IconButton>
                             </InputAdornment>
                           )
@@ -620,9 +679,12 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                               color="primary"
                               onClick={() => {
                                 if (isStreaming) {
-                                  setCancelConversation(true);
-                                  setIsStreaming(false);
-                                  cancelConversationRef.current = true;
+                                  if (abortController) {
+                                    console.log("Onboarding: Stopping stream via button click...");
+                                    abortController.abort();
+                                    setAbortController(null);
+                                    setIsStreaming(false);
+                                  }
                                 } else {
                                   handleSendMessageSocraticLangGraph(inputValue);
                                 }
@@ -692,7 +754,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                         '& .MuiOutlinedInput-root': {
                           '& fieldset': { border: 'none' },
                           '&:hover fieldset': {
-                            boxShadow: messages.some((msg) => msg.TAK && msg.TAK.length > 0)
+                            boxShadow: messages.some((msg:any) => msg.TAK && msg.TAK.length > 0)
                               ? "none"
                               : "0 4px 8px rgba(0, 0, 0, 0.2)",
                           },

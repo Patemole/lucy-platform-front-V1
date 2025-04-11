@@ -169,12 +169,16 @@ interface TopHeaderProps {
                             <IconButton
                             //onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                             onClick={(event) => {
+
+                                handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>);
+                                {/*
                                 if (!user?.onboardingComplete) {
                                 setShowOnboardingProfilePopup(true);
                                 return
                                 } else {
                                 handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>);
                                 }
+                                */}
                             }}
                             aria-label="Open profile menu"
                             aria-haspopup="true"

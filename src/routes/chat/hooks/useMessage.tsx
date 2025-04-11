@@ -2,13 +2,15 @@ import { useRef } from 'react';
 import { useEffect} from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../auth/firebase';
-import { useAuth } from '../../../auth/hooks/useAuth';
-import { useChat } from '../../../auth/hooks/useChat';
+//import { useAuth } from '../../../auth/hooks/useAuth';
+//import { useChat } from '../../../auth/hooks/useChat';
 import { sendMessageSocraticLangGraph, saveMessageAIToBackend } from '../../../api/chat';
 import { submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../../../api/feedback_wrong_answer';
 import { Message, StreamingError,AnswerPiecePacket, AnswerDocumentPacket, Conversation, SocialThread, AnswerDocument, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY } from '../../../interfaces/interfaces_eleve';
 import { debounce } from 'lodash';
 import { KeyboardEvent } from 'react';
+import useChatStore from '../../../stores/useChatStore'; // Importer le store
+import useAuthStore from '../../../stores/useAuthStore'; // Importer le store d'authentification
 
 
 
@@ -16,48 +18,46 @@ export const useMessage = ({
   generateUniqueId,
   inputValue,
   setInputValue,
-  isStreaming,
-  setIsStreaming,
   setHasNewContent,
   scrollableDivRef,
-  setIsComplete,
-  setRelatedQuestions,
   isAtBottom,
   setIsAtBottom,
   setNewMessagesCount,
   endDivRef,
-  cancelConversationRef,
-  setCancelConversation,
   setSelectedAiMessage,
   setSelectedHumanMessage,
   setModalOpen,
   setSnackbarOpen,
-
-
 }: {
   generateUniqueId: () => number;
   inputValue: string;
   setInputValue: (val: string) => void;
-  isStreaming: boolean;
-  setIsStreaming: (val: boolean) => void;
   setHasNewContent: (val: boolean) => void;
   scrollableDivRef: React.RefObject<HTMLDivElement>;
-  setIsComplete: (val: boolean) => void;
-  setRelatedQuestions: (val: string[]) => void;
   isAtBottom:boolean;
   setIsAtBottom: (val: boolean) => void;
   setNewMessagesCount: React.Dispatch<React.SetStateAction<number>>;
   endDivRef: React.RefObject<HTMLDivElement>;
-  cancelConversationRef: React.MutableRefObject<boolean>;
-  setCancelConversation: (val: boolean) => void;
   setSelectedAiMessage: React.Dispatch<React.SetStateAction<string | null>>;
   setSelectedHumanMessage: React.Dispatch<React.SetStateAction<string | null>>;
   setModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setSnackbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
 
-    const { user, chatIds } = useAuth();
-    const { messages, setMessages, conversations, setConversations, socialThreads, setSocialThreads, setIsLandingPageVisible } = useChat();
+    const { user, chatIds } = useAuthStore();
+    const {
+      messages,
+      setMessages,
+      conversations,
+      setConversations,
+      socialThreads,
+      setSocialThreads,
+      setIsLandingPageVisible,
+      setAbortController,
+      isStreamingResponse: isStreaming,
+      _setIsStreamingResponse: setIsStreaming,
+      _setRelatedQuestions: setRelatedQuestions,
+    } = useChatStore();
 
 
      // Autoscroll logic based on isAtBottom
@@ -98,8 +98,8 @@ export const useMessage = ({
 
     // Fonction pour envoyer le message à l'AI ou à l'API
     const onSubmit = async (messageHistory: Message[], inputValue: string, isOnboardingMessage: boolean = false) => {
-        setIsStreaming(true); 
-        setHasNewContent(false); // Reset new content detection at the start of each message
+        setIsStreaming(true);
+        setHasNewContent(false);
         let answer = '';
         let answerDocuments: AnswerDocument[] = [];
         let answerImages: { image_id: string; image_url: string; image_description?: string }[] = [];
@@ -123,8 +123,8 @@ export const useMessage = ({
         let error: string | null = null;
 
 
-        const abortController = new AbortController(); // Crée un AbortController
-        cancelConversationRef.current = false; // Réinitialiser l'état d'annulation au début
+        const abortController = new AbortController();
+        setAbortController(abortController);
 
         try {
             const chatSessionId = chatIds[0] || 'default_chat_id';
@@ -156,11 +156,13 @@ export const useMessage = ({
             let currentConversation = null;
 
             if (isOnboardingMessage) {
-            const newConv = { chat_id: chatSessionId, name: 'New Chat', thread_type: 'Public' };
-            setConversations((prevConversations: any) => [newConv, ...prevConversations]);
-            currentConversation = newConv; // ✅ tu sais que tu viens de l'ajouter
+              const newConv: Conversation = { chat_id: chatSessionId, name: 'New Chat', thread_type: 'Public' };
+              // Get current state, create new array, pass new array to setter
+              const currentConversations = useChatStore.getState().conversations;
+              setConversations([newConv, ...currentConversations]);
+              currentConversation = newConv; // ✅ tu sais que tu viens de l'ajouter
             } else {
-            currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
+              currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
             }
 
             const isFirstMessage = currentConversation?.name === 'New Chat';
@@ -187,15 +189,11 @@ export const useMessage = ({
                 user: user,
                 isOnboardingMessage: isOnboardingMessage,
             },
-            abortController.signal // Passez le signal ici
+            abortController.signal
         )) {
 
-                // Vérifier si la conversation a été annulée
-                if (cancelConversationRef.current) {
-                console.log("Conversation a été annulée.");
-                abortController.abort(); // Arrête immédiatement la requête
-                break; // Sortir de la boucle pour arrêter le traitement des paquets
-            }
+                // Vérifier si la conversation a été annulée via le store (si nécessaire, mais AbortController suffit)
+                // if (useChatStore.getState().isCancellationRequested) { ... }
 
                 // Process each packet in the packet bunch
                 if (Array.isArray(packetBunch)) {
@@ -328,22 +326,22 @@ export const useMessage = ({
                 const { category: newCategory, conversation_title: newTitle } = flattenedTITLEANDCATEGORY[0];
                 
                 // Mise à jour locale du topic et du titre
-                setConversations((prevConversations: any) =>
-                    prevConversations.map((conv: any) =>
+                const currentConversationsForUpdate = useChatStore.getState().conversations;
+                const updatedConversations = currentConversationsForUpdate.map((conv: Conversation) =>
                     conv.chat_id === chatSessionId
                         ? { ...conv, topic: newCategory, name: newTitle } // Mise à jour locale
                         : conv
-                    )
                 );
+                setConversations(updatedConversations);
 
                 // Mise à jour locale du topic pour `socialThreads`
-                setSocialThreads((prevSocialThreads: any) =>
-                    prevSocialThreads.map((thread: any) =>
+                const currentSocialThreadsForUpdate = useChatStore.getState().socialThreads;
+                const updatedSocialThreads = currentSocialThreadsForUpdate.map((thread: SocialThread) =>
                     thread.chat_id === chatSessionId
                         ? { ...thread, topic: newCategory, name: newTitle } // Mise à jour locale
                         : thread
-                    )
                 );
+                setSocialThreads(updatedSocialThreads);
                 
                 // Mise à jour dans Firestore pour le topic et le titre
                 const updateThreadData = async (chatId: string, data: { topic: string; name: string }) => {
@@ -371,11 +369,14 @@ export const useMessage = ({
                 const flattenedwaitingdata = answerWaiting.flat();
 
                 // Update the messages if conversation was not cancelled
-                if (!cancelConversationRef.current) {
-                    setMessages((prevMessages) => {
-                        const updatedMessages = [...prevMessages];
+                if (!error) {
+                    // Get current state, create new array, pass new array to setter
+                    const currentMessages = useChatStore.getState().messages;
+                    const updatedMessages = [...currentMessages];
+                    // Ensure lastMessageIndex is valid before updating
+                    if (lastMessageIndex >= 0 && lastMessageIndex < updatedMessages.length) {
                         updatedMessages[lastMessageIndex] = {
-                            ...prevMessages[lastMessageIndex],
+                            ...(updatedMessages[lastMessageIndex] as Message), // Added type assertion
                             type: 'ai',
                             content: answer,
                             personaName: 'Lucy',
@@ -395,14 +396,19 @@ export const useMessage = ({
                             INSTA_CLUB: flattenedINSTA_CLUB,
                             LINKEDIN: flattenedLINKEDIN,
                             INSTA2: flattenedINSTA2,
+                            // Ensure isLoading is handled if needed, maybe set to false here?
+                            isLoading: false, // Explicitly set isLoading to false when updating
                         };
-                        return updatedMessages;
-                    });
+                         setMessages(updatedMessages);
+                    } else {
+                        console.error("onSubmit: Invalid lastMessageIndex", lastMessageIndex, "Messages length:", currentMessages.length);
+                        // Handle error case - maybe add a new AI message instead?
+                    }
                 }
             }
 
             // Mettre à jour les questions liées et arrêter le streaming si non annulé
-            if (!cancelConversationRef.current) {
+            if (!error) {
             setRelatedQuestions(relatedQuestionsList);
             setIsStreaming(false);
             }
@@ -412,9 +418,9 @@ export const useMessage = ({
             }
 
             // Save AI message to backend if conversation is still active
-            // Vérifier l'état de cancelConversationRef.current avant d'appeler la fonction
-            console.log("cancelConversationRef.current:", cancelConversationRef.current);
-            if (!cancelConversationRef.current) {
+            // Vérifier l'état de error avant d'appeler la fonction
+            console.log("error:", error);
+            if (!error) {
                 console.log("Conversation active -> Envoi du message AI au backend");
                 await saveMessageAIToBackend({
                     message: answer,
@@ -444,27 +450,23 @@ export const useMessage = ({
         } catch (e: any) {
             if (e.name === 'AbortError') {
             console.log('Requête interrompue par l utilisateur.');
-            setIsStreaming(false); // Mettre à jour l'état ici
-            setHasNewContent(false); // Réinitialiser si nécessaire
+            // setIsStreaming(false); // Déjà dans finally
+            // setHasNewContent(false); // Déjà dans finally ou reset avant appel
             // Optionnel : Ajouter une indication à l'UI pour signaler que la réponse est stoppée
             } else {
             console.error('Erreur lors du traitement des messages :', e.message);
-            setMessages((prevMessages) => [
-                ...prevMessages,
-                {
-                    id: Date.now(),
-                    type: 'error',
-                    content: 'An error occurred. Try to send the message again or open a new chat.',
-                },
-            ]);
+             // Get current state, create new array, pass new array to setter
+            const currentMessagesWithError = useChatStore.getState().messages;
+            const errorMsg: Message = {
+                id: Date.now(),
+                type: 'error',
+                content: 'An error occurred. Try to send the message again or open a new chat.',
+            };
+            setMessages([...currentMessagesWithError, errorMsg]);
             }
         } finally {
-            setIsStreaming(false); // Ensure streaming is set to false after completion or error
-            if (cancelConversationRef.current) {
-            cancelConversationRef.current = false;
-            setCancelConversation(false);
-            console.log("cancelConversation réinitialisé à false après annulation.");
-        }
+            setIsStreaming(false);
+            setAbortController(null);
         }
     };
 
@@ -474,12 +476,14 @@ export const useMessage = ({
         if (TAK_message.trim() === '') return;
 
         const newMessage: Message = { id: Date.now(), type: 'human', content: TAK_message };
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy', isLoading: true }; // Add isLoading
+        const currentMessages = useChatStore.getState().messages;
+        const messagesWithHuman = [...currentMessages, newMessage];
+        setMessages(messagesWithHuman);
+        const messagesWithLoading = [...messagesWithHuman, loadingMessage];
+        setMessages(messagesWithLoading);
 
-        const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-        setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-        onSubmit([...messages, newMessage, loadingMessage], TAK_message);
+        onSubmit(messagesWithLoading, TAK_message);
     };
 
 
@@ -488,12 +492,14 @@ export const useMessage = ({
         if (COURSE_message.trim() === '') return;
 
         const newMessage: Message = { id: Date.now(), type: 'human', content: COURSE_message };
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy', isLoading: true }; // Add isLoading
+        const currentMessages = useChatStore.getState().messages;
+        const messagesWithHuman = [...currentMessages, newMessage];
+        setMessages(messagesWithHuman);
+        const messagesWithLoading = [...messagesWithHuman, loadingMessage];
+        setMessages(messagesWithLoading);
 
-        const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-        setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-        onSubmit([...messages, newMessage, loadingMessage], COURSE_message);
+        onSubmit(messagesWithLoading, COURSE_message);
     };
 
 
@@ -534,18 +540,17 @@ export const useMessage = ({
         // Masquer la LandingPage après l'envoi du premier message
         setIsLandingPageVisible(false);
         setRelatedQuestions([]);
-        //setShowChat(true);
-        setIsLandingPageVisible(false);
-        setIsComplete(false);
         setIsStreaming(true);
 
         const newMessage: Message = { id: generateUniqueId(), type: 'human', content: message };
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy', isLoading: true }; // Add isLoading
+        const currentMessages = useChatStore.getState().messages;
+        const messagesWithHuman = [...currentMessages, newMessage];
+        setMessages(messagesWithHuman);
+        const messagesWithLoading = [...messagesWithHuman, loadingMessage];
+        setMessages(messagesWithLoading);
 
-        const loadingMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy' };
-        setMessages((prevMessages) => [...prevMessages, loadingMessage]);
-
-        onSubmit([...messages, newMessage, loadingMessage], message);
+        onSubmit(messagesWithLoading, message);
         setInputValue('');
     };
 

@@ -1,12 +1,12 @@
 import { useEffect} from 'react';
-import { useAuth } from '../../../auth/hooks/useAuth';
-import { useChat } from '../../../auth/hooks/useChat';
 import { useNavigate } from 'react-router-dom';
 import { sendUserInfoToBackend } from '../../../api/calendar-event-studentProfile';
 import { StudentProfile, EventStudentProfile } from '../../../interfaces/interfaces_eleve';
 import { MouseEvent } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../auth/firebase';
+import useAuthStore from '../../../stores/useAuthStore';
+import useChatStore from '../../../stores/useChatStore';
 
 export const useUserProfile = ({
   setEvents,
@@ -21,8 +21,8 @@ export const useUserProfile = ({
 
 }) => {
 
-    const { user, logout } = useAuth();
-    const { setIsLandingPageVisible } = useChat();
+    const { user, logoutUser: logout } = useAuthStore();
+    const { setIsLandingPageVisible } = useChatStore();
     const navigate = useNavigate();
 
 
@@ -144,6 +144,7 @@ export const useUserProfile = ({
 
     //gestion du log-out
     const handleLogout = () => {
+        console.log("handleLogout called from useUserProfile");
         logout();
         navigate('/auth/sign-in', { replace: true });
     };
