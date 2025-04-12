@@ -373,9 +373,13 @@ export const useMessage = ({
                             INSTA_CLUB: flattenedINSTA_CLUB,
                             LINKEDIN: flattenedLINKEDIN,
                             INSTA2: flattenedINSTA2,
+                            METADATAONBOARDING: flattenedTITLEANDCATEGORY.length > 0 ? flattenedTITLEANDCATEGORY[0].category : undefined,
                             // Ensure isLoading is handled if needed, maybe set to false here?
                             isLoading: false, // Explicitly set isLoading to false when updating
                         };
+                        // --- LOG --- 
+                        console.log(`[useMessage] Updating AI message ID: ${updatedMessages[lastMessageIndex].id}`, updatedMessages[lastMessageIndex]);
+                        // --- FIN LOG ---
                          setMessages(updatedMessages);
                     } else {
                         console.error("onSubmit: Invalid lastMessageIndex", lastMessageIndex, "Messages length:", currentMessages.length);
@@ -490,7 +494,7 @@ export const useMessage = ({
         console.log("wasEmpty (was the conversation empty before this message?):", wasEmpty);
     
         const newMessage: Message = { id: Date.now(), type: 'human', content: message };
-        const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
+        const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy', isLoading: true };
     
         // Créer un nouveau tableau de messages, incluant le message humain et le message "en cours"
         const newMessagesArray = [...messages, newMessage, loadingMessage];
@@ -619,6 +623,17 @@ export const useMessage = ({
         setModalOpen(false);
     };
 
+    // Helper function to update message metadata in the store
+    const clearOnboardingMetadata = (aiMessageId: number | null) => {
+        if (!aiMessageId) return;
+        const currentMessages = useChatStore.getState().messages;
+        const updatedMessages = currentMessages.map(msg => 
+            msg.id === aiMessageId ? { ...msg, METADATAONBOARDING: undefined } : msg
+        );
+        setMessages(updatedMessages);
+        console.log(`[useMessage] Cleared METADATAONBOARDING for AI message ID: ${aiMessageId}`);
+    };
+
     return {
         onSubmit,
         handleSendMessageFromLandingPage,
@@ -633,6 +648,6 @@ export const useMessage = ({
         handleWrongAnswerClick,
         handleFeedbackClick,
         handleCloseWrongAnswerModal,
-
-      };
+        clearOnboardingMetadata,
+    };
 };

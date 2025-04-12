@@ -27,11 +27,11 @@ interface ChatContentProps {
     handleSourceClick: (url: string) => void;
     isStreaming: boolean;
     hasNewContent: boolean;
-    handleSendSCHOOLMessage: (value: string) => void;
-    handleSendYEARMessage: (value: string) => void;
-    handleSendLINKEDINMessage: (value: string) => void;
-    handleSendMAJORMINORMessage: (data: { majors: string[]; minors: string[] }) => void;
-    handleSendCOMPLIANCEMessage: (data: { termsAccepted: boolean; ageConfirmed: boolean }) => void;
+    handleSendSCHOOLMessage: (value: string, aiMessageId: number | null) => void;
+    handleSendYEARMessage: (value: string, aiMessageId: number | null) => void;
+    handleSendLINKEDINMessage: (value: string, aiMessageId: number | null) => void;
+    handleSendMAJORMINORMessage: (data: { majors: string[]; minors: string[] }, aiMessageId: number | null) => void;
+    handleSendCOMPLIANCEMessage: (data: { termsAccepted: boolean; ageConfirmed: boolean }, aiMessageId: number | null) => void;
     hasStartedStreaming: boolean;
     handlePrivacyChange: (newState: boolean) => void;
     setIsAtBottom: (val: boolean) => void;
@@ -70,6 +70,10 @@ interface ChatContentProps {
 
     const theme = useTheme();
 
+    // --- LOG 1 --- 
+    console.log("[ChatContent] Rendering with messages:", messages, "Last AI Message ID:", lastAiMessageId);
+    // --- FIN LOG 1 ---
+
     return (
         <>
            {isLandingPageVisible ? (
@@ -102,8 +106,11 @@ interface ChatContentProps {
                 maxHeight: '100%',
             }}
             >
-            {messages.map((message, index) =>
-                message.type === 'human' ? (
+            {messages.map((message, index) => {
+              // --- LOG 2 --- 
+              console.log(`[ChatContent] Mapping message ID: ${message.id}, Type: ${message.type}, Metadata: ${message.METADATAONBOARDING}, LastAIID Prop: ${lastAiMessageId}`);
+              // --- FIN LOG 2 ---
+              return message.type === 'human' ? (
                 <div
                     key={message.id}
                     className={`flex justify-end ${messageMarginX} ${index === 0 ? 'mt-8' : ''}`}
@@ -160,7 +167,7 @@ interface ChatContentProps {
                         drawerOpen={drawerOpen}
                         handleSendTAKMessage={handleSendTAKMessage}
                         handleSendCOURSEMessage={handleSendCOURSEMessage}
-                        isLoading={isStreaming && message.id === lastAiMessageId}
+                        isLoading={message.isLoading}
                         hasNewContent={hasNewContent}
                         redditData={message.REDDIT}
                         instaData={message.INSTA}
@@ -178,12 +185,12 @@ interface ChatContentProps {
                         handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
                         handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
                         hasStartedStreaming={hasStartedStreaming}
-                        
-                    
+                        lastAiMessageId={lastAiMessageId}
                     />
                     </div>
                 </div>
-                )
+                );
+            }
             )}
             <div ref={endDivRef}></div>
             </div>

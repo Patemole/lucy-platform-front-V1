@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   FiCheck,
   FiCopy,
@@ -53,7 +53,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from "@mui/material/Tooltip";
 
 import { useAuth } from '../../auth/hooks/useAuth';
-
 
 
 
@@ -129,11 +128,11 @@ interface AIMessageProps {
   handleSourceClick: (link: string) => void;
 
   handleSendTAKMessage: (TAK_message: string) => void;
-  handleSendSCHOOLMessage?: (school_message: string) => void; // 👈 optionnel
-  handleSendYEARMessage?: (year_message: string) => void; // 👈 optionnel
-  handleSendLINKEDINMessage?: (url: string) => void; // 👈 optionnel
-  handleSendMAJORMINORMessage?: (data: { majors: string[]; minors: string[] }) => void;
-  handleSendCOMPLIANCEMessage?: (payload: {termsAccepted: boolean; ageConfirmed: boolean;}) => void;
+  handleSendSCHOOLMessage?: (school_message: string, aiMessageId: number | null) => void; // <-- Ajout aiMessageId
+  handleSendYEARMessage?: (year_message: string, aiMessageId: number | null) => void; // <-- Ajout aiMessageId
+  handleSendLINKEDINMessage?: (url: string, aiMessageId: number | null) => void; // <-- Ajout aiMessageId
+  handleSendMAJORMINORMessage?: (data: { majors: string[]; minors: string[] }, aiMessageId: number | null) => void; // <-- Ajout aiMessageId
+  handleSendCOMPLIANCEMessage?: (payload: {termsAccepted: boolean; ageConfirmed: boolean;}, aiMessageId: number | null) => void; // <-- Ajout aiMessageId
 
   handleSendCOURSEMessage: (COURSE_message: string) => void;
   drawerOpen: boolean;
@@ -149,6 +148,7 @@ interface AIMessageProps {
   insta2Data?: AnswerINSTA2[] | null;
   metadataOnboarding?: string | null; //for onboarding
   hasStartedStreaming?: boolean; // ✅ indique que le stream a démarré
+  lastAiMessageId?: number | null; // <-- AJOUTER CETTE LIGNE
 }
 
 export const AIMessage: React.FC<AIMessageProps> = ({
@@ -193,7 +193,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   linkedinData,
   insta2Data,
   metadataOnboarding,
-  hasStartedStreaming
+  hasStartedStreaming,
+  lastAiMessageId, // <-- RÉCUPÉRER LA PROP ICI
 }) => {
   // États pour la gestion des interactions utilisateur
   const { user, login, setPrimaryChatId, chatIds, isAuth, loading } = useAuth();
@@ -209,6 +210,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [showAllSteps, setShowAllSteps] = useState(false);
   const [isOtherSelected, setIsOtherSelected] = useState<boolean>(false);
   const [showSourcesSidebar, setShowSourcesSidebar] = useState(false);
+
+  //const [isOnboardingActioned, setIsOnboardingActioned] = useState(false); // <-- SUPPRIMER CET ÉTAT
 /*
   const [selectedSchools, setSelectedSchools] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState<string[]>([]);
@@ -258,12 +261,21 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [readyToDisplayStep, setReadyToDisplayStep] = useState(false);
 
   //const showLoadingIndicator = isLoading && !hasNewContent;
-  const showLoadingIndicator = isLoading && (!hasNewContent || !hasStartedStreaming);
+  const showLoadingIndicator = isLoading;
   const isResponseReceived = !isLoading;
 
   // Thème et responsive
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // --- LOG 1 : Props reçues (déplacé ici après isResponseReceived) --- 
+  console.log(`[AIMessage ID: ${messageId}] Rendering with props:`, {
+    messageId,
+    metadataOnboarding,
+    isResponseReceived,
+    lastAiMessageId
+  });
+  // --- FIN LOG 1 ---
 
   // Ajustement de la taille de la police en fonction de la taille de l'écran
   const messageFontSize = isSmallScreen ? "custom-phone" : "text-lg";
@@ -569,7 +581,7 @@ useEffect(() => {
   const handleSendSCHOOLClick = () => {
     const message = selectedSchools.join(", ");
     if (handleSendSCHOOLMessage && message) {
-      handleSendSCHOOLMessage(message);
+      handleSendSCHOOLMessage(message, messageId); // <-- Passer messageId
     }
     //setSelectedSchools([]);
   };
@@ -577,13 +589,22 @@ useEffect(() => {
 
   const handleSendYEARClick = (year: string) => {
     if (handleSendYEARMessage && year) {
-      handleSendYEARMessage(year);
+      handleSendYEARMessage(year, messageId); // <-- Passer messageId
     }
   };
 
+  // Créer une fonction intermédiaire pour gérer la sélection de l'année
+  const handleYearSelection = (year: string) => {
+    setLearnerType(year); 
+    if (handleSendYEARMessage) {
+      handleSendYEARMessage(year, messageId); // <-- Passer messageId
+    }
+  };
+
+
   const handleSendLINKEDINClick = () => {
     if (handleSendLINKEDINMessage && linkedinUrl) {
-      handleSendLINKEDINMessage(linkedinUrl);
+      handleSendLINKEDINMessage(linkedinUrl, messageId); // <-- Passer messageId
     }
     //setLinkedinUrl('');
   };
@@ -594,7 +615,7 @@ useEffect(() => {
     const cleanedMinors = minors.filter((m: string) => m.trim() !== '');
   
     if (handleSendMAJORMINORMessage) {
-      handleSendMAJORMINORMessage({ majors: cleanedMajors, minors: cleanedMinors });
+      handleSendMAJORMINORMessage({ majors: cleanedMajors, minors: cleanedMinors }, messageId); // <-- S'assurer que messageId est passé
     }
   
     // reset if needed
@@ -603,17 +624,30 @@ useEffect(() => {
   };
 
 
-  const handleSendCompliance = () => {
-    if (handleSendCOMPLIANCEMessage) {
-      handleSendCOMPLIANCEMessage({
-        termsAccepted: true,
-        ageConfirmed: true,
-      });
-    }
   
-    // Reset si besoin
-    //setTermsChecked(false);
-    //setAgeChecked(false);
+  // Nouvelle fonction pour gérer les changements de conformité
+  const handleComplianceChange = (type: 'terms' | 'age', checked: boolean) => {
+    let otherChecked = false;
+    let currentTermsChecked = termsChecked;
+    let currentAgeChecked = ageChecked;
+
+    if (type === 'terms') {
+      setTermsChecked(checked);
+      currentTermsChecked = checked;
+      otherChecked = currentAgeChecked;
+    } else {
+      setAgeChecked(checked);
+      currentAgeChecked = checked;
+      otherChecked = currentTermsChecked;
+    }
+
+    // Vérifier si les deux sont cochés *après* la mise à jour de l'état actuel
+    if (checked && otherChecked) {
+      // setIsOnboardingActioned(true); // <-- Mettre à jour l'état ici // <-- SUPPRIMER
+      if (handleSendCOMPLIANCEMessage) {
+        handleSendCOMPLIANCEMessage({ termsAccepted: true, ageConfirmed: true }, messageId);
+      }
+    }
   };
 
 
@@ -642,6 +676,24 @@ useEffect(() => {
   (instaclubData && instaclubData.length > 0) ||
   (linkedinData && linkedinData.length > 0) ||
   (insta2Data && insta2Data.length > 0);
+
+  // --- Pré-calcul des conditions d'affichage --- 
+  const showSchoolBlock = metadataOnboarding === 'SCHOOL' && isResponseReceived && messageId === lastAiMessageId;
+  const showYearBlock = metadataOnboarding === 'YEAR' && isResponseReceived && messageId === lastAiMessageId;
+  const showLinkedinBlock = metadataOnboarding === 'LINKEDIN' && isResponseReceived && messageId === lastAiMessageId;
+  const showMajorMinorBlock = metadataOnboarding === 'MAJOR&MINOR' && isResponseReceived && messageId === lastAiMessageId;
+  const showComplianceBlock = metadataOnboarding === 'COMPLIANCE' && isResponseReceived && messageId === lastAiMessageId;
+
+  // --- LOG 2 : Conditions calculées --- 
+  console.log(`[AIMessage ID: ${messageId}] Conditions calculated:`, {
+    showSchoolBlock,
+    showYearBlock,
+    showLinkedinBlock,
+    showMajorMinorBlock,
+    showComplianceBlock
+  });
+  // --- FIN LOG 2 ---
+
 
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">
@@ -1022,16 +1074,14 @@ useEffect(() => {
             
 
           {/* Affichez l'indicateur de chargement tant que isLoading est vrai */}
-          {(!takData || takData.length === 0) ? (
-            showLoadingIndicator && (
+          {(!takData || takData.length === 0) ? ( // This condition seems unrelated to the loading dots themselves
+            showLoadingIndicator && ( // This is the important part
               <div className="flex justify-start mt-2 pl-10 mb-2">
                 <ThreeDots height="30" width="50" color={theme.palette.primary.main} />
               </div>
             )
           ) : (
-            <div>
-              {/* Ajoutez ici le contenu pour le cas où `takData` existe et contient des éléments */}
-            </div>
+            <div> {/* Placeholder for when takData exists */} </div>
           )}
 
 
@@ -1825,9 +1875,7 @@ useEffect(() => {
 
 
           {/* Gestion dynamique des écoles avec au moins un menu déroulant visible */}
-          
-          {metadataOnboarding === 'SCHOOL' && isResponseReceived && readyToDisplayStep && (
-
+          {showSchoolBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -1902,9 +1950,7 @@ useEffect(() => {
 
 
 
-
-
-          {metadataOnboarding === 'YEAR' && isResponseReceived && readyToDisplayStep &&(
+          {showYearBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -1915,34 +1961,33 @@ useEffect(() => {
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
               }}
               tabIndex={0}
-            >
-              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-4">
-                Select your current year
-              </label>
-              <div className="flex flex-col gap-2">
-              {yearOptions.map(({ label, value }) => (
-                  <button
-                    key={value}
-                    onClick={() => {
-                      setLearnerType(value);
-                      handleSendYEARClick(value); // envoie la valeur correcte
-                    }}
-                    className={`w-full px-4 py-2 rounded-lg border text-sm text-left ${
-                      learnerType === value
-                        ? 'bg-gray-800 text-white'
-                        : 'bg-white text-gray-800 border-gray-300'
-                    } hover:bg-gray-100`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+             >
+              {/* ... contenu du bloc YEAR ... */}
+                <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-4">
+                  Select your current year
+                </label>
+                <div className="flex flex-col gap-2">
+                {yearOptions.map(({ label, value }) => (
+                    <button
+                      key={value}
+                      onClick={() => {
+                        handleYearSelection(value); // Utiliser la nouvelle fonction
+                      }}
+                      className={`w-full px-4 py-2 rounded-lg border text-sm text-left ${
+                        learnerType === value
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-white text-gray-800 border-gray-300'
+                      } hover:bg-gray-100`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
             </div>
           )}
 
 
-
-          {metadataOnboarding === 'LINKEDIN' && isResponseReceived && (
+          {showLinkedinBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -1953,6 +1998,7 @@ useEffect(() => {
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
               }}
             >
+              {/* ... contenu du bloc LINKEDIN ... */}
               <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
                 Paste your LinkedIn profile URL
               </label>
@@ -1986,8 +2032,7 @@ useEffect(() => {
             </div>
           )}
 
-
-          {metadataOnboarding === 'MAJOR&MINOR' && isResponseReceived && readyToDisplayStep &&(
+          {showMajorMinorBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -1997,100 +2042,99 @@ useEffect(() => {
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
               }}
             >
-              <label className="block text-sm font-medium text-gray-800 mb-3">What is your major and minor?</label>
+              {/* ... contenu du bloc MAJOR&MINOR ... */}
+               <label className="block text-sm font-medium text-gray-800 mb-3">What is your major and minor?</label>
+               {/* MAJORS */}
+                <div className="mb-4">
+                  <label className="text-sm font-semibold text-gray-700 mb-1 block">Majors</label>
+                  {majors.map((major:string, index:number) => (
+                    <div key={index} className="flex items-center gap-2 mb-2">
+                      <input
+                        type="text"
+                        placeholder="Enter a major"
+                        value={major}
+                        onChange={(e) => {
+                          const updated = [...majors];
+                          updated[index] = e.target.value;
+                          setMajors(updated);
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                      {majors.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setMajors(majors.filter((_: string, i: number) => i !== index))}
+                          className="text-red-500 text-sm"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setMajors([...majors, ''])}
+                    className="text-blue-700 text-sm hover:underline"
+                  >
+                    + Add another major
+                  </button>
+                </div>
 
-              {/* MAJORS */}
-              <div className="mb-4">
-                <label className="text-sm font-semibold text-gray-700 mb-1 block">Majors</label>
-                {majors.map((major:string, index:number) => (
-                  <div key={index} className="flex items-center gap-2 mb-2">
-                    <input
-                      type="text"
-                      placeholder="Enter a major"
-                      value={major}
-                      onChange={(e) => {
-                        const updated = [...majors];
-                        updated[index] = e.target.value;
-                        setMajors(updated);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                    {majors.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => setMajors(majors.filter((_: string, i: number) => i !== index))}
-                        className="text-red-500 text-sm"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setMajors([...majors, ''])}
-                  className="text-blue-700 text-sm hover:underline"
-                >
-                  + Add another major
-                </button>
-              </div>
+                {/* MINORS */}
+                <div className="mb-6">
+                  <label className="text-sm font-semibold text-gray-700 mb-1 block">Minors</label>
+                  {minors.map((minor: string, index: number) => (
+                    <div key={index} className="flex items-center gap-2 mb-2">
+                      <input
+                        type="text"
+                        placeholder="Enter a minor"
+                        value={minor}
+                        onChange={(e) => {
+                          const updated = [...minors];
+                          updated[index] = e.target.value;
+                          setMinors(updated);
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                      {minors.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setMinors(minors.filter((_ : string, i: number) => i !== index))}
+                          className="text-red-500 text-sm"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setMinors([...minors, ''])}
+                    className="text-blue-700 text-sm hover:underline"
+                  >
+                    + Add another minor
+                  </button>
+                </div>
 
-              {/* MINORS */}
-              <div className="mb-6">
-                <label className="text-sm font-semibold text-gray-700 mb-1 block">Minors</label>
-                {minors.map((minor: string, index: number) => (
-                  <div key={index} className="flex items-center gap-2 mb-2">
-                    <input
-                      type="text"
-                      placeholder="Enter a minor"
-                      value={minor}
-                      onChange={(e) => {
-                        const updated = [...minors];
-                        updated[index] = e.target.value;
-                        setMinors(updated);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                    {minors.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => setMinors(minors.filter((_ : string, i: number) => i !== index))}
-                        className="text-red-500 text-sm"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setMinors([...minors, ''])}
-                  className="text-blue-700 text-sm hover:underline"
-                >
-                  + Add another minor
-                </button>
-              </div>
-
-              {/* CONTINUE */}
-              <div className="flex justify-end">
-                <button
-                  onClick={handleSendMajorMinorClick}
-                  disabled={majors.filter((m: string) => m.trim()).length === 0}
-                  className={`px-4 py-2 text-sm rounded-lg ${
-                    majors.filter((m:string) => m.trim()).length === 0
-                      ? 'bg-gray-300 cursor-not-allowed text-gray-600'
-                      : 'text-white bg-gray-800 hover:bg-gray-900'
-                  }`}
-                >
-                  Continue
-                </button>
-              </div>
+                {/* CONTINUE */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleSendMajorMinorClick}
+                    disabled={majors.filter((m: string) => m.trim()).length === 0}
+                    className={`px-4 py-2 text-sm rounded-lg ${
+                      majors.filter((m:string) => m.trim()).length === 0
+                        ? 'bg-gray-300 cursor-not-allowed text-gray-600'
+                        : 'text-white bg-gray-800 hover:bg-gray-900'
+                    }`}
+                  >
+                    Continue
+                  </button>
+                </div>
             </div>
           )}
 
 
-
-          {metadataOnboarding === 'COMPLIANCE' && isResponseReceived && readyToDisplayStep &&(
+          {showComplianceBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -2099,9 +2143,10 @@ useEffect(() => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
               }}
-            >
+             >
+              {/* ... contenu du bloc COMPLIANCE ... */}
               <label className="block text-sm font-medium text-gray-800 mb-4">
-                Final step before you’re in!
+                Final step before you're in!
               </label>
 
               {/* Checkbox 1 */}
@@ -2112,12 +2157,13 @@ useEffect(() => {
                   checked={termsChecked}
                   onChange={(e) => {
                     setTermsChecked(e.target.checked);
-                    if (e.target.checked && ageChecked) handleSendCompliance();
+                    //if (e.target.checked && ageChecked) handleComplianceChange();
                   }}
                   className="mt-1"
                 />
-                <label htmlFor="termsCheckbox" className="text-sm text-gray-700 leading-snug">
-                  You agree to our{' '}
+                 <label htmlFor="termsCheckbox" className="text-sm text-gray-700 leading-snug">
+                  {/* ... texte et liens ... */}
+                   You agree to our{' '}
                   <a href="#" className="underline text-blue-700 hover:text-blue-900">
                     Terms of Service
                   </a>{' '}
@@ -2141,33 +2187,25 @@ useEffect(() => {
                   checked={ageChecked}
                   onChange={(e) => {
                     setAgeChecked(e.target.checked);
-                    if (termsChecked && e.target.checked) handleSendCompliance();
+                    //if (termsChecked && e.target.checked) handleSendCompliance(); 
                   }}
                   className="mt-1"
                 />
                 <label htmlFor="ageCheckbox" className="text-sm text-gray-700 leading-snug">
-                I confirm that I am at least 18 years old or have parental consent if aged 13-17. Users under 13 are not permitted.{" "}
-                <a
-                  href="/documents/age-consent.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-700 underline"
-                >
-                  Details
-                </a>.
+                  {/* ... texte et lien Details ... */}
+                   I confirm that I am at least 18 years old or have parental consent if aged 13-17. Users under 13 are not permitted.{" "}
+                  <a
+                    href="/documents/age-consent.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-700 underline"
+                  >
+                    Details
+                  </a>.
                 </label>
               </div>
             </div>
           )}
-
-
-
-
-
-
-
-
-
 
 
 
