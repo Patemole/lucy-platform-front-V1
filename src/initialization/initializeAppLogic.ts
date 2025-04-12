@@ -58,29 +58,22 @@ export const initializeAppLogic = async (): Promise<void> => {
     socialThreadsUnsubscribe = chatStore.fetchSocialThreads();
     console.log(`[initializeAppLogic] Social threads listener initialized.`);
 
-    // 5. Déterminer et charger le chat initial en utilisant le DERNIER chatId de l'utilisateur
-    const initialChatId = chatIds.length > 0 ? chatIds[chatIds.length - 1] : null; // <--- Utilise le dernier ID de la liste
-    console.log(`[initializeAppLogic] Determined initialChatId: ${initialChatId} (based on last ID in AuthStore's chatIds)`);
+    // 5. Déterminer et charger le chat initial en utilisant la PREMIÈRE conversation de la liste récupérée
+    //    (car fetchConversations les trie par modified_at desc)
+    const conversationsFromStore = useChatStore.getState().conversations; // Récupère la liste MISE À JOUR
+    const initialChatId = conversationsFromStore.length > 0 ? conversationsFromStore[0].chat_id : null;
+    console.log(`[initializeAppLogic] Determined initialChatId: ${initialChatId} (based on the first conversation in the fetched & sorted list)`);
 
     if (initialChatId) {
-      console.log(`[initializeAppLogic] Loading initial chat messages for chatId: ${initialChatId}`);
-      // Important: loadChatMessages doit vérifier si initialChatId existe bien
-      // dans les `conversations` chargées juste avant.
-      // Si ce n'est pas le cas, il y a un problème de synchronisation.
-      const chatExists = conversationsAfterFetch.some(c => c.chat_id === initialChatId);
-      if (!chatExists) {
-          console.warn(`[initializeAppLogic] WARNING: Initial chat ID ${initialChatId} not found in fetched conversations. Data might be stale.`);
-          // Que faire ici ?
-          // - Attendre et réessayer ? (Complexe)
-          // - Forcer un re-fetch des données user + conversations ? (Risque de boucle)
-          // - Continuer sans charger de chat initial ? (Comportement actuel probable)
-          chatStore.setActiveChat(null); // Assurer la cohérence si le chat n'est pas trouvé
-      } else {
-          await chatStore.loadChatMessages(initialChatId);
-          console.log(`[initializeAppLogic] Initial chat messages loaded for ${initialChatId}.`);
-      }
+      console.log(`[initializeAppLogic] Setting active chat and loading messages for chatId: ${initialChatId}`);
+      // Plus besoin de vérifier chatExists car on prend directement depuis la liste qu'on vient de mettre dans le store
+      // L'action setActiveChat va maintenant gérer le chargement des messages
+      chatStore.setActiveChat(initialChatId);
+      // L'appel loadChatMessages est maintenant redondant car setActiveChat s'en charge
+      // await chatStore.loadChatMessages(initialChatId); 
+      console.log(`[initializeAppLogic] setActiveChat called for ${initialChatId}. Message loading initiated by setActiveChat.`);
     } else {
-      console.log("[initializeAppLogic] No initial chat ID found. Setting active chat to null.");
+      console.log("[initializeAppLogic] No initial chat ID found (no conversations fetched?). Setting active chat to null.");
       chatStore.setActiveChat(null);
     }
 
