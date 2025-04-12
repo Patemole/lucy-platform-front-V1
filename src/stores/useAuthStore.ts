@@ -18,7 +18,7 @@ En gros, c'est la source unique de vérité et le contrôleur pour l'authentific
 
 import { create } from 'zustand';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore'; // Ajoutez updateDoc si nécessaire pour mettre à jour Firestore
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'; // Ajout de serverTimestamp
 import { auth, db } from '../auth/firebase'; // Assurez-vous que ce chemin est correct
 import { User } from '../interfaces/interfaces_eleve'; // Assurez-vous que ce chemin est correct
 
@@ -43,6 +43,7 @@ interface AuthState {
   removeChatIdFromStore: (chatId: string) => void; // Simplifié, la suppression Firestore se fait ailleurs si besoin
   logoutUser: () => Promise<void>;
   updateUserProfileInStore: (updatedProfileData: Partial<User>) => void; // Pour les mises à jour locales
+  updateUserProfileInStoreAndFirestore: (updatedProfileData: Partial<Omit<User, 'id' | 'email'>>) => Promise<void>;
 
   // Fonction pour initialiser l'écouteur Firebase
   initializeAuthListener: () => () => void; // Retourne la fonction unsubscribe
@@ -152,7 +153,19 @@ const useAuthStore = create<AuthState>((set, get) => ({
   updateUserProfileInStore: (updatedProfileData) => {
     const currentUser = get().user;
     if (currentUser) {
-      const updatedUser = { ...currentUser, ...updatedProfileData };
+      // Fusionne l'utilisateur actuel avec les nouvelles données, en s'assurant que les tableaux vides remplacent les anciens si nécessaire
+      const updatedUser = {
+            ...currentUser,
+            ...updatedProfileData,
+            // Gestion spécifique pour les tableaux pour éviter la fusion simple qui pourrait mal se comporter si updatedProfileData a des tableaux vides
+            faculty: updatedProfileData.faculty !== undefined ? updatedProfileData.faculty : currentUser.faculty,
+            major: updatedProfileData.major !== undefined ? updatedProfileData.major : currentUser.major,
+            minor: updatedProfileData.minor !== undefined ? updatedProfileData.minor : currentUser.minor,
+            interests: updatedProfileData.interests !== undefined ? updatedProfileData.interests : currentUser.interests,
+            chatsessions: updatedProfileData.chatsessions !== undefined ? updatedProfileData.chatsessions : currentUser.chatsessions,
+            // Inclure aussi profilePicture si elle est dans les données mises à jour
+            profilePicture: updatedProfileData.profilePicture !== undefined ? updatedProfileData.profilePicture : currentUser.profilePicture,
+         };
       set({ user: updatedUser });
       console.log("AuthStore: Profil utilisateur mis à jour localement:", updatedUser);
       // Note : Ceci ne met PAS à jour Firestore.
@@ -160,6 +173,44 @@ const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  // Nouvelle action : Met à jour Firestore PUIS le store local
+  updateUserProfileInStoreAndFirestore: async (updatedProfileData) => {
+    const { user, _setError, updateUserProfileInStore } = get(); // Utilise l'action locale existante
+    if (!user || !user.id) {
+      console.error("AuthStore: Utilisateur non connecté, impossible de mettre à jour le profil.");
+      _setError("Vous devez être connecté pour mettre à jour votre profil.");
+      throw new Error("User not authenticated"); // Lance une erreur pour que le composant puisse réagir
+    }
+
+    console.log("AuthStore: Tentative de mise à jour du profil dans Firestore pour", user.id);
+    const userDocRef = doc(db, 'users', user.id);
+
+    try {
+      // Prépare les données à envoyer à Firestore, incluant le timestamp
+      // IMPORTANT: Ne pas inclure l'email ou l'id dans l'objet mis à jour dans Firestore ici,
+      // car ils ne sont généralement pas modifiables ou proviennent de l'Auth.
+      // On utilise updatedProfileData qui est déjà Omit<'id' | 'email'>
+      const dataToUpdate = {
+        ...updatedProfileData,
+        updatedAt: serverTimestamp(), // Ajoute automatiquement la date de mise à jour
+      };
+
+      // Met à jour Firestore
+      await updateDoc(userDocRef, dataToUpdate);
+      console.log("AuthStore: Profil mis à jour avec succès dans Firestore.");
+
+      // Si Firestore réussit, met à jour le store local
+      // Note: Firestore ne retourne pas le timestamp `updatedAt` immédiatement de la même manière,
+      // donc nous mettons à jour le store avec les données fournies `updatedProfileData`.
+      // Assurez-vous que `updateUserProfileInStore` gère correctement tous les champs, y compris `profilePicture`.
+      updateUserProfileInStore(updatedProfileData); // Met à jour l'état local avec les nouvelles infos
+
+    } catch (error) {
+      console.error("❌ AuthStore: Erreur lors de la mise à jour du profil dans Firestore:", error);
+      _setError("Erreur lors de la sauvegarde des modifications du profil.");
+      throw error; // Relance l'erreur pour que le composant appelant puisse la gérer (ex: ne pas fermer la popup)
+    }
+  },
 
  addChatIdToStoreAndFirestore: async (chatId) => {
     const { user, chatIds, _setChatIds, _setError } = get();
@@ -236,29 +287,36 @@ const useAuthStore = create<AuthState>((set, get) => ({
   initializeAuthListener: () => {
     console.log("AuthStore: Initialisation de l'écouteur onAuthStateChanged.");
     const { _setUserAndAuth, fetchUserData, _setLoading, _setError } = get();
-    _setLoading(true); // Commence en chargement
+    _setLoading(true); // Indique que l'initialisation globale commence
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         console.log("AuthStore: onAuthStateChanged - Utilisateur Firebase détecté:", firebaseUser.uid);
-         // Met à jour l'état de base rapidement
-         set({ isAuthenticated: true, isLoading: false, user: { id: firebaseUser.uid, email: firebaseUser.email || '', /* autres champs potentiellement vides */ } as User });
-        // Ensuite, récupère les données complètes depuis Firestore
-        await fetchUserData(firebaseUser.uid);
+         // **Suppression du set partiel ici**
+         // On met isAuthenticated à true, mais on laisse fetchUserData gérer la mise à jour de user et isLoading/isFetchingUserData
+         set({ isAuthenticated: true }); // Indique qu'on est authentifié
+         // Attend que les données utilisateur soient chargées avant de potentiellement modifier l'état de chargement principal
+         try {
+             await fetchUserData(firebaseUser.uid);
+             // fetchUserData s'occupe de mettre à jour user, isFetchingUserData et isLoading via _setUserAndAuth
+         } catch (fetchError) {
+             console.error("AuthStore: Erreur lors du fetchUserData initial:", fetchError);
+             _setError("Erreur lors du chargement des données utilisateur.");
+             // Peut-être déconnecter l'utilisateur ici?
+             _setUserAndAuth(null); // Réinitialise en cas d'échec critique du chargement des données
+         }
       } else {
         console.log("AuthStore: onAuthStateChanged - Aucun utilisateur Firebase.");
-        _setUserAndAuth(null); // Réinitialise complètement l'état si pas d'utilisateur
-        _setLoading(false); // Fin du chargement
+        _setUserAndAuth(null); // Réinitialise complètement l'état (ceci met aussi isLoading: false)
       }
     }, (error) => {
-        // Gère les erreurs potentielles de l'écouteur lui-même
         console.error("AuthStore: Erreur dans onAuthStateChanged listener:", error);
         _setError("Erreur d'authentification Firebase.");
-        _setUserAndAuth(null); // Déconnecte en cas d'erreur listener
-        _setLoading(false);
+        _setUserAndAuth(null); // Réinitialise en cas d'erreur listener (met isLoading: false)
     });
 
-    return unsubscribe; // Retourne la fonction pour pouvoir l'appeler au démontage
+    // Note: _setLoading(false) est maintenant principalement géré par _setUserAndAuth
+    return unsubscribe;
   },
 }));
 
