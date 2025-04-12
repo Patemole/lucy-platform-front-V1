@@ -392,7 +392,7 @@ type SidebarProps = {
                     >
                     <List component="ul">
                         {conversations.length > 0 ? (
-                        conversations.map((conversation) => (
+                        conversations.sort((a, b) => a.chat_id === 'onboarding_chat_id' ? -1 : 1).map((conversation) => (
                             <ListItem
                             key={conversation.chat_id}
                             component="li"
