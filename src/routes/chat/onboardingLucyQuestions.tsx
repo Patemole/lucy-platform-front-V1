@@ -460,120 +460,58 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                     WebkitBackdropFilter: 'blur(50px)',
                     borderTopLeftRadius: '20px',
                     borderTopRightRadius: '20px',
-                    padding: '12px',
-                    minHeight: '80px',
-                    maxHeight: inputValue.length > 0 ? '300px' : '150px',
-                    overflow: 'hidden',
+                    padding: '12px 15px', // Ajuster le padding horizontal
+                    minHeight: '70px', // Réduire un peu la hauteur min
+                    // maxHeight: 'auto', // Laisser la hauteur s'adapter
+                    // overflow: 'hidden', // Peut causer des problèmes avec multiline
                     transition: 'max-height 0.2s ease-in-out',
                     zIndex: 2,
                   }}
                 >
-                  {/* Champ de saisie avec placeholder "Ask Lucy..." */}
-                  <section id="chat-section" tabIndex={-1} aria-label="Chat section">
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    multiline
-                    minRows={1}
-                    maxRows={6}
-                    placeholder="Ask Lucy..."
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    InputProps={{
-                      style: {
-                        backgroundColor: 'rgba(255,255,255,0.6)', // même fond que le container pour homogénéité
-                        borderRadius: '15px',
-                        padding: '10px 15px',
-                        fontSize: '1rem',
-                        fontWeight: '500',
-                        border: 'none',
-                      },
-                    }}
-                    inputProps={{ style: { color: '#333' } }}
-                    sx={{
-                      width: '100%',
-                      maxWidth: '600px',
-                      transition: 'height 0.2s ease-in-out',
-                      '& fieldset': { border: 'none' },
-                    }}
-                  />
-                  </section>
-
-                  {/* Conteneur des boutons Public/Private et du bouton d'envoi */}
-                  <div
-                    className="w-full flex items-center justify-start"
-                    style={{
-                      maxWidth: '600px',
-                      marginTop: '10px',
-                      gap: '10px',
-                    }}
-                  >
-                    {/* Bouton Public */}
-                    <button
-                      aria-label="Set conversation to public"
-                      className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
-                      style={{
-                        backgroundColor: !isPrivate ? '#D6DDF5' : '#E0E0E0', // pour public, fond light-blue (#D6DDF5)
-                        color: !isPrivate ? '#3155CC' : '#6F6F6F', // et texte en bleu (#3155CC)
-                        borderRadius: '12px',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                      }}
-                      onClick={async () => {
-                        try {
-                          const newPrivacyState = !isPrivate;
-                          setIsPrivate(newPrivacyState);
-
-                          const currentThreadType = newPrivacyState ? 'Private' : 'Public';
-                          const chatSessionId = chatIds[0] || 'default_chat_id';
-
-                          // 1. Mise à jour Firestore (logique existante)
-                          const docRef = doc(db, 'chatsessions', chatSessionId);
-                          await updateDoc(docRef, { thread_type: currentThreadType });
-                          console.log(`Le thread_type a été mis à jour en ${currentThreadType} pour le chat_id ${chatSessionId}`);
-
-                          // 2. Mise à jour du store Zustand
-                          const currentConversations = useChatStore.getState().conversations; // Récupérer l'état actuel
-                          const updatedConversations = currentConversations.map((conv) => // Créer le nouveau tableau
-                            conv.chat_id === chatSessionId
-                              ? { ...conv, thread_type: currentThreadType } // Mettre à jour l'élément concerné
-                              : conv
-                          );
-                          setConversations(updatedConversations); // Passer le nouveau tableau à l'action du store
-
-                        } catch (error) {
-                          console.error('Erreur lors de la mise à jour du thread_type :', error);
-                        }
-                      }}
+                  {/* Nouvelle ligne pour icône, input, bouton envoi */}
+                  <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '8px' }}>
+                    {/* Icône Cadenas cliquable */}
+                    <IconButton
+                      onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}
+                      aria-label={isPrivate ? "Set conversation to public" : "Set conversation to private"}
+                      size="medium" // Ajuster la taille si besoin
+                      sx={{ color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main, padding: '6px' /* Ajuster padding */ }}
                     >
-                      <LockOpenIcon fontSize="small" style={{ color: !isPrivate ? '#3155CC' : '#6F6F6F' }} /> Public
-                    </button>
+                      {isPrivate ? <LockIcon fontSize="small" /> : <LockOpenIcon fontSize="small" />}
+                    </IconButton>
 
-                    {/* Bouton Private */}
-                    <button
-                      aria-label="Set conversation to private"
-                      className="py-1 px-3 rounded-full flex items-center text-xs font-medium"
-                      style={{
-                        backgroundColor: isPrivate ? '#F0F0F0' : '#E0E0E0',
-                        //color: isPrivate ? '#6F6F6F' : '#3155CC',
-                        color: '#6F6F6F',
-                        borderRadius: '12px',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
+                    {/* Champ de saisie occupant l'espace restant */}
+                    <TextField
+                      variant="outlined"
+                      multiline
+                      minRows={1}
+                      maxRows={4} // Limiter un peu plus ?
+                      placeholder="Ask Lucy..."
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={handleInputKeyPressSocraticLangGraph} // Utiliser onKeyDown
+                      InputProps={{
+                        style: {
+                          backgroundColor: 'rgba(255,255,255,0.8)', // Légèrement plus opaque pour la lisibilité
+                          borderRadius: '15px',
+                          padding: '8px 12px', // Ajuster le padding interne
+                          fontSize: '1rem',
+                          fontWeight: '500',
+                          border: 'none',
+                          flexGrow: 1, // Important
+                          minWidth: 0, // Important pour flexbox
+                        },
                       }}
-                      onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', true)}
-                    >
-                      {/*<LockIcon fontSize="small" style={{ color: isPrivate ? '#6F6F6F' : '#3155CC' }} /> Private*/}
-                      <LockIcon fontSize="small" style={{ color: '#6F6F6F' }} /> Private
-                    </button>
+                      inputProps={{ style: { color: '#333' } }}
+                      sx={{
+                        flexGrow: 1, // Important
+                        minWidth: 0, // Important pour flexbox
+                        '& fieldset': { border: 'none' },
+                      }}
+                    />
 
-                    {/* Bouton d'envoi (cercle identique à celui de desktop, mais avec flèche vers le haut) */}
-                    <button
-                      className="rounded-full flex items-center justify-center"
+                    {/* Bouton d'envoi (identique) */}
+                    <IconButton
                       onClick={() => {
                         if (isStreaming) {
                           if (abortController) {
@@ -586,27 +524,29 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                           handleSendMessageSocraticLangGraph(inputValue);
                         }
                       }}
-                      style={{
-                        width: '30px',
-                        height: '30px',
-                        marginLeft: 'auto', // positionné à droite
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                      aria-label={isStreaming ? "Stop response" : "Send message"}
+                      size="medium"
+                      sx={{
                         backgroundColor: isStreaming ? '#F04261' : theme.palette.button_sign_in,
+                        color: '#fff',
+                        width: '36px', // Légèrement plus grand ?
+                        height: '36px',
+                        '&:hover': {
+                          backgroundColor: isStreaming ? '#D03050' : theme.palette.augmentColor({ color: { main: theme.palette.button_sign_in } }).dark,
+                        }
                       }}
                     >
                       {isStreaming ? (
-                        <StopIcon style={{ color: '#fff', fontSize: '16px' }} />
+                        <StopIcon style={{ fontSize: '20px' }} />
                       ) : (
-                        <ArrowUpwardIcon style={{ color: '#fff', fontSize: '16px' }} />
+                        <ArrowUpwardIcon style={{ fontSize: '20px' }} />
                       )}
-                    </button>
+                    </IconButton>
                   </div>
 
-                  {/* Phrase d'information sous le champ de saisie (version mobile courte) */}
-                  <div className="flex justify-center w-full">
-                    <p className="mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80">
+                  {/* Phrase d'information sous le champ de saisie */}
+                  <div className="flex justify-center w-full mt-2"> {/* Ajouter un peu de marge top */}
+                    <p className="text-center text-[0.6rem] text-[#6F6F6F] opacity-80">
                       Lucy can make mistake. Consider checking important information.
                     </p>
                   </div>
