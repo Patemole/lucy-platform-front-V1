@@ -3,91 +3,97 @@ import useChatStore from '../stores/useChatStore';
 import { useAppInitializationStore } from '../stores/useAppInitializationStore';
 import { Unsubscribe } from 'firebase/firestore'; // Importer pour le type de retour de fetchSocialThreads
 
-// Variable globale pour garder une trace de la fonction de désinscription des threads sociaux
+// Variables globales pour garder une trace des fonctions de désinscription
+let privateConversationsUnsubscribe: Unsubscribe | null = null;
 let socialThreadsUnsubscribe: Unsubscribe | null = null;
 
 /**
- * Fonction principale pour initialiser les données essentielles de l'application
+ * Fonction principale pour initialiser les écouteurs de données de l'application
  * après l'authentification de l'utilisateur.
  * Appelée depuis App.tsx lorsque l'utilisateur est authentifié et ses données chargées.
  */
 export const initializeAppLogic = async (): Promise<void> => {
-  console.log("[initializeAppLogic] Starting application data initialization...");
+  console.log("[initializeAppLogic] Starting application listeners initialization...");
 
-  const { user, chatIds } = useAuthStore.getState(); // Récupère les chatIds ACTUELS du store
+  // Note : userId et university sont récupérés DANS les actions du store maintenant
   const chatStore = useChatStore.getState();
   const appInitStore = useAppInitializationStore.getState();
+  const { user } = useAuthStore.getState(); // Récupérer l'utilisateur pour la vérification initiale
 
   // 0. S'assurer que l'état d'initialisation est bien false au début.
-  //    Normalement géré par App.tsx avant l'appel, mais double-vérification possible.
-  // appInitStore.setAppInitialized(false); // Normalement déjà fait par App.tsx
+  //    Normalement géré par App.tsx, mais utile pour la clarté du flux.
+  // appInitStore.setAppInitialized(false); // Déjà fait par App.tsx avant l'appel
 
-  // 1. Vérification utilisateur
+  // 1. Vérification utilisateur (garde essentielle)
   if (!user?.id || !user.university) {
-    console.warn("[initializeAppLogic] User ID or University missing. Aborting.");
-    chatStore.clearChatState();
-    // Assurez-vous que l'initialisation est marquée comme terminée même en cas d'échec précoce
+    console.warn("[initializeAppLogic] User ID or University missing. Aborting listener setup.");
+    chatStore.clearChatState(); // Nettoyer l'état du chat si l'utilisateur n'est pas valide
+    // Important : Se désabonner des listeners potentiellement actifs d'une session précédente invalide
+    if (privateConversationsUnsubscribe) {
+      console.log("[initializeAppLogic] Unsubscribing from previous private conversations listener (user invalid).");
+      privateConversationsUnsubscribe();
+      privateConversationsUnsubscribe = null;
+    }
+    if (socialThreadsUnsubscribe) {
+      console.log("[initializeAppLogic] Unsubscribing from previous social threads listener (user invalid).");
+      socialThreadsUnsubscribe();
+      socialThreadsUnsubscribe = null;
+    }
+    // Marquer l'initialisation comme terminée (même si échec) pour éviter boucle si App.tsx le gère
     if (!appInitStore.isAppInitialized) {
         appInitStore.setAppInitialized(true);
     }
     return;
   }
 
-  console.log(`[initializeAppLogic] Initializing for user: ${user.id}. Available chatIds from AuthStore: ${JSON.stringify(chatIds)}`);
-  // ^^^ CE LOG EST CRUCIAL: Vérifiez si le nouveau chatId est DÉJÀ ici.
+  console.log(`[initializeAppLogic] Initializing listeners for user: ${user.id}.`);
 
   try {
-    // 2. Se désabonner de l'ancien listener de threads sociaux (s'il y en avait un d'une session précédente)
-    // Cela évite les écoutes multiples si initializeAppLogic est appelé plusieurs fois (ex: changement rapide d'utilisateur)
+    // 2. Se désabonner des anciens listeners (si existants)
+    // Important pour éviter les écoutes multiples lors des changements d'utilisateur ou rechargements rapides
+    if (privateConversationsUnsubscribe) {
+      console.log("[initializeAppLogic] Unsubscribing from previous private conversations listener.");
+      privateConversationsUnsubscribe();
+      privateConversationsUnsubscribe = null;
+    }
     if (socialThreadsUnsubscribe) {
       console.log("[initializeAppLogic] Unsubscribing from previous social threads listener.");
       socialThreadsUnsubscribe();
       socialThreadsUnsubscribe = null;
     }
 
-    // 3. Charger les conversations basées sur les chatIds du AuthStore
-    console.log("[initializeAppLogic] Fetching user conversations based on current chatIds...");
-    await chatStore.fetchConversations(); // Utilise les chatIds récupérés au début
-    const conversationsAfterFetch = chatStore.conversations; // Vérifier les conversations chargées
-    console.log(`[initializeAppLogic] User conversations fetched. Count: ${conversationsAfterFetch.length}`);
-    // Log pour voir si le nouveau chat est dans la liste chargée
-    console.log("[initializeAppLogic] Fetched conversation IDs:", conversationsAfterFetch.map(c => c.chat_id));
+    // 3. Initialiser le listener pour les conversations PRIVÉES de l'utilisateur
+    //    Cette fonction retourne maintenant une fonction `Unsubscribe`
+    console.log("[initializeAppLogic] Initializing private conversations listener...");
+    privateConversationsUnsubscribe = chatStore.fetchConversations();
+    // La logique de sélection du chat initial est MAINTENANT GÉRÉE DANS fetchConversations (onSnapshot callback)
+    console.log(`[initializeAppLogic] Private conversations listener initialized.`);
 
-    // 4. Initialiser le listener social threads ...
+    // 4. Initialiser le listener pour les threads SOCIAUX de l'université
+    //    Cette fonction retourne également une fonction `Unsubscribe`
     console.log("[initializeAppLogic] Initializing social threads listener...");
     socialThreadsUnsubscribe = chatStore.fetchSocialThreads();
     console.log(`[initializeAppLogic] Social threads listener initialized.`);
 
-    // 5. Déterminer et charger le chat initial en utilisant la PREMIÈRE conversation de la liste récupérée
-    //    (car fetchConversations les trie par modified_at desc)
-    const conversationsFromStore = useChatStore.getState().conversations; // Récupère la liste MISE À JOUR
-    const initialChatId = conversationsFromStore.length > 0 ? conversationsFromStore[0].chat_id : null;
-    console.log(`[initializeAppLogic] Determined initialChatId: ${initialChatId} (based on the first conversation in the fetched & sorted list)`);
+    // 5. --- SUPPRIMÉ --- La logique de détermination et d'activation du chat initial
+    //    est maintenant gérée directement dans le callback onSnapshot de `fetchConversations`.
 
-    if (initialChatId) {
-      console.log(`[initializeAppLogic] Setting active chat and loading messages for chatId: ${initialChatId}`);
-      // Plus besoin de vérifier chatExists car on prend directement depuis la liste qu'on vient de mettre dans le store
-      // L'action setActiveChat va maintenant gérer le chargement des messages
-      chatStore.setActiveChat(initialChatId);
-      // L'appel loadChatMessages est maintenant redondant car setActiveChat s'en charge
-      // await chatStore.loadChatMessages(initialChatId); 
-      console.log(`[initializeAppLogic] setActiveChat called for ${initialChatId}. Message loading initiated by setActiveChat.`);
-    } else {
-      console.log("[initializeAppLogic] No initial chat ID found (no conversations fetched?). Setting active chat to null.");
-      chatStore.setActiveChat(null);
-    }
-
-    console.log("[initializeAppLogic] Data initialization process seemingly completed.");
+    console.log("[initializeAppLogic] Listener initialization process seemingly completed.");
+    // Le chat actif sera défini par le callback de fetchConversations s'il y a des conversations.
 
   } catch (error) {
-    console.error("[initializeAppLogic] Error during initialization:", error);
+    console.error("[initializeAppLogic] Error during listener initialization:", error);
+    // En cas d'erreur ici, les listeners pourraient ne pas être actifs.
+    // clearChatState pourrait être appelé ici aussi pour être sûr.
+    // chatStore.clearChatState();
   } finally {
-    // 6. Marquer l'initialisation comme terminée (déjà fait dans App.tsx avant l'appel)
-    //    On peut le refaire ici pour être sûr, mais attention aux effets de bord si appelé plusieurs fois.
-    if (!appInitStore.isAppInitialized) {
-        appInitStore.setAppInitialized(true);
-        console.log("[initializeAppLogic] isAppInitialized set to true (finally block - safety net).");
-    }
+    // 6. Marquer l'initialisation comme terminée (géré par App.tsx)
+    // On ne le fait plus ici pour éviter les conflits avec App.tsx
+    // if (!appInitStore.isAppInitialized) {
+    //     appInitStore.setAppInitialized(true);
+    //     console.log("[initializeAppLogic] isAppInitialized set to true (finally block - safety net).");
+    // }
+    console.log("[initializeAppLogic] Execution finished.");
   }
 };
 
@@ -96,3 +102,13 @@ export const initializeAppLogic = async (): Promise<void> => {
 // et actions correspondants (fetchProfilePicture, fetchChatSessions,
 // fetchSocialThreads, loadInitialMessages, setMessages, setIsLandingPageVisible).
 // Les `Promise.resolve()` sont des placeholders pour rendre le code exécutable. 
+
+// Note importante pour le nettoyage :
+// Les fonctions `privateConversationsUnsubscribe` et `socialThreadsUnsubscribe`
+// devraient idéalement être appelées lorsque l'utilisateur se déconnecte explicitement
+// ou lorsque l'application est sur le point d'être fermée/démontée.
+// L'endroit le plus logique serait dans `useChatStore.clearChatState()`
+// ou potentiellement dans la fonction de nettoyage de l'effet `useEffect`
+// qui appelle `initializeAppLogic` dans `App.tsx`.
+// Pour l'instant, nous nous assurons seulement qu'elles sont appelées avant de
+// ré-initialiser les listeners dans cette même fonction. 
