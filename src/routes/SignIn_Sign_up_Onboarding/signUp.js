@@ -272,16 +272,6 @@ export default function SignUp() {
 
       console.log(`[Step 6a] Setting active chat in ChatStore to: ${chatId}`);
       useChatStore.getState().setActiveChat(chatId);
-      const newConversationObject = {
-          chat_id: chatId,
-          name: chatData.name,
-          thread_type: chatData.thread_type,
-          topic: chatData.topic,
-      };
-      useChatStore.setState(state => ({
-          conversations: [newConversationObject, ...state.conversations]
-      }));
-      console.log(`[Step 6b] Optimistically added conversation to ChatStore list.`);
 
       console.log(`[Step 7] Navigating to onboarding page for user ${newUser.uid}... (after 300ms delay)`);
       setTimeout(() => {

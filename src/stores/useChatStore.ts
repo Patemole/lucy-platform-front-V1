@@ -90,7 +90,7 @@ interface ChatState {
   setMessagesList: (messages: Message[]) => void; // Remplace la liste complète des messages
   clearChatState: () => void; // Réinitialise l'état du chat (utile à la déconnexion)
 
-  fetchConversations: () => Promise<void>; // Charge la liste des conversations de l'utilisateur
+  fetchConversations: () => Unsubscribe; // Charge la liste des conversations de l'utilisateur
   fetchSocialThreads: () => Unsubscribe; // Initialise le listener pour les threads sociaux
   loadChatMessages: (chatId: string) => Promise<void>; // Charge les messages et détails d'un chat spécifique
   setActiveChat: (chatId: string | null) => void; // Définit le chat actif (peut appeler loadChatMessages)
@@ -332,56 +332,72 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
 
   // --- Data Fetching Actions ---
 
-  fetchConversations: async () => {
-    const { _setIsLoadingConversations, setConversations, _setError } = get();
+  fetchConversations: () => {
+    const { _setIsLoadingConversations, setConversations, _setError, setActiveChat } = get();
     const userId = useAuthStore.getState().user?.id;
     const university = useAuthStore.getState().user?.university;
 
     if (!userId || !university) {
-      console.warn("[ChatStore] Cannot fetch conversations: userId or university missing.");
-      setConversations([]); // Reset conversations
+      console.warn("[ChatStore] Cannot fetch conversations listener: userId or university missing.");
+      setConversations([]);
       _setError("User information missing to fetch conversations.");
-      return;
+      _setIsLoadingConversations(false); // S'assurer que le loading s'arrête
+      return () => { console.log("[ChatStore - fetchConversations] Returning No-Op Unsubscribe (no user/university)."); }; // Retourne une fonction vide pour le désabonnement
     }
 
-    console.log(`[ChatStore] Fetching conversations for user ${userId} in ${university}`);
+    console.log(`[ChatStore] Setting up Firestore listener for conversations for user ${userId} in ${university}`);
     _setIsLoadingConversations(true);
-    try {
-      const conversationsRef = collection(db, 'chatsessions');
-      const q = query(
-        conversationsRef,
-        where('user_ids', 'array-contains', userId), // Conversations where user is a member
-        where('university', '==', university),
-        orderBy('modified_at', 'desc') // Trier par date de modification décroissante
-      );
 
-      const querySnapshot = await getDocs(q);
-      const fetchedConversations: Conversation[] = querySnapshot.docs.map(doc => {
-         // ---> CORRECTION Linter Error 2 : Ajouter thread_type <---
+    const conversationsRef = collection(db, 'chatsessions');
+    const q = query(
+      conversationsRef,
+      where('user_ids', 'array-contains', userId),
+      where('university', '==', university),
+      orderBy('modified_at', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log(`[ChatStore - fetchConversations] onSnapshot triggered. Received ${snapshot.docs.length} conversation documents.`);
+      const isInitialLoad = get().isLoadingConversations;
+
+      const fetchedConversations: Conversation[] = snapshot.docs.map(doc => {
          const data = doc.data();
-         const isPrivate = data.is_private !== undefined ? data.is_private : true;
+         const threadType = data.thread_type === 'Public' ? 'Public' : 'Private'; // Default to Private if missing/invalid
+
          return {
              chat_id: doc.id,
              name: data.name || 'Untitled Conversation',
              last_message_preview: data.last_message_preview || '',
              modified_at: (data.modified_at as Timestamp)?.toDate(),
-             is_private: isPrivate,
-             thread_type: isPrivate ? 'Private' : 'Public', // Déduire thread_type
-             topic: data.topic || 'General', // Ajouter un topic par défaut si nécessaire
-             // Ajoutez d'autres champs nécessaires depuis le document Firestore
+             thread_type: threadType, // <-- Utiliser directement la valeur de Firestore (ou défaut Private)
+             topic: data.topic || 'General',
          };
       });
 
-      console.log(`[ChatStore] Fetched ${fetchedConversations.length} conversations.`);
+      console.log(`[ChatStore - fetchConversations] Processed ${fetchedConversations.length} conversations.`);
       setConversations(fetchedConversations);
-
-    } catch (error) {
-      console.error("[ChatStore] Error fetching conversations:", error);
-      _setError("Failed to load conversation history.");
-      setConversations([]); // Reset on error
-    } finally {
       _setIsLoadingConversations(false);
-    }
+      _setError(null);
+
+      // --- Logique pour le chat initial ---
+      if (isInitialLoad && !get().currentChatId && fetchedConversations.length > 0) {
+          const initialChatId = fetchedConversations[0].chat_id;
+          console.log(`[ChatStore - fetchConversations] Initial load complete. Setting initial active chat to: ${initialChatId}`);
+          setActiveChat(initialChatId); // setActiveChat déterminera la bonne valeur pour isCurrentChatPrivate
+      } else if (isInitialLoad && !get().currentChatId && fetchedConversations.length === 0) {
+          console.log("[ChatStore - fetchConversations] Initial load complete. No conversations found, setting active chat to null.");
+          setActiveChat(null);
+      }
+
+    }, (error) => {
+      console.error("[ChatStore - fetchConversations] onSnapshot listener error:", error);
+      _setError("Failed to load conversation history listener.");
+      setConversations([]);
+      _setIsLoadingConversations(false);
+    });
+
+    console.log("[ChatStore - fetchConversations] Returning Firestore unsubscribe function.");
+    return unsubscribe;
   },
 
   fetchSocialThreads: () => {
@@ -500,24 +516,58 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
 
   setActiveChat: (chatId: string | null) => {
     const currentId = get().currentChatId;
-    const { setMessages, setIsLandingPageVisible } = get(); // Utiliser setMessages directement
+    const { setMessages, setIsLandingPageVisible, _setCurrentChatId, setIsSocialThreadActive, _setIsCurrentChatPrivate, _setIsLoadingMessages } = get();
 
-    if (chatId === currentId) {
-      console.log(`[ChatStore] Chat ${chatId} is already active.`);
-      return; // Ne rien faire si le chat est déjà actif
+    if (chatId === currentId && chatId !== null) {
+        console.log(`[ChatStore - setActiveChat] Chat ${chatId} is already active.`);
+        return;
+    }
+    if (chatId === null && currentId === null) {
+        console.log(`[ChatStore - setActiveChat] Already on landing page (active chat is null).`);
+        if (!get().isLandingPageVisible) setIsLandingPageVisible(true);
+        return;
     }
 
-    console.log(`[ChatStore] Setting active chat to: ${chatId}`);
+    console.log(`[ChatStore - setActiveChat] Setting active chat from ${currentId} to: ${chatId}`);
+
+    let isSocial = false;
+    let isPrivate = false; // Default to false
 
     if (chatId) {
-      // Si on active un nouveau chat
-      setIsLandingPageVisible(false); // Cacher la landing page
-      get().loadChatMessages(chatId); // Charger les messages (ce qui mettra aussi à jour currentChatId)
+        // Chercher dans les conversations personnelles/publiques de l'utilisateur
+        const conv = get().conversations.find(c => c.chat_id === chatId);
+        if (conv) {
+            // ---> MODIFICATION: Déterminer la privacité basée sur thread_type <---
+            isPrivate = conv.thread_type === 'Private';
+            isSocial = false; // Une conversation dans cette liste n'est pas un "social thread" pur
+            console.log(`[ChatStore - setActiveChat] Found in 'conversations'. thread_type: ${conv.thread_type}, Setting isPrivate: ${isPrivate}`);
+        } else {
+            // Si non trouvé dans conversations, chercher dans les threads sociaux généraux
+            const social = get().socialThreads.find(t => t.chat_id === chatId);
+            if (social) {
+                isSocial = true;
+                isPrivate = false; // Les threads sociaux généraux sont toujours publics
+                console.log(`[ChatStore - setActiveChat] Found in 'socialThreads'. Setting isSocial: true, isPrivate: false`);
+            } else {
+                 console.warn(`[ChatStore - setActiveChat] Chat ID ${chatId} not found in conversations or socialThreads.`);
+                 // Garder isPrivate = false, isSocial = false par défaut
+            }
+        }
+    }
+
+    // Mettre à jour l'état global
+    _setCurrentChatId(chatId);
+    setIsLandingPageVisible(!chatId); // Afficher landing si chatId est null
+    setIsSocialThreadActive(isSocial);
+    _setIsCurrentChatPrivate(isPrivate); // Utiliser la valeur calculée
+    setMessages([]); // Vider les messages
+    _setIsLoadingMessages(!!chatId); // Mettre en chargement si un chat est sélectionné
+
+    if (chatId) {
+        console.log(`[ChatStore - setActiveChat] Loading messages for chat ${chatId} (isSocial: ${isSocial}, isPrivate: ${isPrivate})`);
+        get().loadChatMessages(chatId);
     } else {
-      // Si on désactive le chat (retour à la landing page)
-      setIsLandingPageVisible(true); // Afficher la landing page
-      get()._setCurrentChatId(null); // Mettre l'ID à null
-      setMessages([]); // Vider les messages
+       console.log("[ChatStore - setActiveChat] Active chat set to null. Landing page visible.");
     }
   },
 
@@ -534,69 +584,72 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     // Stop any ongoing streaming response
     if (get().isStreamingResponse) {
         console.log("addNewConversation: Stopping ongoing AI response.");
-        set({ isStreamingResponse: false });
-        // Add logic here if you need to explicitly cancel the backend stream
+        get().abortController?.abort();
+        set({ isStreamingResponse: false, abortController: null });
     }
 
-    set({ isLoadingConversations: true, error: null }); // Indicate loading while creating
+    set({ error: null });
     const newChatId = uuidv4();
-    console.log(`addNewConversation: Creating new chat with ID: ${newChatId}`);
+    console.log(`addNewConversation: Attempting to create new chat with ID: ${newChatId}`);
 
-    // Garder une copie de l'état avant mise à jour optimiste
-    const originalConversations = get().conversations;
+    // --- Mise à jour optimiste de l'état pour un NOUVEAU chat ---
+    // Sauvegarder l'état précédent au cas où la création Firestore échoue
     const originalCurrentChatId = get().currentChatId;
     const originalMessages = get().messages;
     const originalIsLandingVisible = get().isLandingPageVisible;
     const originalIsPrivate = get().isCurrentChatPrivate;
     const originalIsSocial = get().isSocialThreadActive;
+    const originalIsLoadingMessages = get().isLoadingMessages;
 
-    // Mise à jour optimiste
-    const newConversation: Conversation = { chat_id: newChatId, name: 'New Chat', thread_type: 'Private', topic: 'Default' };
-    set(state => ({
-      conversations: [newConversation, ...state.conversations],
-      currentChatId: newChatId,
-      messages: [],
-      isLandingPageVisible: true,
-      isCurrentChatPrivate: true,
-      isSocialThreadActive: false,
-      isLoadingConversations: false,
-      error: null
-    }));
+    // Définir l'état directement: nouveau chat ID actif, landing page visible, pas de messages, pas de chargement
+    set({
+        currentChatId: newChatId,
+        isLandingPageVisible: true, // <-- Afficher la landing page !
+        messages: [],
+        isLoadingMessages: false, // <-- Pas besoin de charger pour un nouveau chat
+        isSocialThreadActive: false, // Les nouveaux chats sont privés par défaut
+        isCurrentChatPrivate: true, // Les nouveaux chats sont privés par défaut
+    });
+    console.log(`[ChatStore - addNewConversation] Optimistically set state for new chat ${newChatId}. Landing page should be visible.`);
+
 
     try {
       const currentTime = serverTimestamp();
-      // 1. Create the chatsessions document
-      await setDoc(doc(db, 'chatsessions', newChatId), {
+      const chatData = {
         chat_id: newChatId,
-        name: 'New Chat', // Default name
+        name: 'New Chat', // Sera mis à jour par le backend si nécessaire
         created_at: currentTime,
         modified_at: currentTime,
         university: user.university,
-        thread_type: 'Private', // New chats default to Private for the user
-        user_ids: [user.id], // Assurer que le créateur est membre
-        is_private: true, // Cohérent avec thread_type
-        last_message_preview: 'Conversation started.', // Placeholder
-      });
-      // 2. Add the chatId to the user's document in AuthStore (and Firestore)
-      await useAuthStore.getState().addChatIdToStoreAndFirestore(newChatId); // S'assurer que CELLE-CI a aussi un rollback
-      console.log(`addNewConversation: Successfully created and activated private chat ${newChatId}`);
+        thread_type: 'Private',
+        user_ids: [user.id],
+        is_private: true,
+        last_message_preview: '', // Vide au début
+        topic: 'General', // Default topic
+      };
+      await setDoc(doc(db, 'chatsessions', newChatId), chatData);
+      // L'ajout à la liste de l'utilisateur est crucial
+      await useAuthStore.getState().addChatIdToStoreAndFirestore(newChatId);
+
+      console.log(`addNewConversation: Successfully created Firestore doc for chat ${newChatId}. Listener should pick it up.`);
+      // Le listener mettra à jour la liste `conversations` dans la sidebar. L'état actif est déjà bon.
       return newChatId;
 
     } catch (error) {
       console.error("❌ addNewConversation: Failed to create new conversation:", error);
       // !! ROLLBACK !!
       set({
-        error: "Failed to create new conversation.",
-        isLoadingConversations: false,
-        conversations: originalConversations, // Restaurer l'état précédent
-        currentChatId: originalCurrentChatId,
-        messages: originalMessages,
-        isLandingPageVisible: originalIsLandingVisible,
-        isCurrentChatPrivate: originalIsPrivate,
-        isSocialThreadActive: originalIsSocial,
+          error: "Failed to create new conversation.",
+          // Restaurer l'état précédent
+          currentChatId: originalCurrentChatId,
+          messages: originalMessages,
+          isLandingPageVisible: originalIsLandingVisible,
+          isCurrentChatPrivate: originalIsPrivate,
+          isSocialThreadActive: originalIsSocial,
+          isLoadingMessages: originalIsLoadingMessages, // Restaurer aussi l'état de chargement
       });
-      // Annuler aussi l'ajout dans AuthStore si possible (ou AuthStore gère son propre rollback)
-      useAuthStore.getState().removeChatIdFromStore(newChatId); // Essayer d'annuler côté AuthStore aussi
+      // Annuler aussi l'ajout dans AuthStore si l'erreur vient de Firestore
+      useAuthStore.getState().removeChatIdFromStore(newChatId);
       return null;
     }
   },
@@ -715,34 +768,44 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   },
 
   updateConversationPrivacy: async (chatId: string, isPrivate: boolean) => {
-      if (!chatId) return;
-      const newThreadType = isPrivate ? 'Private' : 'Public';
-      const originalConversation = get().conversations.find(c => c.chat_id === chatId);
-      // Sauvegarde état avant modif optimiste
-      const originalThreadType = originalConversation?.thread_type;
-      const wasActiveChat = get().currentChatId === chatId;
-      const originalIsPrivateForActive = get().isCurrentChatPrivate;
+    if (!chatId) return;
+    const newThreadType = isPrivate ? 'Private' : 'Public';
+    const originalConversation = get().conversations.find(c => c.chat_id === chatId);
+    // Sauvegarde état avant modif optimiste
+    const originalThreadType = originalConversation?.thread_type;
+    const wasActiveChat = get().currentChatId === chatId;
+    const originalIsPrivateForActive = get().isCurrentChatPrivate;
 
-      // Mise à jour optimiste
-      set(state => ({
-          conversations: state.conversations.map(c => c.chat_id === chatId ? { ...c, thread_type: newThreadType } : c),
-          isCurrentChatPrivate: wasActiveChat ? isPrivate : state.isCurrentChatPrivate
-      }));
+    // Mise à jour optimiste
+    set(state => ({
+        conversations: state.conversations.map(c =>
+            c.chat_id === chatId
+            ? { ...c, thread_type: newThreadType }
+            : c
+        ),
+        isCurrentChatPrivate: wasActiveChat ? isPrivate : state.isCurrentChatPrivate
+    }));
 
-       try {
-            const conversationRef = doc(db, 'chatsessions', chatId);
-            await updateDoc(conversationRef, { thread_type: newThreadType, modified_at: serverTimestamp() });
-            console.log(`updateConversationPrivacy: Chat ${chatId} privacy set to ${newThreadType}.`);
-            // Le listener fetchSocialThreads devrait gérer l'affichage/masquage dans la liste sociale.
-       } catch (error) {
-           console.error(`❌ updateConversationPrivacy: Failed for chat ${chatId}:`, error);
-            // !! ROLLBACK !!
-            set(state => ({
-                conversations: state.conversations.map(c => c.chat_id === chatId ? { ...c, thread_type: originalThreadType || 'Public' } : c), // Remettre l'ancien type
-                isCurrentChatPrivate: wasActiveChat ? originalIsPrivateForActive : state.isCurrentChatPrivate, // Remettre l'ancien état si c'était l'actif
-                error: "Failed to update conversation privacy."
-            }));
-       }
+     try {
+          const conversationRef = doc(db, 'chatsessions', chatId);
+          await updateDoc(conversationRef, {
+              thread_type: newThreadType,
+              modified_at: serverTimestamp()
+          });
+          console.log(`updateConversationPrivacy: Chat ${chatId} privacy set to ${newThreadType}.`);
+     } catch (error) {
+         console.error(`❌ updateConversationPrivacy: Failed for chat ${chatId}:`, error);
+          // !! ROLLBACK !!
+          set(state => ({
+              conversations: state.conversations.map(c =>
+                  c.chat_id === chatId
+                  ? { ...c, thread_type: originalThreadType || 'Public' }
+                  : c
+              ),
+              isCurrentChatPrivate: wasActiveChat ? originalIsPrivateForActive : state.isCurrentChatPrivate,
+              error: "Failed to update conversation privacy."
+          }));
+     }
   },
 
    updateConversationTitleAndTopic: async (chatId: string, title: string, category: string) => {

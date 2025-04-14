@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
+import React, { useState, useEffect, useRef, KeyboardEvent, useMemo } from 'react';
 import Marquee from "react-fast-marquee"; // ✅ Importe la bibliothèque
 import {
   Typography,
@@ -19,7 +19,7 @@ import {
 } from 'react-icons/fa';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
-import { doc, updateDoc} from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../auth/firebase';
 import useChatStore from '../../stores/useChatStore';
 import config from '../../config';
@@ -44,10 +44,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const subdomain = config.subdomain;
 
-  const { conversations, currentChatId, updateConversationPrivacy } = useChatStore();
-
-  const currentConversation = conversations.find(c => c.chat_id === currentChatId);
-  const isCurrentlyPrivate = currentConversation?.thread_type === 'Private' || false;
+  const currentChatId = useChatStore((state) => state.currentChatId);
+  const isCurrentChatPrivate = useChatStore((state) => state.isCurrentChatPrivate);
+  const updateConversationPrivacy = useChatStore((state) => state.updateConversationPrivacy);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -89,44 +88,48 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
 
   const handleSend = () => {
     const message = inputValue.trim();
-    console.log('Button clicked');
-    console.log('Message to send:', message);
+    console.log('LandingPageImprove: handleSend - Button clicked');
+    console.log('LandingPageImprove: handleSend - Message to send:', message);
 
     if (message !== '') {
-      console.log("Début d'envoi du message");
+      console.log("LandingPageImprove: handleSend - Début d'envoi du message");
       onSend(message);
-      console.log('Après la fonction onSend');
+      console.log('LandingPageImprove: handleSend - Après la fonction onSend');
       setInputValue('');
       setActiveButton(null);
       setPlaceholderText('Ask Lucy...');
     } else {
-      console.log('Message is empty');
+      console.log('LandingPageImprove: handleSend - Message is empty');
     }
   };
 
   const handleKeyPress = (event: KeyboardEvent) => {
     if (event.key === 'Enter' && !event.shiftKey) {
+      console.log('LandingPageImprove: handleKeyPress - Enter pressed');
       handleSend();
       event.preventDefault();
     }
   };
 
   const handlePlaceholderClick = () => {
+    console.log('LandingPageImprove: handlePlaceholderClick');
     setShowPlaceholder(false);
   };
 
   const handleQuestionClick = (question: string) => {
+     console.log(`LandingPageImprove: handleQuestionClick - Question: ${question}`);
     setInputValue(question);
   };
   
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    console.log('Current input value in handleInputChange:', value);
+    // console.log('LandingPageImprove: handleInputChange - Current input value:', value); // Potentially noisy log
     setInputValue(value);
   };
 
   useEffect(() => {
+    console.log('LandingPageImprove: useEffect for typing animation mount');
     let index = 0;
     let currentText = '';
     const typingSpeed = 100;
@@ -141,29 +144,35 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         setIsTyping(false);
         setInputValue('');
         setPlaceholderText('Ask Lucy...');
+        console.log('LandingPageImprove: Typing animation complete');
       }
     }, typingSpeed);
 
     return () => {
+      console.log('LandingPageImprove: useEffect for typing animation unmount/cleanup');
       clearInterval(typingInterval);
     };
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   useEffect(() => {
     if (!isTyping && inputValue.trim() === '') {
+       console.log('LandingPageImprove: useEffect [inputValue, isTyping] - Input empty after typing, resetting placeholder.');
       setActiveButton(null);
       setPlaceholderText('Ask Lucy...');
     }
   }, [inputValue, isTyping]);
 
   useEffect(() => {
+    console.log('LandingPageImprove: useEffect for click outside listener mount');
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
+      // Check if click is outside the main container AND not inside the question buttons area (if hovering)
       if (
         containerRef.current &&
         !containerRef.current.contains(target) &&
         !isHoveringQuestions
       ) {
+        console.log('LandingPageImprove: Click outside detected, resetting state.');
         setActiveButton(null);
         setInputValue('');
         setPlaceholderText('Ask Lucy...');
@@ -173,9 +182,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
+      console.log('LandingPageImprove: useEffect for click outside listener unmount/cleanup');
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isHoveringQuestions]);
+  }, [isHoveringQuestions]); // Depends on hovering state
 
   const allButtons = [
     {
@@ -243,6 +253,76 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   };
   
 
+  // ---> Mémoïsation du startAdornment <---
+  const startAdornment = useMemo(() => {
+     // Log when useMemo recalculates
+     console.log('[LandingPageImprove useMemo startAdornment] Recalculating with:', { currentChatId, isCurrentChatPrivate });
+    return (
+      <InputAdornment position="start">
+        <IconButton
+          disabled={!currentChatId}
+          onClick={async () => {
+             // Log when the button is clicked
+             console.log('[LandingPageImprove startAdornment onClick] Button clicked. State:', { currentChatId, isCurrentChatPrivate });
+            if (!currentChatId) {
+              console.warn("Cannot change privacy: No active chat selected.");
+              return;
+            }
+            const newPrivacyState = !isCurrentChatPrivate;
+            console.log(`LandingPage: Toggling privacy for chat ${currentChatId} to ${newPrivacyState ? 'Private' : 'Public'}`);
+            try {
+              await updateConversationPrivacy(currentChatId, newPrivacyState);
+              console.log(`[LandingPageImprove startAdornment onClick] updateConversationPrivacy called successfully.`);
+            } catch (error) {
+              console.error('[LandingPageImprove startAdornment onClick] Error calling updateConversationPrivacy:', error);
+            }
+          }}
+          edge="start"
+          aria-label={isCurrentChatPrivate ? "Set to Public" : "Set to Private"}
+          sx={{
+            opacity: !currentChatId ? 0.5 : 1,
+            cursor: !currentChatId ? 'not-allowed' : 'pointer',
+            backgroundColor: isCurrentChatPrivate ? '#E0E0E0' : '#D6DDF5',
+            color: isCurrentChatPrivate ? '#6F6F6F' : '#3155CC',
+            borderRadius: '12px',
+            padding: '6px 12px',
+            marginLeft: '8px',
+            marginRight: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '80px',
+            height: '35px',
+            '&:hover': !currentChatId ? {} : {
+              backgroundColor: isCurrentChatPrivate ? '#D5D5D5' : '#C4A4D8',
+              color: isCurrentChatPrivate ? '#5A5A5A' : '#4A0B8A',
+            },
+          }}
+        >
+          {isCurrentChatPrivate ? (
+            <>
+              <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
+              <Typography variant="caption" sx={{ color: '#000' }}>
+                Private
+              </Typography>
+            </>
+          ) : (
+            <>
+              <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
+              <Typography variant="caption" sx={{ color: '#3155CC' }}>
+                Public
+              </Typography>
+            </>
+          )}
+        </IconButton>
+      </InputAdornment>
+    );
+  }, [currentChatId, isCurrentChatPrivate]); // Removed updateConversationPrivacy from deps
+  // ---> Fin Mémoïsation <---
+
+  // Log before returning the component JSX
+  console.log('[LandingPageImprove] Rendering component. State:', { currentChatId, isCurrentChatPrivate, inputValue, isTyping });
+
   return (
     <Box
       display="flex"
@@ -288,7 +368,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
                   key={index}
                   type="button"
                   className="mx-2 flex items-center px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer hover:bg-gray-200 transition pb-1"
-                  style={{ backgroundColor: "##F7F9FC" }}
+                  style={{ backgroundColor: "##F7F9FC" }} // Note: Double hash might be unintentional
                   onClick={() => handleQuestionClick(questionObj.question)}
                 >
                   <span
@@ -347,68 +427,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           onChange={handleInputChange}
           onMouseDown={handlePlaceholderClick}
           onKeyPress={handleKeyPress}
-          placeholder={isTyping ? '' : `${placeholderText}`}
+          placeholder={placeholderText}
           InputProps={{
-            startAdornment: (
-                <InputAdornment position="start">
-                  <IconButton
-                    onClick={async () => {
-                      if (!currentChatId) {
-                        console.warn("Cannot change privacy: No active chat selected.");
-                        return;
-                      }
-                      const newPrivacyState = !isCurrentlyPrivate;
-                      console.log(`LandingPage: Toggling privacy for chat ${currentChatId} to ${newPrivacyState ? 'Private' : 'Public'}`);
-                      try {
-                        await updateConversationPrivacy(currentChatId, newPrivacyState);
-                      } catch (error) {
-                        console.error('Error calling updateConversationPrivacy:', error);
-                      }
-                    }}
-                    edge="start"
-                    aria-label={isCurrentlyPrivate ? "Set to Public" : "Set to Private"}
-                    sx={{
-                      backgroundColor: isCurrentlyPrivate ? '#E0E0E0' : '#D6DDF5',
-                      color: isCurrentlyPrivate ? '#6F6F6F' : '#3155CC',
-                      borderRadius: '12px',
-                      padding: '6px 12px',
-                      marginLeft: '8px',
-                      marginRight: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      width: '80px',
-                      height: '35px',
-                      '&:hover': {
-                        backgroundColor: isCurrentlyPrivate ? '#D5D5D5' : '#C4A4D8',
-                        color: isCurrentlyPrivate ? '#5A5A5A' : '#4A0B8A',
-                      },
-                    }}
-                    ref={(el) => {
-                      if (el) {
-                        console.log("Background color applied:", getComputedStyle(el).backgroundColor);
-                      }
-                    }}
-                  >
-                    {isCurrentlyPrivate ? (
-                      <>
-                        <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                        <Typography variant="caption" sx={{ color: '#000' }}>
-                          Private
-                        </Typography>
-                      </>
-                    ) : (
-                      <>
-                        <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
-                        <Typography variant="caption" sx={{ color: '#3155CC' }}>
-                          Public
-                        </Typography>
-                      </>
-                    )}
-                  </IconButton>
-                </InputAdornment>
-              ),
+            startAdornment: startAdornment,
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={handleSend} aria-label="Send message">
