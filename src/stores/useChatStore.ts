@@ -295,8 +295,8 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
                    university: user.university || '',
                    // Inclure d'autres métadonnées si attendues par l'API
                    // (Ex: sources, confidence score, etc. si finalAiMessage les contient)
-                   // sources: finalAiMessage.citedDocuments?.map(doc => ({...})),
-                   // confident_score: finalAiMessage.CONFIDENCESCORE?.[0]?.confidenceScore,
+                   sources: finalAiMessage.citedDocuments, // Utiliser directement citedDocuments si le format correspond
+                   confident_score: finalAiMessage.CONFIDENCESCORE && finalAiMessage.CONFIDENCESCORE.length > 0 ? parseFloat(finalAiMessage.CONFIDENCESCORE[0].confidenceScore) : null, // Extraire et convertir le score
                 });
                  console.log("ChatStore: Finalized AI message saved successfully.");
             } else {

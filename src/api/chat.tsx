@@ -29,6 +29,7 @@ export interface SendMessageRequest {
 
 
 
+
 /*
 export async function getChatHistory(chat_id: string) {
     const getChatHistoryResponse = await fetch(
@@ -83,6 +84,8 @@ export async function getChatHistory(chat_id: string) {
 */
 
 
+
+//ANCIENNE FONCTION POUR RECUPERER L'HISTORIQUE DES MESSAGES QUI FONCTIONNE MAIS QUI NE RECUPERE PAS LES SOURCES, LE CONFIDENCE SCORE ET LE METADATAONBOARDING
 export async function getChatHistory(chat_id: string) {
     console.log(`🔍 Fetching chat history for chat_id: ${chat_id}`);
 
@@ -131,7 +134,7 @@ export async function getChatHistory(chat_id: string) {
             console.log(`📝 Added METADATAONBOARDING to message #${index}:`, newMessage.METADATAONBOARDING);
         }
 
-        /*
+        
         // Gérer les sources si elles sont présentes et valides
         if (Array.isArray(message.sources) && message.sources.length > 0) {
             newMessage.citedDocuments = message.sources.map((source: any) => ({
@@ -150,7 +153,6 @@ export async function getChatHistory(chat_id: string) {
             }];
             console.log(`✅ Added CONFIDENCESCORE to message #${index}:`, newMessage.CONFIDENCESCORE);
         }
-        */
 
         return newMessage;
     });
@@ -272,8 +274,8 @@ export const saveMessageAIToBackend = async ({
     uid,
     input_message,
     university,
-    //sources,
-    //confident_score
+    sources,
+    confident_score
 }: {
     message: string;
     chatSessionId: string;
@@ -283,8 +285,8 @@ export const saveMessageAIToBackend = async ({
     uid: string,
     input_message: string
     university: string
-    //sources?: { document_id: string; document_name: string; link: string; source_type: string }[];
-    //confident_score?: number | null; // 👈 Ajout du confident_score
+    sources?: { document_id: string; document_name: string; link: string; source_type: string }[];
+    confident_score?: number | null; // 👈 Ajout du confident_score
 }) => {
     try {
         console.log("Entering saveMessageAIToBackend with message:", message);
@@ -302,8 +304,8 @@ export const saveMessageAIToBackend = async ({
                 uid,
                 input_message,
                 university,
-                //sources,
-                //confident_score
+                sources,
+                confident_score
             }),
         });
 
