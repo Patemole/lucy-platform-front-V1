@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Button } from '@mui/material';
 import { AIMessage } from '../../../components/main_components/MessagesWEB';
 import LandingPage from '../../../components/main_components/LandingPageImprove';
@@ -70,6 +70,32 @@ interface ChatContentProps {
 
     const theme = useTheme();
 
+    // Fonction pour scroller vers le bas
+    const scrollToBottom = () => {
+      if (endDivRef.current) {
+        endDivRef.current.scrollIntoView({ behavior: 'smooth' });
+        setIsAtBottom(true); // Assurer que l'état est mis à jour après le scroll
+        setNewMessagesCount(0);
+      }
+    };
+
+    // Effet pour l'auto-scroll lorsque de nouveaux messages arrivent ET que l'utilisateur est en bas
+    useEffect(() => {
+      const scrollDiv = scrollableDivRef.current;
+      if (scrollDiv) {
+        // Vérifier si on est VRAIMENT proche du bas avant de scroller
+        const scrollThreshold = 50; // Marge de pixels
+        const isReallyAtBottom = scrollDiv.scrollTop + scrollDiv.clientHeight >= scrollDiv.scrollHeight - scrollThreshold;
+        console.log(`[ChatContent autoScroll Effect] Triggered by messages change. isReallyAtBottom: ${isReallyAtBottom} (scrollTop: ${scrollDiv.scrollTop}, scrollHeight: ${scrollDiv.scrollHeight}, clientHeight: ${scrollDiv.clientHeight})`);
+        if (isReallyAtBottom) {
+          console.log('[ChatContent autoScroll Effect] Scrolling to bottom...');
+          scrollToBottom(); // Fonction déjà définie qui fait scrollIntoView
+        } else {
+          console.log('[ChatContent autoScroll Effect] Not scrolling, user is not at the bottom.');
+        }
+      }
+    }, [messages]); // Ne dépendre que de messages
+
     return (
         <>
            {isLandingPageVisible ? (
@@ -93,6 +119,7 @@ interface ChatContentProps {
                 if (scrollDiv) {
                 const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
                 const atBottom = scrollTop + clientHeight >= scrollHeight - 5;
+                console.log(`[ChatContent onScroll] scrollTop: ${scrollTop}, scrollHeight: ${scrollHeight}, clientHeight: ${clientHeight}, Calculated atBottom: ${atBottom}`);
                 setIsAtBottom(atBottom);
                 if (atBottom) setNewMessagesCount(0);
                 }
@@ -172,7 +199,11 @@ interface ChatContentProps {
                         instaclubData={message.INSTA_CLUB}
                         linkedinData={message.LINKEDIN}
                         insta2Data={message.INSTA2}
-                        metadataOnboarding={message.METADATAONBOARDING || null}
+                        isOnboardingSCHOOL={message.isOnboardingSCHOOL}
+                        isOnboardingYEAR={message.isOnboardingYEAR}
+                        isOnboardingLINKEDIN={message.isOnboardingLINKEDIN}
+                        isOnboardingMAJORMINOR={message.isOnboardingMAJORMINOR}
+                        isOnboardingCOMPLIANCE={message.isOnboardingCOMPLIANCE}
                         handleSendSCHOOLMessage={handleSendSCHOOLMessage}
                         handleSendYEARMessage={handleSendYEARMessage}
                         handleSendLINKEDINMessage={handleSendLINKEDINMessage}

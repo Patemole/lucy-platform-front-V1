@@ -86,7 +86,13 @@ export interface Message {
   INSTA_CLUB?: AnswerINSTA_CLUB[] | null;
   LINKEDIN?: AnswerLINKEDIN[] | null;
   INSTA2?: AnswerINSTA2[] | null;
-  METADATAONBOARDING?: string; // THE DATA FROM THE ONBOARDING, CAN BE SCHOOL, MAJOR, MINOR...
+  METADATAONBOARDING?: string; // Garder pour référence ou sauvegarde ? À évaluer. Sera supprimé de l'affichage.
+  // Propriétés spécifiques pour l'onboarding
+  isOnboardingSCHOOL?: boolean;
+  isOnboardingYEAR?: boolean;
+  isOnboardingLINKEDIN?: boolean;
+  isOnboardingMAJORMINOR?: boolean;
+  isOnboardingCOMPLIANCE?: boolean;
   isLoading?: boolean; // Ajouté pour gérer l'état de chargement optimiste
 };
 

@@ -7,7 +7,7 @@ import { db } from '../../../auth/firebase';
 import { sendMessageSocraticLangGraph, saveMessageAIToBackend } from '../../../api/chat';
 import { submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../../../api/feedback_wrong_answer';
 import { Message, StreamingError,AnswerPiecePacket, AnswerDocumentPacket, Conversation, SocialThread, AnswerDocument, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY } from '../../../interfaces/interfaces_eleve';
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 import { KeyboardEvent } from 'react';
 import useChatStore from '../../../stores/useChatStore'; // Importer le store
 import useAuthStore from '../../../stores/useAuthStore'; // Importer le store d'authentification
@@ -60,6 +60,7 @@ export const useMessage = ({
     } = useChatStore();
 
 
+    /*
      // Autoscroll logic based on isAtBottom
     useEffect(() => {
         if (isAtBottom) {
@@ -68,6 +69,7 @@ export const useMessage = ({
         setNewMessagesCount((prevCount) => prevCount + 1);
         }
     }, [messages, isAtBottom]); // Depend on messages and isAtBottom
+    */
 
 
     //Scrolling useffect for autoscrolling I think
@@ -98,29 +100,89 @@ export const useMessage = ({
 
     // Fonction pour envoyer le message à l'AI ou à l'API
     const onSubmit = async (messageHistory: Message[], inputValue: string, isOnboardingMessage: boolean = false) => {
+        console.log(`[useMessage onSubmit START] Input: "${inputValue}", History length: ${messageHistory.length}, IsOnboarding: ${isOnboardingMessage}`);
         setIsStreaming(true);
         setHasNewContent(false);
-        let answer = '';
-        let answerDocuments: AnswerDocument[] = [];
-        let answerImages: { image_id: string; image_url: string; image_description?: string }[] = [];
-        let relatedQuestionsList: string[] = [];
-        let answerTAK: AnswerTAK[] = [];
-        let answerCHART: AnswerCHART[] = [];
-        let answerCourse: AnswerCourse[] = [];
-        let answerWaiting: AnswerWaiting[] = [];
-        let answerReasoning: ReasoningStep[] = [];
-        let answerREDDIT: AnswerREDDIT[] = [];
-        let answerINSTA: AnswerINSTA[] = [];
-        let answerINSTA2: AnswerINSTA2[] = [];
-        let answerYOUTUBE: AnswerYOUTUBE[] = [];
-        let answerQUORA: AnswerQUORA[] = [];
-        let answerINSTA_CLUB: AnswerINSTA_CLUB[] = [];
-        let answerLINKEDIN: AnswerLINKEDIN[] = [];
-        let answerERROR: AnswerERROR[] = [];
-        let answerACCURACYSCORE: AnswerACCURACYSCORE[] = [];
-        let answerTITLEANDCATEGORY: AnswerTITLEANDCATEGORY[] = [];
-        let flattenedACCURACYSCORE: AnswerACCURACYSCORE[] = [];
+        // Variables locales pour accumuler les changements avant la mise à jour throttled
+        let currentAnswerChunk = '';
+        let currentCitedDocuments: AnswerDocument[] = [];
+        let currentImages: { image_id: string; image_url: string; image_description?: string }[] = [];
+        let currentRelatedQuestions: string[] = [];
+        let currentTAK: AnswerTAK[] = [];
+        let currentCHART: AnswerCHART[] = [];
+        let currentCourse: AnswerCourse[] = [];
+        let currentWaiting: AnswerWaiting[] = [];
+        let currentReasoning: ReasoningStep[] = [];
+        let currentREDDIT: AnswerREDDIT[] = [];
+        let currentINSTA: AnswerINSTA[] = [];
+        let currentINSTA2: AnswerINSTA2[] = [];
+        let currentYOUTUBE: AnswerYOUTUBE[] = [];
+        let currentQUORA: AnswerQUORA[] = [];
+        let currentINSTA_CLUB: AnswerINSTA_CLUB[] = [];
+        let currentLINKEDIN: AnswerLINKEDIN[] = [];
+        let currentERROR: AnswerERROR[] = [];
+        let currentACCURACYSCORE: AnswerACCURACYSCORE[] = [];
+        let currentTITLEANDCATEGORY: AnswerTITLEANDCATEGORY[] = [];
+
         let error: string | null = null;
+        const lastAiMessageId = messageHistory[messageHistory.length - 1]?.id; // ID du message AI à mettre à jour
+
+        // Fonction pour mettre à jour l'état (via le store)
+        const updateStoreMessage = () => {
+            console.log(`[useMessage updateStoreMessage THROTTLED CALL] Updating message ID: ${lastAiMessageId} with partial content.`);
+            const currentMessages = useChatStore.getState().messages;
+            const messageIndex = currentMessages.findIndex(m => m.id === lastAiMessageId);
+            if (messageIndex === -1) return; // Message non trouvé
+
+            const updatedMessages = [...currentMessages];
+            const messageToUpdate = updatedMessages[messageIndex];
+
+            updatedMessages[messageIndex] = {
+                ...messageToUpdate,
+                content: currentAnswerChunk, // Utiliser le contenu accumulé
+                // Fusionner les métadonnées accumulées
+                citedDocuments: [...(messageToUpdate.citedDocuments || []), ...currentCitedDocuments],
+                images: [...(messageToUpdate.images || []), ...currentImages],
+                TAK: [...(messageToUpdate.TAK || []), ...currentTAK],
+                CHART: [...(messageToUpdate.CHART || []), ...currentCHART],
+                COURSE: [...(messageToUpdate.COURSE || []), ...currentCourse],
+                waitingMessages: currentWaiting.length > 0 ? [...(messageToUpdate.waitingMessages || []), ...currentWaiting] : messageToUpdate.waitingMessages,
+                ReasoningSteps: [...(messageToUpdate.ReasoningSteps || []), ...currentReasoning],
+                REDDIT: [...(messageToUpdate.REDDIT || []), ...currentREDDIT],
+                INSTA: [...(messageToUpdate.INSTA || []), ...currentINSTA],
+                YOUTUBE: [...(messageToUpdate.YOUTUBE || []), ...currentYOUTUBE],
+                QUORA: [...(messageToUpdate.QUORA || []), ...currentQUORA],
+                ERROR: [...(messageToUpdate.ERROR || []), ...currentERROR],
+                CONFIDENCESCORE: [...(messageToUpdate.CONFIDENCESCORE || []), ...currentACCURACYSCORE],
+                INSTA_CLUB: [...(messageToUpdate.INSTA_CLUB || []), ...currentINSTA_CLUB],
+                LINKEDIN: [...(messageToUpdate.LINKEDIN || []), ...currentLINKEDIN],
+                INSTA2: [...(messageToUpdate.INSTA2 || []), ...currentINSTA2],
+                isLoading: true, // Toujours en cours pendant le throttle
+            };
+
+            useChatStore.getState().setMessages(updatedMessages);
+            // Réinitialiser les accumulateurs locaux après la mise à jour du store
+            currentCitedDocuments = [];
+            currentImages = [];
+            currentTAK = [];
+            currentCHART = [];
+            currentCourse = [];
+            currentWaiting = [];
+            currentReasoning = [];
+            currentREDDIT = [];
+            currentINSTA = [];
+            currentYOUTUBE = [];
+            currentQUORA = [];
+            currentERROR = [];
+            currentACCURACYSCORE = [];
+            currentINSTA_CLUB = [];
+            currentLINKEDIN = [];
+            currentINSTA2 = [];
+            // Ne pas réinitialiser currentRelatedQuestions ou currentTITLEANDCATEGORY car ils arrivent généralement en fin de stream
+        };
+
+        // Créer la version throttled de la mise à jour du store
+        const throttledUpdateStoreMessage = throttle(updateStoreMessage, 150, { leading: true, trailing: false });
 
 
         const abortController = new AbortController();
@@ -199,7 +261,7 @@ export const useMessage = ({
             },
             abortController.signal
         )) {
-
+            console.log(`[useMessage onSubmit] Received packet bunch.`);
                 // Vérifier si la conversation a été annulée via le store (si nécessaire, mais AbortController suffit)
                 // if (useChatStore.getState().isCancellationRequested) { ... }
 
@@ -208,230 +270,186 @@ export const useMessage = ({
                     for (const packet of packetBunch) {
                         if (typeof packet === 'string') {
                             setHasNewContent(true); // Detects new content
-                            answer = packet.replace(/\|/g, '');
+                            currentAnswerChunk += packet.replace(/\|/g, ''); // Accumuler localement
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
-                            answer = (packet as AnswerPiecePacket).answer_piece;
+                            currentAnswerChunk += (packet as AnswerPiecePacket).answer_piece; // Accumuler localement
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'image_data')) {
-                            answerImages.push((packet as any).image_data);
+                            currentImages.push((packet as any).image_data); // Accumuler localement
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_TAK_data')) {
-                            answerTAK.push((packet as any).answer_TAK_data);
+                            currentTAK.push((packet as any).answer_TAK_data); // Accumuler localement
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_CHART_data')) {
-                            answerCHART.push((packet as any).answer_CHART_data);
+                            currentCHART.push((packet as any).answer_CHART_data); // Accumuler localement
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_COURSE_data')) {
-                            answerCourse.push((packet as any).answer_COURSE_data);
+                            currentCourse.push((packet as any).answer_COURSE_data); // Accumuler localement
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'reasoning_steps')) {
-                            answerReasoning.push((packet as any).reasoning_steps);
+                            currentReasoning.push((packet as any).reasoning_steps); // Accumuler localement
                             console.log("Étapes de raisonnement ajoutées");
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'reddit')) {
-                            answerREDDIT.push((packet as any).reddit);
+                            currentREDDIT.push((packet as any).reddit); // Accumuler localement
                             console.log("Reddit ajoutées");
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'insta')) {
-                            answerINSTA.push((packet as any).insta);
+                            currentINSTA.push((packet as any).insta); // Accumuler localement
                             console.log("Insta ajoutées");
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'insta2')) {
-                            answerINSTA2.push((packet as any).insta2);
+                            currentINSTA2.push((packet as any).insta2); // Accumuler localement
                             console.log("Insta2 ajoutées");
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'insta_club')) {
-                            answerINSTA_CLUB.push((packet as any).insta_club);
+                            currentINSTA_CLUB.push((packet as any).insta_club); // Accumuler localement
                             console.log("Insta club ajoutées");
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'linkedin')) {
-                            answerLINKEDIN.push((packet as any).linkedin);
+                            currentLINKEDIN.push((packet as any).linkedin); // Accumuler localement
                             console.log("Linkedin ajoutées");
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'youtube')) {
-                            answerYOUTUBE.push((packet as any).youtube);
+                            currentYOUTUBE.push((packet as any).youtube); // Accumuler localement
                             console.log("Youtube ajoutées");
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'quora')) {
-                            answerQUORA.push((packet as any).quora);
+                            currentQUORA.push((packet as any).quora); // Accumuler localement
                             console.log("Quora ajoutées");
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'error_back')) {
-                            answerERROR.push((packet as any).error_back);
+                            currentERROR.push((packet as any).error_back); // Accumuler localement
                             console.log("Error ajoutées");
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'accuracy_score')) {
-                            answerACCURACYSCORE.push((packet as any).accuracy_score);
+                            currentACCURACYSCORE.push((packet as any).accuracy_score); // Accumuler localement
                             console.log("Accuracy score ajoutées");
-
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'classification_title_result')) {
-                            answerTITLEANDCATEGORY.push((packet as any).classification_title_result);
+                            currentTITLEANDCATEGORY.push((packet as any).classification_title_result); // Accumuler localement
                             console.log("title and category ajoutées");
-
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_waiting')) {
-                            answerWaiting = (packet as any).answer_waiting;
+                            currentWaiting = (packet as any).answer_waiting; // Accumuler localement (remplace, ne fusionne pas ici)
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'error')) {
                             error = (packet as StreamingError).error;
                         }
                     }
                 } else if (typeof packetBunch === 'object' && packetBunch !== null) {
+                    // Gérer les paquets uniques (qui sont moins fréquents, donc on peut les accumuler directement)
                     if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_document')) {
-                        answerDocuments.push((packetBunch as AnswerDocumentPacket).answer_document);
-                        console.log('This is a test');
+                        currentCitedDocuments.push((packetBunch as AnswerDocumentPacket).answer_document); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'image_data')) {
-                        answerImages.push((packetBunch as any).image_data);
+                        currentImages.push((packetBunch as any).image_data); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_TAK_data')) {
-                        answerTAK.push((packetBunch as any).answer_TAK_data);
+                        currentTAK.push((packetBunch as any).answer_TAK_data); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reasoning_steps')) {
-                        answerReasoning.push((packetBunch as any).reasoning_steps);
+                        currentReasoning.push((packetBunch as any).reasoning_steps); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'reddit')) {
-                        answerREDDIT.push((packetBunch as any).reddit);
+                        currentREDDIT.push((packetBunch as any).reddit); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta')) {
-                        answerINSTA.push((packetBunch as any).insta);
+                        currentINSTA.push((packetBunch as any).insta); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta2')) {
-                        answerINSTA2.push((packetBunch as any).insta2);
+                        currentINSTA2.push((packetBunch as any).insta2); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'insta_club')) {
-                        answerINSTA_CLUB.push((packetBunch as any).insta_club);
+                        currentINSTA_CLUB.push((packetBunch as any).insta_club); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'linkedin')) {
-                        answerLINKEDIN.push((packetBunch as any).linkedin);
+                        currentLINKEDIN.push((packetBunch as any).linkedin); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'youtube')) {
-                        answerYOUTUBE.push((packetBunch as any).youtube);
+                        currentYOUTUBE.push((packetBunch as any).youtube); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'quora')) {
-                        answerQUORA.push((packetBunch as any).quora);
+                        currentQUORA.push((packetBunch as any).quora); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'error_back')) {
-                        answerERROR.push((packetBunch as any).error_back);
+                        currentERROR.push((packetBunch as any).error_back); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'accuracy_score')) {
-                        answerACCURACYSCORE.push((packetBunch as any).accuracy_score);
-
+                        currentACCURACYSCORE.push((packetBunch as any).accuracy_score); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'classification_title_result')) {
-                        answerTITLEANDCATEGORY.push((packetBunch as any).classification_title_result);
-
+                        currentTITLEANDCATEGORY.push((packetBunch as any).classification_title_result); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_CHART_data')) {
-                        answerCHART.push((packetBunch as any).answer_CHART_data);
+                        currentCHART.push((packetBunch as any).answer_CHART_data); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_COURSE_data')) {
-                        answerCourse.push((packetBunch as any).answer_COURSE_data);
+                        currentCourse.push((packetBunch as any).answer_COURSE_data); // Accumuler
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'related_questions')) {
-                        relatedQuestionsList = (packetBunch as any).related_questions;
+                        currentRelatedQuestions = (packetBunch as any).related_questions; // Remplacer
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'answer_waiting')) {
-                        answerWaiting = (packetBunch as any).answer_waiting;
+                        currentWaiting = (packetBunch as any).answer_waiting; // Remplacer
                     } else if (Object.prototype.hasOwnProperty.call(packetBunch, 'error')) {
                         error = (packetBunch as StreamingError).error;
                     }
                 }
 
-                console.log("Valeur brute de answerTITLEANDCATEGORY :", answerTITLEANDCATEGORY);
-
-                const flattenedImages = answerImages.flat();
-                const flattenedTAK = answerTAK.flat();
-                const flattenedReasoning = answerReasoning.flat();
-                const flattenedREDDIT = answerREDDIT.flat();
-                const flattenedINSTA = answerINSTA.flat();
-                const flattenedINSTA2 = answerINSTA2.flat();
-                const flattenedINSTA_CLUB = answerINSTA_CLUB.flat();
-                const flattenedLINKEDIN = answerLINKEDIN.flat();
-                const flattenedYOUTUBE = answerYOUTUBE.flat();
-                const flattenedQUORA = answerQUORA.flat();
-                const flattenedERROR = answerERROR.flat();
-                // Log before flattening `answerACCURACYSCORE`
-                console.log("Raw answerACCURACYSCORE received:", answerACCURACYSCORE);
-
-                flattenedACCURACYSCORE = answerACCURACYSCORE.flat();
-
-                const flattenedTITLEANDCATEGORY = answerTITLEANDCATEGORY.flat();
-                console.log("Flattened answerTITLEANDCATEGORY:", flattenedTITLEANDCATEGORY);
-
-
-
-                //permet de pouvoir update le topic de la conversation en cours en fonction de la question de l utilisateur
-                if (flattenedTITLEANDCATEGORY.length > 0) {
-                  const { category: newCategory, conversation_title: newTitle } = flattenedTITLEANDCATEGORY[0];
-                  // Utiliser l'action du store qui gère la mise à jour optimiste et Firestore
-                  useChatStore.getState().updateConversationTitleAndTopic(chatSessionId, newTitle, newCategory);
-                }
-
-                //const flattenedTITLEANDCATEGORY = [
-                //  { category: "Financial Aids", conversation_title: "Scholarship Details" }
-                //];
-
-                // Log after flattening `answerACCURACYSCORE`
-                console.log("Flattened answerACCURACYSCORE:", flattenedACCURACYSCORE);
-                const flattenedCHART = answerCHART.flat();
-                const flattenedCourse = answerCourse.flat();
-                const flattenedwaitingdata = answerWaiting.flat();
-
-                // Update the messages if conversation was not cancelled
+                // Appeler la fonction throttled pour mettre à jour le store
                 if (!error) {
-                    // Get current state, create new array, pass new array to setter
-                    const currentMessages = useChatStore.getState().messages;
-                    const updatedMessages = [...currentMessages];
-                    // Ensure lastMessageIndex is valid before updating
-                    if (lastMessageIndex >= 0 && lastMessageIndex < updatedMessages.length) {
-                        updatedMessages[lastMessageIndex] = {
-                            ...(updatedMessages[lastMessageIndex] as Message), // Added type assertion
-                            type: 'ai',
-                            content: answer,
-                            personaName: 'Lucy',
-                            citedDocuments: answerDocuments,
-                            images: flattenedImages,
-                            TAK: flattenedTAK,
-                            CHART: flattenedCHART,
-                            COURSE: flattenedCourse,
-                            waitingMessages: flattenedwaitingdata,
-                            ReasoningSteps: flattenedReasoning,
-                            REDDIT: flattenedREDDIT,
-                            INSTA: flattenedINSTA,
-                            YOUTUBE: flattenedYOUTUBE,
-                            QUORA: flattenedQUORA,
-                            ERROR: flattenedERROR,
-                            CONFIDENCESCORE: flattenedACCURACYSCORE,
-                            INSTA_CLUB: flattenedINSTA_CLUB,
-                            LINKEDIN: flattenedLINKEDIN,
-                            INSTA2: flattenedINSTA2,
-                            // Ensure isLoading is handled if needed, maybe set to false here?
-                            isLoading: false, // Explicitly set isLoading to false when updating
-                        };
-                         setMessages(updatedMessages);
-                    } else {
-                        console.error("onSubmit: Invalid lastMessageIndex", lastMessageIndex, "Messages length:", currentMessages.length);
-                        // Handle error case - maybe add a new AI message instead?
-                    }
+                    throttledUpdateStoreMessage();
                 }
             }
 
-            // Mettre à jour les questions liées et arrêter le streaming si non annulé
-            if (!error) {
-            setRelatedQuestions(relatedQuestionsList);
-            setIsStreaming(false);
-            }
+            // --- Finalisation après la boucle de streaming ---
+            throttledUpdateStoreMessage.cancel(); // Annuler tout appel throttled en attente
 
-            if (!user?.id) {
-            throw new Error("L'ID utilisateur (uid) est manquant dans l'URL.");
-            }
-
-            // Save AI message to backend if conversation is still active
-            // Vérifier l'état de error avant d'appeler la fonction
-            console.log("error:", error);
+            // Mise à jour finale et sauvegarde si pas d'erreur
             if (!error) {
-                console.log("Conversation active -> Envoi du message AI au backend");
+                // Mettre à jour l'état final une dernière fois avec toutes les données accumulées
+                console.log(`[useMessage onSubmit] Finalizing message ID: ${lastAiMessageId} after stream.`);
+                const finalMessages = useChatStore.getState().messages;
+                const finalMessageIndex = finalMessages.findIndex(m => m.id === lastAiMessageId);
+                if (finalMessageIndex !== -1) {
+                    const updatedFinalMessages = [...finalMessages];
+                    const finalMessageToUpdate = updatedFinalMessages[finalMessageIndex];
+                    updatedFinalMessages[finalMessageIndex] = {
+                        ...finalMessageToUpdate,
+                        content: currentAnswerChunk,
+                        citedDocuments: [...(finalMessageToUpdate.citedDocuments || []), ...currentCitedDocuments],
+                        images: [...(finalMessageToUpdate.images || []), ...currentImages],
+                        TAK: [...(finalMessageToUpdate.TAK || []), ...currentTAK],
+                        CHART: [...(finalMessageToUpdate.CHART || []), ...currentCHART],
+                        COURSE: [...(finalMessageToUpdate.COURSE || []), ...currentCourse],
+                        waitingMessages: currentWaiting.length > 0 ? [...(finalMessageToUpdate.waitingMessages || []), ...currentWaiting] : finalMessageToUpdate.waitingMessages,
+                        ReasoningSteps: [...(finalMessageToUpdate.ReasoningSteps || []), ...currentReasoning],
+                        REDDIT: [...(finalMessageToUpdate.REDDIT || []), ...currentREDDIT],
+                        INSTA: [...(finalMessageToUpdate.INSTA || []), ...currentINSTA],
+                        YOUTUBE: [...(finalMessageToUpdate.YOUTUBE || []), ...currentYOUTUBE],
+                        QUORA: [...(finalMessageToUpdate.QUORA || []), ...currentQUORA],
+                        ERROR: [...(finalMessageToUpdate.ERROR || []), ...currentERROR],
+                        CONFIDENCESCORE: [...(finalMessageToUpdate.CONFIDENCESCORE || []), ...currentACCURACYSCORE],
+                        INSTA_CLUB: [...(finalMessageToUpdate.INSTA_CLUB || []), ...currentINSTA_CLUB],
+                        LINKEDIN: [...(finalMessageToUpdate.LINKEDIN || []), ...currentLINKEDIN],
+                        INSTA2: [...(finalMessageToUpdate.INSTA2 || []), ...currentINSTA2],
+                        isLoading: false, // Terminé!
+                    };
+                    useChatStore.getState().setMessages(updatedFinalMessages);
+                    console.log(`[useMessage onSubmit] Final message state set for ID: ${lastAiMessageId}.`);
+                }
+
+                setRelatedQuestions(currentRelatedQuestions); // Mettre à jour les questions liées finales
+
+                // Mise à jour du titre/catégorie si nécessaire (déplacé de la boucle)
+                if (currentTITLEANDCATEGORY.length > 0) {
+                  const { category: newCategory, conversation_title: newTitle } = currentTITLEANDCATEGORY[0];
+                  const chatSessionId = useChatStore.getState().currentChatId;
+                  if (chatSessionId) {
+                      useChatStore.getState().updateConversationTitleAndTopic(chatSessionId, newTitle, newCategory);
+                  }
+                }
+
+                // Sauvegarde Backend
+                if (!user?.id) {
+                    throw new Error("L'ID utilisateur (uid) est manquant.");
+                }
+                console.log("Conversation active -> Envoi du message AI finalisé au backend");
                 await saveMessageAIToBackend({
-                    message: answer,
-                    chatSessionId: chatSessionId,
-                    courseId: courseId,
+                    message: currentAnswerChunk, // Contenu final
+                    chatSessionId: useChatStore.getState().currentChatId || '', // ID du chat courant
+                    courseId: 'default_course_id',
                     username: 'Lucy',
                     type: 'ai',
-                    uid: user?.id,
+                    uid: user.id,
                     input_message: inputValue,
-                    university: university,
-                    //sources: answerDocuments.map((doc) => ({ 
-                    //  document_id: doc.document_id,
-                        //document_name: doc.document_name,
-                        //link: doc.link,
-                        //source_type: doc.source_type
-                    //})),
-                    //confident_score: flattenedACCURACYSCORE.length > 0 ? parseFloat(flattenedACCURACYSCORE[0].confidenceScore): null, // 👈 Conversion correcte en nombre
-                    });
-                    //confident_score: confident_score => important
-                    //sources: sources / un tableau je pense avec le le titre et le lien des sources. avec answer document je pense => important
-                    //reasonning_steps / un tableau 
-                    //TAK / une structure de donnne, je ne sais pas comment save pour l instant
+                    university: user.university || '',
+                    // Inclure ici les métadonnées finales si nécessaire pour la sauvegarde
+                    // confident_score: currentACCURACYSCORE[0]?.confidenceScore ? parseFloat(currentACCURACYSCORE[0].confidenceScore) : null,
+                    // sources: currentCitedDocuments.map(doc => ({...})), // etc.
+                });
+                console.log(`[useMessage onSubmit] AI message saved to backend for ID: ${lastAiMessageId}.`);
 
             } else {
-            console.log("Conversation annulée -> Le message AI ne sera pas envoyé");
-        }
+                console.log(`[useMessage onSubmit] Stream finished with error or cancellation for message ID: ${lastAiMessageId}. No final update/save.`);
+                // Optionnel: Mettre à jour le message AI pour indiquer l'erreur/annulation si nécessaire
+            }
+
         } catch (e: any) {
             if (e.name === 'AbortError') {
-            console.log('Requête interrompue par l utilisateur.');
+            console.log('[useMessage onSubmit] Stream aborted by user.');
             // setIsStreaming(false); // Déjà dans finally
             // setHasNewContent(false); // Déjà dans finally ou reset avant appel
             // Optionnel : Ajouter une indication à l'UI pour signaler que la réponse est stoppée
             } else {
-            console.error('Erreur lors du traitement des messages :', e.message);
+            console.error('[useMessage onSubmit] Error during streaming:', e.message);
              // Get current state, create new array, pass new array to setter
             const currentMessagesWithError = useChatStore.getState().messages;
             const errorMsg: Message = {
@@ -444,6 +462,7 @@ export const useMessage = ({
         } finally {
             setIsStreaming(false);
             setAbortController(null);
+            console.log(`[useMessage onSubmit END] Input: "${inputValue}"`);
         }
     };
 

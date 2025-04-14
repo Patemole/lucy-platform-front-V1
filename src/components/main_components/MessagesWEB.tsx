@@ -148,7 +148,13 @@ interface AIMessageProps {
   instaclubData?: AnswerINSTA_CLUB[] | null;
   linkedinData?: AnswerLINKEDIN[]| null;
   insta2Data?: AnswerINSTA2[] | null;
-  metadataOnboarding?: string | null; //for onboarding
+  // metadataOnboarding?: string | null; // Supprimé
+  // Propriétés spécifiques pour l'onboarding
+  isOnboardingSCHOOL?: boolean;
+  isOnboardingYEAR?: boolean;
+  isOnboardingLINKEDIN?: boolean;
+  isOnboardingMAJORMINOR?: boolean;
+  isOnboardingCOMPLIANCE?: boolean;
   hasStartedStreaming?: boolean; // ✅ indique que le stream a démarré
 }
 
@@ -194,10 +200,17 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   instaclubData,
   linkedinData,
   insta2Data,
-  metadataOnboarding,
+  // metadataOnboarding, // Supprimé
+  isOnboardingSCHOOL, // Ajouté
+  isOnboardingYEAR, // Ajouté
+  isOnboardingLINKEDIN, // Ajouté
+  isOnboardingMAJORMINOR, // Ajouté
+  isOnboardingCOMPLIANCE, // Ajouté
   hasStartedStreaming
 }) => {
   // États pour la gestion des interactions utilisateur
+  console.log(`[AIMessage Render] ID: ${messageId}, isLoading: ${isMessageLoading}, Content Length: ${content?.length}, isGloballyStreaming: ${isGloballyStreaming}, isOnboardingSCHOOL: ${!!isOnboardingSCHOOL}, isOnboardingYEAR: ${!!isOnboardingYEAR}, ...other flags`); // Log initial
+
   const { user, login, setPrimaryChatId, chatIds, isAuth, loading } = useAuth();
   const [copyClicked, setCopyClicked] = useState(false);
   const [feedbackClicked, setFeedbackClicked] = useState(false);
@@ -211,20 +224,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [showAllSteps, setShowAllSteps] = useState(false);
   const [isOtherSelected, setIsOtherSelected] = useState<boolean>(false);
   const [showSourcesSidebar, setShowSourcesSidebar] = useState(false);
-/*
-  const [selectedSchools, setSelectedSchools] = useState<string[]>([]);
-  const [selectedYear, setSelectedYear] = useState<string[]>([]);
-  const [selectedLinkedin, setSelectedLinkedin] = useState<string[]>([]);
-  const [selectedMajor, setSelectedMajor] = useState<string[]>([]);
-  const [selectedMinor, setSelectedMinor] = useState<string[]>([]);
-  const [selectedCompliance, setSelectedCompliance] = useState<string[]>([]);
-  const [linkedinUrl, setLinkedinUrl] = useState<string>('');
-  const [learnerType, setLearnerType] = useState<string>('');
-  const [majors, setMajors] = useState<string[]>(['']);
-  const [minors, setMinors] = useState<string[]>(['']);
-  const [termsChecked, setTermsChecked] = useState(false);
-  const [ageChecked, setAgeChecked] = useState(false);
-  */
+
 
   //const [selectedSchools, setSelectedSchools] = useState(user?.faculty || ['']);
   const [selectedSchools, setSelectedSchools] = useState(
@@ -293,6 +293,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 // avant d'afficher le bloc d'onboarding (ex: YEAR, SCHOOL, etc.). 
 // Cela améliore la fluidité de l'expérience utilisateur en évitant que le bloc apparaisse 
 // immédiatement en même temps que le texte IA.
+/*
   useEffect(() => {
     if (isResponseReceived) {
       const timeout = setTimeout(() => {
@@ -304,6 +305,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
       setReadyToDisplayStep(false);
     }
   }, [isResponseReceived]);
+  */
 
 
 // Dès que les Reasoning Steps commencent, on affiche les shadow sources
@@ -648,12 +650,19 @@ useEffect(() => {
   (insta2Data && insta2Data.length > 0);
 
   // --- Correction pour les blocs d'onboarding (Condition simplifiée) ---
-  // Dépend maintenant uniquement de la présence de metadata et de la fin du chargement du message
-  const shouldDisplaySchoolBlock = metadataOnboarding === 'SCHOOL' && !isMessageLoading;
-  const shouldDisplayYearBlock = metadataOnboarding === 'YEAR' && !isMessageLoading;
-  const shouldDisplayLinkedInBlock = metadataOnboarding === 'LINKEDIN' && !isMessageLoading;
-  const shouldDisplayMajorMinorBlock = metadataOnboarding === 'MAJOR&MINOR' && !isMessageLoading;
-  const shouldDisplayComplianceBlock = metadataOnboarding === 'COMPLIANCE' && !isMessageLoading;
+  // Dépend maintenant uniquement de la prop booléenne correspondante et de la fin du chargement du message
+  const shouldDisplaySchoolBlock = isOnboardingSCHOOL && !isMessageLoading;
+  const shouldDisplayYearBlock = isOnboardingYEAR && !isMessageLoading;
+  const shouldDisplayLinkedInBlock = isOnboardingLINKEDIN && !isMessageLoading;
+  const shouldDisplayMajorMinorBlock = isOnboardingMAJORMINOR && !isMessageLoading;
+  const shouldDisplayComplianceBlock = isOnboardingCOMPLIANCE && !isMessageLoading;
+
+  useEffect(() => {
+    console.log(`[AIMessage Effect] ID: ${messageId}, Props updated or component re-rendered.`);
+    // Vous pouvez ajouter ici des logs spécifiques pour certaines props si nécessaire
+    // console.log(`   -> isMessageLoading changed to: ${isMessageLoading}`);
+    // console.log(`   -> content length: ${content?.length}`);
+  }); // Se déclenche à chaque rendu/mise à jour
 
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">

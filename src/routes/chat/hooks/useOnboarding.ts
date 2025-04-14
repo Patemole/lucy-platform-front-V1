@@ -167,8 +167,25 @@ export const useOnboarding = ({
     const { question, metadata } = onboardingMessages[index];
     const onboardingMessageId = generateUniqueId();
 
+    // Créer le payload spécifique à l'étape
+    const onboardingPayload: Partial<Message> = {};
+    switch (metadata) {
+      case "SCHOOL": onboardingPayload.isOnboardingSCHOOL = true; break;
+      case "YEAR": onboardingPayload.isOnboardingYEAR = true; break;
+      case "LINKEDIN": onboardingPayload.isOnboardingLINKEDIN = true; break;
+      case "MAJOR&MINOR": onboardingPayload.isOnboardingMAJORMINOR = true; break;
+      case "COMPLIANCE": onboardingPayload.isOnboardingCOMPLIANCE = true; break;
+    }
+
     // Ajouter le message AI placeholder à la copie actuelle
-    const loadingMessage: Message = { id: onboardingMessageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata, isLoading: true };
+    const loadingMessage: Message = {
+      id: onboardingMessageId,
+      type: 'ai',
+      content: '',
+      personaName: 'Lucy',
+      ...onboardingPayload, // Ajouter la propriété spécifique
+      isLoading: true
+    };
     messagesAfterUpdate = [...messagesAfterUpdate, loadingMessage];
     setMessages(messagesAfterUpdate); // Mettre à jour le store
 
