@@ -103,6 +103,7 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSSOLoading, setIsSSOLoading] = React.useState(false);
 
+  const { user, setUser } = useAuthStore();
   const isLoadingAuth = useAuthStore((state) => state.isLoading);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -113,85 +114,140 @@ export default function SignUp() {
   const subdomain = config.subdomain;
   const courseId = location.pathname.split('/sign-up/')[1] || '';
 
+  const [shouldRedirect, setShouldRedirect] = useState(true);
+
   useEffect(() => {
-    if (!isLoadingAuth && isAuthenticated) {
-      console.log("SignUp Page: User already authenticated via Zustand, redirecting.");
-      const userId = useAuthStore.getState().user?.id;
-      navigate(`/onboarding-with-lucy/${userId || 'defaultId'}`, { replace: true });
+    if (!isLoadingAuth && isAuthenticated && user && shouldRedirect) {
+      console.log("[SignUp Page] User authenticated via useEffect (using Zustand state), redirecting...");
+      navigate(`/onboarding-with-lucy/${user?.id || 'defaultId'}`, { replace: true });
     }
-  }, [isLoadingAuth, isAuthenticated, navigate]);
+  }, [isLoadingAuth, isAuthenticated, user, shouldRedirect, navigate]);
 
   async function handleSignUpWithSSO() {
+    console.log("🚀 [SSO Harmonisée - SignUp] Début du processus de connexion/inscription SSO...");
+    setShouldRedirect(false);
     setErrors({});
     setIsSSOLoading(true);
     setIsLoading(false);
-    console.log("🚀 Initiating SSO Sign Up / Sign In process...");
 
     try {
       const university = config.subdomain;
+      console.log("🔍 [SSO Harmonisée - SignUp] Université détectée :", university);
+
       if (!university) {
-        throw new Error("University configuration (subdomain) is missing.");
+        throw new Error("Université non reconnue (subdomain manquant).");
       }
 
       const providerId = `oidc.${university}`;
+      console.log("🛠️ [SSO Harmonisée - SignUp] Construction du provider Firebase avec OIDC :", providerId);
       const provider = new OAuthProvider(providerId);
-      console.log(`🛠️ Using OIDC provider: ${providerId}`);
 
+      console.log("🔄 [SSO Harmonisée - SignUp] Début de l'authentification Firebase Popup...");
       const result = await signInWithPopup(auth, provider);
       const ssoUser = result.user;
-      console.log(`✅ SSO authentication successful: ${ssoUser.email} (UID: ${ssoUser.uid})`);
 
       try {
         const credential = OAuthProvider.credentialFromResult(result);
         if (credential?.idToken) {
             const payload = JSON.parse(atob(credential.idToken.split('.')[1]));
-            console.log("📝 OIDC Token Payload:", payload);
-            console.log("🔑 Provider User Identifier (sub):", payload.sub);
+            console.log("📝 [SSO Harmonisée - SignUp] Payload OIDC:", payload);
         }
       } catch (tokenError) {
-          console.warn("⚠️ Could not parse OIDC token details:", tokenError);
+          console.warn("⚠️ [SSO Harmonisée - SignUp] Impossible de parser les détails du token OIDC:", tokenError);
       }
 
+      console.log("✅ [SSO Harmonisée - SignUp] Utilisateur connecté via SSO :", ssoUser.email, "| UID :", ssoUser.uid);
+
       const userRef = doc(db, "users", ssoUser.uid);
-      console.log("📡 Checking Firestore for existing user document...");
+      console.log("📡 [SSO Harmonisée - SignUp] Vérification de l'existence Firestore...");
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
-        console.log("🆕 New user via SSO. Creating Firestore document...");
+        console.log("🆕 [SSO Harmonisée - SignUp] Nouvel utilisateur détecté. Création Firestore...");
         const initialChatId = uuidv4();
+        const currentTime = serverTimestamp();
 
-        await setDoc(userRef, {
+        const newUserFirestoreData = {
           uid: ssoUser.uid,
           email: ssoUser.email || '',
           name: ssoUser.displayName || "New User",
           university,
           role: university === 'admin' ? 'admin' : 'student',
           onboardingComplete: false,
-          createdAt: serverTimestamp(),
+          createdAt: currentTime,
           chatsessions: [initialChatId],
-        });
+          major: [], minor: [], interests: [], year: null, faculty: [], linkedin_profile: null,
+        };
+        await setDoc(userRef, newUserFirestoreData);
 
-        await setDoc(doc(db, "chatsessions", initialChatId), {
+        const chatDocRef = doc(db, "chatsessions", initialChatId);
+        const initialChatData = {
           chat_id: initialChatId,
-          name: `${ssoUser.displayName || "New User"} Onboarding`,
-          created_at: serverTimestamp(),
-          modified_at: serverTimestamp(),
-        });
+          name: `${newUserFirestoreData.name} Onboarding`,
+          created_at: currentTime,
+          modified_at: currentTime,
+          is_private: true,
+          user_ids: [ssoUser.uid],
+          last_message_preview: "Welcome! Let's get you started.",
+          university: university,
+          thread_type: 'Private',
+          topic: 'Onboarding',
+        };
+        await setDoc(chatDocRef, initialChatData);
 
-        console.log("✅ Firestore document and initial chat created for new SSO user.");
-        navigate(`/onboarding-with-lucy/${ssoUser.uid || 'defaultId'}`, { replace: true });
+        console.log("✅ [SSO Harmonisée - SignUp] Firestore: Utilisateur et chat initial créés.");
+
+        const userForStore = {
+          id: newUserFirestoreData.uid,
+          email: newUserFirestoreData.email,
+          name: newUserFirestoreData.name,
+          university: newUserFirestoreData.university,
+          onboardingComplete: newUserFirestoreData.onboardingComplete,
+          role: newUserFirestoreData.role,
+          major: newUserFirestoreData.major,
+          minor: newUserFirestoreData.minor,
+          interests: newUserFirestoreData.interests,
+          year: newUserFirestoreData.year,
+          faculty: newUserFirestoreData.faculty,
+          linkedin_profile: newUserFirestoreData.linkedin_profile,
+          createdAt: new Date(),
+          chatsessions: newUserFirestoreData.chatsessions,
+        };
+        setUser(userForStore);
+        console.log("🔄 [SSO Harmonisée - SignUp] Store Zustand mis à jour pour le nouvel utilisateur.");
 
       } else {
-        console.log("🔄 Existing user signed in via SSO. Firestore document already exists.");
+        console.log("🔄 [SSO Harmonisée - SignUp] Utilisateur existant trouvé. Récupération Firestore...");
+        const userData = userSnap.data();
+        console.log("✅ [SSO Harmonisée - SignUp] Données Firestore existantes:", userData);
+
+        const userForStore = {
+          id: userData.uid || ssoUser.uid,
+          email: userData.email || ssoUser.email || '',
+          name: userData.name || ssoUser.displayName || "",
+          university: userData.university || university,
+          onboardingComplete: userData.onboardingComplete !== undefined ? userData.onboardingComplete : true,
+          role: userData.role || (university === 'admin' ? 'admin' : 'student'),
+          major: userData.major || [],
+          minor: userData.minor || [],
+          interests: userData.interests || [],
+          year: userData.year || null,
+          faculty: userData.faculty || [],
+          linkedin_profile: userData.linkedin_profile || null,
+          createdAt: userData.createdAt?.toDate ? userData.createdAt.toDate() : new Date(),
+          chatsessions: userData.chatsessions || [],
+        };
+        setUser(userForStore);
+        console.log("🔄 [SSO Harmonisée - SignUp] Store Zustand mis à jour pour l'utilisateur existant.");
       }
 
-      console.log("AuthStore listener will now handle the global state update.");
-
     } catch (error) {
-      console.error("❌ SSO Sign Up / Sign In failed:", error);
-      setErrors({ general: `Sign Up failed. Please try again or use email/password. (${error.code || error.message})` });
+      console.error("❌ [SSO Harmonisée - SignUp] Erreur lors de la connexion/inscription SSO:", error);
+      setErrors({ general: `Sign Up / Sign In with SSO failed. Please try again. (${error.code || error.message})` });
     } finally {
       setIsSSOLoading(false);
+      setShouldRedirect(true);
+      console.log("🏁 [SSO Harmonisée - SignUp] Processus terminé. Redirection useEffect réactivée.");
     }
   }
 
