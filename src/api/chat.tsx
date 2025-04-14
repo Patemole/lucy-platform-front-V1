@@ -305,7 +305,7 @@ export const saveMessageAIToBackend = async ({
                 input_message,
                 university,
                 sources,
-                confident_score
+                confidence_score: confident_score,
             }),
         });
 
