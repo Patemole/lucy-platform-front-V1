@@ -398,7 +398,7 @@ export const useMessage = ({
             // Vérifier l'état de error avant d'appeler la fonction
             console.log("error:", error);
             if (!error) {
-                console.log("Conversation active -> Envoi du message AI au backend");
+               
                 await saveMessageAIToBackend({
                     message: answer,
                     chatSessionId: chatSessionId,
@@ -408,13 +408,13 @@ export const useMessage = ({
                     uid: user?.id,
                     input_message: inputValue,
                     university: university,
-                    //sources: answerDocuments.map((doc) => ({ 
-                    //  document_id: doc.document_id,
-                        //document_name: doc.document_name,
-                        //link: doc.link,
-                        //source_type: doc.source_type
-                    //})),
-                    //confident_score: flattenedACCURACYSCORE.length > 0 ? parseFloat(flattenedACCURACYSCORE[0].confidenceScore): null, // 👈 Conversion correcte en nombre
+                    sources: answerDocuments.map((doc) => ({ 
+                      document_id: doc.document_id,
+                        document_name: doc.document_name,
+                        link: doc.link,
+                        source_type: doc.source_type
+                    })),
+                    confident_score: flattenedACCURACYSCORE.length > 0 ? parseFloat(flattenedACCURACYSCORE[0].confidenceScore): null, // 👈 Conversion correcte en nombre
                     });
                     //confident_score: confident_score => important
                     //sources: sources / un tableau je pense avec le le titre et le lien des sources. avec answer document je pense => important
