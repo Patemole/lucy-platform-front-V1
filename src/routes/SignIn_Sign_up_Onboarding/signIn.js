@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { setPersistence, browserLocalPersistence, signInWithEmailAndPassword, OAuthProvider, signInWithPopup} from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
-import { useAuth } from '../../auth/hooks/useAuth';
+import useAuthStore from '../../stores/useAuthStore'; // Importer le store Zustand
 import { doc, setDoc, getDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
@@ -11,6 +11,7 @@ import lucyLogo from '../../logo_lucy.png';
 import { motion } from 'framer-motion'; // Framer Motion for animations
 import config from '../../config';
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import { v4 as uuidv4 } from 'uuid'; // <-- AJOUTER CET IMPORT
 
 
 const allowedDomains = {
@@ -90,10 +91,9 @@ const isAllowedEmail = (email, subdomain) => {
 
 
 const SignIn = ({ handleToggleThemeMode }) => {
-  const { isAuth, loading, user } = useAuth();
+  const { isAuthenticated: isAuth, isLoading: loading, user, setUser } = useAuthStore();
   const theme = useTheme();
   const navigate = useNavigate();
-  const { login } = useAuth(); // Utiliser la fonction `login` du contexte
   const { course_id } = useParams();
 
   const [email, setEmail] = useState('');
@@ -102,137 +102,170 @@ const SignIn = ({ handleToggleThemeMode }) => {
   const [isLoading, setIsLoading] = useState(false); // Tracks spinner in button
   const subdomain = config.subdomain;
   const [shouldRedirect, setShouldRedirect] = useState(true); // Par défaut, on redirige
-  //const auth = getAuth(); // Récupère directement l'instance Firebase Auth
 
-
-
+  // ============================================================
+  //                FONCTION SSO HARMONISÉE
+  // ============================================================
   async function signInWithSSO() {
+    console.log("🚀 [SSO Harmonisée - SignIn] Début du processus de connexion/inscription SSO...");
+    setShouldRedirect(false); // Désactive temporairement le useEffect pour éviter double redirection
+    setErrors({}); // Reset errors
+    // Note: On ne gère pas de spinner spécifique pour le bouton SSO ici, mais on pourrait
+
     try {
-      console.log("🚀 Début du processus de connexion SSO...");
-      setShouldRedirect(false); // Désactive temporairement le useEffect
-  
-      // 🔥 Récupérer le sous-domaine (université)
       const university = config.subdomain;
-      console.log("🔍 Université détectée :", university);
-  
+      console.log("🔍 [SSO Harmonisée - SignIn] Université détectée :", university);
+
       if (!university) {
-        console.error("❌ Erreur : Université non reconnue.");
-        return;
+        throw new Error("Université non reconnue (subdomain manquant).");
       }
-  
-      // 🔥 Construire dynamiquement le provider Firebase
+
       const providerId = `oidc.${university}`;
-      console.log("🛠️ Construction du provider Firebase avec OIDC :", providerId);
-  
+      console.log("🛠️ [SSO Harmonisée - SignIn] Construction du provider Firebase avec OIDC :", providerId);
       const provider = new OAuthProvider(providerId);
-  
-      console.log("🔄 Début de l'authentification avec Firebase...");
-  
-      // 🔥 Démarrer l'authentification avec Firebase
+
+      console.log("🔄 [SSO Harmonisée - SignIn] Début de l'authentification Firebase Popup...");
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      const ssoUser = result.user; // Utilisateur retourné par Firebase Auth
 
-      // 👉 Ajoute ton code exactement ici :
-      const credential = OAuthProvider.credentialFromResult(result);
-      const idToken = credential.idToken;
-      const payload = JSON.parse(atob(idToken.split('.')[1]));
-      console.log("📝 Payload complet du provider OIDC :", payload);
-      console.log("🔑 Identifiant (sub) du provider SSO :", payload.sub);
-      // Fin de l'ajout 👈
-  
-      console.log("✅ Utilisateur connecté via SSO :", user.email, " | UID :", user.uid);
-  
-      // 🔥 Vérifier si l'utilisateur existe déjà dans Firestore
-      const userRef = doc(db, "users", user.uid);
-      console.log("📡 Vérification de l'existence de l'utilisateur dans Firestore...");
-  
-      const userSnap = await getDoc(userRef);
-  
-      if (!userSnap.exists()) {
-        console.log("🆕 Nouvel utilisateur détecté. Création d'un compte Firestore...");
-  
-        // 🚀 Nouvel utilisateur → Création du compte Firestore et redirection vers onboarding
-        await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName || "",
-          university,
-          onboardingComplete: false,
-          createdAt: serverTimestamp(),
-        });
-  
-        console.log("✅ Compte Firestore créé avec succès.");
-  
-        // 🔥 Mettre à jour le contexte utilisateur avec useAuth
-        login({
-          id: user.uid,
-          name: user.displayName || "",
-          email: user.email,
-          university,
-          onboardingComplete: false,
-        });
-  
-        console.log("🔄 Redirection vers l'onboarding...");
-        navigate(`/onboarding/learningStyleSurvey`);
-      } else {
-        console.log("🔄 Utilisateur existant trouvé dans Firestore. Récupération des données...");
-  
-        // 🔥 Utilisateur existant → Récupérer ses infos et rediriger vers le dashboard
-        const userData = userSnap.data();
-        console.log("✅ Données utilisateur Firestore :", userData);
-  
-        //login(userData);
-        login({
-          id: userData.uid, // Assure la cohérence avec le SSO
-          name: userData.name || "",
-          //name: user.displayName || "",
-          email: userData.email,
-          university: userData.university,
-          onboardingComplete: userData.onboardingComplete,
-        });
-
-        console.log("Sign-in successful in SSO, redirecting...");
-        console.log("🔄 Redirection vers le dashboard...");
-        //navigate(`/dashboard/student/${user.uid}`);
-        //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
-        console.log("valeur de userdatauid", userData.uid)
-        navigate(`/dashboard/student/${userData.uid || 'defaultId'}`, { replace: true });
-
-        // 🔥 Réactive la redirection après un court délai pour éviter qu'elle reste bloquée
-        setTimeout(() => {
-          setShouldRedirect(true);
-        }, 100); // Petit délai pour s'assurer que l'état se met bien à jour
-
+      // Debug: Log OIDC token details (facultatif mais utile)
+      try {
+        const credential = OAuthProvider.credentialFromResult(result);
+        if (credential?.idToken) {
+            const payload = JSON.parse(atob(credential.idToken.split('.')[1]));
+            console.log("📝 [SSO Harmonisée - SignIn] Payload OIDC:", payload);
+        }
+      } catch (tokenError) {
+          console.warn("⚠️ [SSO Harmonisée - SignIn] Impossible de parser les détails du token OIDC:", tokenError);
       }
+
+      console.log("✅ [SSO Harmonisée - SignIn] Utilisateur connecté via SSO :", ssoUser.email, "| UID :", ssoUser.uid);
+
+      // Vérifier l'existence dans Firestore
+      const userRef = doc(db, "users", ssoUser.uid);
+      console.log("📡 [SSO Harmonisée - SignIn] Vérification de l'existence Firestore...");
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        // ---- CAS NOUVEL UTILISATEUR ----
+        console.log("🆕 [SSO Harmonisée - SignIn] Nouvel utilisateur détecté. Création Firestore...");
+        const initialChatId = uuidv4();
+        const currentTime = serverTimestamp();
+
+        // Créer le document utilisateur
+        const newUserFirestoreData = {
+          uid: ssoUser.uid,
+          email: ssoUser.email || '',
+          name: ssoUser.displayName || "New User", // Utiliser le displayName SSO ou un défaut
+          university,
+          role: university === 'admin' ? 'admin' : 'student', // Rôle basé sur l'université
+          onboardingComplete: false, // Nouvel utilisateur -> onboarding nécessaire
+          createdAt: currentTime,
+          chatsessions: [initialChatId], // Ajouter le chat initial
+          // Ajouter d'autres champs par défaut si nécessaire
+          major: [], minor: [], interests: [], year: null, faculty: [], linkedin_profile: null,
+        };
+        await setDoc(userRef, newUserFirestoreData);
+
+        // Créer le document chat initial
+        const chatDocRef = doc(db, "chatsessions", initialChatId);
+        const initialChatData = {
+          chat_id: initialChatId,
+          name: `${newUserFirestoreData.name} Onboarding`, // Nom basé sur le nom user
+          created_at: currentTime,
+          modified_at: currentTime,
+          is_private: true, // Chat d'onboarding est privé
+          user_ids: [ssoUser.uid], // Lié à l'utilisateur
+          last_message_preview: "Welcome! Let's get you started.",
+          university: university,
+          thread_type: 'Private', // Type privé
+          topic: 'Onboarding',
+        };
+        await setDoc(chatDocRef, initialChatData);
+
+        console.log("✅ [SSO Harmonisée - SignIn] Firestore: Utilisateur et chat initial créés.");
+
+        // Mettre à jour l'état Zustand avec les infos du NOUVEL utilisateur
+        // Important : utiliser les données qu'on vient de mettre dans Firestore
+        const userForStore/*: User*/ = {
+          id: newUserFirestoreData.uid,
+          email: newUserFirestoreData.email,
+          name: newUserFirestoreData.name,
+          university: newUserFirestoreData.university,
+          onboardingComplete: newUserFirestoreData.onboardingComplete,
+          role: newUserFirestoreData.role,
+          major: newUserFirestoreData.major,
+          minor: newUserFirestoreData.minor,
+          interests: newUserFirestoreData.interests,
+          year: newUserFirestoreData.year,
+          faculty: newUserFirestoreData.faculty,
+          linkedin_profile: newUserFirestoreData.linkedin_profile,
+          createdAt: new Date(), // Approximation pour le store, Firestore a le vrai timestamp
+          chatsessions: newUserFirestoreData.chatsessions,
+          // S'assurer que tous les champs du type User sont présents
+        };
+        setUser(userForStore);
+        console.log("🔄 [SSO Harmonisée - SignIn] Store Zustand mis à jour pour le nouvel utilisateur.");
+        // PAS DE REDIRECTION ICI -> Laissé au useEffect global
+
+      } else {
+        // ---- CAS UTILISATEUR EXISTANT ----
+        console.log("🔄 [SSO Harmonisée - SignIn] Utilisateur existant trouvé. Récupération Firestore...");
+        const userData = userSnap.data();
+        console.log("✅ [SSO Harmonisée - SignIn] Données Firestore existantes:", userData);
+
+        // Mettre à jour l'état Zustand avec les infos de l'utilisateur EXISTANT
+        const userForStore/*: User*/ = {
+          id: userData.uid || ssoUser.uid, // Priorité Firestore
+          email: userData.email || ssoUser.email || '', // Priorité Firestore
+          name: userData.name || ssoUser.displayName || "", // Priorité Firestore
+          university: userData.university || university, // Priorité Firestore
+          onboardingComplete: userData.onboardingComplete !== undefined ? userData.onboardingComplete : true, // Default true si existant mais champ manquant
+          role: userData.role || (university === 'admin' ? 'admin' : 'student'),
+          major: userData.major || [],
+          minor: userData.minor || [],
+          interests: userData.interests || [],
+          year: userData.year || null,
+          faculty: userData.faculty || [],
+          linkedin_profile: userData.linkedin_profile || null,
+          // Conversion Timestamp Firestore -> Date JS pour le store
+          createdAt: userData.createdAt?.toDate ? userData.createdAt.toDate() : new Date(),
+          chatsessions: userData.chatsessions || [],
+          // S'assurer que tous les champs du type User sont présents
+        };
+        setUser(userForStore);
+        console.log("🔄 [SSO Harmonisée - SignIn] Store Zustand mis à jour pour l'utilisateur existant.");
+        // PAS DE REDIRECTION ICI -> Laissé au useEffect global
+      }
+
     } catch (error) {
-      console.error("❌ Erreur lors de la connexion SSO :", error);
+      console.error("❌ [SSO Harmonisée - SignIn] Erreur lors de la connexion/inscription SSO:", error);
+      setErrors({ general: `SSO failed. Please try again. (${error.code || error.message})` });
+    } finally {
+        // Important: Réactiver la redirection via useEffect après la tentative SSO
+        setShouldRedirect(true);
+        console.log("🏁 [SSO Harmonisée - SignIn] Processus terminé. Redirection useEffect réactivée.");
     }
   }
-  
-  /*
-  // Redirect if user is already authenticated
-  useEffect(() => {
-    if (!loading && isAuth && user && shouldRedirect) {
-      console.log("User authenticated via useeffect, redirecting...");
-      console.log("user.id est", user?.id || 'defaultId')
-      navigate(`/dashboard/student/${user?.id || 'defaultId'}`, { replace: true });
-    }
-  }, [loading, isAuth, user, shouldRedirect, navigate]);
-  */
+  // ============================================================
+  //              FIN FONCTION SSO HARMONISÉE
+  // ============================================================
 
 
-   // Redirect if user is already authenticated
+  // Redirect if user is already authenticated (Utilise maintenant les états du store)
   useEffect(() => {
+    // 'loading' correspond maintenant à isLoading du store
     if (!loading && isAuth && user && shouldRedirect) {
-      console.log("User authenticated via useeffect, redirecting...");
-      console.log("user.id est", user?.id || 'defaultId')
+      console.log("User authenticated via useEffect (using Zustand state), redirecting...");
+      console.log("user.id est", user?.id || 'defaultId');
+      // Redirige vers l'onboarding, cohérent avec handleSubmit
       navigate(`/onboarding-with-lucy/${user?.id || 'defaultId'}`, { replace: true });
     }
   }, [loading, isAuth, user, shouldRedirect, navigate]);
 
 
 
-  
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -264,12 +297,10 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
       // Optional: Fetch additional user data or validation here
       console.log("Sign-in successful in manual, redirecting...");
-      
-      // Navigate immediately after successful sign-in
-      //navigate(`/dashboard/${result.user.role || 'defaultRole'}/${result.user.uid || 'defaultId'}`, { replace: true });
-      //navigate(`/dashboard/student/${result.user.uid || 'defaultId'}`, { replace: true });
-      navigate(`/onboarding-with-lucy/${result.user.uid || 'defaultId'}`, { replace: true });
-      
+
+      // La redirection se fait maintenant via le useEffect après la mise à jour de l'état par l'écouteur Firebase
+      // navigate(`/onboarding-with-lucy/${result.user.uid || 'defaultId'}`, { replace: true });
+
 
     } catch (error) {
       const newErrors = {};
@@ -280,7 +311,8 @@ const SignIn = ({ handleToggleThemeMode }) => {
       } else if (error.code === 'auth/too-many-requests') {
         newErrors.email = 'Account access blocked! Try again later';
       } else {
-        newErrors.email = 'Login failed';
+        // Utiliser errors.general pour les erreurs non spécifiques
+        newErrors.general = 'Login failed. Please check your credentials.';
       }
       setErrors(newErrors);
 
@@ -311,7 +343,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
       <header aria-label="University branding" className="absolute top-4 left-4">
         <img src={theme.logo} alt="University Logo" className="h-12" />
       </header>
-  
+
 
       <main className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4" role="main">
         <h1 className="text-xl font-semibold text-center mb-4">Sign In to your account</h1>
@@ -319,10 +351,13 @@ const SignIn = ({ handleToggleThemeMode }) => {
           Sign In with your university credentials.
         </p>
 
+        {/* Afficher l'erreur générale SSO si elle existe */}
+        {errors.general && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
+
         {/* Bouton SSO */}
         <button
           type="button"
-          onClick={signInWithSSO}
+          onClick={signInWithSSO} // Utilise la nouvelle fonction SSO
           className="w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300"
         >
           <AccountBalanceIcon sx={{ fontSize: 20 }} /> {/* Icône université */}
@@ -341,6 +376,9 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
 
         <form onSubmit={handleSubmit} noValidate>
+        {/* Afficher l'erreur générale Email/Password si elle existe */}
+        {errors.general && subdomain !== 'holyfamily' && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
+
         {subdomain !== 'holyfamily' && (
           <div className="mb-6">
             <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
@@ -418,3 +456,4 @@ const SignIn = ({ handleToggleThemeMode }) => {
 };
 
 export default SignIn;
+
