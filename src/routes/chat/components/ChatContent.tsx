@@ -160,7 +160,8 @@ interface ChatContentProps {
                         drawerOpen={drawerOpen}
                         handleSendTAKMessage={handleSendTAKMessage}
                         handleSendCOURSEMessage={handleSendCOURSEMessage}
-                        isLoading={isStreaming && message.id === lastAiMessageId}
+                        isGloballyStreaming={isStreaming}
+                        isMessageLoading={message.isLoading ?? false}
                         hasNewContent={hasNewContent}
                         redditData={message.REDDIT}
                         instaData={message.INSTA}
@@ -178,8 +179,6 @@ interface ChatContentProps {
                         handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
                         handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
                         hasStartedStreaming={hasStartedStreaming}
-                        
-                    
                     />
                     </div>
                 </div>

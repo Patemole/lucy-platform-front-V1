@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   FiCheck,
   FiCopy,
@@ -111,7 +111,8 @@ interface AIMessageProps {
   personaName?: string;
   citedDocuments?: AnswerDocument[] | null;
   isComplete?: boolean;
-  isLoading?: boolean;
+  isGloballyStreaming?: boolean; // Renommée depuis isLoading
+  isMessageLoading?: boolean; // Nouvelle prop pour l'état du message
   hasNewContent?: boolean;
   hasDocs?: boolean;
   images?: AnswerImage[] | null;
@@ -158,7 +159,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   personaName,
   citedDocuments,
   isComplete,
-  isLoading = false,
+  isGloballyStreaming = false, // Fournir une valeur par défaut
+  isMessageLoading = false,    // Fournir une valeur par défaut
   hasNewContent = false,
   hasDocs,
   images,
@@ -256,10 +258,12 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [displayedReasoningSteps, setDisplayedReasoningSteps] = useState<ReasoningStep[]>([]);
 
   const [readyToDisplayStep, setReadyToDisplayStep] = useState(false);
+  const prevIsMessageLoadingRef = useRef(isMessageLoading); // Pour détecter le changement
 
   //const showLoadingIndicator = isLoading && !hasNewContent;
-  const showLoadingIndicator = isLoading && (!hasNewContent || !hasStartedStreaming);
-  const isResponseReceived = !isLoading;
+  const showLoadingIndicator = isMessageLoading && content.trim() === '';
+
+  const isResponseReceived = !isMessageLoading;
 
   // Thème et responsive
   const theme = useTheme();
@@ -642,6 +646,14 @@ useEffect(() => {
   (instaclubData && instaclubData.length > 0) ||
   (linkedinData && linkedinData.length > 0) ||
   (insta2Data && insta2Data.length > 0);
+
+  // --- Correction pour les blocs d'onboarding (Condition simplifiée) ---
+  // Dépend maintenant uniquement de la présence de metadata et de la fin du chargement du message
+  const shouldDisplaySchoolBlock = metadataOnboarding === 'SCHOOL' && !isMessageLoading;
+  const shouldDisplayYearBlock = metadataOnboarding === 'YEAR' && !isMessageLoading;
+  const shouldDisplayLinkedInBlock = metadataOnboarding === 'LINKEDIN' && !isMessageLoading;
+  const shouldDisplayMajorMinorBlock = metadataOnboarding === 'MAJOR&MINOR' && !isMessageLoading;
+  const shouldDisplayComplianceBlock = metadataOnboarding === 'COMPLIANCE' && !isMessageLoading;
 
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">
@@ -1826,7 +1838,7 @@ useEffect(() => {
 
           {/* Gestion dynamique des écoles avec au moins un menu déroulant visible */}
           
-          {metadataOnboarding === 'SCHOOL' && isResponseReceived && readyToDisplayStep && (
+          {shouldDisplaySchoolBlock && (
 
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
@@ -1904,7 +1916,7 @@ useEffect(() => {
 
 
 
-          {metadataOnboarding === 'YEAR' && isResponseReceived && readyToDisplayStep &&(
+          {shouldDisplayYearBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -1942,7 +1954,7 @@ useEffect(() => {
 
 
 
-          {metadataOnboarding === 'LINKEDIN' && isResponseReceived && (
+          {shouldDisplayLinkedInBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -1987,7 +1999,7 @@ useEffect(() => {
           )}
 
 
-          {metadataOnboarding === 'MAJOR&MINOR' && isResponseReceived && readyToDisplayStep &&(
+          {shouldDisplayMajorMinorBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -2090,7 +2102,7 @@ useEffect(() => {
 
 
 
-          {metadataOnboarding === 'COMPLIANCE' && isResponseReceived && readyToDisplayStep &&(
+          {shouldDisplayComplianceBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -2101,7 +2113,7 @@ useEffect(() => {
               }}
             >
               <label className="block text-sm font-medium text-gray-800 mb-4">
-                Final step before you’re in!
+                Final step before you're in!
               </label>
 
               {/* Checkbox 1 */}
