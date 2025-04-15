@@ -3,6 +3,7 @@ import { Box, Typography, Snackbar } from '@mui/material';
 import { FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
 import useAuthStore from '../../stores/useAuthStore';
 import useChatStore from '../../stores/useChatStore';
+import useFeedbackStore from '../../stores/useFeedbackStore';
 import { saveFeedback } from '../../api/chat';
 
 export const useForcedFeedback = () => {
@@ -18,35 +19,55 @@ export const useForcedFeedback = () => {
     return aiMessageCount > 0 && aiMessageCount % 4 === 0 && !feedbackStatus[lastMessage.id];
   };
 
+  const getLastAiMessageAndContext = () => {
+    if (!messages.length) return { aiMessage: null, humanMessage: null };
+    
+    // Trouver le dernier message de l'IA
+    const aiMessageIndex = [...messages].reverse().findIndex(msg => msg.type === 'ai');
+    if (aiMessageIndex === -1) return { aiMessage: null, humanMessage: null };
+    
+    const aiMessage = messages[messages.length - 1 - aiMessageIndex];
+    
+    // Trouver le message humain précédent
+    const humanMessageIndex = messages.length - 1 - aiMessageIndex - 1;
+    const humanMessage = humanMessageIndex >= 0 ? messages[humanMessageIndex] : null;
+    
+    return { aiMessage, humanMessage };
+  };
+
   return {
     shouldShowFeedback,
     feedbackStatus,
-    setFeedbackStatus
+    setFeedbackStatus,
+    getLastAiMessageAndContext
   };
 };
 
 export const ForcedFeedback: React.FC = () => {
   const { user } = useAuthStore();
   const { messages, currentChatId } = useChatStore();
+  const { getLastAiMessageAndContext, setFeedbackStatus } = useFeedbackStore();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const { feedbackStatus, setFeedbackStatus } = useForcedFeedback();
+  
+  const { aiMessage, humanMessage } = getLastAiMessageAndContext(messages);
 
   const handleFeedback = async (isPositive: boolean) => {
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage || !currentChatId || !user?.id) return;
+    if (!aiMessage || !currentChatId || !user?.id) return;
     
     try {
       await saveFeedback({
-        messageId: lastMessage.id,
+        messageId: aiMessage.id,
         chatSessionId: currentChatId,
         isPositive,
-        userId: user.id
+        userId: user.id,
+        aiMessageContent: aiMessage.content,
+        humanMessageContent: humanMessage?.content || ''
       });
-      setFeedbackStatus(prev => ({
-        ...prev,
-        [lastMessage.id]: true
-      }));
+
+      // Mettre à jour le statut du feedback dans le store global
+      setFeedbackStatus(aiMessage.id, true);
+
       setSnackbarMessage(isPositive ? 'Merci pour votre feedback positif !' : 'Merci pour votre feedback négatif !');
       setSnackbarOpen(true);
     } catch (error) {
@@ -69,7 +90,8 @@ export const ForcedFeedback: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '20px'
+          gap: '20px',
+          width: '100%'
         }}
       >
         <Typography variant="h6" sx={{ textAlign: 'center', color: '#333' }}>

@@ -303,11 +303,15 @@ export const saveFeedback = async ({
     chatSessionId,
     isPositive,
     userId,
+    aiMessageContent,
+    humanMessageContent,
 }: {
     messageId: number;
     chatSessionId: string;
     isPositive: boolean;
     userId: string;
+    aiMessageContent?: string;
+    humanMessageContent?: string;
 }) => {
     try {
         console.log("Preparing to send feedback:");
@@ -315,12 +319,16 @@ export const saveFeedback = async ({
         console.log("chatSessionId:", chatSessionId);
         console.log("isPositive:", isPositive);
         console.log("userId:", userId);
+        console.log("aiMessageContent:", aiMessageContent);
+        console.log("humanMessageContent:", humanMessageContent);
 
         const payload = {
             message_id: messageId,
             chat_id: chatSessionId,
             is_positive: isPositive,
             user_id: userId,
+            ai_message_content: aiMessageContent,
+            human_message_content: humanMessageContent,
         };
 
         const response = await fetch(`${apiUrlPrefix}/chat/save_feedback`, {
