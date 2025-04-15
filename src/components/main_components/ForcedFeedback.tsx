@@ -67,11 +67,11 @@ export const ForcedFeedback: React.FC = () => {
         humanMessageContent: humanMessage?.content || ''
       });
 
-      setSnackbarMessage(isPositive ? 'Merci pour votre feedback positif !' : 'Merci pour votre feedback négatif !');
+      setSnackbarMessage(isPositive ? 'Thank you for your positive feedback!' : 'Thank you for your negative feedback!');
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error saving feedback:', error);
-      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback, mais votre choix a été pris en compte localement');
+      setSnackbarMessage('An error occurred while saving your feedback, but your choice has been recorded locally');
       setSnackbarOpen(true);
     }
   };
@@ -80,21 +80,21 @@ export const ForcedFeedback: React.FC = () => {
     <>
       <div className="w-full max-w-2xl mx-auto mt-4 bg-white/50 backdrop-blur-lg border border-white/20 rounded-lg p-4">
         <h3 className="text-center text-gray-800 text-lg font-medium mb-3">
-          Comment évaluez-vous cette réponse ?
+          How do you like this answer?
         </h3>
         <div className="flex justify-center space-x-8">
           <button
             onClick={() => handleFeedback(false)}
             className="flex flex-col items-center group transition-transform hover:scale-105"
           >
-            <span className="text-sm text-gray-600 mb-1">Pas satisfait</span>
+            <span className="text-sm text-gray-600 mb-1">Not satisfied</span>
             <FiThumbsDown className="text-red-400 text-xl group-hover:text-red-500" />
           </button>
           <button
             onClick={() => handleFeedback(true)}
             className="flex flex-col items-center group transition-transform hover:scale-105"
           >
-            <span className="text-sm text-gray-600 mb-1">Satisfait</span>
+            <span className="text-sm text-gray-600 mb-1">Satisfied</span>
             <FiThumbsUp className="text-green-400 text-xl group-hover:text-green-500" />
           </button>
         </div>

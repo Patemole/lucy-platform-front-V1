@@ -199,6 +199,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
       handleSendSCHOOLMessage,
       handleSendYEARMessage,
       handleSendLINKEDINMessage,
+      handleSendINSTAGRAMMessage,
       handleSendMAJORMINORMessage,
       handleSendCOMPLIANCEMessage,
   } = useOnboarding({
@@ -410,6 +411,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             handleSendSCHOOLMessage={handleSendSCHOOLMessage}
             handleSendYEARMessage={handleSendYEARMessage}
             handleSendLINKEDINMessage={handleSendLINKEDINMessage}
+            handleSendINSTAGRAMMessage={handleSendINSTAGRAMMessage}
             handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
             handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
             hasStartedStreaming={hasStartedStreaming}
