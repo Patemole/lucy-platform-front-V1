@@ -8,7 +8,7 @@ import {
   AuthErrorCodes // Import specific error codes for better handling
 } from 'firebase/auth';
 import { auth, db } from '../../auth/firebase';
-import { doc, setDoc, getDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, Timestamp, serverTimestamp, updateDoc } from 'firebase/firestore';
 import useAuthStore from '../../stores/useAuthStore'; // Import the Zustand store
 import useChatStore from '../../stores/useChatStore'; // Import the Chat store
 import { useTheme } from '@mui/material/styles';
@@ -19,6 +19,7 @@ import config from '../../config';
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { v4 as uuidv4 } from 'uuid';
 import { useRef } from 'react';
+import { sendUserInfoLinkedInScraping } from '../../api/auth_and_onboarding';
 
 
 const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
@@ -146,14 +147,21 @@ export default function SignUp() {
       const result = await signInWithPopup(auth, provider);
       const ssoUser = result.user;
 
+      let firstName = '';
+      let lastName = '';
+
       try {
         const credential = OAuthProvider.credentialFromResult(result);
         if (credential?.idToken) {
-            const payload = JSON.parse(atob(credential.idToken.split('.')[1]));
-            console.log("📝 [SSO Harmonisée - SignUp] Payload OIDC:", payload);
+          const payload = JSON.parse(atob(credential.idToken.split('.')[1]));
+          console.log("📝 [SSO Harmonisée - SignUp] Payload OIDC:", payload);
+          
+          // Extraire le prénom et le nom du payload OIDC
+          firstName = payload.given_name || '';
+          lastName = payload.family_name || '';
         }
       } catch (tokenError) {
-          console.warn("⚠️ [SSO Harmonisée - SignUp] Impossible de parser les détails du token OIDC:", tokenError);
+        console.warn("⚠️ [SSO Harmonisée - SignUp] Impossible de parser les détails du token OIDC:", tokenError);
       }
 
       console.log("✅ [SSO Harmonisée - SignUp] Utilisateur connecté via SSO :", ssoUser.email, "| UID :", ssoUser.uid);
@@ -195,8 +203,7 @@ export default function SignUp() {
         };
         await setDoc(chatDocRef, initialChatData);
 
-        console.log("✅ [SSO Harmonisée - SignUp] Firestore: Utilisateur et chat initial créés.");
-
+        // Mettre à jour le store avec les données initiales
         const userForStore = {
           id: newUserFirestoreData.uid,
           email: newUserFirestoreData.email,
@@ -209,12 +216,33 @@ export default function SignUp() {
           interests: newUserFirestoreData.interests,
           year: newUserFirestoreData.year,
           faculty: newUserFirestoreData.faculty,
-          linkedin_profile: newUserFirestoreData.linkedin_profile,
+          linkedin_profile: null,
           createdAt: new Date(),
           chatsessions: newUserFirestoreData.chatsessions,
         };
         setUser(userForStore);
-        console.log("🔄 [SSO Harmonisée - SignUp] Store Zustand mis à jour pour le nouvel utilisateur.");
+
+        // Lancer la requête LinkedIn en parallèle
+        sendUserInfoLinkedInScraping({
+          firstName,
+          lastName,
+          university,
+          userId: ssoUser.uid
+        }).then(linkedInFound => {
+          // Mettre à jour Firestore quand la réponse arrive
+          updateDoc(userRef, { linkedin_profile: linkedInFound });
+          
+          // Mettre à jour le store local si l'utilisateur est toujours connecté
+          const currentUser = useAuthStore.getState().user;
+          if (currentUser && currentUser.id === ssoUser.uid) {
+            useAuthStore.getState().setUser({
+              ...currentUser,
+              linkedin_profile: linkedInFound
+            });
+          }
+        }).catch(error => {
+          console.error("Erreur lors de la vérification LinkedIn:", error);
+        });
 
       } else {
         console.log("🔄 [SSO Harmonisée - SignUp] Utilisateur existant trouvé. Récupération Firestore...");
@@ -261,6 +289,8 @@ export default function SignUp() {
 
     const data = new FormData(event.currentTarget);
     const firstName = data.get('firstName')?.toString().trim() || '';
+    const lastName = data.get('firstName')?.toString().trim() || '';
+    //const lastName = ''; // Pour l'inscription par email/mot de passe, nous n'avons pas le nom de famille
     const email = data.get('email')?.toString().trim() || '';
     const password = data.get('password')?.toString() || '';
 
@@ -326,10 +356,33 @@ export default function SignUp() {
       await setDoc(chatDocRef, chatData);
       console.log("✅ Firestore documents created manually.");
 
+      // Lancer la requête LinkedIn en parallèle
+      sendUserInfoLinkedInScraping({
+        firstName,
+        lastName,
+        university: subdomain,
+        userId: newUser.uid
+      }).then(linkedInFound => {
+        // Mettre à jour Firestore quand la réponse arrive
+        updateDoc(userDocRef, { linkedin_profile: linkedInFound });
+        
+        // Mettre à jour le store local si l'utilisateur est toujours connecté
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser && currentUser.id === newUser.uid) {
+          useAuthStore.getState().setUser({
+            ...currentUser,
+            linkedin_profile: linkedInFound
+          });
+        }
+      }).catch(error => {
+        console.error("Erreur lors de la vérification LinkedIn:", error);
+      });
+
+      // Continuer sans attendre la réponse
       console.log(`[Step 6a] Setting active chat in ChatStore to: ${chatId}`);
       useChatStore.getState().setActiveChat(chatId);
 
-      console.log(`[Step 7] Navigating to onboarding page for user ${newUser.uid}... (after 300ms delay)`);
+      console.log(`[Step 7] Navigating to onboarding page for user ${newUser.uid}...`);
       setTimeout(() => {
         navigate(`/onboarding-with-lucy/${newUser.uid}`, { replace: true });
       }, 300);

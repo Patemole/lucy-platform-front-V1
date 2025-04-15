@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../auth/firebase';
 import { saveOnboardingStep } from '../../../api/chat';
+import { sendUserInfoLinkedInScraping } from '../../../api/auth_and_onboarding';
 import { Message, StudentProfile, User } from '../../../interfaces/interfaces_eleve';
 import useAuthStore from '../../../stores/useAuthStore';
 import useChatStore from '../../../stores/useChatStore';
@@ -33,6 +34,8 @@ export const useOnboarding = ({
   // --- Refs ---
   const hasRunOnboardingCheckRef = useRef(false);
   const onboardingStartAttemptedRef = useRef(false);
+  const [skipLinkedInQuestion, setSkipLinkedInQuestion] = useState(false);
+  const linkedInCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- Constantes ---
   const onboardingMessages = [
@@ -43,6 +46,14 @@ export const useOnboarding = ({
     { question: "What is your major and minor?", metadata: "MAJOR&MINOR" },
     { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" },
   ];
+
+  // --- Fonction pour obtenir l'index de la prochaine question ---
+  const getNextQuestionIndex = useCallback((currentIndex: number) => {
+    if (currentIndex === 2 && skipLinkedInQuestion) { // 2 est l'index après INSTAGRAM
+      return 4; // Skip LINKEDIN (index 3) et aller directement à MAJOR&MINOR (index 4)
+    }
+    return currentIndex + 1;
+  }, [skipLinkedInQuestion]);
 
   // --- Fonctions Mémoisées (useCallback) ---
 
@@ -117,66 +128,60 @@ export const useOnboarding = ({
 
 
   // Fonction principale pour envoyer la prochaine question d'onboarding
-  // ACCEPTE MAINTENANT le tableau de messages courant comme argument
   const sendNextOnboardingMessage = useCallback(async (
     index: number,
-    currentMessagesSnom: Message[], // <-- Accepte le tableau de messages actuel
+    currentMessagesSnom: Message[],
     fieldToUpdate?: string | Record<string, any>,
     previousAnswer?: string
   ) => {
     const currentUserId = useAuthStore.getState().user?.id;
     const currentChatId = useAuthStore.getState().chatIds[0];
-    let messagesAfterUpdate = [...currentMessagesSnom]; // Travailler sur une copie
+    let messagesAfterUpdate = [...currentMessagesSnom];
 
-    // --- Partie 1: Gestion de la fin de l'onboarding ---
     if (index >= onboardingMessages.length) {
       console.log("[useOnboarding] Fin de l'index, tentative de finalisation.");
       await updateUserField({ onboardingComplete: true });
 
-      // Le message humain a déjà été ajouté par la fonction handleSend... appelante
-      // Sauvegarder l'étape humaine si previousAnswer existe
       if (previousAnswer && currentUserId && currentChatId) {
-         const lastStep = onboardingMessages[onboardingMessages.length - 1];
-         try {
-            console.log(`[useOnboarding] Sauvegarde dernière étape humaine (métadata: ${lastStep.metadata}).`);
-            await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, metadata: lastStep.metadata, message: previousAnswer, type: 'human' });
-         } catch (error) { console.error(`❌ Erreur saveOnboardingStep (fin, humain) pour ${lastStep.metadata}:`, error); }
+        const lastStep = onboardingMessages[onboardingMessages.length - 1];
+        try {
+          console.log(`[useOnboarding] Sauvegarde dernière étape humaine (métadata: ${lastStep.metadata}).`);
+          await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, metadata: lastStep.metadata, message: previousAnswer, type: 'human' });
+        } catch (error) { console.error(`❌ Erreur saveOnboardingStep (fin, humain) pour ${lastStep.metadata}:`, error); }
       }
 
-      // Mettre à jour le champ utilisateur (déjà fait dans handleSend... si fieldToUpdate était string)
-       if (typeof fieldToUpdate === 'object') { // Gérer le cas où c'est un objet (MAJOR&MINOR)
-         await updateUserField(fieldToUpdate);
-       }
+      if (typeof fieldToUpdate === 'object') {
+        await updateUserField(fieldToUpdate);
+      }
 
       const loadingAiMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy', isLoading: true };
-      const historyForSubmit = [...messagesAfterUpdate, loadingAiMessage]; // Utiliser la copie à jour
-      setMessages(historyForSubmit); // Mettre à jour le store avec le loading msg
+      const historyForSubmit = [...messagesAfterUpdate, loadingAiMessage];
+      setMessages(historyForSubmit);
 
       console.log("🏁 [useOnboarding] Onboarding terminé, appel de onSubmit pour message final.");
       setIsStreaming(true);
       await onSubmit(historyForSubmit, '');
-
-      return; // Fin de la fonction ici
+      return;
     }
 
-    // --- Partie 2: Gestion de l'envoi d'une question d'onboarding ---
+    // Si on doit sauter la question LinkedIn
+    if (index === 3 && skipLinkedInQuestion) {
+      console.log("[useOnboarding] Saut de la question LinkedIn car profil déjà trouvé");
+      return sendNextOnboardingMessage(4, messagesAfterUpdate, fieldToUpdate, previousAnswer);
+    }
+
     console.log(`[useOnboarding] Préparation étape ${index}.`);
     setIsLandingPageVisible(false);
     setRelatedQuestions([]);
-    setIsStreaming(true); // Pour le message AI qui va arriver
+    setIsStreaming(true);
 
     const { question, metadata } = onboardingMessages[index];
     const onboardingMessageId = generateUniqueId();
 
-    // Ajouter le message AI placeholder à la copie actuelle
     const loadingMessage: Message = { id: onboardingMessageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata, isLoading: true };
     messagesAfterUpdate = [...messagesAfterUpdate, loadingMessage];
-    setMessages(messagesAfterUpdate); // Mettre à jour le store
+    setMessages(messagesAfterUpdate);
 
-    // Mettre à jour le profil (déjà fait dans handleSend... si applicable)
-    // if (index > 0 && fieldToUpdate) { await updateUserField(fieldToUpdate, previousAnswer); }
-
-    // Sauvegarder l'étape AI
     if (currentUserId && currentChatId) {
       try {
         console.log(`[useOnboarding] Sauvegarde étape AI (métadata: ${metadata}).`);
@@ -184,18 +189,13 @@ export const useOnboarding = ({
       } catch (error) { console.error(`❌ Erreur saveOnboardingStep (AI) pour ${metadata}:`, error); }
     }
 
-    // Simuler le streaming, en passant la copie à jour des messages
     await new Promise((resolve) => setTimeout(resolve, 300));
-    messagesAfterUpdate = await fakeStreamMessage(question, metadata, onboardingMessageId, messagesAfterUpdate); // Récupère le tableau mis à jour
+    messagesAfterUpdate = await fakeStreamMessage(question, metadata, onboardingMessageId, messagesAfterUpdate);
 
     setIsStreaming(false);
     console.log(`[useOnboarding] Étape ${index} ("${metadata}") affichée.`);
 
-  }, [ // Mettre à jour les dépendances si nécessaire
-    generateUniqueId, setMessages, updateUserField, saveOnboardingStep,
-    setIsLandingPageVisible, setRelatedQuestions, setIsStreaming,
-    onSubmit, fakeStreamMessage
-  ]);
+  }, [generateUniqueId, setMessages, updateUserField, saveOnboardingStep, setIsLandingPageVisible, setRelatedQuestions, setIsStreaming, onSubmit, fakeStreamMessage, skipLinkedInQuestion, onboardingMessages]);
 
 
   // --- useEffect Principal (pour démarrer l'onboarding) ---
@@ -289,10 +289,72 @@ export const useOnboarding = ({
       handleSendGeneric(yearMessage, 2, "YEAR", 'year');
   }, [handleSendGeneric]);
 
-  const handleSendINSTAGRAMMessage = useCallback((instagramMessage: string) => {
-      handleSendGeneric(instagramMessage, 3, "INSTAGRAM", 'instagram_username');
-  }, [handleSendGeneric]);
+  // Fonction pour vérifier périodiquement si linkedin_profile a été mis à jour
+  const checkLinkedInProfile = useCallback((maxAttempts = 10) => {
+    let attempts = 0;
 
+    const check = () => {
+      const user = useAuthStore.getState().user;
+      if (user?.linkedin_profile !== undefined) {
+        // Profile trouvé, on met à jour skipLinkedInQuestion
+        setSkipLinkedInQuestion(!!user.linkedin_profile);
+        if (linkedInCheckTimeoutRef.current) {
+          clearTimeout(linkedInCheckTimeoutRef.current);
+        }
+      } else if (attempts < maxAttempts) {
+        // Continuer à vérifier toutes les secondes
+        attempts++;
+        linkedInCheckTimeoutRef.current = setTimeout(check, 1000);
+      }
+    };
+
+    check();
+
+    // Cleanup function
+    return () => {
+      if (linkedInCheckTimeoutRef.current) {
+        clearTimeout(linkedInCheckTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Modifier handleSendINSTAGRAMMessage pour utiliser le nouveau système de vérification
+  const handleSendINSTAGRAMMessage = useCallback(async (instagramMessage: string) => {
+    const currentMessages = useChatStore.getState().messages;
+    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: instagramMessage };
+    const messagesWithHuman = [...currentMessages, newMessage];
+    setMessages(messagesWithHuman);
+
+    const currentUserId = useAuthStore.getState().user?.id;
+    const currentChatId = useAuthStore.getState().chatIds[0];
+
+    if (currentUserId && currentChatId) {
+      try {
+        await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, message: instagramMessage, type: 'human', metadata: "INSTAGRAM" });
+      } catch(error) {
+        console.error(`❌ [useOnboarding] Erreur saveOnboardingStep (INSTAGRAM):`, error);
+      }
+    }
+
+    await updateUserField('instagram_username', instagramMessage);
+
+    // Vérifier si on a déjà une réponse LinkedIn dans le store
+    const user = useAuthStore.getState().user;
+    console.log("[useOnboarding] Vérification linkedin_profile:", user?.linkedin_profile);
+    
+    // Si linkedin_profile est true, on a trouvé un profil → skip la question
+    // Si linkedin_profile est false, on n'a pas trouvé de profil → poser la question
+    // Si linkedin_profile est undefined/null, pas de réponse encore → poser la question
+    setSkipLinkedInQuestion(user?.linkedin_profile === true);
+
+    // Utiliser getNextQuestionIndex pour déterminer la prochaine question
+    const nextIndex = getNextQuestionIndex(2); // 2 est l'index après INSTAGRAM
+    await sendNextOnboardingMessage(nextIndex, messagesWithHuman);
+
+  }, [generateUniqueId, setMessages, saveOnboardingStep, updateUserField, sendNextOnboardingMessage, getNextQuestionIndex, checkLinkedInProfile]);
+
+
+  
   const handleSendLINKEDINMessage = useCallback((linkedinMessage: string) => {
     handleSendGeneric(linkedinMessage, 4, "LINKEDIN", 'linkedin_url');
 }, [handleSendGeneric]);
@@ -309,6 +371,14 @@ export const useOnboarding = ({
       handleSendGeneric(summary, 6, "COMPLIANCE", { complianceAccepted: true, ...payload });
   }, [handleSendGeneric]);
 
+  // Cleanup lors du démontage du composant
+  useEffect(() => {
+    return () => {
+      if (linkedInCheckTimeoutRef.current) {
+        clearTimeout(linkedInCheckTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // --- Return ---
   return {

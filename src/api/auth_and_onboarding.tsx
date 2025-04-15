@@ -98,3 +98,41 @@ export const scrapeLinkedInProfile = async (linkedinUrl: string) => {
         return null;
     }
 };
+
+export const sendUserInfoLinkedInScraping = async ({
+  firstName,
+  lastName,
+  university,
+  userId
+}: {
+  firstName: string;
+  lastName: string;
+  university: string;
+  userId: string;
+}): Promise<boolean> => {
+  try {
+    const response = await fetch(`${apiUrlPrefix}/files/linkedin_scraping`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        first_name: firstName,
+        last_name: lastName,
+        university,
+        user_id: userId
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    // On suppose que le backend renvoie { linkedInFound: boolean }
+    return data.linkedInFound || false;
+  } catch (error) {
+    console.error('Error sending user signup info:', error);
+    return false; // En cas d'erreur, on retourne false pour poser la question
+  }
+};
