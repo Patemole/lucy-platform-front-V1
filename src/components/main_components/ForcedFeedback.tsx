@@ -55,8 +55,6 @@ export const ForcedFeedback: React.FC = () => {
   const handleFeedback = async (isPositive: boolean) => {
     if (!aiMessage || !currentChatId || !user?.id) return;
     
-    // Mettre à jour le statut du feedback dans le store global immédiatement
-    // pour une meilleure réactivité de l'UI
     setFeedbackStatus(aiMessage.id, true);
     
     try {
@@ -73,8 +71,6 @@ export const ForcedFeedback: React.FC = () => {
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error saving feedback:', error);
-      // Ne pas annuler la mise à jour du state local même en cas d'erreur
-      // pour éviter de bloquer l'utilisateur
       setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback, mais votre choix a été pris en compte localement');
       setSnackbarOpen(true);
     }
@@ -82,59 +78,27 @@ export const ForcedFeedback: React.FC = () => {
 
   return (
     <>
-      <Box
-        sx={{
-          backgroundColor: 'rgba(255, 255, 255, 0.5)',
-          backdropFilter: 'blur(60px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '20px',
-          width: '100%'
-        }}
-      >
-        <Typography variant="h6" sx={{ textAlign: 'center', color: '#333' }}>
+      <div className="w-full max-w-2xl mx-auto mt-4 bg-white/50 backdrop-blur-lg border border-white/20 rounded-lg p-4">
+        <h3 className="text-center text-gray-800 text-lg font-medium mb-3">
           Comment évaluez-vous cette réponse ?
-        </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'space-around', width: '100%' }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              cursor: 'pointer',
-              transition: 'transform 0.2s',
-              '&:hover': {
-                transform: 'scale(1.1)'
-              }
-            }}
+        </h3>
+        <div className="flex justify-center space-x-8">
+          <button
             onClick={() => handleFeedback(false)}
+            className="flex flex-col items-center group transition-transform hover:scale-105"
           >
-            <Typography sx={{ mb: 1, color: '#666' }}>Pas satisfait</Typography>
-            <FiThumbsDown size={24} style={{ color: '#f87171' }} />
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              cursor: 'pointer',
-              transition: 'transform 0.2s',
-              '&:hover': {
-                transform: 'scale(1.1)'
-              }
-            }}
+            <span className="text-sm text-gray-600 mb-1">Pas satisfait</span>
+            <FiThumbsDown className="text-red-400 text-xl group-hover:text-red-500" />
+          </button>
+          <button
             onClick={() => handleFeedback(true)}
+            className="flex flex-col items-center group transition-transform hover:scale-105"
           >
-            <Typography sx={{ mb: 1, color: '#666' }}>Satisfait</Typography>
-            <FiThumbsUp size={24} style={{ color: '#4ade80' }} />
-          </Box>
-        </Box>
-      </Box>
+            <span className="text-sm text-gray-600 mb-1">Satisfait</span>
+            <FiThumbsUp className="text-green-400 text-xl group-hover:text-green-500" />
+          </button>
+        </div>
+      </div>
 
       <Snackbar
         open={snackbarOpen}
