@@ -308,6 +308,8 @@ export const saveFeedback = async ({
     isPositive: boolean;
     userId: string;
 }) => {
+
+    console.log(`Enregistrement du feedback pour le message ${messageId}`);
     try {
         const response = await fetch(`${apiUrlPrefix}/chat/save_feedback`, {
             method: "POST",
@@ -322,10 +324,14 @@ export const saveFeedback = async ({
             }),
         });
 
+        console.log(`Réponse reçue pour l'enregistrement du feedback: ${response.status}`);
+
         if (!response.ok) {
             throw new Error(`Failed to save feedback - ${response.status}`);
         }
 
+        const jsonResponse = await response.json();
+        console.log(`Feedback enregistré avec succès:`, jsonResponse); // Ajout d'un console.log pour le feedback enregistré
         return await response.json();
     } catch (error) {
         console.error("Error saving feedback:", error);
