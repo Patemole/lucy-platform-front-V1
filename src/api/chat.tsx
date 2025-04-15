@@ -328,7 +328,7 @@ export const saveFeedback = async ({
             is_positive: isPositive,
             user_id: userId,
             ai_message_content: aiMessageContent,
-            human_message_content: humanMessageContent,
+            humain_message_content: humanMessageContent,
         };
 
         const response = await fetch(`${apiUrlPrefix}/chat/save_feedback`, {

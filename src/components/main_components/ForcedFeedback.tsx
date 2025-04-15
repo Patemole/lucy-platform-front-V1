@@ -55,6 +55,10 @@ export const ForcedFeedback: React.FC = () => {
   const handleFeedback = async (isPositive: boolean) => {
     if (!aiMessage || !currentChatId || !user?.id) return;
     
+    // Mettre à jour le statut du feedback dans le store global immédiatement
+    // pour une meilleure réactivité de l'UI
+    setFeedbackStatus(aiMessage.id, true);
+    
     try {
       await saveFeedback({
         messageId: aiMessage.id,
@@ -65,14 +69,13 @@ export const ForcedFeedback: React.FC = () => {
         humanMessageContent: humanMessage?.content || ''
       });
 
-      // Mettre à jour le statut du feedback dans le store global
-      setFeedbackStatus(aiMessage.id, true);
-
       setSnackbarMessage(isPositive ? 'Merci pour votre feedback positif !' : 'Merci pour votre feedback négatif !');
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error saving feedback:', error);
-      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback');
+      // Ne pas annuler la mise à jour du state local même en cas d'erreur
+      // pour éviter de bloquer l'utilisateur
+      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback, mais votre choix a été pris en compte localement');
       setSnackbarOpen(true);
     }
   };

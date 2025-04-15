@@ -529,6 +529,11 @@ useEffect(() => {
     const previousHumanMessage = currentMessageIndex > 0 ? 
       allMessages.slice(0, currentMessageIndex).reverse().find(msg => msg.type === 'human') : 
       null;
+
+    // Mettre à jour l'état local immédiatement pour une meilleure réactivité
+    setThumbsUpClicked(true);
+    setThumbsDownClicked(false);
+    useFeedbackStore.getState().setFeedbackStatus(messageId, true);
     
     try {
       await saveFeedback({
@@ -540,16 +545,11 @@ useEffect(() => {
         humanMessageContent: previousHumanMessage?.content || ''
       });
 
-      // Mettre à jour le statut du feedback dans le store global
-      useFeedbackStore.getState().setFeedbackStatus(messageId, true);
-
-      setThumbsUpClicked(true);
-      setThumbsDownClicked(false);
       setSnackbarMessage('Merci pour votre feedback positif !');
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error saving positive feedback:', error);
-      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback');
+      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback, mais votre choix a été pris en compte localement');
       setSnackbarOpen(true);
     }
   };
@@ -564,6 +564,11 @@ useEffect(() => {
     const previousHumanMessage = currentMessageIndex > 0 ? 
       allMessages.slice(0, currentMessageIndex).reverse().find(msg => msg.type === 'human') : 
       null;
+
+    // Mettre à jour l'état local immédiatement pour une meilleure réactivité
+    setThumbsDownClicked(true);
+    setThumbsUpClicked(false);
+    useFeedbackStore.getState().setFeedbackStatus(messageId, true);
     
     try {
       await saveFeedback({
@@ -575,16 +580,11 @@ useEffect(() => {
         humanMessageContent: previousHumanMessage?.content || ''
       });
 
-      // Mettre à jour le statut du feedback dans le store global
-      useFeedbackStore.getState().setFeedbackStatus(messageId, true);
-
-      setThumbsDownClicked(true);
-      setThumbsUpClicked(false);
       setSnackbarMessage('Merci pour votre feedback négatif !');
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error saving negative feedback:', error);
-      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback');
+      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback, mais votre choix a été pris en compte localement');
       setSnackbarOpen(true);
     }
   };
