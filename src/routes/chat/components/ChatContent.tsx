@@ -30,6 +30,7 @@ interface ChatContentProps {
     handleSendSCHOOLMessage: (value: string) => void;
     handleSendYEARMessage: (value: string) => void;
     handleSendLINKEDINMessage: (value: string) => void;
+    handleSendINSTAGRAMMessage: (value: string) => void;
     handleSendMAJORMINORMessage: (data: { majors: string[]; minors: string[] }) => void;
     handleSendCOMPLIANCEMessage: (data: { termsAccepted: boolean; ageConfirmed: boolean }) => void;
     hasStartedStreaming: boolean;
@@ -60,6 +61,7 @@ interface ChatContentProps {
     handleSendSCHOOLMessage,
     handleSendYEARMessage,
     handleSendLINKEDINMessage,
+    handleSendINSTAGRAMMessage,
     handleSendMAJORMINORMessage,
     handleSendCOMPLIANCEMessage,
     hasStartedStreaming,
@@ -181,6 +183,7 @@ interface ChatContentProps {
                         handleSendSCHOOLMessage={handleSendSCHOOLMessage}
                         handleSendYEARMessage={handleSendYEARMessage}
                         handleSendLINKEDINMessage={handleSendLINKEDINMessage}
+                        handleSendINSTAGRAMMessage={handleSendINSTAGRAMMessage}
                         handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
                         handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
                         hasStartedStreaming={hasStartedStreaming}

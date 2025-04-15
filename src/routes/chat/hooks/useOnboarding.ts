@@ -38,6 +38,7 @@ export const useOnboarding = ({
   const onboardingMessages = [
     { question: "What is your current school?", metadata: "SCHOOL" },
     { question: "What year are you in?", metadata: "YEAR" },
+    { question: "What's your Insta?", metadata: "INSTAGRAM" },
     { question: "What is you linkedin URL?", metadata: "LINKEDIN" },
     { question: "What is your major and minor?", metadata: "MAJOR&MINOR" },
     { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" },
@@ -288,20 +289,24 @@ export const useOnboarding = ({
       handleSendGeneric(yearMessage, 2, "YEAR", 'year');
   }, [handleSendGeneric]);
 
-  const handleSendLINKEDINMessage = useCallback((linkedinMessage: string) => {
-      handleSendGeneric(linkedinMessage, 3, "LINKEDIN", 'linkedin_url');
+  const handleSendINSTAGRAMMessage = useCallback((instagramMessage: string) => {
+      handleSendGeneric(instagramMessage, 3, "INSTAGRAM", 'instagram_username');
   }, [handleSendGeneric]);
+
+  const handleSendLINKEDINMessage = useCallback((linkedinMessage: string) => {
+    handleSendGeneric(linkedinMessage, 4, "LINKEDIN", 'linkedin_url');
+}, [handleSendGeneric]);
 
   const handleSendMAJORMINORMessage = useCallback(({ majors, minors }: { majors: string[]; minors: string[]; }) => {
       const content = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;
       // Pour MAJORMINOR, la mise à jour du profil est gérée par l'objet passé
-      handleSendGeneric(content, 4, "MAJOR&MINOR", { major: majors, minor: minors });
+      handleSendGeneric(content, 5, "MAJOR&MINOR", { major: majors, minor: minors });
   }, [handleSendGeneric]);
 
   const handleSendCOMPLIANCEMessage = useCallback((payload: { termsAccepted: boolean; ageConfirmed: boolean; }) => {
       const summary = `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
        // Pour COMPLIANCE, la mise à jour du profil est gérée par l'objet passé
-      handleSendGeneric(summary, 5, "COMPLIANCE", { complianceAccepted: true, ...payload });
+      handleSendGeneric(summary, 6, "COMPLIANCE", { complianceAccepted: true, ...payload });
   }, [handleSendGeneric]);
 
 
@@ -310,6 +315,7 @@ export const useOnboarding = ({
     handleSendSCHOOLMessage,
     handleSendYEARMessage,
     handleSendLINKEDINMessage,
+    handleSendINSTAGRAMMessage,
     handleSendMAJORMINORMessage,
     handleSendCOMPLIANCEMessage,
   };

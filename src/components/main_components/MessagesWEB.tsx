@@ -138,6 +138,7 @@ interface AIMessageProps {
   handleSendSCHOOLMessage?: (school_message: string) => void; // 👈 optionnel
   handleSendYEARMessage?: (year_message: string) => void; // 👈 optionnel
   handleSendLINKEDINMessage?: (url: string) => void; // 👈 optionnel
+  handleSendINSTAGRAMMessage?: (instagram_message: string) => void; // 👈 optionnel
   handleSendMAJORMINORMessage?: (data: { majors: string[]; minors: string[] }) => void;
   handleSendCOMPLIANCEMessage?: (payload: {termsAccepted: boolean; ageConfirmed: boolean;}) => void;
 
@@ -187,6 +188,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   handleSendLINKEDINMessage,
   handleSendMAJORMINORMessage,
   handleSendCOMPLIANCEMessage,
+  handleSendINSTAGRAMMessage,
   handleSendCOURSEMessage,
   drawerOpen,
   chartData,
@@ -235,6 +237,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   );
   const [learnerType, setLearnerType] = useState(user?.year || '');
   const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || '');
+  const [instagramUsername, setInstagramUsername] = useState(user?.instagram_username || '');
   const [termsChecked, setTermsChecked] = useState(user?.termsAccepted || false);
   const [ageChecked, setAgeChecked] = useState(user?.ageConfirmed || false); 
   
@@ -649,6 +652,12 @@ useEffect(() => {
     //setLinkedinUrl('');
   };
 
+  const handleSendINSTAGRAMClick = () => {
+    if (handleSendINSTAGRAMMessage && instagramUsername) {
+      handleSendINSTAGRAMMessage(instagramUsername);
+    }
+    //setInstagramUsername('');
+  };
 
   const handleSendMajorMinorClick = () => {
     const cleanedMajors = majors.filter((m: string) => m.trim() !== '');
@@ -708,6 +717,7 @@ useEffect(() => {
   // Dépend maintenant uniquement de la présence de metadata et de la fin du chargement du message
   const shouldDisplaySchoolBlock = metadataOnboarding === 'SCHOOL' && !isMessageLoading;
   const shouldDisplayYearBlock = metadataOnboarding === 'YEAR' && !isMessageLoading;
+  const shouldDisplayInstagramBlock = metadataOnboarding === 'INSTAGRAM' && !isMessageLoading;
   const shouldDisplayLinkedInBlock = metadataOnboarding === 'LINKEDIN' && !isMessageLoading;
   const shouldDisplayMajorMinorBlock = metadataOnboarding === 'MAJOR&MINOR' && !isMessageLoading;
   const shouldDisplayComplianceBlock = metadataOnboarding === 'COMPLIANCE' && !isMessageLoading;
@@ -2011,6 +2021,50 @@ useEffect(() => {
 
 
 
+          {shouldDisplayInstagramBlock && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
+                Don't worry, just helps me get your vibe a bit better
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center border border-gray-300 rounded-lg bg-white px-2 py-1 w-full">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                    alt="Instagram"
+                    className="w-5 h-5 mr-2"
+                  />
+                  <input
+                    type="text"
+                    value={instagramUsername}
+                    onChange={(e) => setInstagramUsername(e.target.value)}
+                    placeholder="Instagram username"
+                    className="w-full text-sm focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleSendINSTAGRAMClick}
+                  disabled={!instagramUsername}
+                  className={`flex items-center px-4 py-2 text-sm rounded-lg ${
+                    !instagramUsername
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-600'
+                      : 'text-white bg-gray-800 hover:bg-gray-900'
+                  }`}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+
           {shouldDisplayLinkedInBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
@@ -2049,7 +2103,7 @@ useEffect(() => {
                       : 'text-white bg-gray-800 hover:bg-gray-900'
                   }`}
                 >
-                  Send
+                  Continue
                 </button>
               </div>
             </div>
