@@ -60,12 +60,7 @@ export async function startOnboarding() {
   const messageId = Date.now();
   const firstMessage = onboardingMessages[0];
 
-  // Préparer l'état initial
-  chatStore.setIsLandingPageVisible(false);
-  chatStore._setRelatedQuestions([]);
-  chatStore._setIsStreamingResponse(true);
-
-  // Créer et afficher le message initial
+  // Créer le message initial
   const initialMessage: Message = {
     id: messageId,
     type: 'ai',
@@ -75,7 +70,14 @@ export async function startOnboarding() {
     isLoading: true
   };
 
+  // Mettre à jour les états de manière optimisée
+  chatStore.setIsLandingPageVisible(false);
+  chatStore._setRelatedQuestions([]);
+  chatStore._setIsStreamingResponse(true);
   chatStore.setMessages([initialMessage]);
+
+  // Attendre un court instant pour laisser les transitions se terminer
+  await new Promise(resolve => setTimeout(resolve, 100));
 
   // Streamer le premier message
   await streamOnboardingMessage(

@@ -15,16 +15,21 @@ interface LoadingStepProps {
 const LoadingStep: React.FC<LoadingStepProps> = ({ label, isLoading, isComplete }) => (
   <div className="flex items-center gap-4 mb-4 w-full max-w-[280px]">
     <div className="w-6 flex justify-center">
-      {isLoading ? (
-        <CircularProgress size={20} />
-      ) : isComplete ? (
-        <CheckCircleIcon className="text-green-500" />
-      ) : (
-        <div className="w-5" /> // Placeholder pour l'alignement
-      )}
+      <div className="relative w-5 h-5">
+        {/* Utiliser des éléments superposés avec des transitions d'opacité */}
+        <div className={`absolute inset-0 transition-opacity duration-500 ${isLoading ? 'opacity-100' : 'opacity-0'}`}>
+          <CircularProgress size={20} />
+        </div>
+        <div className={`absolute inset-0 transition-opacity duration-500 ${isComplete ? 'opacity-100' : 'opacity-0'}`}>
+          <CheckCircleIcon className="text-green-500" />
+        </div>
+        <div className={`absolute inset-0 transition-opacity duration-500 ${!isLoading && !isComplete ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="w-5" /> {/* Placeholder pour l'alignement */}
+        </div>
+      </div>
     </div>
     <span
-      className={`text-sm md:text-base ${
+      className={`text-sm md:text-base transition-colors duration-500 ${
         isComplete 
           ? 'text-green-600 dark:text-green-400'
           : isLoading 
@@ -43,7 +48,7 @@ const LoadingScreen: React.FC = () => {
   const isAppInitialized = useAppInitializationStore((state) => state.isAppInitialized);
 
   return (
-    <Fade in={true}>
+    <Fade in={true} timeout={800}>
       <div className="min-h-screen w-full flex flex-col justify-center items-center px-4 bg-white dark:bg-gray-900">
         <div className="w-full max-w-md flex flex-col items-center">
           {/* Logo Container */}
