@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef,} from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../auth/firebase';
 import { doc, updateDoc} from 'firebase/firestore';
@@ -81,7 +81,9 @@ const OnboardingLucyQuestions: React.FC = ()=> {
     loadChatMessages, // Action from store
     clearChatState, // Action from store
     updateConversationTitleAndTopic, // Action from store
-    markSocialThreadAsRead // Action from store
+    markSocialThreadAsRead, // Action from store
+    updateLastAiMessage,
+    finalizeAiMessage,
   } = useChatStore(); // Use Zustand store
 
   //3. Messages et gestion du Chat - some states might be directly from store now
@@ -201,9 +203,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
       handleSendCOMPLIANCEMessage,
   } = useOnboarding({
       generateUniqueId,
-      hasStartedStreaming,
-      setHasStartedStreaming,
-      onSubmit,
+      //onSubmit,
   });
 
   const chatSessionId = chatIds[0] || 'default_chat_id';
@@ -407,7 +407,6 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             handleSendLINKEDINMessage={handleSendLINKEDINMessage}
             handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
             handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
-            hasStartedStreaming={hasStartedStreaming}
             handlePrivacyChange={handlePrivacyToggleClick}
             setIsAtBottom={setIsAtBottom}
             setNewMessagesCount={setNewMessagesCount}

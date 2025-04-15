@@ -32,7 +32,7 @@ interface ChatContentProps {
     handleSendLINKEDINMessage: (value: string) => void;
     handleSendMAJORMINORMessage: (data: { majors: string[]; minors: string[] }) => void;
     handleSendCOMPLIANCEMessage: (data: { termsAccepted: boolean; ageConfirmed: boolean }) => void;
-    hasStartedStreaming: boolean;
+    //hasStartedStreaming: boolean;
     handlePrivacyChange: (newState: boolean) => void;
     setIsAtBottom: (val: boolean) => void;
     setNewMessagesCount: React.Dispatch<React.SetStateAction<number>>;
@@ -62,7 +62,7 @@ interface ChatContentProps {
     handleSendLINKEDINMessage,
     handleSendMAJORMINORMessage,
     handleSendCOMPLIANCEMessage,
-    hasStartedStreaming,
+    //hasStartedStreaming,
     handlePrivacyChange,
     setIsAtBottom,
     setNewMessagesCount,
@@ -178,7 +178,7 @@ interface ChatContentProps {
                         handleSendLINKEDINMessage={handleSendLINKEDINMessage}
                         handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
                         handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
-                        hasStartedStreaming={hasStartedStreaming}
+                        //hasStartedStreaming={hasStartedStreaming}
                     />
                     </div>
                 </div>

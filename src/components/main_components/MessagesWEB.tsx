@@ -149,7 +149,7 @@ interface AIMessageProps {
   linkedinData?: AnswerLINKEDIN[]| null;
   insta2Data?: AnswerINSTA2[] | null;
   metadataOnboarding?: string | null; //for onboarding
-  hasStartedStreaming?: boolean; // ✅ indique que le stream a démarré
+  //hasStartedStreaming?: boolean; // ✅ indique que le stream a démarré
 }
 
 export const AIMessage: React.FC<AIMessageProps> = ({
@@ -195,7 +195,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   linkedinData,
   insta2Data,
   metadataOnboarding,
-  hasStartedStreaming
+  //hasStartedStreaming
 }) => {
   // États pour la gestion des interactions utilisateur
   const { user, login, setPrimaryChatId, chatIds, isAuth, loading } = useAuth();
