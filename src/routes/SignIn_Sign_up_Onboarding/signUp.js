@@ -329,10 +329,8 @@ export default function SignUp() {
       console.log(`[Step 6a] Setting active chat in ChatStore to: ${chatId}`);
       useChatStore.getState().setActiveChat(chatId);
 
-      console.log(`[Step 7] Navigating to onboarding page for user ${newUser.uid}... (after 300ms delay)`);
-      setTimeout(() => {
-        navigate(`/onboarding-with-lucy/${newUser.uid}`, { replace: true });
-      }, 300);
+      console.log(`[Step 7] Navigating to onboarding page for user ${newUser.uid}...`);
+      navigate(`/onboarding-with-lucy/${newUser.uid}`, { replace: true });
 
     } catch (error) {
       console.error("❌ Sign Up failed:", error);

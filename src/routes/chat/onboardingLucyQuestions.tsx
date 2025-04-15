@@ -203,8 +203,8 @@ const OnboardingLucyQuestions: React.FC = ()=> {
       handleSendCOMPLIANCEMessage,
   } = useOnboarding({
       generateUniqueId,
-      hasStartedStreaming,
-      setHasStartedStreaming,
+      //hasStartedStreaming,
+      //setHasStartedStreaming,
       onSubmit,
   });
 

@@ -1,47 +1,64 @@
 import React, { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import useAuthStore from '../stores/useAuthStore'; // Importer le store Zustand
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
+import useAuthStore from '../stores/useAuthStore';
+import useChatStore from '../stores/useChatStore';
+import { useAppInitializationStore } from '../stores/useAppInitializationStore';
+import LoadingScreen from './LoadingScreen';
 
 const PrivateRoute: React.FC = () => {
-    // Utiliser useAuthStore pour récupérer l'état
-    const { isAuthenticated: isAuth, isLoading: loading, user } = useAuthStore(); 
+    // Auth Store
+    const { isAuthenticated: isAuth, isLoading: authLoading, user } = useAuthStore();
+    
+    // Chat Store
+    const {
+        isLoadingConversations,
+        isLoadingMessages,
+        currentChatId,
+        isLandingPageVisible,
+    } = useChatStore();
+
+    // App Initialization Store
+    const isAppInitialized = useAppInitializationStore((state) => state.isAppInitialized);
+
     const location = useLocation();
 
     useEffect(() => {
         console.log("PrivateRoute: Current location:", location.pathname);
-    }, [location]);
+        console.log("PrivateRoute: Auth state:", { isAuth, authLoading, userId: user?.id });
+        console.log("PrivateRoute: Data loading state:", {
+            isAppInitialized,
+            isLoadingConversations,
+            isLoadingMessages,
+            currentChatId,
+            isLandingPageVisible
+        });
+    }, [location, isAuth, authLoading, user, isAppInitialized, isLoadingConversations, isLoadingMessages, currentChatId, isLandingPageVisible]);
 
-    console.log("PrivateRoute: isAuth =", isAuth, ", loading =", loading);
+    // Vérifier si les données sont en cours de chargement
+    const isDataLoading = !isAppInitialized || 
+                         isLoadingConversations || 
+                         (!isLandingPageVisible && isLoadingMessages);
 
-    // Affiche un loader pendant le chargement
-    if (loading) {
-        console.log("PrivateRoute: Chargement en cours, affichage du loader.");
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress />
-            </Box>
-        );
+    // 1. Afficher le loader pendant le chargement de l'authentification
+    if (authLoading || isDataLoading) {
+        return <LoadingScreen />;
     }
 
-    // Redirige si l'utilisateur n'est pas authentifié
-    // On vérifie `isAuth` qui vient maintenant du store
+    // 2. Rediriger vers la connexion si non authentifié
     if (!isAuth) {
-        console.log("PrivateRoute: Utilisateur non authentifié (isAuth=", isAuth, "), redirection vers /auth/sign-in.");
-        // Redirige vers sign-in mais garde la location d'origine pour un potentiel retour
+        console.log("PrivateRoute: Utilisateur non authentifié, redirection vers /auth/sign-in");
         return <Navigate to="/auth/sign-in" state={{ from: location }} replace />;
     }
 
-    // Redirige depuis `/` vers le tableau de bord de l'utilisateur si authentifié
+    // 3. Rediriger depuis '/' vers le tableau de bord si authentifié
     if (location.pathname === '/' && user?.id) {
         console.log(`PrivateRoute: Redirection de '/' vers /onboarding-with-lucy/${user.id}`);
         return <Navigate to={`/onboarding-with-lucy/${user.id}`} replace />;
     }
     
-    // Si l'utilisateur est authentifié et n'est pas sur `/` ou si la redirection n'est pas nécessaire
-    console.log("PrivateRoute: Utilisateur authentifié (isAuth=", isAuth, "), accès aux routes protégées.");
-    return <Outlet />; // Affiche le composant enfant correspondant à la route
+    // 4. Rendre le contenu protégé si tout est prêt
+    console.log("PrivateRoute: Tout est prêt, affichage du contenu protégé");
+    return <Outlet />;
 };
 
 export default PrivateRoute;

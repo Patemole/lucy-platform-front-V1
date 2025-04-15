@@ -2,6 +2,8 @@ import useAuthStore from '../stores/useAuthStore';
 import useChatStore from '../stores/useChatStore';
 import { useAppInitializationStore } from '../stores/useAppInitializationStore';
 import { Unsubscribe } from 'firebase/firestore'; // Importer pour le type de retour de fetchSocialThreads
+import { Message } from '../interfaces/interfaces_eleve';
+import { startOnboarding } from '../services/onboardingService';
 
 // Variables globales pour garder une trace des fonctions de désinscription
 let privateConversationsUnsubscribe: Unsubscribe | null = null;
@@ -75,17 +77,20 @@ export const initializeAppLogic = async (): Promise<void> => {
     socialThreadsUnsubscribe = chatStore.fetchSocialThreads();
     console.log(`[initializeAppLogic] Social threads listener initialized.`);
 
-    // 5. --- SUPPRIMÉ --- La logique de détermination et d'activation du chat initial
-    //    est maintenant gérée directement dans le callback onSnapshot de `fetchConversations`.
+    // 5. Vérifier si l'onboarding est nécessaire
+    if (!user.onboardingComplete) {
+      console.log("[initializeAppLogic] User needs onboarding. Starting onboarding sequence...");
+      await startOnboarding();
+    }
 
-    console.log("[initializeAppLogic] Listener initialization process seemingly completed.");
+    console.log("[initializeAppLogic] Listener initialization process completed.");
     // Le chat actif sera défini par le callback de fetchConversations s'il y a des conversations.
 
   } catch (error) {
     console.error("[initializeAppLogic] Error during listener initialization:", error);
     // En cas d'erreur ici, les listeners pourraient ne pas être actifs.
     // clearChatState pourrait être appelé ici aussi pour être sûr.
-    // chatStore.clearChatState();
+    chatStore.clearChatState();
   } finally {
     // 6. Marquer l'initialisation comme terminée (géré par App.tsx)
     // On ne le fait plus ici pour éviter les conflits avec App.tsx
