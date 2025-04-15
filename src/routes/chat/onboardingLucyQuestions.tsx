@@ -4,6 +4,7 @@ import { db } from '../../auth/firebase';
 import { doc, updateDoc} from 'firebase/firestore';
 import useAuthStore from '../../stores/useAuthStore';
 import useChatStore from '../../stores/useChatStore';
+import useFeedbackStore from '../../stores/useFeedbackStore';
 import {EventStudentProfile, SocialThread} from '../../interfaces/interfaces_eleve';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
@@ -28,7 +29,7 @@ import TopHeader from './components/TopHeader';
 import Popups from './components/Popups';
 import ChatContent from './components/ChatContent';
 import RelatedQuestions from './components/RelatedQuestions';
-import ForcedFeedback, { useForcedFeedback } from '../../components/main_components/ForcedFeedback';
+import ForcedFeedback from '../../components/main_components/ForcedFeedback';
 
 
 //For Topic of the conversations
@@ -209,8 +210,8 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
   const chatSessionId = chatIds[0] || 'default_chat_id';
 
-  // Ajout du hook useForcedFeedback
-  const { shouldShowFeedback, feedbackStatus, setFeedbackStatus } = useForcedFeedback();
+  //from feedback
+  const { shouldShowFeedback } = useFeedbackStore();
 
   /*
    * NOTE: L'initialisation de l'application a été centralisée
@@ -472,7 +473,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                     zIndex: 2,
                   }}
                 >
-                  {shouldShowFeedback() ? (
+                  {shouldShowFeedback(messages, isStreaming) ? (
                     <ForcedFeedback />
                   ) : (
                     <>
@@ -594,7 +595,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                       position: 'relative',
                     }}
                   >
-                    {shouldShowFeedback() ? (
+                    {shouldShowFeedback(messages, isStreaming) ? (
                       <ForcedFeedback />
                     ) : (
                       <>

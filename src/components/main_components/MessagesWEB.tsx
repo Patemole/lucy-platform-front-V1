@@ -24,9 +24,10 @@ import {
   AnswerLINKEDIN,
   AnswerINSTA2,
   AnswerERROR,
-  AnswerACCURACYSCORE
+  AnswerACCURACYSCORE,
+  Message
 
-} from "../../interfaces/interfaces";
+} from "../../interfaces/interfaces_eleve";
 import { IconButton } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -56,6 +57,7 @@ import useAuthStore from '../../stores/useAuthStore';
 import { saveFeedback } from '../../api/chat';
 import { Snackbar } from '@mui/material';
 import useChatStore from '../../stores/useChatStore';
+import useFeedbackStore from '../../stores/useFeedbackStore';
 
 
 
@@ -520,13 +522,27 @@ useEffect(() => {
   const handleThumbsUp = async () => {
     if (!messageId || !currentChatId || !user?.id) return;
     
+    // Trouver le message actuel et le message humain précédent dans les messages du store
+    const allMessages = useChatStore.getState().messages;
+    const currentMessage = allMessages.find(msg => msg.id === messageId);
+    const currentMessageIndex = allMessages.findIndex(msg => msg.id === messageId);
+    const previousHumanMessage = currentMessageIndex > 0 ? 
+      allMessages.slice(0, currentMessageIndex).reverse().find(msg => msg.type === 'human') : 
+      null;
+    
     try {
       await saveFeedback({
         messageId,
         chatSessionId: currentChatId,
         isPositive: true,
-        userId: user.id
+        userId: user.id,
+        aiMessageContent: currentMessage?.content || '',
+        humanMessageContent: previousHumanMessage?.content || ''
       });
+
+      // Mettre à jour le statut du feedback dans le store global
+      useFeedbackStore.getState().setFeedbackStatus(messageId, true);
+
       setThumbsUpClicked(true);
       setThumbsDownClicked(false);
       setSnackbarMessage('Merci pour votre feedback positif !');
@@ -541,13 +557,27 @@ useEffect(() => {
   const handleThumbsDown = async () => {
     if (!messageId || !currentChatId || !user?.id) return;
     
+    // Trouver le message actuel et le message humain précédent dans les messages du store
+    const allMessages = useChatStore.getState().messages;
+    const currentMessage = allMessages.find(msg => msg.id === messageId);
+    const currentMessageIndex = allMessages.findIndex(msg => msg.id === messageId);
+    const previousHumanMessage = currentMessageIndex > 0 ? 
+      allMessages.slice(0, currentMessageIndex).reverse().find(msg => msg.type === 'human') : 
+      null;
+    
     try {
       await saveFeedback({
         messageId,
         chatSessionId: currentChatId,
         isPositive: false,
-        userId: user.id
+        userId: user.id,
+        aiMessageContent: currentMessage?.content || '',
+        humanMessageContent: previousHumanMessage?.content || ''
       });
+
+      // Mettre à jour le statut du feedback dans le store global
+      useFeedbackStore.getState().setFeedbackStatus(messageId, true);
+
       setThumbsDownClicked(true);
       setThumbsUpClicked(false);
       setSnackbarMessage('Merci pour votre feedback négatif !');
