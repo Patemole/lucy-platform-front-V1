@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import useAuthStore from '../stores/useAuthStore';
-import useChatStore from '../stores/useChatStore';
 import { useAppInitializationStore } from '../stores/useAppInitializationStore';
 import LoadingScreen from './LoadingScreen';
 
@@ -9,14 +8,6 @@ const PrivateRoute: React.FC = () => {
     // Auth Store
     const { isAuthenticated: isAuth, isLoading: authLoading, user } = useAuthStore();
     
-    // Chat Store
-    const {
-        isLoadingConversations,
-        isLoadingMessages,
-        currentChatId,
-        isLandingPageVisible,
-    } = useChatStore();
-
     // App Initialization Store
     const isAppInitialized = useAppInitializationStore((state) => state.isAppInitialized);
 
@@ -25,22 +16,11 @@ const PrivateRoute: React.FC = () => {
     useEffect(() => {
         console.log("PrivateRoute: Current location:", location.pathname);
         console.log("PrivateRoute: Auth state:", { isAuth, authLoading, userId: user?.id });
-        console.log("PrivateRoute: Data loading state:", {
-            isAppInitialized,
-            isLoadingConversations,
-            isLoadingMessages,
-            currentChatId,
-            isLandingPageVisible
-        });
-    }, [location, isAuth, authLoading, user, isAppInitialized, isLoadingConversations, isLoadingMessages, currentChatId, isLandingPageVisible]);
+        console.log("PrivateRoute: App initialization state:", { isAppInitialized });
+    }, [location, isAuth, authLoading, user, isAppInitialized]);
 
-    // Vérifier si les données sont en cours de chargement
-    const isDataLoading = !isAppInitialized || 
-                         isLoadingConversations || 
-                         (!isLandingPageVisible && isLoadingMessages);
-
-    // 1. Afficher le loader pendant le chargement de l'authentification
-    if (authLoading || isDataLoading) {
+    // 1. Afficher le loader pendant le chargement de l'authentification ou l'initialisation
+    if (authLoading || !isAppInitialized) {
         return <LoadingScreen />;
     }
 
