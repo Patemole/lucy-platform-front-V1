@@ -81,11 +81,15 @@ interface ChatContentProps {
         ) : (
         <section
             aria-label="Chat content"
-            className="flex-grow overflow-y-auto"
-            style={{ backgroundColor: 'transparent', paddingBottom: '100px' }}
+            className="flex-grow"
+            style={{ 
+              backgroundColor: 'transparent', 
+              paddingBottom: '100px',
+              overflow: 'hidden',
+              height: '0'
+            }}
         >
             <div
-            //className="flex flex-col space-y-2 p-4"
             className={`flex flex-col space-y-2 ${isSmallScreen ? 'px-1 py-4' : 'p-4'}`}
             ref={scrollableDivRef}
             onScroll={() => {
@@ -99,7 +103,8 @@ interface ChatContentProps {
             }}
             style={{
                 overflowY: 'auto',
-                maxHeight: '100%',
+                height: '100%',
+                touchAction: 'manipulation',
             }}
             >
             {messages.map((message, index) =>
