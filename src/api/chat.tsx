@@ -296,6 +296,7 @@ export const saveOnboardingStep = async ({
     }
   };
   
+  
 //NOUVELLE FONCTION POUR ENREGISTRER LE FEEDBACK SANS POPUP
 export const saveFeedback = async ({
     messageId,
@@ -308,31 +309,37 @@ export const saveFeedback = async ({
     isPositive: boolean;
     userId: string;
 }) => {
-
-    console.log(`Enregistrement du feedback pour le message ${messageId}`);
     try {
+        console.log("Preparing to send feedback:");
+        console.log("messageId:", messageId);
+        console.log("chatSessionId:", chatSessionId);
+        console.log("isPositive:", isPositive);
+        console.log("userId:", userId);
+
+        const payload = {
+            message_id: messageId,
+            chat_id: chatSessionId,
+            is_positive: isPositive,
+            user_id: userId,
+        };
+
         const response = await fetch(`${apiUrlPrefix}/chat/save_feedback`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                message_id: messageId,
-                chat_id: chatSessionId,
-                is_positive: isPositive,
-                user_id: userId,
-            }),
+            body: JSON.stringify(payload),
         });
-
-        console.log(`Réponse reçue pour l'enregistrement du feedback: ${response.status}`);
 
         if (!response.ok) {
             throw new Error(`Failed to save feedback - ${response.status}`);
         }
 
-        const jsonResponse = await response.json();
-        console.log(`Feedback enregistré avec succès:`, jsonResponse); // Ajout d'un console.log pour le feedback enregistré
-        return await response.json();
+        // lire d'abord la réponse
+        const responseData = await response.json();
+        console.log("Feedback enregistré avec succès:", responseData);
+
+        return responseData;
     } catch (error) {
         console.error("Error saving feedback:", error);
         throw error;
