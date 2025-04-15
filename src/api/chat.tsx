@@ -28,63 +28,6 @@ export interface SendMessageRequest {
 }
 
 
-
-
-/*
-export async function getChatHistory(chat_id: string) {
-    const getChatHistoryResponse = await fetch(
-        `${apiUrlPrefix}/chat/get_chat_history/${chat_id}`,
-        {
-            method: "GET",
-        }
-    );
-    if (!getChatHistoryResponse.ok) {
-        console.log(
-            `Failed to get chat history - ${getChatHistoryResponse.status}`
-        );
-        throw Error("Failed to get chat history");
-    }
-    const responseBody = await getChatHistoryResponse.json();
-
-    const messages: Message[] = responseBody.map((message: any) => {
-        const newMessage: Message = {
-            id: message['message_id'],
-            content: message['body'],
-            type: message['username'] === "Lucy" ? "ai" : "human", // type de message, qui est "ai" si le username est "TAI", sinon "human".
-            METADATAONBOARDING: undefined, // initialisé proprement
-            citedDocuments: message['documents'] || [], // 👈 sécurité supplémentaire //to recuperer les sources du backend
-        };
-
-        if (Object.prototype.hasOwnProperty.call(message, 'step_metadata')) {
-            newMessage.METADATAONBOARDING = Array.isArray(message.step_metadata)
-                ? message.step_metadata[0]
-                : message.step_metadata;
-        }
-
-
-        if (Object.prototype.hasOwnProperty.call(message, 'documents')) {
-            newMessage.citedDocuments = Array.isArray(message.documents)
-              ? message.documents.map((doc: any) => ({
-                  document_id: doc.document_id,
-                  document_name: doc.document_name,
-                  link: doc.link,
-                  source_type: doc.source_type
-                }))
-              : [];
-          }
-
-        if (Object.prototype.hasOwnProperty.call(message, 'documents')) {
-            newMessage.citedDocuments = message.documents;
-        }
-        return newMessage;
-    });
-
-    return messages;
-}
-*/
-
-
-
 //ANCIENNE FONCTION POUR RECUPERER L'HISTORIQUE DES MESSAGES QUI FONCTIONNE MAIS QUI NE RECUPERE PAS LES SOURCES, LE CONFIDENCE SCORE ET LE METADATAONBOARDING
 export async function getChatHistory(chat_id: string) {
     console.log(`🔍 Fetching chat history for chat_id: ${chat_id}`);
@@ -223,11 +166,6 @@ export async function* sendMessageSocraticLangGraph({
 
 
 
-
-
-
-
-
 //Endpoint to send a message
 export async function* sendMessageFakeDemo({
     message,
@@ -320,69 +258,6 @@ export const saveMessageAIToBackend = async ({
 };
 
 
-
-/*
-export const saveOnboardingStep = async ({
-    chatId,
-    userId,
-    metadata,
-    question,
-    answer,
-    isLastStep = false, // 👈 Paramètre supplémentaire avec valeur par défaut à false
-  }: {
-    chatId: string;
-    userId: string;
-    metadata: string;
-    question: string;
-    answer: string;
-    isLastStep?: boolean; // 👈 optionnel
-  }) => {
-    try {
-      // Message AI (Lucy) avec metadata
-      if (!isLastStep) {
-      await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: question,
-          chatSessionId: chatId,
-          courseId: 'onboarding_course', // ou "" si inutile
-          username: 'Lucy',
-          type: 'ai',
-          uid: userId,
-          input_message: '',
-          university: 'onboarding', // ou user.university
-          metadataOnboarding: metadata, // 👈 à ajouter dans le backend
-        }),
-      });
-    }
-  
-      // Message de l'étudiant
-      if (answer && answer.trim() !== '') {
-      await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: answer,
-          chatSessionId: chatId,
-          courseId: 'onboarding_course',
-          username: 'onboardingstudent', // 👈 distinct pour pouvoir filtrer
-          type: 'human',
-          uid: userId,
-          input_message: '',
-          university: 'onboarding',
-        }),
-      });
-    }
-  
-      console.log(`✅ Onboarding step '${metadata}' saved as two messages`);
-    } catch (error) {
-      console.error('❌ Error saving onboarding step:', error);
-    }
-  };
-*/
-
-
 export const saveOnboardingStep = async ({
     chatId,
     userId,
@@ -421,5 +296,42 @@ export const saveOnboardingStep = async ({
     }
   };
   
+//NOUVELLE FONCTION POUR ENREGISTRER LE FEEDBACK SANS POPUP
+export const saveFeedback = async ({
+    messageId,
+    chatSessionId,
+    isPositive,
+    userId,
+}: {
+    messageId: number;
+    chatSessionId: string;
+    isPositive: boolean;
+    userId: string;
+}) => {
+    try {
+        const response = await fetch(`${apiUrlPrefix}/chat/save_feedback`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                message_id: messageId,
+                chat_id: chatSessionId,
+                is_positive: isPositive,
+                user_id: userId,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to save feedback - ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Error saving feedback:", error);
+        throw error;
+    }
+};
+
 
 
