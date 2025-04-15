@@ -32,6 +32,7 @@ const useFeedbackStore = create<FeedbackStore>((set, get): FeedbackStore => ({
     const aiMessageCount = messages.filter(msg => msg.type === 'ai').length;
     return aiMessageCount > 0 && aiMessageCount % 4 === 0 && !get().feedbackStatus[lastMessage.id];
   },
+  
 
   getLastAiMessageAndContext: (messages: Message[]) => {
     if (!messages.length) return { aiMessage: null, humanMessage: null };
