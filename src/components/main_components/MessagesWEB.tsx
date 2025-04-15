@@ -52,7 +52,10 @@ import { Box,Drawer, Typography, ListItem, List } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from "@mui/material/Tooltip";
 
-import { useAuth } from '../../auth/hooks/useAuth';
+import useAuthStore from '../../stores/useAuthStore';
+import { saveFeedback } from '../../api/chat';
+import { Snackbar } from '@mui/material';
+import useChatStore from '../../stores/useChatStore';
 
 
 
@@ -159,8 +162,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   personaName,
   citedDocuments,
   isComplete,
-  isGloballyStreaming = false, // Fournir une valeur par défaut
-  isMessageLoading = false,    // Fournir une valeur par défaut
+  isGloballyStreaming = false,
+  isMessageLoading = false,
   hasNewContent = false,
   hasDocs,
   images,
@@ -198,10 +201,12 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   hasStartedStreaming
 }) => {
   // États pour la gestion des interactions utilisateur
-  const { user, login, setPrimaryChatId, chatIds, isAuth, loading } = useAuth();
+  const { user } = useAuthStore(); // Au lieu de useAuth()
+  const { currentChatId } = useChatStore();
   const [copyClicked, setCopyClicked] = useState(false);
   const [feedbackClicked, setFeedbackClicked] = useState(false);
   const [thumbsUpClicked, setThumbsUpClicked] = useState(false);
+  const [thumbsDownClicked, setThumbsDownClicked] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isTrackPopupOpen, setIsTrackPopupOpen] = useState(false);
   const [selectedCharts, setSelectedCharts] = useState<string[]>([]);
@@ -211,22 +216,10 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [showAllSteps, setShowAllSteps] = useState(false);
   const [isOtherSelected, setIsOtherSelected] = useState<boolean>(false);
   const [showSourcesSidebar, setShowSourcesSidebar] = useState(false);
-/*
-  const [selectedSchools, setSelectedSchools] = useState<string[]>([]);
-  const [selectedYear, setSelectedYear] = useState<string[]>([]);
-  const [selectedLinkedin, setSelectedLinkedin] = useState<string[]>([]);
-  const [selectedMajor, setSelectedMajor] = useState<string[]>([]);
-  const [selectedMinor, setSelectedMinor] = useState<string[]>([]);
-  const [selectedCompliance, setSelectedCompliance] = useState<string[]>([]);
-  const [linkedinUrl, setLinkedinUrl] = useState<string>('');
-  const [learnerType, setLearnerType] = useState<string>('');
-  const [majors, setMajors] = useState<string[]>(['']);
-  const [minors, setMinors] = useState<string[]>(['']);
-  const [termsChecked, setTermsChecked] = useState(false);
-  const [ageChecked, setAgeChecked] = useState(false);
-  */
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  //const [selectedSchools, setSelectedSchools] = useState(user?.faculty || ['']);
+  
   const [selectedSchools, setSelectedSchools] = useState(
     user && Array.isArray(user.faculty) && user.faculty.length > 0 ? user.faculty : ['']
   );
@@ -523,14 +516,48 @@ useEffect(() => {
   };
 
 
-  /*
   // Fonction pour gérer les clics sur le pouce en l'air
-  const handleThumbUpClick = () => {
-    setThumbsUpClicked(true);
-    handleFeedback && handleFeedback("like");
-    setTimeout(() => setThumbsUpClicked(false), 2000);
+  const handleThumbsUp = async () => {
+    if (!messageId || !currentChatId || !user?.id) return;
+    
+    try {
+      await saveFeedback({
+        messageId,
+        chatSessionId: currentChatId,
+        isPositive: true,
+        userId: user.id
+      });
+      setThumbsUpClicked(true);
+      setThumbsDownClicked(false);
+      setSnackbarMessage('Merci pour votre feedback positif !');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error saving positive feedback:', error);
+      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback');
+      setSnackbarOpen(true);
+    }
   };
-  */
+
+  const handleThumbsDown = async () => {
+    if (!messageId || !currentChatId || !user?.id) return;
+    
+    try {
+      await saveFeedback({
+        messageId,
+        chatSessionId: currentChatId,
+        isPositive: false,
+        userId: user.id
+      });
+      setThumbsDownClicked(true);
+      setThumbsUpClicked(false);
+      setSnackbarMessage('Merci pour votre feedback négatif !');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error saving negative feedback:', error);
+      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback');
+      setSnackbarOpen(true);
+    }
+  };
 
   // Fonction pour gérer le clic sur une image
   const handleImageClick = (imageUrl: string) => {
@@ -2575,21 +2602,35 @@ useEffect(() => {
                   <FiCopy style={{ color: theme.palette.text.primary }} />
                 )}
               </Hoverable>
-              {/*<Hoverable onClick={handleThumbUpClick} isActive={thumbsUpClicked}>*/}
-              <Hoverable onClick={handleWrongAnswer} isActive={thumbsUpClicked}>
+              <Hoverable onClick={handleThumbsUp} isActive={thumbsUpClicked}>
                 <FiThumbsUp
                   className={thumbsUpClicked ? "text-green-400 fill-current" : ""}
-                  style={{ color: theme.palette.text.primary }}
+                  style={{ 
+                    color: thumbsUpClicked ? '#4ade80' : theme.palette.text.primary,
+                    fill: thumbsUpClicked ? '#4ade80' : 'none'
+                  }}
                 />
               </Hoverable>
-              <Hoverable onClick={handleWrongAnswer}>
+              <Hoverable onClick={handleThumbsDown} isActive={thumbsDownClicked}>
                 <FiThumbsDown
-                  className={feedbackClicked ? "text-green-400 fill-current" : ""}
-                  style={{ color: theme.palette.text.primary }}
+                  className={thumbsDownClicked ? "text-red-400 fill-current" : ""}
+                  style={{ 
+                    color: thumbsDownClicked ? '#f87171' : theme.palette.text.primary,
+                    fill: thumbsDownClicked ? '#f87171' : 'none'
+                  }}
                 />
               </Hoverable>
             </div>
           )}
+
+          {/* Snackbar pour les notifications de feedback */}
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={3000}
+            onClose={() => setSnackbarOpen(false)}
+            message={snackbarMessage}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          />
         </div>
       </div>
     </section>
