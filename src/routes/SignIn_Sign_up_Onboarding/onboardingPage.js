@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate} from 'react-router-dom';
 import { db } from '../../auth/firebase';
@@ -208,7 +207,7 @@ export default function LearningStyleSurvey() {
         let linkedinData = null;
         if (linkedinUrl) {
             console.log("[Step 5] Scraping LinkedIn profile");
-            linkedinData = await scrapeLinkedInProfile(linkedinUrl);
+            linkedinData = await scrapeLinkedInProfile(linkedinUrl, user.id);
             if (linkedinData) {
                 console.log("Données LinkedIn récupérées:", linkedinData);
 
