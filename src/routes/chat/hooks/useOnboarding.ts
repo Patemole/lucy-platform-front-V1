@@ -341,11 +341,7 @@ export const useOnboarding = ({
     // Appeler scrapeInstagramProfile pour envoyer le username au backend
     try {
       console.log("[useOnboarding] Appel de scrapeInstagramProfile avec le username:", instagramMessage);
-      const currentUserId = useAuthStore.getState().user?.id;
-      if (!currentUserId) {
-        throw new Error("User ID not found");
-      }
-      const instagramData = await scrapeInstagramProfile(instagramMessage, currentUserId);
+      const instagramData = await scrapeInstagramProfile(instagramMessage);
       console.log("[useOnboarding] Résultat du scraping Instagram:", instagramData);
       
       // Si le scraping a réussi, on met à jour le profil utilisateur avec les données
@@ -382,11 +378,7 @@ export const useOnboarding = ({
     // Appeler scrapeLinkedInProfile pour envoyer l'URL au backend
     try {
       console.log("[useOnboarding] Appel de scrapeLinkedInProfile avec l'URL:", linkedinMessage);
-      const currentUserId = useAuthStore.getState().user?.id;
-      if (!currentUserId) {
-        throw new Error("User ID not found");
-      }
-      const linkedinData = await scrapeLinkedInProfile(linkedinMessage, currentUserId);
+      const linkedinData = await scrapeLinkedInProfile(linkedinMessage,);
       console.log("[useOnboarding] Résultat du scraping LinkedIn:", linkedinData);
       
       // Si le scraping a réussi, on met à jour le profil utilisateur avec les données
