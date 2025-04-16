@@ -327,6 +327,8 @@ export const useMessage = ({
                 // Log before flattening `answerACCURACYSCORE`
                 console.log("Raw answerACCURACYSCORE received:", answerACCURACYSCORE);
 
+                console.log("Raw answerACCURACYSCORE received:", flattenedREDDIT);
+
                 flattenedACCURACYSCORE = answerACCURACYSCORE.flat();
 
                 const flattenedTITLEANDCATEGORY = answerTITLEANDCATEGORY.flat();
