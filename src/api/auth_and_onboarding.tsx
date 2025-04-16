@@ -99,6 +99,33 @@ export const scrapeLinkedInProfile = async (linkedinUrl: string) => {
     }
 };
 
+
+export const scrapeInstagramProfile = async (instagramnUrl: string) => {
+    try {
+        const response = await fetch(`${apiUrlPrefix}/chat/instagram_scraping`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: instagramnUrl }) 
+        });
+
+        if (!response.ok) {
+            const errorJson = await response.json();
+            throw new Error(`Erreur lors du scraping instagram : ${errorJson.detail || response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Données scrappées depuis Instagram :', data);
+        return data;
+    } catch (error) {
+        console.error('Erreur lors du scraping Instagram:', error);
+        return null;
+    }
+};
+
+
+
 export const sendUserInfoLinkedInScraping = async ({
   firstName,
   lastName,
