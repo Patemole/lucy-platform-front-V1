@@ -175,8 +175,6 @@ const SignIn = ({ handleToggleThemeMode }) => {
           created_at: currentTime,
           modified_at: currentTime,
           is_private: true, // Chat d'onboarding est privé
-          user_ids: [ssoUser.uid], // Lié à l'utilisateur
-          last_message_preview: "Welcome! Let's get you started.",
           university: university,
           thread_type: 'Private', // Type privé
           topic: 'Onboarding',

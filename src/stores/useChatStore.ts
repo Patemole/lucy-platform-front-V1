@@ -12,7 +12,8 @@ import {
   setDoc,
   serverTimestamp,
   Timestamp, // Importer Timestamp
-  Unsubscribe // Importer Unsubscribe pour le retour du listener
+  Unsubscribe, // Importer Unsubscribe pour le retour du listener
+  documentId, // <-- Importer documentId
 } from 'firebase/firestore';
 import { db, auth } from '../auth/firebase'; // Assurez-vous que le chemin est correct
 import { getChatHistory, saveMessageAIToBackend } from '../api/chat'; // Assurez-vous que le chemin est correct
@@ -334,58 +335,82 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
 
   fetchConversations: () => {
     const { _setIsLoadingConversations, setConversations, _setError, setActiveChat } = get();
-    const userId = useAuthStore.getState().user?.id;
-    const university = useAuthStore.getState().user?.university;
+    const user = useAuthStore.getState().user; // Récupérer l'objet user entier
+    const userId = user?.id;
+    const university = user?.university;
+    const userChatIds = user?.chatsessions || []; // <-- Récupérer les chat IDs de l'utilisateur
 
     if (!userId || !university) {
       console.warn("[ChatStore] Cannot fetch conversations listener: userId or university missing.");
       setConversations([]);
       _setError("User information missing to fetch conversations.");
-      _setIsLoadingConversations(false); // S'assurer que le loading s'arrête
-      return () => { console.log("[ChatStore - fetchConversations] Returning No-Op Unsubscribe (no user/university)."); }; // Retourne une fonction vide pour le désabonnement
+      _setIsLoadingConversations(false);
+      return () => { console.log("[ChatStore - fetchConversations] Returning No-Op Unsubscribe (no user/university)."); };
     }
 
-    console.log(`[ChatStore] Setting up Firestore listener for conversations for user ${userId} in ${university}`);
+    // Si l'utilisateur n'a pas de conversations, ne rien faire et retourner une fonction de désabonnement vide
+    if (userChatIds.length === 0) {
+      console.log("[ChatStore - fetchConversations] User has no chat sessions. Setting empty list.");
+      setConversations([]);
+      _setIsLoadingConversations(false);
+      setActiveChat(null); // Assure qu'aucun chat n'est actif
+      return () => { console.log("[ChatStore - fetchConversations] Returning No-Op Unsubscribe (no chats)."); };
+    }
+
+    console.log(`[ChatStore] Setting up Firestore listener for conversations for user ${userId} using ${userChatIds.length} chat IDs.`);
     _setIsLoadingConversations(true);
 
     const conversationsRef = collection(db, 'chatsessions');
+    // Utiliser 'documentId()' et 'in' pour écouter spécifiquement les chats de l'utilisateur
+    // Attention: l'opérateur 'in' est limité à 30 éléments (auparavant 10). Gérer si > 30.
+    // Pour l'instant, on suppose <= 30 pour la simplicité.
     const q = query(
       conversationsRef,
-      where('user_ids', 'array-contains', userId),
-      where('university', '==', university),
-      orderBy('modified_at', 'desc')
+      where(documentId(), 'in', userChatIds.slice(0, 30)), // Utiliser les IDs du user
+      // On ne peut pas utiliser 'where university' avec 'where documentId in'
+      // Il faudra filtrer côté client si nécessaire, ou s'assurer que les IDs sont corrects
+      orderBy('modified_at', 'desc') // Garder le tri
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      console.log(`[ChatStore - fetchConversations] onSnapshot triggered. Received ${snapshot.docs.length} conversation documents.`);
+      console.log(`[ChatStore - fetchConversations] onSnapshot triggered. Received ${snapshot.docs.length} matching conversation documents.`);
       const isInitialLoad = get().isLoadingConversations;
 
-      const fetchedConversations: Conversation[] = snapshot.docs.map(doc => {
-         const data = doc.data();
-         const threadType = data.thread_type === 'Public' ? 'Public' : 'Private'; // Default to Private if missing/invalid
+      const fetchedConversations: Conversation[] = snapshot.docs
+          // Filtrage côté client pour l'université, car non possible dans la requête 'in'
+         .filter(doc => doc.data().university === university)
+         .map(doc => {
+            const data = doc.data();
+            const threadType = data.thread_type === 'Public' ? 'Public' : 'Private';
 
-         return {
-             chat_id: doc.id,
-             name: data.name || 'Untitled Conversation',
-             last_message_preview: data.last_message_preview || '',
-             modified_at: (data.modified_at as Timestamp)?.toDate(),
-             thread_type: threadType, // <-- Utiliser directement la valeur de Firestore (ou défaut Private)
-             topic: data.topic || 'General',
-         };
-      });
+            return {
+                chat_id: doc.id,
+                name: data.name || 'Untitled Conversation',
+                modified_at: (data.modified_at as Timestamp)?.toDate(),
+                thread_type: threadType,
+                topic: data.topic || 'General',
+            };
+         });
 
-      console.log(`[ChatStore - fetchConversations] Processed ${fetchedConversations.length} conversations.`);
+      console.log(`[ChatStore - fetchConversations] Processed ${fetchedConversations.length} conversations after client-side filtering.`);
       setConversations(fetchedConversations);
       _setIsLoadingConversations(false);
       _setError(null);
 
       // --- Logique pour le chat initial ---
       if (isInitialLoad && !get().currentChatId && fetchedConversations.length > 0) {
-          const initialChatId = fetchedConversations[0].chat_id;
+          // Trier à nouveau par date après le filtre client pour s'assurer que le plus récent est sélectionné
+          // Correction Linter: Utiliser les timestamps directement s'ils existent, sinon 0.
+          const sortedConversations = [...fetchedConversations].sort((a, b) => {
+            const timeA = a.modified_at instanceof Date ? a.modified_at.getTime() : 0;
+            const timeB = b.modified_at instanceof Date ? b.modified_at.getTime() : 0;
+            return timeB - timeA;
+          });
+          const initialChatId = sortedConversations[0].chat_id;
           console.log(`[ChatStore - fetchConversations] Initial load complete. Setting initial active chat to: ${initialChatId}`);
-          setActiveChat(initialChatId); // setActiveChat déterminera la bonne valeur pour isCurrentChatPrivate
+          setActiveChat(initialChatId);
       } else if (isInitialLoad && !get().currentChatId && fetchedConversations.length === 0) {
-          console.log("[ChatStore - fetchConversations] Initial load complete. No conversations found, setting active chat to null.");
+          console.log("[ChatStore - fetchConversations] Initial load complete. No matching conversations found after filtering, setting active chat to null.");
           setActiveChat(null);
       }
 
@@ -622,7 +647,6 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         modified_at: currentTime,
         university: user.university,
         thread_type: 'Private',
-        user_ids: [user.id],
         is_private: true,
         last_message_preview: '', // Vide au début
         topic: 'General', // Default topic

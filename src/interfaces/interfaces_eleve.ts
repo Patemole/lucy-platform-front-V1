@@ -63,6 +63,7 @@ export interface Conversation {
   name: string;
   thread_type: string;
   topic?: string;
+  modified_at?: Date;
 }
 
 
