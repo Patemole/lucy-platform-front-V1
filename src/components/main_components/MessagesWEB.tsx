@@ -5,6 +5,7 @@ import {
   FiThumbsDown,
   FiThumbsUp,
   FiSend,
+  FiUsers,
 } from "react-icons/fi";
 import ReactMarkdown from "react-markdown";
 import Avatar from "@mui/material/Avatar";
@@ -548,11 +549,11 @@ useEffect(() => {
         humanMessageContent: previousHumanMessage?.content || ''
       });
 
-      setSnackbarMessage('Merci pour votre feedback positif !');
+      setSnackbarMessage('Thank you for your positivefeedback !');
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error saving positive feedback:', error);
-      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback, mais votre choix a été pris en compte localement');
+      setSnackbarMessage('An error occurred while saving your feedback, but your choice has been taken into account locally');
       setSnackbarOpen(true);
     }
   };
@@ -583,11 +584,11 @@ useEffect(() => {
         humanMessageContent: previousHumanMessage?.content || ''
       });
 
-      setSnackbarMessage('Merci pour votre feedback négatif !');
+      setSnackbarMessage('Thank you for your negative feedback !');
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error saving negative feedback:', error);
-      setSnackbarMessage('Une erreur est survenue lors de l\'enregistrement du feedback, mais votre choix a été pris en compte localement');
+      setSnackbarMessage('An error occurred while saving your feedback, but your choice has been taken into account locally');
       setSnackbarOpen(true);
     }
   };
@@ -869,8 +870,8 @@ useEffect(() => {
         {/* Bloc des sources : il s'affiche uniquement si le texte n'est pas encore affiché 
           et que soit le loader est actif, soit des sources réelles sont disponibles */}
         {!isTextDisplayed && (showShadowSources || (citedDocuments && citedDocuments.length > 0)) && (
-          <div className={`mt-0 ${!isSmallScreen ? "ml-8" : ""} pb-3`}>
-            {/* Titre : affiché uniquement si des sources réelles sont disponibles */}
+          <div className={`mt-0 ${!isSmallScreen ? "ml-8" : ""} pb-3 mb-6`}>
+            {/* Titre Sources */}
             {(showShadowSources || (citedDocuments && citedDocuments.length > 0)) && (
               <div className="flex items-center mb-3">
                 <LanguageIcon sx={{ width: 20, height: 20, marginRight: 1 }} />
@@ -880,130 +881,130 @@ useEffect(() => {
               </div>
             )}
 
-    {/* Contenu : si le loader est actif, on affiche les boîtes skeleton avec les mêmes styles que les vraies sources */}
-    {showShadowSources ? (
-      <div
-        className="sources-grid mt-2 grid grid-cols-5 gap-2"
-        style={{ 
-          width: "800px", 
-          maxWidth: "100%" }}
-      >
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="animate-pulse rounded bg-gray-300"
-            style={{
-              height: "45px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "10px 12px",
-              flex: "1",
-              minWidth: "0px",
-            }}
-          ></div>
-        ))}
-        <div
-          className="animate-pulse rounded bg-gray-300"
-          style={{
-            height: "45px",
-            width: "150px", // ✅ Contraindre chaque boîte à une largeur fixe
-            minWidth: "150px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "10px 12px",
-            flex: "1",
-            //minWidth: "0px",
-          }}
-        ></div>
-      </div>
-    ) : (
-      <div
-        className="sources-grid mt-2 grid grid-cols-5 gap-2"
-        style={{ width: "100%" }}
-      >
-        {citedDocuments?.slice(0, 4).map((document) => (
-          <a
-            key={document.document_id}
-            className="group p-2 rounded-lg cursor-pointer flex items-center shadow transition-shadow duration-200 ease-in-out hover:shadow-lg"
-            href="#"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.3)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              height: "45px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "10px 12px",
-              flex: "1",
-              minWidth: "0px",
-            }}
-            aria-label={`Open source: ${document.document_name}`}
-            onClick={() => handleSourceClick(document.link)}
-          >
-            <div className="flex items-center w-full">
-              <div style={{ width: "24px", height: "24px", flexShrink: 0 }}>
-                <img
-                  src={theme.logo}
-                  alt="Source Logo"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    aspectRatio: "1/1",
-                    marginRight: "6px",
-                  }}
-                />
-              </div>
-
-              {/* Ajout de Tooltip autour du titre du document */}
-              <Tooltip title={document.document_name} arrow>
-              <span
-                className="text-sm truncate group-hover:underline transition duration-200 ease-in-out"
+            {/* Contenu Sources (Skeleton ou Réel) */}
+            {showShadowSources ? (
+              <div
+                className="sources-grid grid grid-cols-5 gap-2"
                 style={{
-                  maxWidth: "75%",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
+                  width: "800px",
+                  maxWidth: "100%" }}
               >
-                {document.document_name}
-              </span>
-              </Tooltip>
-            </div>
-          </a>
-        ))}
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="animate-pulse rounded bg-gray-300"
+                    style={{
+                      height: "45px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "10px 12px",
+                      flex: "1",
+                      minWidth: "0px",
+                    }}
+                  ></div>
+                ))}
+                <div
+                  className="animate-pulse rounded bg-gray-300"
+                  style={{
+                    height: "45px",
+                    width: "150px", // ✅ Contraindre chaque boîte à une largeur fixe
+                    minWidth: "150px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "10px 12px",
+                    flex: "1",
+                    //minWidth: "0px",
+                  }}
+                ></div>
+              </div>
+            ) : (
+              <div
+                className="sources-grid grid grid-cols-5 gap-2"
+                style={{ width: "100%" }}
+              >
+                {citedDocuments?.slice(0, 4).map((document) => (
+                  <a
+                    key={document.document_id}
+                    className="group p-2 rounded-lg cursor-pointer flex items-center shadow transition-shadow duration-200 ease-in-out hover:shadow-lg"
+                    href="#"
+                    style={{
+                      backgroundColor: "rgba(255, 255, 255, 0.3)",
+                      backdropFilter: "blur(12px)",
+                      border: "1px solid rgba(255, 255, 255, 0.15)",
+                      height: "45px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 12px",
+                      flex: "1",
+                      minWidth: "0px",
+                    }}
+                    aria-label={`Open source: ${document.document_name}`}
+                    onClick={() => handleSourceClick(document.link)}
+                  >
+                    <div className="flex items-center w-full">
+                      <div style={{ width: "24px", height: "24px", flexShrink: 0 }}>
+                        <img
+                          src={theme.logo}
+                          alt="Source Logo"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                            aspectRatio: "1/1",
+                            marginRight: "6px",
+                          }}
+                        />
+                      </div>
 
-        {citedDocuments && citedDocuments.length > 4 && (
-          <div
-            className="group p-2 rounded-lg cursor-pointer flex items-center justify-center shadow transition-shadow duration-200 ease-in-out hover:shadow-lg"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.3)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              fontSize: "0.9rem",
-              fontWeight: "600",
-              color: "#555",
-              height: "45px",
-              minWidth: "80px",
-              width: "auto",
-              textAlign: "center",
-              whiteSpace: "nowrap",
-              padding: "0 12px",
-            }}
-            onClick={() => setShowSourcesSidebar(true)}
-          >
-            <span className="no-underline group-hover:underline transition duration-200 ease-in-out">
-              View {citedDocuments.length - 4}+
-            </span>
+                      {/* Ajout de Tooltip autour du titre du document */}
+                      <Tooltip title={document.document_name} arrow>
+                      <span
+                        className="text-sm truncate group-hover:underline transition duration-200 ease-in-out"
+                        style={{
+                          maxWidth: "75%",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {document.document_name}
+                      </span>
+                      </Tooltip>
+                    </div>
+                  </a>
+                ))}
+
+                {citedDocuments && citedDocuments.length > 4 && (
+                  <div
+                    className="group p-2 rounded-lg cursor-pointer flex items-center justify-center shadow transition-shadow duration-200 ease-in-out hover:shadow-lg"
+                    style={{
+                      backgroundColor: "rgba(255, 255, 255, 0.3)",
+                      backdropFilter: "blur(12px)",
+                      border: "1px solid rgba(255, 255, 255, 0.15)",
+                      fontSize: "0.9rem",
+                      fontWeight: "600",
+                      color: "#555",
+                      height: "45px",
+                      minWidth: "80px",
+                      width: "auto",
+                      textAlign: "center",
+                      whiteSpace: "nowrap",
+                      padding: "0 12px",
+                    }}
+                    onClick={() => setShowSourcesSidebar(true)}
+                  >
+                    <span className="no-underline group-hover:underline transition duration-200 ease-in-out">
+                      View {citedDocuments.length - 4}+
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
-      </div>
-    )}
-  </div>
-)}
 
 
 
@@ -1115,10 +1116,10 @@ useEffect(() => {
 
 
             {/* Social Thread Section */}
-            {/* Social Thread Section */}
+            {/* Remplacer le fragment <> par un div avec une marge inférieure */}
             {(redditData || instaData || youtubeData || quoraData || instaclubData || linkedinData) && (
-            <>
-                {/* Divider and Title, only displayed once */}
+            <div className="mb-6"> {/* Ajout de mb-6 ici */}
+                {/* Titre pour la section des témoignages */}
                 {(redditData && redditData.length > 0) ||
                 (instaData && instaData.length > 0) ||
                 (youtubeData && youtubeData.length > 0) ||
@@ -1126,362 +1127,366 @@ useEffect(() => {
                 (instaclubData && instaclubData.length > 0) ||
                 (linkedinData && linkedinData.length > 0) ? (
                 <>
-                    {/*<hr className="my-4 border-gray-300 ml-8 animate-fadeIn" /> {/* Animation ajoutée */}
-                    <div
-                    className="font-bold mb-3 ml-8 animate-fadeIn"
-                    style={{
-                        color: theme.palette.text.primary,
-                        fontSize: '15px',
-                    }}
-                    >
-                    Social Thread
+                    <div className={`${!isSmallScreen ? "ml-8" : ""} mb-3 flex items-center animate-fadeIn`}>
+                      <FiUsers style={{ width: 20, height: 20, marginRight: 8, color: theme.palette.text.primary }} />
+                      <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
+                        Student Testimonials
+                      </span>
                     </div>
                 </>
                 ) : null}
 
                 {/* Reddit Section */}
                 {redditData && redditData.length > 0 && (
-                <div className="ml-8 mt-4">
-                    {redditData.map((redditItem, index) => (
-                    <div
-                        key={index}
-                        className="flex items-center p-2 shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 animate-fadeInUp"
-                        style={{
-                        backgroundColor: '#F7F7F7',
-                        border: '1px solid #E0E0E0',
-                        borderRadius: '8px',
-                        boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
-                        animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
-                        }}
-                    >
-                        <div className="mr-3 flex-shrink-0">
-                        <img
-                            src="/logos/reddit_logo.png"
-                            alt="Reddit Logo"
-                            className="w-8 h-8"
-                            style={{ width: '32px', height: '32px' }} // Ensures fixed dimensions
-                        />
-                        </div>
-                        <div
-                        className="flex-grow"
-                        style={{ color: theme.palette.text.primary, fontSize: '14.5px' }}
-                        >
-                        {redditItem.comment}
-                        </div>
-                        <div className="flex items-center ml-3 space-x-1">
-                        <button>
-                            <FiThumbsUp className="text-gray-500 hover:text-orange-500" />
-                        </button>
-                        <span className="text-gray-700 font-bold">{redditItem.score}</span>
-                        <button>
-                            <FiThumbsDown className="text-gray-500 hover:text-blue-500" />
-                        </button>
-                        </div>
-                    </div>
-                    ))}
-                </div>
+                  <div className="ml-8">
+                      {redditData.map((redditItem, index) => (
+                      <div
+                          key={index}
+                          // Suppression des classes shadow-md, hover:shadow-lg et ajout de animate-fadeInUp
+                          className="flex items-center p-3 transition-shadow duration-300 mb-4 animate-fadeInUp rounded-lg" // Augmentation du padding à p-3, ajout de rounded-lg
+                          style={{
+                            // Effet glace avec une teinte orange très légère
+                            backgroundColor: 'rgba(255, 69, 0, 0.1)', // #FF4500 (OrangeRed) avec 10% d'opacité
+                            backdropFilter: 'blur(8px)', // Flou pour l'effet glace
+                            // Bordure fine orange Reddit
+                            border: '1px solid #FF4500', // Couleur orange de Reddit
+                            // Ombre légère pour la profondeur
+                            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+                            animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
+                          }}
+                      >
+                          <div className="mr-3 flex-shrink-0">
+                          <img
+                              src="/logos/reddit_logo.png"
+                              alt="Reddit Logo"
+                              className="w-8 h-8"
+                              style={{ width: '32px', height: '32px' }} // Ensures fixed dimensions
+                          />
+                          </div>
+                          <div
+                          className="flex-grow"
+                          // Modification de la couleur du texte pour un meilleur contraste sur le fond effet glace
+                          style={{ color: theme.palette.text.primary, fontSize: '14.5px' }}
+                          >
+                          "{redditItem.comment}"
+                          </div>
+                          <div className="flex items-center ml-3 space-x-1">
+                          <button>
+                              {/* Ajustement des couleurs pour la lisibilité */}
+                              <FiThumbsUp className="text-gray-600 hover:text-orange-600" />
+                          </button>
+                          {/* Ajustement de la couleur du score */}
+                          <span className="text-gray-800 font-bold">{redditItem.score}</span>
+                          <button>
+                              {/* Ajustement des couleurs pour la lisibilité */}
+                              <FiThumbsDown className="text-gray-600 hover:text-blue-600" />
+                          </button>
+                          </div>
+                      </div>
+                      ))}
+                  </div>
                 )}
 
                 {/* Quora Section */}
                 {quoraData && quoraData.length > 0 && (
-                <div className="ml-8 mt-4">
-                    {quoraData.map((quoraItem, index) => (
-                    <div
-                        key={index}
-                        className="flex items-center p-2 shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 animate-fadeInUp"
-                        style={{
-                        backgroundColor: '#F7F7F7',
-                        border: '1px solid #E0E0E0',
-                        borderRadius: '8px',
-                        boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
-                        animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
-                        }}
-                    >
-                        <div className="mr-3 flex-shrink-0">
-                        <img
-                            src="/logos/medium_logo.png"
-                            alt="Medium Logo"
-                            className="w-8 h-8"
-                            style={{ width: '32px', height: '32px' }} // Ensures fixed dimensions
-                        />
-                        </div>
-                        <div
-                        className="flex-grow text-sm"
-                        style={{ color: theme.palette.text.primary }}
-                        >
-                        {quoraItem.comment}
-                        </div>
-                        <div className="flex items-center ml-3 space-x-1">
-                        <button>
-                            <FiThumbsUp className="text-gray-500 hover:text-orange-500" />
-                        </button>
-                        <span className="text-gray-700 font-bold">{quoraItem.score}</span>
-                        <button>
-                            <FiThumbsDown className="text-gray-500 hover:text-blue-500" />
-                        </button>
-                        </div>
-                    </div>
-                    ))}
-                </div>
+                  <div className="ml-8"> {/* Note: mt-4 avait été supprimé ici aussi, ce qui est correct */}
+                      {quoraData.map((quoraItem, index) => (
+                      <div
+                          key={index}
+                          className="flex items-center p-2 shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 animate-fadeInUp"
+                          style={{
+                          backgroundColor: '#F7F7F7',
+                          border: '1px solid #E0E0E0',
+                          borderRadius: '8px',
+                          boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
+                          animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
+                          }}
+                      >
+                          <div className="mr-3 flex-shrink-0">
+                          <img
+                              src="/logos/medium_logo.png"
+                              alt="Medium Logo"
+                              className="w-8 h-8"
+                              style={{ width: '32px', height: '32px' }} // Ensures fixed dimensions
+                          />
+                          </div>
+                          <div
+                          className="flex-grow text-sm"
+                          style={{ color: theme.palette.text.primary }}
+                          >
+                          {quoraItem.comment}
+                          </div>
+                          <div className="flex items-center ml-3 space-x-1">
+                          <button>
+                              <FiThumbsUp className="text-gray-500 hover:text-orange-500" />
+                          </button>
+                          <span className="text-gray-700 font-bold">{quoraItem.score}</span>
+                          <button>
+                              <FiThumbsDown className="text-gray-500 hover:text-blue-500" />
+                          </button>
+                          </div>
+                      </div>
+                      ))}
+                  </div>
                 )}
 
                 {/* YouTube, Instagram Reels, Instagram Club, and LinkedIn Combined Section */}
                 {(youtubeData || instaData || instaclubData || linkedinData) && (
-                <div className="ml-8 mt-4">
-                    <div className="flex flex-wrap -mx-2">
-                    {/* YouTube Items */}
-                    {youtubeData?.map((youtubeItem, index) => {
-                        const videoId = youtubeItem.link.split("v=")[1] || youtubeItem.link.split("/").pop();
-                        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                  <div className="ml-8">
+                      <div className="flex flex-wrap -mx-2">
+                      {/* YouTube Items */}
+                      {youtubeData?.map((youtubeItem, index) => {
+                          const videoId = youtubeItem.link.split("v=")[1] || youtubeItem.link.split("/").pop();
+                          const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
-                        return (
-                        <div key={`youtube-${index}`} className="p-2 w-full sm:w-1/2 lg:w-1/3" style={{ maxWidth: '300px' }}>
-                            <div className="shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 animate-fadeInUp" style={{
-                            backgroundColor: '#F7F7F7',
-                            border: '1px solid #E0E0E0',
-                            borderRadius: '8px',
-                            boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
-                            animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
-                            }}>
-                            <a href={youtubeItem.link} target="_blank" rel="noopener noreferrer" className="relative block" style={{ width: '100%', height: '150px', overflow: 'hidden', borderRadius: '8px 8px 0 0' }}>
-                                <img src={thumbnailUrl} alt="YouTube Video Thumbnail" className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black opacity-20" style={{ borderRadius: '8px 8px 0 0' }}></div>
-                                <img src="/logos/youtube_logo.png" alt="YouTube Play Icon" className="absolute inset-0 w-12 h-12 m-auto" />
-                            </a>
-                            <div className="flex justify-between items-center p-2" style={{
-                                paddingTop: '6px',
-                                paddingBottom: '6px',
-                                backgroundColor: '#F7F7F7',
-                                borderTop: '1px solid #E0E0E0',
-                                borderBottomLeftRadius: '8px',
-                                borderBottomRightRadius: '8px',
-                            }}>
-                                <div className="text-sm" style={{
-                                color: theme.palette.text.primary,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                maxWidth: '75%',
-                                }}>
-                                {youtubeItem.title}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                {youtubeItem.nbr_view} views
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                        );
-                    })}
+                          return (
+                          <div key={`youtube-${index}`} className="p-2 w-full sm:w-1/2 lg:w-1/3" style={{ maxWidth: '300px' }}>
+                              <div className="shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 animate-fadeInUp" style={{
+                              backgroundColor: '#F7F7F7',
+                              border: '1px solid #E0E0E0',
+                              borderRadius: '8px',
+                              boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
+                              animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
+                              }}>
+                              <a href={youtubeItem.link} target="_blank" rel="noopener noreferrer" className="relative block" style={{ width: '100%', height: '150px', overflow: 'hidden', borderRadius: '8px 8px 0 0' }}>
+                                  <img src={thumbnailUrl} alt="YouTube Video Thumbnail" className="w-full h-full object-cover" />
+                                  <div className="absolute inset-0 bg-black opacity-20" style={{ borderRadius: '8px 8px 0 0' }}></div>
+                                  <img src="/logos/youtube_logo.png" alt="YouTube Play Icon" className="absolute inset-0 w-12 h-12 m-auto" />
+                              </a>
+                              <div className="flex justify-between items-center p-2" style={{
+                                  paddingTop: '6px',
+                                  paddingBottom: '6px',
+                                  backgroundColor: '#F7F7F7',
+                                  borderTop: '1px solid #E0E0E0',
+                                  borderBottomLeftRadius: '8px',
+                                  borderBottomRightRadius: '8px',
+                              }}>
+                                  <div className="text-sm" style={{
+                                  color: theme.palette.text.primary,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  maxWidth: '75%',
+                                  }}>
+                                  {youtubeItem.title}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                  {youtubeItem.nbr_view} views
+                                  </div>
+                              </div>
+                              </div>
+                          </div>
+                          );
+                      })}
 
-                    {/* Instagram Reels Items */}
-                    {instaData?.map((instaItem, index) => (
-                        <div key={`insta-${index}`} className="p-2 w-full sm:w-1/2 lg:w-1/3" style={{ maxWidth: '300px' }}>
-                        <div
-                            className="shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 animate-fadeInUp"
-                            style={{
-                            backgroundColor: '#F7F7F7',
-                            border: '1px solid #E0E0E0',
-                            borderRadius: '8px',
-                            boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
-                            animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
-                            }}
-                        >
-                            <a
-                            href={instaItem.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="relative block"
-                            style={{
-                                width: '100%',
-                                height: '280px',
-                                overflow: 'hidden',
-                                borderRadius: '8px 8px 0 0',
-                            }}
-                            >
-                            <img
-                                src={instaItem.picture}
-                                alt="Instagram Short Thumbnail"
-                                className="w-full h-full object-cover rounded-t-md"
-                                style={{ aspectRatio: '3/4' }}
-                            />
-                            <div
-                                className="absolute inset-0 bg-black opacity-20"
-                                style={{ borderRadius: '8px 8px 0 0' }}
-                            ></div>
-                            </a>
-                            <div
-                            className="flex justify-between items-center p-2 animate-fadeIn"
-                            style={{
-                                paddingTop: '6px',
-                                paddingBottom: '6px',
-                                backgroundColor: '#F7F7F7',
-                                borderTop: '1px solid #E0E0E0',
-                                borderBottomLeftRadius: '8px',
-                                borderBottomRightRadius: '8px',
-                            }}
-                            >
-                            {/* Titre avec Image Instagram Personnalisée */}
-                            <div
-                                className="flex items-center text-sm"
-                                style={{
-                                color: theme.palette.text.primary,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                maxWidth: '70%',
-                                }}
-                            >
-                                <img
-                                src="/logos/insta_logo.png" // Remplacez par le chemin de votre image Instagram
-                                alt="Instagram Icon"
-                                className="mr-2"
-                                style={{
-                                    width: '16px', // Taille de l'icône Instagram
-                                    height: '16px',
-                                }}
-                                />
-                                {instaItem.title}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                                {instaItem.nbr_view} views
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-                    ))}
+                      {/* Instagram Reels Items */}
+                      {instaData?.map((instaItem, index) => (
+                          <div key={`insta-${index}`} className="p-2 w-full sm:w-1/2 lg:w-1/3" style={{ maxWidth: '300px' }}>
+                          <div
+                              className="shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 animate-fadeInUp"
+                              style={{
+                              backgroundColor: '#F7F7F7',
+                              border: '1px solid #E0E0E0',
+                              borderRadius: '8px',
+                              boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
+                              animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
+                              }}
+                          >
+                              <a
+                              href={instaItem.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative block"
+                              style={{
+                                  width: '100%',
+                                  height: '280px',
+                                  overflow: 'hidden',
+                                  borderRadius: '8px 8px 0 0',
+                              }}
+                              >
+                              <img
+                                  src={instaItem.picture}
+                                  alt="Instagram Short Thumbnail"
+                                  className="w-full h-full object-cover rounded-t-md"
+                                  style={{ aspectRatio: '3/4' }}
+                              />
+                              <div
+                                  className="absolute inset-0 bg-black opacity-20"
+                                  style={{ borderRadius: '8px 8px 0 0' }}
+                              ></div>
+                              </a>
+                              <div
+                              className="flex justify-between items-center p-2 animate-fadeIn"
+                              style={{
+                                  paddingTop: '6px',
+                                  paddingBottom: '6px',
+                                  backgroundColor: '#F7F7F7',
+                                  borderTop: '1px solid #E0E0E0',
+                                  borderBottomLeftRadius: '8px',
+                                  borderBottomRightRadius: '8px',
+                              }}
+                              >
+                              {/* Titre avec Image Instagram Personnalisée */}
+                              <div
+                                  className="flex items-center text-sm"
+                                  style={{
+                                  color: theme.palette.text.primary,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  maxWidth: '70%',
+                                  }}
+                              >
+                                  <img
+                                  src="/logos/insta_logo.png" // Remplacez par le chemin de votre image Instagram
+                                  alt="Instagram Icon"
+                                  className="mr-2"
+                                  style={{
+                                      width: '16px', // Taille de l'icône Instagram
+                                      height: '16px',
+                                  }}
+                                  />
+                                  {instaItem.title}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                  {instaItem.nbr_view} views
+                              </div>
+                              </div>
+                          </div>
+                          </div>
+                      ))}
 
-            
-                    {/* Instagram Club Items */}
-                    {instaclubData?.map((clubItem, index) => (
-                        <div key={`instaclub-${index}`} className="p-2 w-full sm:w-1/2 lg:w-1/3" style={{ maxWidth: '300px' }}>
-                        <div className="shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 animate-fadeInUp" style={{
-                            backgroundColor: '#F7F7F7',
-                            border: '1px solid #E0E0E0',
-                            borderRadius: '8px',
-                            boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
-                            animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
-                        }}>
-                            <a href={clubItem.link} target="_blank" rel="noopener noreferrer" className="relative block animate-fadeIn" style={{ width: '100%', height: '88px', overflow: 'hidden', borderRadius: '8px 8px 0 0' }}>
-                            <img src={clubItem.picture} alt="Club Thumbnail" className="w-full h-full object-cover rounded-t-md" />
-                            <div className="absolute inset-0 bg-black opacity-20" style={{ borderRadius: '8px 8px 0 0' }}></div>
-                            </a>
-                            <div className="p-2">
-                            <div className="flex items-center">
-                                <img src={clubItem.picture} alt="Club Avatar" className="w-8 h-8 rounded-full mr-2" />
-                                <a href={clubItem.link} target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 text-sm truncate" style={{ maxWidth: '70%' }}>
-                                {clubItem.username}
-                                </a>
-                            </div>
-                            <div className="mt-1 text-sm flex items-center" style={{
-                                color: theme.palette.text.primary,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                            }}>
-                                {/* Instagram Logo in Front of the Title */}
-                                <img
-                                src="/logos/insta_logo.png" // Replace with your Instagram logo path
-                                alt="Instagram Logo"
-                                className="mr-1 ml-1"
-                                style={{
-                                    width: '14px',
-                                    height: '14px',
-                                }}
-                                />
-                                {clubItem.title}
-                            </div>
-                            <div className="flex justify-between mt-2 text-xs text-gray-500">
-                                <span>{clubItem.followers} followers</span>
-                                <span>{clubItem.posts} posts</span>
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-                    ))}
+              
+                      {/* Instagram Club Items */}
+                      {instaclubData?.map((clubItem, index) => (
+                          <div key={`instaclub-${index}`} className="p-2 w-full sm:w-1/2 lg:w-1/3" style={{ maxWidth: '300px' }}>
+                          <div className="shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 animate-fadeInUp" style={{
+                              backgroundColor: '#F7F7F7',
+                              border: '1px solid #E0E0E0',
+                              borderRadius: '8px',
+                              boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
+                              animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
+                          }}>
+                              <a href={clubItem.link} target="_blank" rel="noopener noreferrer" className="relative block animate-fadeIn" style={{ width: '100%', height: '88px', overflow: 'hidden', borderRadius: '8px 8px 0 0' }}>
+                              <img src={clubItem.picture} alt="Club Thumbnail" className="w-full h-full object-cover rounded-t-md" />
+                              <div className="absolute inset-0 bg-black opacity-20" style={{ borderRadius: '8px 8px 0 0' }}></div>
+                              </a>
+                              <div className="p-2">
+                              <div className="flex items-center">
+                                  <img src={clubItem.picture} alt="Club Avatar" className="w-8 h-8 rounded-full mr-2" />
+                                  <a href={clubItem.link} target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 text-sm truncate" style={{ maxWidth: '70%' }}>
+                                  {clubItem.username}
+                                  </a>
+                              </div>
+                              <div className="mt-1 text-sm flex items-center" style={{
+                                  color: theme.palette.text.primary,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                              }}>
+                                  {/* Instagram Logo in Front of the Title */}
+                                  <img
+                                  src="/logos/insta_logo.png" // Replace with your Instagram logo path
+                                  alt="Instagram Logo"
+                                  className="mr-1 ml-1"
+                                  style={{
+                                      width: '14px',
+                                      height: '14px',
+                                  }}
+                                  />
+                                  {clubItem.title}
+                              </div>
+                              <div className="flex justify-between mt-2 text-xs text-gray-500">
+                                  <span>{clubItem.followers} followers</span>
+                                  <span>{clubItem.posts} posts</span>
+                              </div>
+                              </div>
+                          </div>
+                          </div>
+                      ))}
 
-                    {/* LinkedIn Items */}
-                    {linkedinData && linkedinData.length > 0 && (
-                        linkedinData.map((linkedinItem, index) => (
-                        <div key={`linkedin-${index}`} className="p-2 w-full sm:w-1/2 lg:w-1/3" style={{ maxWidth: '300px' }}>
-                            <div
-                            className="shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col items-center animate-fadeInUp"
-                            style={{
-                                backgroundColor: '#F7F7F7',
-                                border: '1px solid #E0E0E0',
-                                borderRadius: '8px',
-                                boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
-                                height: '186px', // Adjust the height as needed
-                                position: 'relative',
-                                animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
-                            }}
-                            >
-                            {/* Headline Banner */}
-                            <div className="w-full h-24 overflow-hidden rounded-t-md animate-fadeIn">
-                                <img
-                                src={linkedinItem.headline}
-                                alt="LinkedIn Headline"
-                                className="w-full h-full object-cover"
-                                />
-                            </div>
+                      {/* LinkedIn Items */}
+                      {linkedinData && linkedinData.length > 0 && (
+                          linkedinData.map((linkedinItem, index) => (
+                          <div key={`linkedin-${index}`} className="p-2 w-full sm:w-1/2 lg:w-1/3" style={{ maxWidth: '300px' }}>
+                              <div
+                              className="shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col items-center animate-fadeInUp"
+                              style={{
+                                  backgroundColor: '#F7F7F7',
+                                  border: '1px solid #E0E0E0',
+                                  borderRadius: '8px',
+                                  boxShadow: '1px 1px 1px rgba(0.1, 0.1, 0.1, 0.1)',
+                                  height: '186px', // Adjust the height as needed
+                                  position: 'relative',
+                                  animationDelay: `${index * 100}ms`, // Optionnel : Délais pour stagger
+                              }}
+                              >
+                              {/* Headline Banner */}
+                              <div className="w-full h-24 overflow-hidden rounded-t-md animate-fadeIn">
+                                  <img
+                                  src={linkedinItem.headline}
+                                  alt="LinkedIn Headline"
+                                  className="w-full h-full object-cover"
+                                  />
+                              </div>
 
-                            {/* Profile Picture */}
-                            <div className="absolute top-16 flex justify-center w-full animate-fadeInUp">
-                                <img
-                                src={linkedinItem.picture}
-                                alt={`${linkedinItem.name} Profile`}
-                                className="w-16 h-16 rounded-full border-2 border-white"
-                                style={{
-                                    marginTop: '-50px', // Adjust to position the picture below the banner
-                                }}
-                                />
-                            </div>
+                              {/* Profile Picture */}
+                              <div className="absolute top-16 flex justify-center w-full animate-fadeInUp">
+                                  <img
+                                  src={linkedinItem.picture}
+                                  alt={`${linkedinItem.name} Profile`}
+                                  className="w-16 h-16 rounded-full border-2 border-white"
+                                  style={{
+                                      marginTop: '-50px', // Adjust to position the picture below the banner
+                                  }}
+                                  />
+                              </div>
 
-                            {/* Content Section */}
-                            <div className="mt-6 text-center px-4 flex flex-col items-center flex-grow">
-                                <div
-                                className="text-gray-700 mb-1 animate-fadeIn"
-                                style={{
-                                    color: '#555555',
-                                }}
-                                >
-                                {linkedinItem.sentence}
-                                </div>
-                                <div className="mt-auto mb-4">
-                                <a
-                                    href={linkedinItem.link} // Navigates to the link when clicked
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center mt-3 px-4 py-2 border border-blue-500 text-blue-500 rounded-full hover:bg-blue-500 hover:text-white transition duration-200 animate-fadeIn"
-                                    style={{
-                                    fontSize: '14px',
-                                    textDecoration: 'none',
-                                    }}
-                                >
-                                    <img
-                                    src="/logos/linkedin_logo.png" // Replace with the path to your LinkedIn icon
-                                    alt="LinkedIn Icon"
-                                    className="mr-2"
-                                    style={{
-                                        width: '16px',
-                                        height: '16px',
-                                    }}
-                                    />
-                                    Connect
-                                </a>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                        ))
-                    )}
-                    </div>
+                              {/* Content Section */}
+                              <div className="mt-6 text-center px-4 flex flex-col items-center flex-grow">
+                                  <div
+                                  className="text-gray-700 mb-1 animate-fadeIn"
+                                  style={{
+                                      color: '#555555',
+                                  }}
+                                  >
+                                  {linkedinItem.sentence}
+                                  </div>
+                                  <div className="mt-auto mb-4">
+                                  <a
+                                      href={linkedinItem.link} // Navigates to the link when clicked
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center mt-3 px-4 py-2 border border-blue-500 text-blue-500 rounded-full hover:bg-blue-500 hover:text-white transition duration-200 animate-fadeIn"
+                                      style={{
+                                      fontSize: '14px',
+                                      textDecoration: 'none',
+                                      }}
+                                  >
+                                      <img
+                                      src="/logos/linkedin_logo.png" // Replace with the path to your LinkedIn icon
+                                      alt="LinkedIn Icon"
+                                      className="mr-2"
+                                      style={{
+                                          width: '16px',
+                                          height: '16px',
+                                      }}
+                                      />
+                                      Connect
+                                  </a>
+                                  </div>
+                              </div>
+                              </div>
+                          </div>
+                          ))
+                      )}
+                  </div>
                 </div>
                 )}
-            </>
+            </div> // Fin du div ajouté
             )}
 
-      
+
             {/* ✅ Afficher "Answer" uniquement s'il y a des messages */}
             {messages.length > 0 && (!takData || takData.length === 0) && (
               <div className={`mt-0 ${!isSmallScreen ? "ml-8" : ""} pb-2 flex items-center`}>
