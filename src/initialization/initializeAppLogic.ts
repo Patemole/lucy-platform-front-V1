@@ -3,6 +3,7 @@ import useChatStore from '../stores/useChatStore';
 import { useAppInitializationStore } from '../stores/useAppInitializationStore';
 import { Unsubscribe } from 'firebase/firestore'; // Importer pour le type de retour de fetchSocialThreads
 import React, { useRef, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 // Variables globales pour garder une trace des fonctions de désinscription
 let privateConversationsUnsubscribe: Unsubscribe | null = null;
@@ -14,11 +15,11 @@ let socialThreadsUnsubscribe: Unsubscribe | null = null;
  * Appelée depuis App.tsx lorsque l'utilisateur est authentifié et ses données chargées.
  */
 export const InitializeAppLogic: React.FC = () => {
-  const { user, isLoading: isLoadingAuth, isAuthenticated } = useAuthStore((state) => ({
+  const { user, isLoading: isLoadingAuth, isAuthenticated } = useAuthStore(useShallow((state) => ({
     user: state.user,
     isLoading: state.isLoading,
     isAuthenticated: state.isAuthenticated,
-  }));
+  })));
   const { 
     _listenToConversations, // <-- Utiliser la nouvelle fonction
     cleanupConversationListener, 
@@ -28,7 +29,16 @@ export const InitializeAppLogic: React.FC = () => {
     isLoadingConversations,
     setActiveChat,
     currentChatId
-  } = useChatStore();
+  } = useChatStore(useShallow((state) => ({
+    _listenToConversations: state._listenToConversations,
+    cleanupConversationListener: state.cleanupConversationListener,
+    fetchSocialThreads: state.fetchSocialThreads,
+    clearChatState: state.clearChatState,
+    conversations: state.conversations,
+    isLoadingConversations: state.isLoadingConversations,
+    setActiveChat: state.setActiveChat,
+    currentChatId: state.currentChatId
+  })));
   const setAppInitialized = useAppInitializationStore((state) => state.setAppInitialized);
   const isAppInitialized = useAppInitializationStore((state) => state.isAppInitialized);
 
@@ -36,31 +46,29 @@ export const InitializeAppLogic: React.FC = () => {
   const socialThreadsListenerInitialized = useRef(false);
   //const conversationListenerInitialized = useRef(false); // Remplacé par la logique dynamique
 
-  // IDs de chat actuels depuis useAuthStore (sera mis à jour par le listener userDoc)
-  const currentChatIds = useAuthStore(state => state.user?.chatsessions || []);
+  // Sélectionner les chatIds de manière stable (retourne undefined si non trouvé)
+  const currentChatIds = useAuthStore(state => state.user?.chatsessions);
 
-  // Effet pour initialiser les listeners des conversations (privées)
-  // Se déclenche quand l'utilisateur est authentifié et que ses IDs de chat changent
+  // Effet pour initialiser les listeners des conversations
   useEffect(() => {
+    // Gérer le cas où currentChatIds est undefined ou vide
+    const chatIdsToListen = currentChatIds || []; 
+    
     if (isAuthenticated && user) {
-      console.log(`[initializeAppLogic] User authenticated. Chat IDs changed/loaded:`, currentChatIds);
-      // Lance ou met à jour le listener pour les conversations privées
-      _listenToConversations(currentChatIds);
-      // conversationListenerInitialized.current = true; // Marquer comme initialisé
+      console.log(`[initializeAppLogic] User authenticated. Chat IDs changed/loaded:`, chatIdsToListen);
+      _listenToConversations(chatIdsToListen);
     } else {
-      // Si l'utilisateur se déconnecte, nettoyer le listener
       console.log("[initializeAppLogic] User logged out or IDs cleared. Cleaning up conversation listener.");
       cleanupConversationListener();
-      // conversationListenerInitialized.current = false;
     }
 
-    // Fonction de nettoyage pour cet effet: appelée si l'utilisateur change ou le composant démonte
     return () => {
       console.log("[initializeAppLogic] Cleanup effect for conversation listener.");
       cleanupConversationListener();
-      // conversationListenerInitialized.current = false;
     };
-  }, [isAuthenticated, user, currentChatIds, _listenToConversations, cleanupConversationListener]); // Dépend de l'auth et des IDs
+    // Garder currentChatIds (la valeur potentiellement undefined) dans les deps
+    // React comparera la référence de l'array s'il existe.
+  }, [isAuthenticated, user, currentChatIds, _listenToConversations, cleanupConversationListener]); 
 
 
   // Effet pour initialiser le listener des threads sociaux (une seule fois après auth)
