@@ -4,7 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { AnimatePresence } from 'framer-motion'; // Pour les animations de transition entre les routes
 import getTheme from './themes'; // Fonction pour obtenir le thème basé sur le sous-domaine et le mode (light/dark)
 import useAuthStore from './stores/useAuthStore'; // Store Zustand pour la gestion de l'authentification
-import { initializeAppLogic } from './initialization/initializeAppLogic'; // Logique d'initialisation des données après connexion
+import { InitializeAppLogic } from './initialization/initializeAppLogic'; // Logique d'initialisation des données après connexion
 import useChatStore from './stores/useChatStore'; // Store Zustand pour la gestion du chat
 import { useAppInitializationStore } from './stores/useAppInitializationStore'; // Store Zustand pour suivre l'état d'initialisation de l'app
 
@@ -132,72 +132,66 @@ const App: React.FC = () => {
 
     // --- Gestion de l'Authentification ---
     // Récupère l'état et les actions liés à l'authentification depuis le store Zustand
-    const initializeAuthListener = useAuthStore((state) => state.initializeAuthListener); // Action pour démarrer l'écouteur Firebase Auth
+    const initializeListeners = useAuthStore((state) => state.initializeListeners); // <-- Utiliser initializeListeners
     const isLoadingAuth = useAuthStore((state) => state.isLoading); // État: l'authentification initiale est-elle en cours ?
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated); // État: l'utilisateur est-il connecté ?
     const user = useAuthStore((state) => state.user); // Données de l'utilisateur connecté
 
-    // --- Effet pour initialiser l'écouteur Firebase Auth ---
+    // --- Effet pour initialiser l'écouteur d'authentification au montage de l'application
     useEffect(() => {
-        // Démarre l'écouteur Firebase Auth une seule fois au montage du composant App
-        console.log("App: Initialisation de l'écouteur Firebase Auth.");
-        const unsubscribe = initializeAuthListener();
+        console.log("[App] Mounting... Initializing Firebase listeners via useAuthStore.");
+        // Lance l'initialisation et récupère la fonction pour arrêter l'écouteur d'authentification
+        const unsubscribeAuth = initializeListeners();
 
-        // Fonction de nettoyage : sera appelée lorsque le composant App est démonté
+        // Nettoie l'écouteur d'authentification lorsque le composant App est démonté
         return () => {
-            console.log("App: Nettoyage de l'écouteur Firebase Auth.");
-            unsubscribe(); // Coupe l'écouteur pour éviter les fuites de mémoire
+            console.log("[App] Unmounting... Cleaning up Firebase auth listener.");
+            unsubscribeAuth();
         };
-    }, [initializeAuthListener]); // Le tableau de dépendances vide assure que l'effet ne s'exécute qu'une fois
+    }, [initializeListeners]); // Dépendance à initializeListeners
 
     // --- Effet pour déclencher l'initialisation de la logique applicative post-authentification ---
-    useEffect(() => {
-        // Récupère l'état de chargement des données Firestore de l'utilisateur (depuis useAuthStore)
-        const isFetchingUserData = useAuthStore.getState().isFetchingUserData;
+    // Cet état local va contrôler si InitializeAppLogic doit être rendu
+    const [shouldInitializeLogic, setShouldInitializeLogic] = useState(false);
 
-        // Définit les conditions nécessaires pour lancer l'initialisation principale
-        const canInitialize =
-            !isLoadingAuth &&      // 1. L'authentification Firebase initiale doit être terminée
-            isAuthenticated &&     // 2. L'utilisateur doit être authentifié
-            !isFetchingUserData && // 3. La récupération des données Firestore de l'utilisateur doit être terminée
-            user &&                // 4. L'objet utilisateur (au moins avec ID/email) doit exister
-            !isAppInitialized;     // 5. L'initialisation ne doit pas déjà avoir été effectuée
+    useEffect(() => {
+        const isFetchingUserData = useAuthStore.getState().isFetchingUserData;
+        const canInitialize = 
+            !isLoadingAuth && 
+            isAuthenticated && 
+            !isFetchingUserData && 
+            user && 
+            !isAppInitialized; // La condition principale
 
         if (canInitialize) {
-            console.log("App: Conditions remplies pour l'initialisation. Déclenchement de initializeAppLogic...");
+            console.log("App: Conditions remplies pour l'initialisation. Rendu de InitializeAppLogic...");
+            // On ne marque plus isAppInitialized ici, le composant InitializeAppLogic le fera
+            // setAppInitialized(true);
+            setShouldInitializeLogic(true); // Déclencher le rendu du composant d'initialisation
 
-            // Vérification optionnelle: les données essentielles (ex: chatIds) sont-elles présentes ?
-             if (!user.chatsessions) { // Note: 'chatsessions' est le nom utilisé dans useAuthStore
-                 console.warn("App: Données utilisateur récupérées, mais 'chatsessions' est manquant. Vérifiez Firestore/fetchUserData.");
-                 // On continue quand même, initializeAppLogic devrait pouvoir gérer une liste vide.
-             }
-
-            // --- !! IMPORTANT !! ---
-            // Marque l'application comme initialisée *avant* l'appel asynchrone.
-            // Cela empêche les appels multiples si les dépendances de l'effet changent rapidement.
-            setAppInitialized(true);
-
-            // Lance la fonction asynchrone qui charge les conversations, etc.
+            // !! Suppression de l'appel direct et du .then/.catch !!
+            /*
             initializeAppLogic()
                 .then(() => {
                     console.log("App: initializeAppLogic terminée avec succès.");
-                    // Optionnel: logguer des infos après l'initialisation réussie
                     const finalChatId = useChatStore.getState().currentChatId;
                     console.log(`App: Chat ID actif après initialisation: ${finalChatId}`);
                 })
-                .catch((error) => {
+                .catch((error: any) => { // <-- Ajout du type ici
                     console.error("App: Erreur pendant initializeAppLogic:", error);
-                    // Gestion d'erreur: Peut-être remettre `isAppInitialized` à false pour permettre une nouvelle tentative ?
-                    // setAppInitialized(false);
                 });
+            */
         } else if (!isAuthenticated && isAppInitialized) {
-             // Cas où l'utilisateur se déconnecte: Réinitialise le flag d'initialisation
-             console.log("App: Utilisateur déconnecté. Réinitialisation du flag isAppInitialized.");
+             console.log("App: Utilisateur déconnecté. Arrêt du rendu de InitializeAppLogic et réinitialisation.");
+             setShouldInitializeLogic(false); // Arrêter le rendu
              setAppInitialized(false);
+        } else if (!canInitialize && shouldInitializeLogic) {
+             // Si les conditions ne sont plus remplies mais qu'on rendait le composant
+             console.log("App: Conditions d'initialisation non remplies. Arrêt du rendu de InitializeAppLogic.");
+             setShouldInitializeLogic(false);
         }
-        // Dépendances de l'effet: l'effet se redéclenchera si l'une de ces valeurs change.
-        // `isFetchingUserData` est lu via `getState` et n'a pas besoin d'être listé ici.
-    }, [isLoadingAuth, isAuthenticated, user, isAppInitialized, setAppInitialized]);
+
+    }, [isLoadingAuth, isAuthenticated, user, isAppInitialized, setAppInitialized, shouldInitializeLogic]); // Ajouter shouldInitializeLogic aux dépendances
 
     // --- Affichage pendant le chargement initial de l'authentification ---
     if (isLoadingAuth) {
@@ -216,7 +210,9 @@ const App: React.FC = () => {
             <ErrorBoundary>
                 {/* Configure le routeur principal de l'application */}
                 <Router future={future}>
-                    {/* Affiche les routes définies dans AnimatedRoutes */}
+                    {/* Rendre le composant d'initialisation s'il doit l'être */} 
+                    {shouldInitializeLogic && <InitializeAppLogic />}
+                    {/* Affiche les routes définies dans AnimatedRoutes */} 
                     <AnimatedRoutes />
                 </Router>
             </ErrorBoundary>

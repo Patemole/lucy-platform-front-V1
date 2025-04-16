@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../auth/firebase';
 import { saveOnboardingStep } from '../../../api/chat';
-import { sendUserInfoLinkedInScraping, scrapeLinkedInProfile, scrapeInstagramProfile } from '../../../api/auth_and_onboarding';
-import { Message, StudentProfile, User } from '../../../interfaces/interfaces_eleve';
+import { scrapeLinkedInProfile, scrapeInstagramProfile } from '../../../api/auth_and_onboarding';
+import { Message} from '../../../interfaces/interfaces_eleve';
 import useAuthStore from '../../../stores/useAuthStore';
 import useChatStore from '../../../stores/useChatStore';
 import { useAppInitializationStore } from '../../../stores/useAppInitializationStore';
@@ -21,7 +21,7 @@ export const useOnboarding = ({
   onSubmit: (history: Message[], inputValue: string, isOnboardingMessage?: boolean) => Promise<void>;
 }) => {
   // --- Stores ---
-  const { user, chatIds, updateUserProfileInStore } = useAuthStore();
+  const { user, updateUserProfileInStore } = useAuthStore();
   const {
     messages,
     setMessages,

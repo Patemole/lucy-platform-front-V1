@@ -142,6 +142,7 @@ export default function LearningStyleSurvey() {
     }
   };
 
+  /*
   // Handler pour le statut d'inscription aux clubs
   const handleRegisteredClubStatusChange = (event) => {
     setRegisteredClubStatus(event.target.value);
@@ -149,6 +150,7 @@ export default function LearningStyleSurvey() {
       setRegisteredClubs('');
     }
   };
+  */
 
   const handleRegisteredClubsChange = (event) => setRegisteredClubs(event.target.value);
 

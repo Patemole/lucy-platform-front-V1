@@ -26,7 +26,6 @@ import {
   AnswerINSTA2,
   AnswerERROR,
   AnswerACCURACYSCORE,
-  Message
 
 } from "../../interfaces/interfaces_eleve";
 import { IconButton } from '@mui/material';

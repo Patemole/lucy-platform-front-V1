@@ -1,7 +1,6 @@
 import {
   doc,
   getDoc,
-  getDocs,
   updateDoc,
   deleteDoc,
   collection,
@@ -15,7 +14,7 @@ import {
   Unsubscribe, // Importer Unsubscribe pour le retour du listener
   documentId, // <-- Importer documentId
 } from 'firebase/firestore';
-import { db, auth } from '../auth/firebase'; // Assurez-vous que le chemin est correct
+import { db} from '../auth/firebase'; // Assurez-vous que le chemin est correct
 import { getChatHistory, saveMessageAIToBackend } from '../api/chat'; // Assurez-vous que le chemin est correct
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -41,6 +40,7 @@ import {
 } from '../interfaces/interfaces_eleve'; // Assurez-vous que le chemin est correct
 import useAuthStore from './useAuthStore'; // Importer pour accéder à l'état d'authentification
 import { create, StateCreator } from 'zustand';
+import { devtools } from 'zustand/middleware';
 
 // --- Interface pour l'état du Chat Store ---
 interface ChatState {
@@ -91,7 +91,6 @@ interface ChatState {
   setMessagesList: (messages: Message[]) => void; // Remplace la liste complète des messages
   clearChatState: () => void; // Réinitialise l'état du chat (utile à la déconnexion)
 
-  fetchConversations: () => Unsubscribe; // Charge la liste des conversations de l'utilisateur
   fetchSocialThreads: () => Unsubscribe; // Initialise le listener pour les threads sociaux
   loadChatMessages: (chatId: string) => Promise<void>; // Charge les messages et détails d'un chat spécifique
   setActiveChat: (chatId: string | null) => void; // Définit le chat actif (peut appeler loadChatMessages)
@@ -102,6 +101,12 @@ interface ChatState {
   updateConversationPrivacy: (chatId: string, isPrivate: boolean) => Promise<void>;
   updateConversationTitleAndTopic: (chatId: string, title: string, category: string) => Promise<void>;
   markSocialThreadAsRead: (chatId: string) => Promise<void>;
+
+  // --- Nouvelles actions/états pour le listener dynamique des conversations ---
+  _conversationListenerUnsubscribe: Unsubscribe | null; // Stocker l'unsubscribe du listener conversations
+  _setConversationListenerUnsubscribe: (unsubscribe: Unsubscribe | null) => void; // Setter
+  _listenToConversations: (chatIds: string[]) => void; // La fonction qui met en place le listener
+  cleanupConversationListener: () => void; // Pour arrêter le listener
 }
 
 
@@ -112,17 +117,18 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   conversations: [],
   socialThreads: [],
   currentChatId: null,
-  isLandingPageVisible: false, // Commence sur la landing page par défaut
+  isLandingPageVisible: true, // Commence sur la landing page par défaut
   isSocialThreadActive: false,
   isCurrentChatPrivate: false,
   isLoadingMessages: false,
-  isLoadingConversations: false,
+  isLoadingConversations: false, // Sera géré par le nouveau listener
   isLoadingSocialThreads: false,
   isStreamingResponse: false,
   unreadSocialThreadsCount: 0,
   relatedQuestions: [],
   error: null,
-  abortController: null, // Initialiser à null
+  abortController: null, 
+  _conversationListenerUnsubscribe: null, // <-- Initialiser à null
 
   // --- Internal Setters ---
   setMessages: (messages: Message[]) => set({ messages }),
@@ -140,11 +146,12 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   _setRelatedQuestions: (questions: string[]) => set({ relatedQuestions: questions }),
   _setError: (error: string | null) => set({ error: error, isLoadingMessages: false, isLoadingConversations: false, isLoadingSocialThreads: false }), // Stop loading on error
   setAbortController: (controller) => set({ abortController: controller }), // Implémenter l'action
+  _setConversationListenerUnsubscribe: (unsubscribe) => set({ _conversationListenerUnsubscribe: unsubscribe }), // <-- Implémenter le setter
 
   // --- Public Actions ---
 
   setMessagesList: (messages: Message[]) => {
-    set({ messages }); // Ne fait que mettre à jour les messages
+    get().setMessages(messages); // Utilise le setter interne
   },
 
   addOptimisticMessage: (humanMessageContent: string) => {
@@ -248,9 +255,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   },
 
   finalizeAiMessage: async (aiMessageContent: string, metadata: Partial<Message>) => {
-    const { currentChatId } = get();
-    const { user } = useAuthStore.getState(); // Get current user info
-
+    let finalAiMessageFromState: Message | undefined;
     set((state) => {
         const currentMessages = state.messages;
         // Trouve le dernier message AI marqué comme isLoading
@@ -270,34 +275,33 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         };
 
         updatedMessages[lastMessageIndex] = finalAiMessage;
+        finalAiMessageFromState = finalAiMessage;
 
         return { messages: updatedMessages, isStreamingResponse: false, relatedQuestions: [] }; // Fin du streaming, reset related questions
     });
 
     // Sauvegarde finale en backend
-    if (currentChatId && user?.id) {
+    if (get().currentChatId && useAuthStore.getState().user?.id && finalAiMessageFromState) {
         try {
             // ---> CORRECTION Linter Error 1 : Revenir à l'appel API original <---
             // Récupérer le dernier message AI finalisé
-            const finalAiMessage = get().messages.slice().reverse().find(m => m.type === 'ai' && !m.isLoading);
-            // Récupérer le message humain qui le précède
             const lastHumanMessage = get().messages.slice(0, get().messages.length - 1).reverse().find(m => m.type === 'human')?.content || '';
 
-            if (finalAiMessage) {
+            if (finalAiMessageFromState) {
                 console.log("ChatStore: Saving finalized AI message to backend...");
                 await saveMessageAIToBackend({
-                   message: finalAiMessage.content, // Utiliser le contenu final
-                   chatSessionId: currentChatId,
+                   message: finalAiMessageFromState.content, // Utiliser le contenu final
+                   chatSessionId: get().currentChatId!,
                    courseId: 'default_course_id', // Ou récupérer dynamiquement si nécessaire
                    username: 'Lucy', // Nom du persona
                    type: 'ai',
-                   uid: user.id,
+                   uid: useAuthStore.getState().user!.id,
                    input_message: lastHumanMessage,
-                   university: user.university || '',
+                   university: useAuthStore.getState().user!.university || '',
                    // Inclure d'autres métadonnées si attendues par l'API
                    // (Ex: sources, confidence score, etc. si finalAiMessage les contient)
-                   sources: finalAiMessage.citedDocuments, // Utiliser directement citedDocuments si le format correspond
-                   confident_score: finalAiMessage.CONFIDENCESCORE && finalAiMessage.CONFIDENCESCORE.length > 0 ? parseFloat(finalAiMessage.CONFIDENCESCORE[0].confidenceScore) : null, // Extraire et convertir le score
+                   sources: finalAiMessageFromState.citedDocuments, // Utiliser directement citedDocuments si le format correspond
+                   confident_score: finalAiMessageFromState.CONFIDENCESCORE && finalAiMessageFromState.CONFIDENCESCORE.length > 0 ? parseFloat(finalAiMessageFromState.CONFIDENCESCORE[0].confidenceScore) : null, // Extraire et convertir le score
                 });
                  console.log("ChatStore: Finalized AI message saved successfully.");
             } else {
@@ -329,60 +333,66 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       error: null,
       abortController: null,
     });
+    get().cleanupConversationListener();
   },
 
-  // --- Data Fetching Actions ---
+  // --- Data Fetching Actions --- (Modifiées/Nouvelles)
 
-  fetchConversations: () => {
-    const { _setIsLoadingConversations, setConversations, _setError, setActiveChat } = get();
-    const user = useAuthStore.getState().user; // Récupérer l'objet user entier
-    const userId = user?.id;
-    const university = user?.university;
-    const userChatIds = user?.chatsessions || []; // <-- Récupérer les chat IDs de l'utilisateur
+  // Nouvelle fonction interne pour mettre en place le listener
+  _listenToConversations: (chatIds) => {
+    const { 
+        setConversations, 
+        _setError, 
+        _setIsLoadingConversations, 
+        setActiveChat, 
+        cleanupConversationListener, // Utiliser pour nettoyer avant de relancer
+        _setConversationListenerUnsubscribe 
+    } = get();
+    const university = useAuthStore.getState().user?.university; // Besoin de l'université pour le filtre client
 
-    if (!userId || !university) {
-      console.warn("[ChatStore] Cannot fetch conversations listener: userId or university missing.");
+    // 1. Nettoyer l'ancien listener s'il existe
+    cleanupConversationListener();
+    console.log("[ChatStore - _listenToConversations] Starting listener setup.");
+
+    if (!university) {
+      console.warn("[ChatStore - _listenToConversations] University missing. Cannot listen to conversations.");
       setConversations([]);
-      _setError("User information missing to fetch conversations.");
+      _setError("University information missing.");
       _setIsLoadingConversations(false);
-      return () => { console.log("[ChatStore - fetchConversations] Returning No-Op Unsubscribe (no user/university)."); };
+      return; // Ne rien faire
     }
 
-    // Si l'utilisateur n'a pas de conversations, ne rien faire et retourner une fonction de désabonnement vide
-    if (userChatIds.length === 0) {
-      console.log("[ChatStore - fetchConversations] User has no chat sessions. Setting empty list.");
+    if (!chatIds || chatIds.length === 0) {
+      console.log("[ChatStore - _listenToConversations] No chat IDs provided. Setting empty list and stopping loading.");
       setConversations([]);
       _setIsLoadingConversations(false);
-      setActiveChat(null); // Assure qu'aucun chat n'est actif
-      return () => { console.log("[ChatStore - fetchConversations] Returning No-Op Unsubscribe (no chats)."); };
+      // Si l'utilisateur actif était dans la liste précédente, le désactiver ?
+      // Ou laisser InitializeAppLogic gérer la sélection initiale.
+      // Pour l'instant, on vide juste la liste.
+      return; // Ne rien faire
     }
 
-    console.log(`[ChatStore] Setting up Firestore listener for conversations for user ${userId} using ${userChatIds.length} chat IDs.`);
+    console.log(`[ChatStore - _listenToConversations] Setting up listener for ${chatIds.length} chat IDs.`);
     _setIsLoadingConversations(true);
 
     const conversationsRef = collection(db, 'chatsessions');
-    // Utiliser 'documentId()' et 'in' pour écouter spécifiquement les chats de l'utilisateur
-    // Attention: l'opérateur 'in' est limité à 30 éléments (auparavant 10). Gérer si > 30.
-    // Pour l'instant, on suppose <= 30 pour la simplicité.
+    // Gérer le cas > 30 IDs si nécessaire (plusieurs listeners)
+    // Pour l'instant: slice(0, 30)
     const q = query(
       conversationsRef,
-      where(documentId(), 'in', userChatIds.slice(0, 30)), // Utiliser les IDs du user
-      // On ne peut pas utiliser 'where university' avec 'where documentId in'
-      // Il faudra filtrer côté client si nécessaire, ou s'assurer que les IDs sont corrects
-      orderBy('modified_at', 'desc') // Garder le tri
+      where(documentId(), 'in', chatIds.slice(0, 30)), 
+      orderBy('modified_at', 'desc') 
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      console.log(`[ChatStore - fetchConversations] onSnapshot triggered. Received ${snapshot.docs.length} matching conversation documents.`);
-      const isInitialLoad = get().isLoadingConversations;
-
+      console.log(`[ChatStore - _listenToConversations] Snapshot received ${snapshot.docs.length} docs.`);
+      // Note: isLoadingConversations est déjà à true, pas besoin de le re-vérifier ici pour la logique initiale
+      
       const fetchedConversations: Conversation[] = snapshot.docs
-          // Filtrage côté client pour l'université, car non possible dans la requête 'in'
-         .filter(doc => doc.data().university === university)
+         .filter(doc => doc.data().university === university) // Filtre client université
          .map(doc => {
             const data = doc.data();
             const threadType = data.thread_type === 'Public' ? 'Public' : 'Private';
-
             return {
                 chat_id: doc.id,
                 name: data.name || 'Untitled Conversation',
@@ -392,37 +402,51 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
             };
          });
 
-      console.log(`[ChatStore - fetchConversations] Processed ${fetchedConversations.length} conversations after client-side filtering.`);
-      setConversations(fetchedConversations);
+      // Tri côté client car Firestore ne garantit pas l'ordre avec la clause 'in'
+      const sortedConversations = [...fetchedConversations].sort((a, b) => {
+        const timeA = a.modified_at instanceof Date ? a.modified_at.getTime() : 0;
+        const timeB = b.modified_at instanceof Date ? b.modified_at.getTime() : 0;
+        return timeB - timeA;
+      });
+
+      console.log(`[ChatStore - _listenToConversations] Processed ${sortedConversations.length} conversations after filtering and sorting.`);
+      setConversations(sortedConversations);
       _setIsLoadingConversations(false);
       _setError(null);
 
-      // --- Logique pour le chat initial ---
-      if (isInitialLoad && !get().currentChatId && fetchedConversations.length > 0) {
-          // Trier à nouveau par date après le filtre client pour s'assurer que le plus récent est sélectionné
-          // Correction Linter: Utiliser les timestamps directement s'ils existent, sinon 0.
-          const sortedConversations = [...fetchedConversations].sort((a, b) => {
-            const timeA = a.modified_at instanceof Date ? a.modified_at.getTime() : 0;
-            const timeB = b.modified_at instanceof Date ? b.modified_at.getTime() : 0;
-            return timeB - timeA;
-          });
-          const initialChatId = sortedConversations[0].chat_id;
-          console.log(`[ChatStore - fetchConversations] Initial load complete. Setting initial active chat to: ${initialChatId}`);
-          setActiveChat(initialChatId);
-      } else if (isInitialLoad && !get().currentChatId && fetchedConversations.length === 0) {
-          console.log("[ChatStore - fetchConversations] Initial load complete. No matching conversations found after filtering, setting active chat to null.");
-          setActiveChat(null);
-      }
+      // Gérer la sélection initiale/désélection si le chat actif disparaît
+      const currentChatId = get().currentChatId;
+      const activeChatExists = currentChatId && sortedConversations.some(c => c.chat_id === currentChatId);
+      
+      if (currentChatId && !activeChatExists) {
+          console.log(`[ChatStore - _listenToConversations] Active chat ${currentChatId} no longer exists in fetched list. Setting active chat to null.`);
+          // On pourrait sélectionner la première conv de la nouvelle liste, ou null
+          setActiveChat(null); // Option simple: revenir à landing
+      } 
+      // La logique pour sélectionner le *premier* chat lors du chargement initial
+      // devrait être gérée par l'orchestrateur (InitializeAppLogic)
 
     }, (error) => {
-      console.error("[ChatStore - fetchConversations] onSnapshot listener error:", error);
+      console.error("[ChatStore - _listenToConversations] Listener error:", error);
       _setError("Failed to load conversation history listener.");
       setConversations([]);
       _setIsLoadingConversations(false);
+      _setConversationListenerUnsubscribe(null); // Assurer le nettoyage en cas d'erreur listener
     });
 
-    console.log("[ChatStore - fetchConversations] Returning Firestore unsubscribe function.");
-    return unsubscribe;
+    // Stocker la fonction de désabonnement
+    _setConversationListenerUnsubscribe(unsubscribe);
+    console.log("[ChatStore - _listenToConversations] Listener setup complete.");
+  },
+
+  // Nouvelle fonction pour nettoyer le listener
+  cleanupConversationListener: () => {
+      const unsubscribe = get()._conversationListenerUnsubscribe;
+      if (unsubscribe) {
+          console.log("[ChatStore] Cleaning up previous conversation listener.");
+          unsubscribe();
+          set({ _conversationListenerUnsubscribe: null });
+      }
   },
 
   fetchSocialThreads: () => {
@@ -541,7 +565,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
 
   setActiveChat: (chatId: string | null) => {
     const currentId = get().currentChatId;
-    const { setMessages, setIsLandingPageVisible, _setCurrentChatId, setIsSocialThreadActive, _setIsCurrentChatPrivate, _setIsLoadingMessages } = get();
+    const { setMessages, setIsLandingPageVisible, _setCurrentChatId, setIsSocialThreadActive, _setIsCurrentChatPrivate, _setIsLoadingMessages, loadChatMessages, conversations, socialThreads } = get(); // Ajouter conversations et socialThreads
 
     if (chatId === currentId && chatId !== null) {
         console.log(`[ChatStore - setActiveChat] Chat ${chatId} is already active.`);
@@ -556,48 +580,53 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     console.log(`[ChatStore - setActiveChat] Setting active chat from ${currentId} to: ${chatId}`);
 
     let isSocial = false;
-    let isPrivate = false; // Default to false
+    let isPrivate = false;
+    let chatExists = false; // Flag pour savoir si le chat ID est valide
 
     if (chatId) {
-        // Chercher dans les conversations personnelles/publiques de l'utilisateur
-        const conv = get().conversations.find(c => c.chat_id === chatId);
+        // Chercher dans les conversations GÉRÉES PAR LE LISTENER
+        const conv = conversations.find(c => c.chat_id === chatId);
         if (conv) {
-            // ---> MODIFICATION: Déterminer la privacité basée sur thread_type <---
             isPrivate = conv.thread_type === 'Private';
-            isSocial = false; // Une conversation dans cette liste n'est pas un "social thread" pur
-            console.log(`[ChatStore - setActiveChat] Found in 'conversations'. thread_type: ${conv.thread_type}, Setting isPrivate: ${isPrivate}`);
+            isSocial = false;
+            chatExists = true;
+            console.log(`[ChatStore - setActiveChat] Found in 'conversations' (via listener). Type: ${conv.thread_type}`);
         } else {
-            // Si non trouvé dans conversations, chercher dans les threads sociaux généraux
-            const social = get().socialThreads.find(t => t.chat_id === chatId);
+            // Si non trouvé, chercher dans les threads sociaux généraux
+            const social = socialThreads.find(t => t.chat_id === chatId);
             if (social) {
                 isSocial = true;
-                isPrivate = false; // Les threads sociaux généraux sont toujours publics
-                console.log(`[ChatStore - setActiveChat] Found in 'socialThreads'. Setting isSocial: true, isPrivate: false`);
+                isPrivate = false; // Les threads sociaux sont publics
+                chatExists = true;
+                console.log(`[ChatStore - setActiveChat] Found in 'socialThreads'.`);
+                // Marquer comme lu SI c'est un thread social et qu'on clique dessus
+                // Attention: A faire peut-être dans le composant Sidebar pour plus de clarté
+                // get().markSocialThreadAsRead(chatId); 
             } else {
-                 console.warn(`[ChatStore - setActiveChat] Chat ID ${chatId} not found in conversations or socialThreads.`);
-                 // Garder isPrivate = false, isSocial = false par défaut
+                 console.warn(`[ChatStore - setActiveChat] Chat ID ${chatId} not found in local lists.`);
+                 // Ne pas changer de chat si l'ID n'est pas valide
+                 return; 
             }
         }
     }
 
-    // Mettre à jour l'état global
+    // Mettre à jour l'état seulement si chatID est null ou valide
     _setCurrentChatId(chatId);
-    setIsLandingPageVisible(!chatId); // Afficher landing si chatId est null
+    setIsLandingPageVisible(!chatId); 
     setIsSocialThreadActive(isSocial);
-    _setIsCurrentChatPrivate(isPrivate); // Utiliser la valeur calculée
-    setMessages([]); // Vider les messages
+    _setIsCurrentChatPrivate(isPrivate); 
+    setMessages([]); 
     _setIsLoadingMessages(!!chatId); // Mettre en chargement si un chat est sélectionné
 
-    if (chatId) {
-        console.log(`[ChatStore - setActiveChat] Loading messages for chat ${chatId} (isSocial: ${isSocial}, isPrivate: ${isPrivate})`);
-        get().loadChatMessages(chatId);
+    if (chatId && chatExists) { // S'assurer que le chat existe avant de charger
+        console.log(`[ChatStore - setActiveChat] Loading messages for chat ${chatId}`);
+        loadChatMessages(chatId); // Utiliser l'action existante
     } else {
-       console.log("[ChatStore - setActiveChat] Active chat set to null. Landing page visible.");
+       console.log("[ChatStore - setActiveChat] Active chat set to null or ID was invalid. Landing page visible.");
     }
   },
 
-  // --- Conversation Management Actions ---
-
+  // addNewConversation: Appelle addChatIdToStoreAndFirestore, le listener s'occupera du reste
   addNewConversation: async () => {
     const { user } = useAuthStore.getState();
     if (!user?.id || !user.university) {
@@ -617,254 +646,165 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     const newChatId = uuidv4();
     console.log(`addNewConversation: Attempting to create new chat with ID: ${newChatId}`);
 
-    // --- Mise à jour optimiste de l'état pour un NOUVEAU chat ---
-    // Sauvegarder l'état précédent au cas où la création Firestore échoue
-    const originalCurrentChatId = get().currentChatId;
-    const originalMessages = get().messages;
+    // Sauvegarder l'état précédent uniquement pour le switch d'UI
+    //const originalMessages = get().messages; // Pas besoin de sauvegarder/restaurer les messages ici
     const originalIsLandingVisible = get().isLandingPageVisible;
     const originalIsPrivate = get().isCurrentChatPrivate;
     const originalIsSocial = get().isSocialThreadActive;
-    const originalIsLoadingMessages = get().isLoadingMessages;
+    //const originalIsLoadingMessages = get().isLoadingMessages;
 
-    // Définir l'état directement: nouveau chat ID actif, landing page visible, pas de messages, pas de chargement
-    set({
-        currentChatId: newChatId,
-        isLandingPageVisible: true, // <-- Afficher la landing page !
-        messages: [],
-        isLoadingMessages: false, // <-- Pas besoin de charger pour un nouveau chat
-        isSocialThreadActive: false, // Les nouveaux chats sont privés par défaut
-        isCurrentChatPrivate: true, // Les nouveaux chats sont privés par défaut
-    });
-    console.log(`[ChatStore - addNewConversation] Optimistically set state for new chat ${newChatId}. Landing page should be visible.`);
-
+    // Switch UI optimiste vers un état "nouveau chat en attente"
+    // Pas besoin de définir currentChatId ici, on attend que le listener le ramène
+    // On pourrait afficher un indicateur de chargement global ?
+    // Pour l'instant, on ne change pas l'UI active, on attend le listener.
+     set({ isLandingPageVisible: true }); // Revenir à la landing page temporairement ? Ou garder l'ancien chat?
+     console.log("[ChatStore - addNewConversation] Creating backend resources...");
 
     try {
       const currentTime = serverTimestamp();
       const chatData = {
         chat_id: newChatId,
-        name: 'New Chat', // Sera mis à jour par le backend si nécessaire
+        name: 'New Chat',
         created_at: currentTime,
         modified_at: currentTime,
         university: user.university,
         thread_type: 'Private',
-        is_private: true,
-        last_message_preview: '', // Vide au début
-        topic: 'General', // Default topic
+        is_private: true, 
+        topic: 'General',
+        // PAS DE user_ids
+        // PAS DE last_message_preview
       };
       await setDoc(doc(db, 'chatsessions', newChatId), chatData);
-      // L'ajout à la liste de l'utilisateur est crucial
+      
+      // L'étape cruciale: ajouter l'ID au document utilisateur
+      // Cette opération va déclencher le listener dans useAuthStore,
+      // qui va mettre à jour user.chatsessions,
+      // ce qui (via l'orchestrateur React) déclenchera _listenToConversations
       await useAuthStore.getState().addChatIdToStoreAndFirestore(newChatId);
 
-      console.log(`addNewConversation: Successfully created Firestore doc for chat ${newChatId}. Listener should pick it up.`);
-      // Le listener mettra à jour la liste `conversations` dans la sidebar. L'état actif est déjà bon.
+      console.log(`addNewConversation: Successfully created Firestore doc ${newChatId} and added ID to user doc.`);
+      // Le listener fera le reste. On pourrait vouloir sélectionner ce chat automatiquement.
+      // On peut retourner l'ID pour que l'appelant puisse faire setActiveChat si besoin.
       return newChatId;
 
     } catch (error) {
-      console.error("❌ addNewConversation: Failed to create new conversation:", error);
-      // !! ROLLBACK !!
-      set({
+      console.error("❌ addNewConversation: Failed to create new conversation or update user doc:", error);
+      set({ 
           error: "Failed to create new conversation.",
-          // Restaurer l'état précédent
-          currentChatId: originalCurrentChatId,
-          messages: originalMessages,
-          isLandingPageVisible: originalIsLandingVisible,
+          // Restaurer l'état UI original si on avait changé quelque chose
+          isLandingPageVisible: originalIsLandingVisible, 
+          // currentChatId: originalCurrentChatId, // Garder l'ancien chat actif
           isCurrentChatPrivate: originalIsPrivate,
           isSocialThreadActive: originalIsSocial,
-          isLoadingMessages: originalIsLoadingMessages, // Restaurer aussi l'état de chargement
       });
-      // Annuler aussi l'ajout dans AuthStore si l'erreur vient de Firestore
-      useAuthStore.getState().removeChatIdFromStore(newChatId);
+      // Pas besoin d'annuler l'ajout dans AuthStore, car addChatIdToStoreAndFirestore gère son propre rollback.
       return null;
     }
   },
 
+  // deleteConversation: Doit supprimer de Firestore ET du tableau user.chatsessions
+  deleteConversation: async (chatId: string) => {
+    if (!chatId) return;
+    
+    const { user } = useAuthStore.getState();
+    if (!user || !user.id) {
+      console.error("deleteConversation: User not logged in.");
+      return;
+    }
+
+    const userId = user.id;
+
+    // Optionnel : Vérifier si le chat appartient bien à l'utilisateur (présent dans ses chatIds actuels)
+    // if (!useAuthStore.getState().user?.chatsessions?.includes(chatId)) { ... }
+
+    // Pas de mise à jour optimiste de l'UI ici, car le listener s'en charge.
+    // On pourrait afficher un indicateur de suppression ?
+
+    try {
+      // 1. Supprimer le document chatsession
+      const conversationRef = doc(db, 'chatsessions', chatId);
+      await deleteDoc(conversationRef);
+      console.log(`deleteConversation: Firestore doc ${chatId} deleted.`);
+
+      // 2. Supprimer l'ID du tableau chatsessions de l'utilisateur
+      const userDocRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userDocRef);
+      if (userSnap.exists()) {
+          let currentDbChatIds: string[] = userSnap.data().chatsessions || []; // Assurer le type string[]
+          if (currentDbChatIds.includes(chatId)) {
+              // Ajouter le type explicite pour 'id' dans le filtre
+              currentDbChatIds = currentDbChatIds.filter((id: string) => id !== chatId);
+              await updateDoc(userDocRef, { chatsessions: currentDbChatIds });
+              console.log(`deleteConversation: ChatId ${chatId} removed from user ${userId} chatsessions.`);
+          } else {
+               console.warn(`deleteConversation: ChatId ${chatId} not found in user ${userId} chatsessions.`);
+          }
+      } else {
+           console.error(`deleteConversation: User document ${userId} not found.`);
+      }
+
+      // Si le chat supprimé était actif, setActiveChat(null) sera appelé par le listener
+      // via la logique dans _listenToConversations qui détecte que l'ID actif n'est plus dans la liste.
+      console.log(`deleteConversation: Chat ${chatId} deletion process complete. Listeners will update UI.`);
+
+    } catch (error) {
+      console.error(`❌ deleteConversation: Failed to delete chat ${chatId}:`, error);
+      set({ error: "Failed to delete conversation." });
+      // Pas de rollback UI nécessaire ici, car la suppression échouée n'aura pas déclenché les listeners.
+    }
+  },
+
+  // renameConversation, updateConversationPrivacy, updateConversationTitleAndTopic: 
+  // Ces fonctions modifient juste le document chatsession.
+  // Le listener _listenToConversations mettra à jour l'UI.
+  // Il faut juste s'assurer qu'elles mettent à jour `modified_at` pour le tri.
   renameConversation: async (chatId: string, newName: string) => {
-     if (!chatId || !newName?.trim()) {
-         console.warn("renameConversation: Invalid chatId or newName.");
-         return;
-     }
+     if (!chatId || !newName?.trim()) return;
      const trimmedNewName = newName.trim();
-     const originalConversation = get().conversations.find(c => c.chat_id === chatId);
-     const originalSocialThread = get().socialThreads.find(t => t.chat_id === chatId);
-     const originalName = originalConversation?.name || originalSocialThread?.name; // Nom original
-
-     if (!originalName || originalName === trimmedNewName) return; // Pas de changement ou non trouvé
-
-     // Mise à jour optimiste
-     set(state => ({
-         conversations: state.conversations.map(c => c.chat_id === chatId ? { ...c, name: trimmedNewName } : c),
-         socialThreads: state.socialThreads.map(t => t.chat_id === chatId ? { ...t, name: trimmedNewName } : t)
-     }));
-
+     // Pas de mise à jour optimiste, le listener s'en charge
      try {
         const conversationRef = doc(db, 'chatsessions', chatId);
         await updateDoc(conversationRef, { name: trimmedNewName, modified_at: serverTimestamp() });
-        console.log(`renameConversation: Chat ${chatId} renamed to "${trimmedNewName}" in Firestore.`);
+        console.log(`renameConversation: Chat ${chatId} updated. Listener will refresh.`);
      } catch (error) {
-         console.error(`❌ renameConversation: Failed to rename chat ${chatId} in Firestore:`, error);
-         // !! ROLLBACK !!
-         set(state => ({
-             conversations: state.conversations.map(c => c.chat_id === chatId ? { ...c, name: originalName } : c), // Remettre l'ancien nom
-             socialThreads: state.socialThreads.map(t => t.chat_id === chatId ? { ...t, name: originalName } : t), // Remettre l'ancien nom
-             error: "Failed to rename conversation."
-         }));
+         console.error(`❌ renameConversation: Failed for chat ${chatId}:`, error);
+         set({ error: "Failed to rename conversation." });
      }
   },
 
-  deleteConversation: async (chatId: string) => {
-    if (!chatId) {
-        console.warn("deleteConversation: Invalid chatId.");
-        return;
-    }
-    const { conversations, currentChatId, socialThreads } = get();
-    const conversationToDelete = conversations.find(c => c.chat_id === chatId);
-
-    // If the conversation isn't in the user's list, maybe it's just a social thread?
-    // For now, we only allow deleting conversations the user "owns" (in their list).
-    if (!conversationToDelete) {
-        console.warn(`deleteConversation: Conversation ${chatId} not found in user's list. Cannot delete.`);
-        // Optionally add logic to "unfollow" a social thread if needed.
-        return;
-    }
-
-    // Sauvegarde état avant modif optimiste
-    const originalConversations = [...conversations];
-    const originalSocialThreads = [...socialThreads];
-    const originalCurrentChatId = currentChatId;
-    const originalMessages = get().messages; // Sauvegarder les messages si on switch
-    const originalLandingVisible = get().isLandingPageVisible;
-    const originalPrivate = get().isCurrentChatPrivate;
-    const originalSocialActive = get().isSocialThreadActive;
-
-
-    // Mise à jour optimiste UI
-    const updatedConversations = conversations.filter(c => c.chat_id !== chatId);
-    const updatedSocialThreads = socialThreads.filter(t => t.chat_id !== chatId);
-    let nextActiveChatId: string | null = currentChatId;
-    if (currentChatId === chatId) {
-        nextActiveChatId = updatedConversations[0]?.chat_id || updatedSocialThreads[0]?.chat_id || null;
-    }
-
-    set({ conversations: updatedConversations, socialThreads: updatedSocialThreads });
-    // Switch de chat optimiste SI on supprime le chat actif
-    if(currentChatId === chatId) {
-        // Simuler l'état après setActiveChat(nextActiveChatId) sans l'appel API
-        set({
-            currentChatId: nextActiveChatId,
-            messages: [], // On vide en attendant le chargement réel (qui n'aura pas lieu si rollback)
-            isLandingPageVisible: true,
-            isCurrentChatPrivate: false, // Reset par défaut
-            isSocialThreadActive: false, // Reset par défaut
-            isLoadingMessages: !!nextActiveChatId, // Mettre en chargement si on switch vers un autre chat
-            error: null,
-         });
-    }
-
-    try {
-      const conversationRef = doc(db, 'chatsessions', chatId);
-      await deleteDoc(conversationRef);
-      await useAuthStore.getState().removeChatIdFromStore(chatId); // Celle-ci DOIT réussir ou avoir son rollback
-      console.log(`deleteConversation: Chat ${chatId} deleted successfully.`);
-      // Si succès, et qu'on avait switché, lancer le vrai chargement
-       if (currentChatId === chatId && nextActiveChatId) {
-            get().loadChatMessages(nextActiveChatId); // Lancer le chargement réel des messages du nouveau chat
-       } else if (currentChatId === chatId && !nextActiveChatId) {
-            set({ isLoadingMessages: false }); // Arrêter le loading si on n'a pas switché vers un autre chat
-       }
-    } catch (error) {
-      console.error(`❌ deleteConversation: Failed to delete chat ${chatId}:`, error);
-      // !! ROLLBACK !!
-      set({
-          conversations: originalConversations,
-          socialThreads: originalSocialThreads,
-          currentChatId: originalCurrentChatId, // Revenir au chat ID original
-          // Restaurer l'état du chat original si on avait switché
-          messages: currentChatId === chatId ? originalMessages : get().messages,
-          isLandingPageVisible: currentChatId === chatId ? originalLandingVisible : get().isLandingPageVisible,
-          isCurrentChatPrivate: currentChatId === chatId ? originalPrivate : get().isCurrentChatPrivate,
-          isSocialThreadActive: currentChatId === chatId ? originalSocialActive : get().isSocialThreadActive,
-          isLoadingMessages: false, // Arrêter le loading dans tous les cas d'erreur
-          error: "Failed to delete conversation."
-      });
-       // Annuler aussi la suppression dans AuthStore si possible
-       // (removeChatIdFromStore n'a pas de DB call, donc pas besoin de rollback ici, mais si addChatIdToStore échoue, son propre rollback est nécessaire)
-    }
-  },
-
   updateConversationPrivacy: async (chatId: string, isPrivate: boolean) => {
-    if (!chatId) return;
-    const newThreadType = isPrivate ? 'Private' : 'Public';
-    const originalConversation = get().conversations.find(c => c.chat_id === chatId);
-    // Sauvegarde état avant modif optimiste
-    const originalThreadType = originalConversation?.thread_type;
-    const wasActiveChat = get().currentChatId === chatId;
-    const originalIsPrivateForActive = get().isCurrentChatPrivate;
-
-    // Mise à jour optimiste
-    set(state => ({
-        conversations: state.conversations.map(c =>
-            c.chat_id === chatId
-            ? { ...c, thread_type: newThreadType }
-            : c
-        ),
-        isCurrentChatPrivate: wasActiveChat ? isPrivate : state.isCurrentChatPrivate
-    }));
-
+     if (!chatId) return;
+     const newThreadType = isPrivate ? 'Private' : 'Public';
+      // Pas de mise à jour optimiste
      try {
           const conversationRef = doc(db, 'chatsessions', chatId);
           await updateDoc(conversationRef, {
               thread_type: newThreadType,
-              modified_at: serverTimestamp()
+              modified_at: serverTimestamp() // Important pour le tri
           });
-          console.log(`updateConversationPrivacy: Chat ${chatId} privacy set to ${newThreadType}.`);
+          console.log(`updateConversationPrivacy: Chat ${chatId} updated. Listener will refresh.`);
      } catch (error) {
          console.error(`❌ updateConversationPrivacy: Failed for chat ${chatId}:`, error);
-          // !! ROLLBACK !!
-          set(state => ({
-              conversations: state.conversations.map(c =>
-                  c.chat_id === chatId
-                  ? { ...c, thread_type: originalThreadType || 'Public' }
-                  : c
-              ),
-              isCurrentChatPrivate: wasActiveChat ? originalIsPrivateForActive : state.isCurrentChatPrivate,
-              error: "Failed to update conversation privacy."
-          }));
+         set({ error: "Failed to update conversation privacy." });
      }
   },
 
    updateConversationTitleAndTopic: async (chatId: string, title: string, category: string) => {
-        if (!chatId || !title?.trim() || !category?.trim()) {
-            console.warn("updateConversationTitleAndTopic: Invalid chatId, title, or category.");
-            return;
-        }
+        if (!chatId || !title?.trim() || !category?.trim()) return;
         const trimmedTitle = title.trim();
         const trimmedCategory = category.trim();
-        const { conversations, socialThreads } = get();
-        const originalConv = conversations.find(c => c.chat_id === chatId);
-        const originalSocial = socialThreads.find(t => t.chat_id === chatId);
-        // Sauvegarde état avant modif optimiste
-        const originalName = originalConv?.name || originalSocial?.name;
-        const originalTopic = originalConv?.topic || originalSocial?.topic;
-
-
-         // Mise à jour optimiste
-         set(state => ({
-            conversations: state.conversations.map(c => c.chat_id === chatId ? { ...c, name: trimmedTitle, topic: trimmedCategory } : c),
-            socialThreads: state.socialThreads.map(t => t.chat_id === chatId ? { ...t, name: trimmedTitle, topic: trimmedCategory } : t)
-        }));
-
+         // Pas de mise à jour optimiste
         try {
              const conversationRef = doc(db, 'chatsessions', chatId);
-             await updateDoc(conversationRef, { name: trimmedTitle, topic: trimmedCategory, modified_at: serverTimestamp() });
-             console.log(`updateConversationTitleAndTopic: Chat ${chatId} updated.`);
+             await updateDoc(conversationRef, { 
+                 name: trimmedTitle, 
+                 topic: trimmedCategory, 
+                 modified_at: serverTimestamp() // Important pour le tri
+                });
+             console.log(`updateConversationTitleAndTopic: Chat ${chatId} updated. Listener will refresh.`);
         } catch (error) {
              console.error(`❌ updateConversationTitleAndTopic: Failed for chat ${chatId}:`, error);
-              // !! ROLLBACK !!
-             set(state => ({
-                conversations: state.conversations.map(c => c.chat_id === chatId ? { ...c, name: originalName || 'New Chat', topic: originalTopic || 'Default' } : c),
-                socialThreads: state.socialThreads.map(t => t.chat_id === chatId ? { ...t, name: originalName || 'New Chat', topic: originalTopic || 'Default' } : t),
-                error: "Failed to update conversation title/topic."
-             }));
+             set({ error: "Failed to update conversation title/topic." });
         }
     },
 
@@ -920,6 +860,12 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
 
 });
 
-const useChatStore = create(chatStoreCreator);
+// --- Enveloppe DevTools --- 
+const useChatStore = create<ChatState>()(
+  devtools(
+    chatStoreCreator, 
+    { name: "ChatStore" } 
+  )
+);
 
 export default useChatStore; 

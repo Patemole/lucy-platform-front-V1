@@ -1,3 +1,4 @@
+import { devtools } from 'zustand/middleware';
 import { create } from 'zustand';
 
 interface AppInitializationState {
@@ -10,10 +11,15 @@ interface AppInitializationState {
 /**
  * Store pour gérer l'état global de l'initialisation de l'application.
  */
-export const useAppInitializationStore = create<AppInitializationState>((set) => ({
-  isAppInitialized: false,
-  setAppInitialized: (status) => {
-    console.log(`[AppInitializationStore] Setting isAppInitialized to: ${status}`);
-    set({ isAppInitialized: status });
-  },
-})); 
+export const useAppInitializationStore = create<AppInitializationState>()(
+  devtools(
+    (set) => ({
+      isAppInitialized: false,
+      setAppInitialized: (status) => {
+        console.log(`[AppInitializationStore] Setting isAppInitialized to: ${status}`);
+        set({ isAppInitialized: status }, false, 'appInit/setAppInitialized');
+      },
+    }),
+    { name: "AppInitializationStore" }
+  )
+); 

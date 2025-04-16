@@ -2,6 +2,7 @@ import useAuthStore from '../stores/useAuthStore';
 import useChatStore from '../stores/useChatStore';
 import { useAppInitializationStore } from '../stores/useAppInitializationStore';
 import { Unsubscribe } from 'firebase/firestore'; // Importer pour le type de retour de fetchSocialThreads
+import React, { useRef, useEffect } from 'react';
 
 // Variables globales pour garder une trace des fonctions de désinscription
 let privateConversationsUnsubscribe: Unsubscribe | null = null;
@@ -12,89 +13,113 @@ let socialThreadsUnsubscribe: Unsubscribe | null = null;
  * après l'authentification de l'utilisateur.
  * Appelée depuis App.tsx lorsque l'utilisateur est authentifié et ses données chargées.
  */
-export const initializeAppLogic = async (): Promise<void> => {
-  console.log("[initializeAppLogic] Starting application listeners initialization...");
+export const InitializeAppLogic: React.FC = () => {
+  const { user, isLoading: isLoadingAuth, isAuthenticated } = useAuthStore((state) => ({
+    user: state.user,
+    isLoading: state.isLoading,
+    isAuthenticated: state.isAuthenticated,
+  }));
+  const { 
+    _listenToConversations, // <-- Utiliser la nouvelle fonction
+    cleanupConversationListener, 
+    fetchSocialThreads,
+    clearChatState,
+    conversations,
+    isLoadingConversations,
+    setActiveChat,
+    currentChatId
+  } = useChatStore();
+  const setAppInitialized = useAppInitializationStore((state) => state.setAppInitialized);
+  const isAppInitialized = useAppInitializationStore((state) => state.isAppInitialized);
 
-  // Note : userId et university sont récupérés DANS les actions du store maintenant
-  const chatStore = useChatStore.getState();
-  const appInitStore = useAppInitializationStore.getState();
-  const { user } = useAuthStore.getState(); // Récupérer l'utilisateur pour la vérification initiale
+  // Références pour garder une trace si les listeners ont déjà été initialisés
+  const socialThreadsListenerInitialized = useRef(false);
+  //const conversationListenerInitialized = useRef(false); // Remplacé par la logique dynamique
 
-  // 0. S'assurer que l'état d'initialisation est bien false au début.
-  //    Normalement géré par App.tsx, mais utile pour la clarté du flux.
-  // appInitStore.setAppInitialized(false); // Déjà fait par App.tsx avant l'appel
+  // IDs de chat actuels depuis useAuthStore (sera mis à jour par le listener userDoc)
+  const currentChatIds = useAuthStore(state => state.user?.chatsessions || []);
 
-  // 1. Vérification utilisateur (garde essentielle)
-  if (!user?.id || !user.university) {
-    console.warn("[initializeAppLogic] User ID or University missing. Aborting listener setup.");
-    chatStore.clearChatState(); // Nettoyer l'état du chat si l'utilisateur n'est pas valide
-    // Important : Se désabonner des listeners potentiellement actifs d'une session précédente invalide
-    if (privateConversationsUnsubscribe) {
-      console.log("[initializeAppLogic] Unsubscribing from previous private conversations listener (user invalid).");
-      privateConversationsUnsubscribe();
-      privateConversationsUnsubscribe = null;
-    }
-    if (socialThreadsUnsubscribe) {
-      console.log("[initializeAppLogic] Unsubscribing from previous social threads listener (user invalid).");
-      socialThreadsUnsubscribe();
-      socialThreadsUnsubscribe = null;
-    }
-    // Marquer l'initialisation comme terminée (même si échec) pour éviter boucle si App.tsx le gère
-    if (!appInitStore.isAppInitialized) {
-        appInitStore.setAppInitialized(true);
-    }
-    return;
-  }
-
-  console.log(`[initializeAppLogic] Initializing listeners for user: ${user.id}.`);
-
-  try {
-    // 2. Se désabonner des anciens listeners (si existants)
-    // Important pour éviter les écoutes multiples lors des changements d'utilisateur ou rechargements rapides
-    if (privateConversationsUnsubscribe) {
-      console.log("[initializeAppLogic] Unsubscribing from previous private conversations listener.");
-      privateConversationsUnsubscribe();
-      privateConversationsUnsubscribe = null;
-    }
-    if (socialThreadsUnsubscribe) {
-      console.log("[initializeAppLogic] Unsubscribing from previous social threads listener.");
-      socialThreadsUnsubscribe();
-      socialThreadsUnsubscribe = null;
+  // Effet pour initialiser les listeners des conversations (privées)
+  // Se déclenche quand l'utilisateur est authentifié et que ses IDs de chat changent
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log(`[initializeAppLogic] User authenticated. Chat IDs changed/loaded:`, currentChatIds);
+      // Lance ou met à jour le listener pour les conversations privées
+      _listenToConversations(currentChatIds);
+      // conversationListenerInitialized.current = true; // Marquer comme initialisé
+    } else {
+      // Si l'utilisateur se déconnecte, nettoyer le listener
+      console.log("[initializeAppLogic] User logged out or IDs cleared. Cleaning up conversation listener.");
+      cleanupConversationListener();
+      // conversationListenerInitialized.current = false;
     }
 
-    // 3. Initialiser le listener pour les conversations PRIVÉES de l'utilisateur
-    //    Cette fonction retourne maintenant une fonction `Unsubscribe`
-    console.log("[initializeAppLogic] Initializing private conversations listener...");
-    privateConversationsUnsubscribe = chatStore.fetchConversations();
-    // La logique de sélection du chat initial est MAINTENANT GÉRÉE DANS fetchConversations (onSnapshot callback)
-    console.log(`[initializeAppLogic] Private conversations listener initialized.`);
+    // Fonction de nettoyage pour cet effet: appelée si l'utilisateur change ou le composant démonte
+    return () => {
+      console.log("[initializeAppLogic] Cleanup effect for conversation listener.");
+      cleanupConversationListener();
+      // conversationListenerInitialized.current = false;
+    };
+  }, [isAuthenticated, user, currentChatIds, _listenToConversations, cleanupConversationListener]); // Dépend de l'auth et des IDs
 
-    // 4. Initialiser le listener pour les threads SOCIAUX de l'université
-    //    Cette fonction retourne également une fonction `Unsubscribe`
-    console.log("[initializeAppLogic] Initializing social threads listener...");
-    socialThreadsUnsubscribe = chatStore.fetchSocialThreads();
-    console.log(`[initializeAppLogic] Social threads listener initialized.`);
 
-    // 5. --- SUPPRIMÉ --- La logique de détermination et d'activation du chat initial
-    //    est maintenant gérée directement dans le callback onSnapshot de `fetchConversations`.
+  // Effet pour initialiser le listener des threads sociaux (une seule fois après auth)
+  useEffect(() => {
+    if (isAuthenticated && user?.university && !socialThreadsListenerInitialized.current) {
+      console.log("[initializeAppLogic] Initializing social threads listener...");
+      const socialUnsubscribe = fetchSocialThreads();
+      socialThreadsListenerInitialized.current = true;
+      console.log("[initializeAppLogic] Social threads listener initialized.");
+      // Nettoyage pour le listener social
+      return () => {
+        console.log("[initializeAppLogic] Cleaning up social threads listener.");
+        socialUnsubscribe();
+        socialThreadsListenerInitialized.current = false;
+      };
+    }
+  }, [isAuthenticated, user?.university, fetchSocialThreads]);
 
-    console.log("[initializeAppLogic] Listener initialization process seemingly completed.");
-    // Le chat actif sera défini par le callback de fetchConversations s'il y a des conversations.
+  // Effet pour gérer la sélection du chat initial
+  // Cet effet se déclenche quand les conversations finissent de charger (isLoadingConversations devient false)
+  // après que l'utilisateur soit authentifié.
+  const initialChatSelected = useRef(false); // Pour éviter de re-sélectionner
+  useEffect(() => {
+    if (isAuthenticated && !isLoadingConversations && conversations.length > 0 && !currentChatId && !initialChatSelected.current) {
+      // Sélectionner la première conversation (la plus récente car triée dans le listener)
+      const initialChatId = conversations[0].chat_id;
+      console.log(`[initializeAppLogic] Conversations loaded. Setting initial active chat to: ${initialChatId}`);
+      setActiveChat(initialChatId);
+      initialChatSelected.current = true; // Marquer comme fait
+    } else if (isAuthenticated && !isLoadingConversations && conversations.length === 0 && !currentChatId && !initialChatSelected.current) {
+        console.log("[initializeAppLogic] Conversations loaded, but list is empty. Setting active chat to null.");
+        setActiveChat(null); // Pas de conversations, aller à la landing page
+        initialChatSelected.current = true; // Marquer comme fait
+    }
+  }, [isAuthenticated, isLoadingConversations, conversations, currentChatId, setActiveChat]);
 
-  } catch (error) {
-    console.error("[initializeAppLogic] Error during listener initialization:", error);
-    // En cas d'erreur ici, les listeners pourraient ne pas être actifs.
-    // clearChatState pourrait être appelé ici aussi pour être sûr.
-    // chatStore.clearChatState();
-  } finally {
-    // 6. Marquer l'initialisation comme terminée (géré par App.tsx)
-    // On ne le fait plus ici pour éviter les conflits avec App.tsx
-    // if (!appInitStore.isAppInitialized) {
-    //     appInitStore.setAppInitialized(true);
-    //     console.log("[initializeAppLogic] isAppInitialized set to true (finally block - safety net).");
-    // }
-    console.log("[initializeAppLogic] Execution finished.");
-  }
+
+  // Effet pour marquer l'application comme initialisée et nettoyer l'état du chat à la déconnexion
+  useEffect(() => {
+    if (!isLoadingAuth) {
+      if (isAuthenticated) {
+        console.log("[initializeAppLogic] Authentication complete, user loaded. App initialized.");
+        setAppInitialized(true);
+        // Réinitialiser le flag de sélection initiale si l'utilisateur change
+        initialChatSelected.current = false; 
+      } else {
+        // Si l'utilisateur n'est plus authentifié (déconnexion)
+        console.log("[initializeAppLogic] User logged out. Clearing chat state and marking app as uninitialized.");
+        clearChatState();
+        setAppInitialized(false); // Ou garder à true ? Discutable.
+        // S'assurer que les flags des listeners sont réinitialisés
+        socialThreadsListenerInitialized.current = false;
+        initialChatSelected.current = false;
+      }
+    }
+  }, [isLoadingAuth, isAuthenticated, setAppInitialized, clearChatState]);
+
+  // Ce composant ne rend rien visuellement
+  return null;
 };
 
 // NOTE: Pour que ce code fonctionne, vous devrez créer les stores Zustand

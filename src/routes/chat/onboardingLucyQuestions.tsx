@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useRef,} from 'react';
+import React, { useState, useRef,} from 'react';
 import { motion } from 'framer-motion';
-import { db } from '../../auth/firebase';
-import { doc, updateDoc} from 'firebase/firestore';
 import useAuthStore from '../../stores/useAuthStore';
 import useChatStore from '../../stores/useChatStore';
 import useFeedbackStore from '../../stores/useFeedbackStore';
-import {EventStudentProfile, SocialThread} from '../../interfaces/interfaces_eleve';
+import {EventStudentProfile} from '../../interfaces/interfaces_eleve';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import {
-  ThemeProvider, TextField, Button, Typography, IconButton,InputAdornment, 
+  ThemeProvider, TextField, Typography, IconButton,InputAdornment, 
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -56,20 +54,11 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const { user, chatIds } = useAuthStore(); // Use Zustand store
   const {
     conversations,
-    setConversations,
     messages,
     isLandingPageVisible,
-    setMessages,
-    setIsLandingPageVisible,
-    isSocialThreadActive,
-    setIsSocialThreadActive,
     isCurrentChatPrivate: isPrivate, // Renaming for consistency if needed
     _setIsCurrentChatPrivate: setIsPrivate,
-    addNewConversation,
-    renameConversation,
-    deleteConversation,
     updateConversationPrivacy,
-    setActiveChat,
     isStreamingResponse: isStreaming, // Renamed in store
     _setIsStreamingResponse: setIsStreaming, // Action in store
     unreadSocialThreadsCount: unreadCount, // Renamed in store
@@ -78,12 +67,6 @@ const OnboardingLucyQuestions: React.FC = ()=> {
     _setRelatedQuestions: setRelatedQuestions, // Action in store
     abortController, // From store
     setAbortController, // Action in store
-    fetchConversations, // Action from store
-    fetchSocialThreads, // Action from store
-    loadChatMessages, // Action from store
-    clearChatState, // Action from store
-    updateConversationTitleAndTopic, // Action from store
-    markSocialThreadAsRead // Action from store
   } = useChatStore(); // Use Zustand store
 
   //3. Messages et gestion du Chat - some states might be directly from store now
@@ -91,8 +74,6 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const [inputValue, setInputValue] = useState(''); // Keep local UI state
   const [hasStartedStreaming, setHasStartedStreaming] = useState(false); // Keep local UI state
   const [activeChatId, setActiveChatId] = useState<string | null>(() => chatIds[0] || null); // Initialize from store, avoid localStorage directly here if possible
-  const [cancelConversation, setCancelConversation] = useState(false); // Keep local UI state
-  const cancelConversationRef = useRef(false); // Keep local ref
   const [selectedAiMessage, setSelectedAiMessage] = useState<string | null>(null); // Keep local UI state
   const [selectedHumanMessage, setSelectedHumanMessage] = useState<string | null>(null); // Keep local UI state
   const [isAtBottom, setIsAtBottom] = useState(true); // Keep local UI state
@@ -101,7 +82,6 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const endDivRef = useRef<HTMLDivElement>(null); // Keep local ref
 
   //4. Onboarding
-  const hasMetadataOnboarding = Array.isArray(messages) && messages.some(msg => msg.METADATAONBOARDING);
   const [showOnboardingSocialThreadPopup, setShowOnboardingSocialThreadPopup] = useState(false); // Keep local UI state
   const [ShowOnboardingProfilePopup, setShowOnboardingProfilePopup] = useState(false); // Keep local UI state
   const [showOnboardingModifyConvPopup, setShowOnboardingModifyConvPopup] = useState(false); // Keep local UI state
@@ -114,7 +94,6 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   //6. Événements et gestion du Calendrier
   const [events, setEvents] = useState<EventStudentProfile[]>([]);
   const [currentView, setCurrentView] = useState('chat'); // 'chat' ou 'events'
-  const [eventDisplayMode, setEventDisplayMode] = useState('kanban'); // 'kanban' ou 'calendar'
   const [selectedEvent, setSelectedEvent] = useState<EventStudentProfile | null>(null);
 
 
@@ -128,7 +107,6 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const [sidebarOpen, setSidebarOpen] = useState(false); // potentiellement doublon avec drawerOpen
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [parametersMenuAnchorEl, setParametersMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -138,7 +116,6 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<number>(Math.floor(Math.random() * 41) + 10);
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
-  const [selectedFilter, setSelectedFilter] = useState<string>('');
   const [hasNewContent, setHasNewContent] = useState(false);
 
 

@@ -1,12 +1,8 @@
-import { useRef } from 'react';
+
 import { useEffect} from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../auth/firebase';
-//import { useAuth } from '../../../auth/hooks/useAuth';
-//import { useChat } from '../../../auth/hooks/useChat';
 import { sendMessageSocraticLangGraph, saveMessageAIToBackend } from '../../../api/chat';
 import { submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../../../api/feedback_wrong_answer';
-import { Message, StreamingError,AnswerPiecePacket, AnswerDocumentPacket, Conversation, SocialThread, AnswerDocument, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY } from '../../../interfaces/interfaces_eleve';
+import { Message, StreamingError,AnswerPiecePacket, AnswerDocumentPacket, Conversation, AnswerDocument, AnswerTAK, AnswerCHART, AnswerCourse, AnswerWaiting, ReasoningStep, AnswerREDDIT, AnswerINSTA, AnswerYOUTUBE, AnswerQUORA, AnswerINSTA_CLUB, AnswerLINKEDIN, AnswerINSTA2, AnswerERROR, AnswerACCURACYSCORE, AnswerTITLEANDCATEGORY } from '../../../interfaces/interfaces_eleve';
 import { debounce } from 'lodash';
 import { KeyboardEvent } from 'react';
 import useChatStore from '../../../stores/useChatStore'; // Importer le store
@@ -44,14 +40,12 @@ export const useMessage = ({
   setSnackbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
 
-    const { user, chatIds } = useAuthStore();
+    const {user} = useAuthStore();
     const {
       messages,
       setMessages,
       conversations,
       setConversations,
-      socialThreads,
-      setSocialThreads,
       setIsLandingPageVisible,
       setAbortController,
       isStreamingResponse: isStreaming,

@@ -1,15 +1,10 @@
-import { useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
-//import { sendUserInfoToBackend } from '../../../api/calendar-event-studentProfile';
-import { StudentProfile, EventStudentProfile } from '../../../interfaces/interfaces_eleve';
-import { MouseEvent } from 'react';
+import { EventStudentProfile } from '../../../interfaces/interfaces_eleve';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../auth/firebase';
 import useAuthStore from '../../../stores/useAuthStore';
-import useChatStore from '../../../stores/useChatStore';
 
 export const useUserProfile = ({
-  setEvents,
   setProfileMenuAnchorEl,
   setParametersMenuAnchorEl,
   setProfilePicture,
@@ -22,7 +17,6 @@ export const useUserProfile = ({
 }) => {
 
     const { user, logoutUser: logout } = useAuthStore();
-    const { setIsLandingPageVisible } = useChatStore();
     const navigate = useNavigate();
 
 /*

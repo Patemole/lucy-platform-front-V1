@@ -14,7 +14,6 @@ export const useUIState = ({
   setOnlineUsers,
   setIsAtBottom,
   setNewMessagesCount,
-  setParametersMenuAnchorEl,
 }: {
   isSmallScreen: boolean;
   messages: Message[];
