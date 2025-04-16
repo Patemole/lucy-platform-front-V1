@@ -77,7 +77,7 @@ export const sendUniversityRequestEmail = async (email: string, university: stri
 
 export const scrapeLinkedInProfile = async (linkedinUrl: string, userId: string) => {
     try {
-        const response = await fetch(`${apiUrlPrefix}/chat/linkedin_scraping_onboarding`, {
+        const response = await fetch(`${apiUrlPrefix}/files/linkedin_scraping_onboarding`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ export const scrapeLinkedInProfile = async (linkedinUrl: string, userId: string)
 
 export const scrapeInstagramProfile = async (instagramnUrl: string, userId: string) => {
     try {
-        const response = await fetch(`${apiUrlPrefix}/chat/instagram_scraping_onboarding`, {
+        const response = await fetch(`${apiUrlPrefix}/files/instagram_scraping_onboarding`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -338,24 +338,19 @@ export const useOnboarding = ({
 
     await updateUserField('instagram_username', instagramMessage);
     
-    // Appeler scrapeInstagramProfile pour envoyer le username au backend
-    try {
+    // Lancer le scraping Instagram en parallèle
+    if (currentUserId) {
       console.log("[useOnboarding] Appel de scrapeInstagramProfile avec le username:", instagramMessage);
-      const currentUserId = useAuthStore.getState().user?.id;
-      if (!currentUserId) {
-        throw new Error("User ID not found");
-      }
-      const instagramData = await scrapeInstagramProfile(instagramMessage, currentUserId);
-      console.log("[useOnboarding] Résultat du scraping Instagram:", instagramData);
-      
-      // Si le scraping a réussi, on met à jour le profil utilisateur avec les données
-      if (instagramData) {
-        // Mettre à jour le profil avec les données Instagram dans le store
-        updateUserProfileInStore({ instagram_profile: instagramData });
-        console.log("[useOnboarding] Profil Instagram mis à jour dans le store");
-      }
-    } catch (error) {
-      console.error("[useOnboarding] Erreur lors du scraping Instagram:", error);
+      scrapeInstagramProfile(instagramMessage, currentUserId)
+        .then(instagramData => {
+          if (instagramData) {
+            updateUserProfileInStore({ instagram_profile: instagramData });
+            console.log("[useOnboarding] Profil Instagram mis à jour dans le store");
+          }
+        })
+        .catch(error => {
+          console.error("[useOnboarding] Erreur lors du scraping Instagram:", error);
+        });
     }
 
     // Vérifier si on a déjà une réponse LinkedIn dans le store
