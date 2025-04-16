@@ -133,7 +133,7 @@ export const useOnboarding = ({
     currentMessagesSnom: Message[],
     fieldToUpdate?: string | Record<string, any>,
     previousAnswer?: string
-  ) => {
+  ): Promise<void> => {
     const currentUserId = useAuthStore.getState().user?.id;
     const currentChatId = useAuthStore.getState().chatIds[0];
     let messagesAfterUpdate = [...currentMessagesSnom];
