@@ -13,6 +13,7 @@ export interface User {
   linkedin_url?: string;
   linkedin_profile?: any;
   instagram_username?: string;
+  instagram_profile?: any;
   registered_club_status?: string;
   registered_clubs?: string;
   onboardingComplete?: boolean;

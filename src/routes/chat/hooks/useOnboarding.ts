@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../auth/firebase';
 import { saveOnboardingStep } from '../../../api/chat';
-import { sendUserInfoLinkedInScraping } from '../../../api/auth_and_onboarding';
+import { sendUserInfoLinkedInScraping, scrapeLinkedInProfile, scrapeInstagramProfile } from '../../../api/auth_and_onboarding';
 import { Message, StudentProfile, User } from '../../../interfaces/interfaces_eleve';
 import useAuthStore from '../../../stores/useAuthStore';
 import useChatStore from '../../../stores/useChatStore';
@@ -337,6 +337,22 @@ export const useOnboarding = ({
     }
 
     await updateUserField('instagram_username', instagramMessage);
+    
+    // Appeler scrapeInstagramProfile pour envoyer le username au backend
+    try {
+      console.log("[useOnboarding] Appel de scrapeInstagramProfile avec le username:", instagramMessage);
+      const instagramData = await scrapeInstagramProfile(instagramMessage);
+      console.log("[useOnboarding] Résultat du scraping Instagram:", instagramData);
+      
+      // Si le scraping a réussi, on met à jour le profil utilisateur avec les données
+      if (instagramData) {
+        // Mettre à jour le profil avec les données Instagram dans le store
+        updateUserProfileInStore({ instagram_profile: instagramData });
+        console.log("[useOnboarding] Profil Instagram mis à jour dans le store");
+      }
+    } catch (error) {
+      console.error("[useOnboarding] Erreur lors du scraping Instagram:", error);
+    }
 
     // Vérifier si on a déjà une réponse LinkedIn dans le store
     const user = useAuthStore.getState().user;
@@ -354,10 +370,27 @@ export const useOnboarding = ({
   }, [generateUniqueId, setMessages, saveOnboardingStep, updateUserField, sendNextOnboardingMessage, getNextQuestionIndex, checkLinkedInProfile]);
 
 
-  
-  const handleSendLINKEDINMessage = useCallback((linkedinMessage: string) => {
-    handleSendGeneric(linkedinMessage, 4, "LINKEDIN", 'linkedin_url');
-}, [handleSendGeneric]);
+
+  const handleSendLINKEDINMessage = useCallback(async (linkedinMessage: string) => {
+    // Appeler handleSendGeneric pour mettre à jour le profil et passer à la question suivante
+    await handleSendGeneric(linkedinMessage, 4, "LINKEDIN", 'linkedin_url');
+    
+    // Appeler scrapeLinkedInProfile pour envoyer l'URL au backend
+    try {
+      console.log("[useOnboarding] Appel de scrapeLinkedInProfile avec l'URL:", linkedinMessage);
+      const linkedinData = await scrapeLinkedInProfile(linkedinMessage);
+      console.log("[useOnboarding] Résultat du scraping LinkedIn:", linkedinData);
+      
+      // Si le scraping a réussi, on met à jour le profil utilisateur avec les données
+      if (linkedinData) {
+        // Mettre à jour le profil avec les données LinkedIn dans le store
+        updateUserProfileInStore({ linkedin_profile: linkedinData });
+        console.log("[useOnboarding] Profil LinkedIn mis à jour dans le store");
+      }
+    } catch (error) {
+      console.error("[useOnboarding] Erreur lors du scraping LinkedIn:", error);
+    }
+  }, [handleSendGeneric, updateUserProfileInStore]);
 
   const handleSendMAJORMINORMessage = useCallback(({ majors, minors }: { majors: string[]; minors: string[]; }) => {
       const content = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;
