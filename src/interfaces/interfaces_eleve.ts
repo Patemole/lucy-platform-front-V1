@@ -243,6 +243,9 @@ export interface Course {
 export interface AnswerREDDIT{
   comment: string;
   score: string;
+  author: string;
+  link: string;
+
 }
 
 export interface AnswerINSTA{
