@@ -75,14 +75,17 @@ export const sendUniversityRequestEmail = async (email: string, university: stri
 
 
 
-export const scrapeLinkedInProfile = async (linkedinUrl: string) => {
+export const scrapeLinkedInProfile = async (linkedinUrl: string, userId: string) => {
     try {
         const response = await fetch(`${apiUrlPrefix}/chat/linkedin_scraping`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ url: linkedinUrl }) 
+            body: JSON.stringify({ 
+                url: linkedinUrl,
+                user_id: userId 
+            }) 
         });
 
         if (!response.ok) {
@@ -100,14 +103,17 @@ export const scrapeLinkedInProfile = async (linkedinUrl: string) => {
 };
 
 
-export const scrapeInstagramProfile = async (instagramnUrl: string) => {
+export const scrapeInstagramProfile = async (instagramnUrl: string, userId: string) => {
     try {
         const response = await fetch(`${apiUrlPrefix}/chat/instagram_scraping`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ url: instagramnUrl }) 
+            body: JSON.stringify({ 
+                username: instagramnUrl,
+                user_id: userId 
+            }) 
         });
 
         if (!response.ok) {
