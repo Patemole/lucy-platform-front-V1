@@ -164,11 +164,17 @@ export const useMessage = ({
             let currentConversation = null;
 
             if (isOnboardingMessage) {
-              const newConv: Conversation = { chat_id: chatSessionId, name: 'New Chat', thread_type: 'Public' };
-              // Get current state, create new array, pass new array to setter
-              const currentConversations = useChatStore.getState().conversations;
-              setConversations([newConv, ...currentConversations]);
-              currentConversation = newConv; // ✅ tu sais que tu viens de l'ajouter
+              // Ne pas créer une nouvelle conversation pour l'onboarding
+              // Utiliser la conversation existante ou en créer une si nécessaire
+              currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
+              
+              // Si aucune conversation n'existe, en créer une
+              if (!currentConversation) {
+                const newConv: Conversation = { chat_id: chatSessionId, name: 'New Chat', thread_type: 'Public' };
+                const currentConversations = useChatStore.getState().conversations;
+                setConversations([newConv, ...currentConversations]);
+                currentConversation = newConv;
+              }
             } else {
               currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
             }

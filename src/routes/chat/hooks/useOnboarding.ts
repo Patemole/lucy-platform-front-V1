@@ -158,9 +158,9 @@ export const useOnboarding = ({
       const historyForSubmit = [...messagesAfterUpdate, loadingAiMessage];
       setMessages(historyForSubmit);
 
-      console.log("🏁 [useOnboarding] Onboarding terminé, appel de onSubmit pour message final.");
+      console.log("🏁 [useOnboarding] Onboarding terminé, appel de onSubmit pour message final avec isOnboardingMessage=true.");
       setIsStreaming(true);
-      await onSubmit(historyForSubmit, '');
+      await onSubmit(historyForSubmit, '', true);
       return;
     }
 
