@@ -1,6 +1,6 @@
 import { useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { sendUserInfoToBackend } from '../../../api/calendar-event-studentProfile';
+//import { sendUserInfoToBackend } from '../../../api/calendar-event-studentProfile';
 import { StudentProfile, EventStudentProfile } from '../../../interfaces/interfaces_eleve';
 import { MouseEvent } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
@@ -25,11 +25,12 @@ export const useUserProfile = ({
     const { setIsLandingPageVisible } = useChatStore();
     const navigate = useNavigate();
 
-
+/*
     useEffect(() => {
         if (!user?.id) return;
         fetchUserInfo();
       }, [user]);
+*/
 
 /*
     //Aller chercher la photo de profile de l utilisateur 
@@ -78,6 +79,7 @@ export const useUserProfile = ({
       };
 
 
+      /*
     // fonction pour envoyer les infos de l'utilisateur au backend et récupérer les événements
     const fetchUserInfo = async () => {
         if (!user) {
@@ -120,6 +122,7 @@ export const useUserProfile = ({
         console.error('Error fetching events:', error);
         }
     };
+    */
 
 
 
@@ -157,7 +160,7 @@ export const useUserProfile = ({
 
 
     return {
-        fetchUserInfo,
+        //fetchUserInfo,
         handleProfileMenuClick,
         handleLogout,
         handleDeleteAccount,

@@ -4,7 +4,7 @@ import { StudentProfile, EventStudentProfile } from '../interfaces/interfaces_el
 // Define the API URL prefix based on the environment
 const apiUrlPrefix: string = config.server_url;
   
-
+/*
 export const sendUserInfoToBackend = async (userInfo: StudentProfile): Promise<{ events?: EventStudentProfile[] }> => {
     try {
       console.log("Sending user info to backend:", userInfo);
@@ -39,8 +39,11 @@ export const sendUserInfoToBackend = async (userInfo: StudentProfile): Promise<{
       return {}; // Retourne un objet vide pour éviter les erreurs si l'API échoue
     }
   };
+
+
+
   
-/*
+
 export const formatEvents = (rawEvents: any[]): EventStudentProfile[] => {
     return rawEvents.map((event, index) => {
       // Convertir les dates
@@ -65,7 +68,7 @@ export const formatEvents = (rawEvents: any[]): EventStudentProfile[] => {
       };
     });
   };
-  */
+  
 
   export const formatEvents = (rawEvents: any[]): EventStudentProfile[] => {
     return rawEvents.map((event, index) => {
@@ -118,6 +121,7 @@ export const formatEvents = (rawEvents: any[]): EventStudentProfile[] => {
   };
   */
 
+  
   const parseEventDate = (day: string, month: string, year: string, time: string): Date | null => {
     if (!day || !month || !year || !time || time === "nan") return null; // ✅ Gère les valeurs invalides
 
