@@ -55,7 +55,8 @@ interface StudentProfileDialogProps {
 const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClose, setProfilePicture }) => {
   const { uid } = useParams<{ uid: string }>();
   // const { setUser } = useAuth(); // Supprimé
-  const updateUserProfileInStore = useAuthStore(state => state.updateUserProfileInStore); // Annotation de type AuthState supprimée
+  // Correction: updateUserProfileInStore n'existe plus, l'écouteur Firestore s'en charge.
+  // const updateUserProfileInStore = useAuthStore(state => state.updateUserProfileInStore);
   const theme: Theme = useTheme();
 
   const [firstName, setFirstName] = useState<string>('');
@@ -178,19 +179,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
 
       const userRef = doc(db, 'users', uid);
       await updateDoc(userRef, firestoreUpdateData);
-
-      const storeUpdateData: Partial<User> = {
-        name: firstName,
-        academic_advisor: academicAdvisor,
-        faculty,
-        year,
-        major,
-        minor,
-        interests,
-        profilePicture: profilePictureUrl,
-      };
-
-      updateUserProfileInStore(storeUpdateData);
+      console.log("[StudentProfileDialog] Firestore updated. Listener will update the store.");
 
       onClose();
     } catch (error) {
