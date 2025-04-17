@@ -70,6 +70,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
     deleteConversation,
     updateConversationPrivacy,
     setActiveChat,
+    isLoadingConversations,
     isStreamingResponse: isStreaming, // Renamed in store
     _setIsStreamingResponse: setIsStreaming, // Action in store
     unreadSocialThreadsCount: unreadCount, // Renamed in store
@@ -350,6 +351,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             setShowOnboardingModifyConvPopup={setShowOnboardingModifyConvPopup}
             setShowOnboardingSocialThreadPopup={setShowOnboardingSocialThreadPopup}
             formatDate={formatDate}
+            isLoadingConversations={isLoadingConversations}
           />
 
 

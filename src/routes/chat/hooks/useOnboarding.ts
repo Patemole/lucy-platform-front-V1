@@ -133,6 +133,21 @@ export const useOnboarding = ({
     fieldToUpdate?: string | Record<string, any>,
     previousAnswer?: string
   ): Promise<void> => {
+    // ---> SÉCURITÉ SUPPLÉMENTAIRE + DÉLAI pour la première question <--- 
+    if (index === 0) {
+      // Re-vérifier si l'onboarding n'est pas déjà complet juste avant d'envoyer
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.onboardingComplete) {
+        console.log("🚫 [useOnboarding - sendNext] Onboarding marqué complet juste avant envoi index 0. Annulation.");
+        return; 
+      }
+      // Ajouter le délai de 2 secondes avant le tout premier message
+      console.log("⏳ [useOnboarding - sendNext] Délai de 2 secondes avant la première question...");
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log("⏳ [useOnboarding - sendNext] Fin du délai. Envoi question 0.");
+    }
+    // ---> FIN SÉCURITÉ + DÉLAI <--- 
+
     const currentUserId = useAuthStore.getState().user?.id;
     const currentChatId = useAuthStore.getState().chatIds[0];
     let messagesAfterUpdate = [...currentMessagesSnom];
@@ -240,7 +255,7 @@ export const useOnboarding = ({
       else if (user?.onboardingComplete) console.log("[useOnboarding Check] Onboarding already complete.");
       else if (hasRunOnboardingCheckRef.current) console.log("[useOnboarding Check] Check already performed in this cycle.");
     }
-  }, [isAppInitialized, user, messages, sendNextOnboardingMessage]); // Garder 'messages' ici pour détecter l'ajout initial
+  }, [isAppInitialized, user]); // Ne dépend plus de `messages` ou `sendNextOnboardingMessage`
 
 
   // --- Fonctions de Handler pour les Réponses Spécifiques ---

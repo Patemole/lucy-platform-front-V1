@@ -48,6 +48,7 @@ type SidebarProps = {
     handleMenuClose: () => void;
     handleRename: () => void;
     handleDelete: () => void;
+    isLoadingConversations: boolean;
     socialThreads: SocialThread[];
     loadingSocialThreads: boolean;
     topicColors: { [key: string]: string };
@@ -61,6 +62,7 @@ type SidebarProps = {
     theme, isSmallScreen, drawerOpen, toggleDrawer,
     profilePicture, user, isLandingPageVisible,
     isHistory, setIsHistory, profileMenuAnchorEl,
+    isLoadingConversations,
     handleProfileMenuClick, handleProfileMenuClose,
     handleParametersMenuClick, handleLogout, handleDialogOpen,
     conversations, handleConversationClick, activeChatId,
@@ -391,47 +393,38 @@ type SidebarProps = {
                     }}
                     >
                     <List component="ul">
-                        {conversations.length > 0 ? (
-                        conversations.sort((a, b) => a.chat_id === 'onboarding_chat_id' ? -1 : 1).map((conversation) => (
-                            <ListItem
-                            key={conversation.chat_id}
-                            component="li"
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => {
-                                handleConversationClick(conversation.chat_id);
-                                if (isSmallScreen) toggleDrawer();
-                            }}
-                            onKeyDown={(e: React.KeyboardEvent) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                handleConversationClick(conversation.chat_id);
-                                if (isSmallScreen) toggleDrawer();
-                                }
-                            }}
-                            sx={{
-                                cursor: 'pointer',
-                                position: 'relative',
-                                borderRadius: '8px',
-                                margin: '2px 0',
-                                paddingRight: '40px',
-                                backgroundColor:
-                                activeChatId === conversation.chat_id
-                                    ? theme.palette.button.background
-                                    : 'transparent',
-                                '& .circle': {
-                                backgroundColor:
+                        {isLoadingConversations ? (
+                            <Box display="flex" justifyContent="center" alignItems="center" p={2}>
+                                <CircularProgress size={24} />
+                            </Box>
+                        ) : conversations.length > 0 ? (
+                            conversations.sort((a, b) => a.chat_id === 'onboarding_chat_id' ? -1 : 1).map((conversation) => (
+                                <ListItem
+                                key={conversation.chat_id}
+                                component="li"
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => {
+                                    handleConversationClick(conversation.chat_id);
+                                    if (isSmallScreen) toggleDrawer();
+                                }}
+                                onKeyDown={(e: React.KeyboardEvent) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleConversationClick(conversation.chat_id);
+                                    if (isSmallScreen) toggleDrawer();
+                                    }
+                                }}
+                                sx={{
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    borderRadius: '8px',
+                                    margin: '2px 0',
+                                    paddingRight: '40px',
+                                    backgroundColor:
                                     activeChatId === conversation.chat_id
-                                    ? conversation.thread_type === 'Private'
-                                        ? '#6F6F6F'
-                                        : '#4A90E2'
-                                    : conversation.thread_type === 'Private'
-                                    ? '#BDBDBD'
-                                    : '#A9C2E8',
-                                },
-                                '@media (hover: hover) and (pointer: fine)': {
-                                '&:hover': {
-                                    backgroundColor: theme.palette.button.background,
+                                        ? theme.palette.button.background
+                                        : 'transparent',
                                     '& .circle': {
                                     backgroundColor:
                                         activeChatId === conversation.chat_id
@@ -439,115 +432,128 @@ type SidebarProps = {
                                             ? '#6F6F6F'
                                             : '#4A90E2'
                                         : conversation.thread_type === 'Private'
-                                        ? '#6F6F6F'
-                                        : '#4A90E2',
+                                        ? '#BDBDBD'
+                                        : '#A9C2E8',
                                     },
-                                },
-                                },
-                            }}
-                            >
-                            <Box
-                                className="circle"
-                                sx={{
-                                width: '10px',
-                                height: '10px',
-                                borderRadius: '50%',
-                                marginRight: '14px',
-                                flexShrink: 0,
+                                    '@media (hover: hover) and (pointer: fine)': {
+                                    '&:hover': {
+                                        backgroundColor: theme.palette.button.background,
+                                        '& .circle': {
+                                        backgroundColor:
+                                            activeChatId === conversation.chat_id
+                                            ? conversation.thread_type === 'Private'
+                                                ? '#6F6F6F'
+                                                : '#4A90E2'
+                                            : conversation.thread_type === 'Private'
+                                            ? '#6F6F6F'
+                                            : '#4A90E2',
+                                        },
+                                    },
+                                    },
                                 }}
-                            />
-                            <ListItemText
-                                primary={conversation.name}
-                                primaryTypographyProps={{
-                                style: {
-                                    fontWeight: '500',
-                                    fontSize: '0.850rem',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                },
-                                }}
-                                secondary={
-                                <Box
-                                    sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    marginTop: '2px',
-                                    }}
                                 >
-                                    <Box
+                                <Box
+                                    className="circle"
                                     sx={{
-                                        fontSize: '0.7rem',
-                                        fontWeight: 'bold',
-                                        color: conversation.thread_type === 'Private' ? '#6F6F6F' : '#4A90E2',
-                                        backgroundColor: conversation.thread_type === 'Private' ? '#F0F0F0' : '#E0F2FF',
-                                        padding: '2px 6px',
-                                        borderRadius: '5px',
-                                        display: 'inline-block',
+                                    width: '10px',
+                                    height: '10px',
+                                    borderRadius: '50%',
+                                    marginRight: '14px',
+                                    flexShrink: 0,
                                     }}
-                                    >
-                                    {conversation.thread_type === 'Private' ? 'Private' : 'Public'}
-                                    </Box>
-                                    {conversation.topic && (
+                                />
+                                <ListItemText
+                                    primary={conversation.name}
+                                    primaryTypographyProps={{
+                                    style: {
+                                        fontWeight: '500',
+                                        fontSize: '0.850rem',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                    },
+                                    }}
+                                    secondary={
                                     <Box
                                         sx={{
-                                        fontSize: '0.7rem',
-                                        fontWeight: 'bold',
-                                        color: topicColors[conversation.topic] || topicColors["Default"],
-                                        backgroundColor: `${(topicColors[conversation.topic] || topicColors["Default"])}20`,
-                                        padding: '2px 6px',
-                                        borderRadius: '5px',
-                                        display: 'inline-block',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        marginTop: '2px',
                                         }}
                                     >
-                                        {conversation.topic}
+                                        <Box
+                                        sx={{
+                                            fontSize: '0.7rem',
+                                            fontWeight: 'bold',
+                                            color: conversation.thread_type === 'Private' ? '#6F6F6F' : '#4A90E2',
+                                            backgroundColor: conversation.thread_type === 'Private' ? '#F0F0F0' : '#E0F2FF',
+                                            padding: '2px 6px',
+                                            borderRadius: '5px',
+                                            display: 'inline-block',
+                                        }}
+                                        >
+                                        {conversation.thread_type === 'Private' ? 'Private' : 'Public'}
+                                        </Box>
+                                        {conversation.topic && (
+                                        <Box
+                                            sx={{
+                                            fontSize: '0.7rem',
+                                            fontWeight: 'bold',
+                                            color: topicColors[conversation.topic] || topicColors["Default"],
+                                            backgroundColor: `${(topicColors[conversation.topic] || topicColors["Default"])}20`,
+                                            padding: '2px 6px',
+                                            borderRadius: '5px',
+                                            display: 'inline-block',
+                                            }}
+                                        >
+                                            {conversation.topic}
+                                        </Box>
+                                        )}
                                     </Box>
-                                    )}
-                                </Box>
-                                }
-                                sx={{
-                                maxWidth: 'calc(100% - 40px)',
-                                flexShrink: 1,
-                                }}
-                            />
-
-                            <IconButton
-                                edge="end"
-                                aria-label="More options"
-                                //onClick={(e) => {e.stopPropagation();handleMenuOpen(e, conversation.chat_id);}}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (!user?.onboardingComplete) {
-                                    setShowOnboardingModifyConvPopup(true); // Affiche la popup d'onboarding
-                                    return; // Empêche explicitement l'ouverture du menu contextuel
                                     }
-                                    handleMenuOpen(e, conversation.chat_id);
-                                }}
-                                sx={{
-                                position: 'absolute',
-                                right: '8px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                color: theme.palette.text.primary,
-                                opacity: activeChatId === conversation.chat_id ? 1 : 0,
-                                pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
-                                '&:hover': {
-                                    backgroundColor: 'transparent',
-                                },
-                                mr: '1px',
-                                }}
-                            >
-                                <MoreHorizIcon
-                                fontSize="small"
-                                sx={{
-                                    color: 'gray',
-                                    fontSize: '20px',
-                                }}
+                                    sx={{
+                                    maxWidth: 'calc(100% - 40px)',
+                                    flexShrink: 1,
+                                    }}
                                 />
-                            </IconButton>
-                            </ListItem>
-                        ))
+
+                                <IconButton
+                                    edge="end"
+                                    aria-label="More options"
+                                    //onClick={(e) => {e.stopPropagation();handleMenuOpen(e, conversation.chat_id);}}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!user?.onboardingComplete) {
+                                        setShowOnboardingModifyConvPopup(true); // Affiche la popup d'onboarding
+                                        return; // Empêche explicitement l'ouverture du menu contextuel
+                                        }
+                                        handleMenuOpen(e, conversation.chat_id);
+                                    }}
+                                    sx={{
+                                    position: 'absolute',
+                                    right: '8px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: theme.palette.text.primary,
+                                    opacity: activeChatId === conversation.chat_id ? 1 : 0,
+                                    pointerEvents: activeChatId === conversation.chat_id ? 'auto' : 'none',
+                                    '&:hover': {
+                                        backgroundColor: 'transparent',
+                                    },
+                                    mr: '1px',
+                                    }}
+                                >
+                                    <MoreHorizIcon
+                                    fontSize="small"
+                                    sx={{
+                                        color: 'gray',
+                                        fontSize: '20px',
+                                    }}
+                                    />
+                                </IconButton>
+                                </ListItem>
+                            ))
                         ) : (
                         <Typography
                             align="center"
