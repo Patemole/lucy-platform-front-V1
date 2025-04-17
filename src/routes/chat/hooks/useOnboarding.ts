@@ -143,7 +143,7 @@ export const useOnboarding = ({
       }
       // Ajouter le délai de 2 secondes avant le tout premier message
       console.log("⏳ [useOnboarding - sendNext] Délai de 2 secondes avant la première question...");
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       console.log("⏳ [useOnboarding - sendNext] Fin du délai. Envoi question 0.");
     }
     // ---> FIN SÉCURITÉ + DÉLAI <--- 
