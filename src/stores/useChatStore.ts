@@ -341,6 +341,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   // Nouvelle fonction interne pour mettre en place le listener
   _listenToConversations: (chatIds) => {
     const { 
+        conversations: currentConversations, // Récupérer les conversations actuelles
         setConversations, 
         _setError, 
         _setIsLoadingConversations, 
@@ -409,13 +410,25 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         return timeB - timeA;
       });
 
-      console.log(`[ChatStore - _listenToConversations] Processed ${sortedConversations.length} conversations after filtering and sorting.`);
-      setConversations(sortedConversations);
+      // ---> AJOUT : Comparer avec l'état actuel avant de mettre à jour <---
+      // Utilisation de JSON.stringify pour une comparaison simple. Pour de grandes listes,
+      // une comparaison plus optimisée pourrait être nécessaire.
+      const currentConversationsString = JSON.stringify(currentConversations);
+      const newConversationsString = JSON.stringify(sortedConversations);
+
+      if (currentConversationsString !== newConversationsString) {
+          console.log(`[ChatStore - _listenToConversations] Conversation data changed. Updating state.`);
+          setConversations(sortedConversations);
+      } else {
+           console.log(`[ChatStore - _listenToConversations] Conversation data has not changed. Skipping state update.`);
+      }
+      // Mettre à jour isLoading et error quel que soit le changement de données
       _setIsLoadingConversations(false);
       _setError(null);
 
       // Gérer la sélection initiale/désélection si le chat actif disparaît
       const currentChatId = get().currentChatId;
+      // ---> Utiliser sortedConversations pour la vérification <---
       const activeChatExists = currentChatId && sortedConversations.some(c => c.chat_id === currentChatId);
       
       if (currentChatId && !activeChatExists) {
