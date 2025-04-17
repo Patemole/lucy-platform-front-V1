@@ -21,7 +21,7 @@ export const useOnboarding = ({
   onSubmit: (history: Message[], inputValue: string, isOnboardingMessage?: boolean) => Promise<void>;
 }) => {
   // --- Stores ---
-  const { user, chatIds, updateUserProfileInStore } = useAuthStore();
+  const { user, chatIds } = useAuthStore();
   const {
     messages,
     setMessages,
@@ -72,8 +72,7 @@ export const useOnboarding = ({
     try {
         console.log(`[useOnboarding] Mise à jour Firestore user ${currentUserId} avec:`, updatePayload);
         await updateDoc(userRef, updatePayload);
-        useAuthStore.getState().updateUserProfileInStore(updatePayload); // Appeler l'action du store
-        console.log(`[useOnboarding] Profil utilisateur mis à jour (Firestore & Store).`);
+        console.log(`[useOnboarding] Profil utilisateur mis à jour (Firestore). L'écouteur mettra à jour le store.`);
     } catch (error) {
         console.error("❌ [useOnboarding] Erreur lors de la mise à jour Firestore pour updateUserField:", error);
     }
@@ -344,8 +343,7 @@ export const useOnboarding = ({
       scrapeInstagramProfile(instagramMessage, currentUserId)
         .then(instagramData => {
           if (instagramData) {
-            updateUserProfileInStore({ instagram_profile: instagramData });
-            console.log("[useOnboarding] Profil Instagram mis à jour dans le store");
+            console.log("[useOnboarding] Scraping Instagram terminé, Firestore devrait être mis à jour et le store suivra.");
           }
         })
         .catch(error => {
@@ -386,14 +384,12 @@ export const useOnboarding = ({
       
       // Si le scraping a réussi, on met à jour le profil utilisateur avec les données
       if (linkedinData) {
-        // Mettre à jour le profil avec les données LinkedIn dans le store
-        updateUserProfileInStore({ linkedin_profile: linkedinData });
-        console.log("[useOnboarding] Profil LinkedIn mis à jour dans le store");
+        console.log("[useOnboarding] Scraping LinkedIn terminé, Firestore devrait être mis à jour et le store suivra.");
       }
     } catch (error) {
       console.error("[useOnboarding] Erreur lors du scraping LinkedIn:", error);
     }
-  }, [handleSendGeneric, updateUserProfileInStore]);
+  }, [handleSendGeneric]);
 
   const handleSendMAJORMINORMessage = useCallback(({ majors, minors }: { majors: string[]; minors: string[]; }) => {
       const content = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;

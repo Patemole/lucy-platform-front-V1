@@ -70,6 +70,7 @@ const App: React.FC = () => {
         }
     }, [theme]); // Se déclenche si l'objet thème change
 
+
     // --- Fonction pour basculer le mode du thème ---
     const handleToggleThemeMode = () => {
         const newMode = themeMode === 'light' ? 'dark' : 'light';
@@ -77,6 +78,7 @@ const App: React.FC = () => {
         localStorage.setItem('themeMode', newMode); // Persiste dans localStorage
         console.log(`App: Mode thème changé en ${newMode}.`);
     };
+
 
     /**
      * Composant interne pour gérer les routes et leurs transitions animées.
@@ -129,6 +131,7 @@ const App: React.FC = () => {
             </AnimatePresence>
         );
     };
+    
 
     // --- Gestion de l'Authentification ---
     // Récupère l'état et les actions liés à l'authentification depuis le store Zustand
@@ -136,6 +139,7 @@ const App: React.FC = () => {
     const isLoadingAuth = useAuthStore((state) => state.isLoading); // État: l'authentification initiale est-elle en cours ?
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated); // État: l'utilisateur est-il connecté ?
     const user = useAuthStore((state) => state.user); // Données de l'utilisateur connecté
+
 
     // --- Effet pour initialiser l'écouteur Firebase Auth ---
     useEffect(() => {
@@ -148,29 +152,27 @@ const App: React.FC = () => {
             console.log("App: Nettoyage de l'écouteur Firebase Auth.");
             unsubscribe(); // Coupe l'écouteur pour éviter les fuites de mémoire
         };
-    }, [initializeAuthListener]); // Le tableau de dépendances vide assure que l'effet ne s'exécute qu'une fois
+    // La dépendance `initializeAuthListener` est incluse par règle, mais comme elle est stable
+    // depuis le store Zustand, cet effet ne s'exécute qu'une fois après le montage initial.
+    }, [initializeAuthListener]);
 
+
+    
     // --- Effet pour déclencher l'initialisation de la logique applicative post-authentification ---
     useEffect(() => {
-        // Récupère l'état de chargement des données Firestore de l'utilisateur (depuis useAuthStore)
-        const isFetchingUserData = useAuthStore.getState().isFetchingUserData;
-
         // Définit les conditions nécessaires pour lancer l'initialisation principale
+        // On a besoin que l'auth soit prête, l'user authentifié, que les données user
+        // (notamment id et university) soient chargées via l'écouteur, et que l'init n'ait pas eu lieu.
         const canInitialize =
             !isLoadingAuth &&      // 1. L'authentification Firebase initiale doit être terminée
             isAuthenticated &&     // 2. L'utilisateur doit être authentifié
-            !isFetchingUserData && // 3. La récupération des données Firestore de l'utilisateur doit être terminée
-            user &&                // 4. L'objet utilisateur (au moins avec ID/email) doit exister
-            !isAppInitialized;     // 5. L'initialisation ne doit pas déjà avoir été effectuée
+            user &&                // 3. L'objet utilisateur doit exister
+            user.id &&             // 4. L'ID utilisateur doit être présent
+            user.university &&     // 5. L'université doit être présente (nécessaire pour les listeners de chat)
+            !isAppInitialized;     // 6. L'initialisation ne doit pas déjà avoir été effectuée
 
         if (canInitialize) {
-            console.log("App: Conditions remplies pour l'initialisation. Déclenchement de initializeAppLogic...");
-
-            // Vérification optionnelle: les données essentielles (ex: chatIds) sont-elles présentes ?
-             if (!user.chatsessions) { // Note: 'chatsessions' est le nom utilisé dans useAuthStore
-                 console.warn("App: Données utilisateur récupérées, mais 'chatsessions' est manquant. Vérifiez Firestore/fetchUserData.");
-                 // On continue quand même, initializeAppLogic devrait pouvoir gérer une liste vide.
-             }
+            console.log("App: Conditions remplies pour l'initialisation des listeners de chat. Déclenchement de initializeAppLogic...");
 
             // --- !! IMPORTANT !! ---
             // Marque l'application comme initialisée *avant* l'appel asynchrone.
@@ -196,8 +198,10 @@ const App: React.FC = () => {
              setAppInitialized(false);
         }
         // Dépendances de l'effet: l'effet se redéclenchera si l'une de ces valeurs change.
-        // `isFetchingUserData` est lu via `getState` et n'a pas besoin d'être listé ici.
+        // `user` est inclus car nous dépendons de user.id et user.university.
     }, [isLoadingAuth, isAuthenticated, user, isAppInitialized, setAppInitialized]);
+
+
 
     // --- Affichage pendant le chargement initial de l'authentification ---
     if (isLoadingAuth) {
@@ -205,8 +209,10 @@ const App: React.FC = () => {
         return <div>Chargement de l'authentification...</div>;
     }
 
+
     // Configuration pour react-router v6+ (gestion des transitions)
     const future = { v7_startTransition: true };
+
 
     // --- Rendu final du composant App ---
     return (

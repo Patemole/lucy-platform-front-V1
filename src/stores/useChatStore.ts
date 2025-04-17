@@ -479,7 +479,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   },
 
   loadChatMessages: async (chatId: string) => {
-    const { _setIsLoadingMessages, setMessagesList, _setError, _setCurrentChatId } = get();
+    const { _setIsLoadingMessages, setMessagesList, _setError, _setCurrentChatId, messages: currentMessages } = get(); // Get current messages
     console.log(`[ChatStore] Loading messages for chatId: ${chatId}`);
 
     if (!chatId) {
@@ -490,8 +490,8 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }
 
     _setIsLoadingMessages(true);
-    _setCurrentChatId(chatId); // Met à jour le chat actif dès le début du chargement
-    setMessagesList([]); // Vide la liste actuelle avant de charger (c'est ok car setActiveChat gère la landing page)
+    // Ne PAS vider les messages ici. setActiveChat gère cela si nécessaire.
+    // setMessagesList([]); // <-- RETIRÉ
 
     try {
       // Utiliser l'API backend pour récupérer l'historique
@@ -499,18 +499,31 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       console.log(`[ChatStore] Received message history for ${chatId}:`, historyData);
 
       // Transformer les données de l'API en format Message[] si nécessaire
-      // ---> CORRECTION Linter Error 3 : Supposer que historyData est Message[] <---
       const formattedMessages: Message[] = historyData || [];
 
-      setMessagesList(formattedMessages);
+      // Mettre à jour seulement si on a reçu un historique non vide
+      if (formattedMessages.length > 0) {
+         setMessagesList(formattedMessages);
+      } else {
+          console.log(`[ChatStore] No message history received for ${chatId}. Keeping existing messages (if any).`);
+          // Si pas d'historique, on ne vide pas les messages optimistes potentiels.
+          // S'assurer que isLoading est false si on garde les messages existants.
+          if (currentMessages.length > 0) {
+             _setIsLoadingMessages(false); // Arrêter le chargement explicitement ici
+          }
+      }
 
     } catch (error) {
       console.error(`[ChatStore] Error loading messages for chatId ${chatId}:`, error);
       _setError(`Failed to load messages for chat ${chatId}.`);
-      setMessagesList([]); // Reset messages on error
-      // Ne pas remettre currentChatId à null ici, l'utilisateur est toujours sur ce chat même si les messages n'ont pas chargé
+      // Ne pas réinitialiser les messages en cas d'erreur si certains existent déjà
+      // setMessagesList([]); // <-- RETIRÉ
+      console.log("[ChatStore] Keeping existing messages on load error.");
+
     } finally {
-      _setIsLoadingMessages(false);
+      // Assurer que isLoading est false dans tous les scénarios finaux.
+      // (le cas où on garde les messages existants est géré dans le bloc try/else)
+       _setIsLoadingMessages(false); 
     }
   },
 
@@ -534,34 +547,50 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     let isPrivate = false; // Default to false
 
     if (chatId) {
-        // Chercher dans les conversations personnelles/publiques de l'utilisateur
         const conv = get().conversations.find(c => c.chat_id === chatId);
         if (conv) {
-            // ---> MODIFICATION: Déterminer la privacité basée sur thread_type <---
             isPrivate = conv.thread_type === 'Private';
-            isSocial = false; // Une conversation dans cette liste n'est pas un "social thread" pur
+            isSocial = false;
             console.log(`[ChatStore - setActiveChat] Found in 'conversations'. thread_type: ${conv.thread_type}, Setting isPrivate: ${isPrivate}`);
         } else {
-            // Si non trouvé dans conversations, chercher dans les threads sociaux généraux
             const social = get().socialThreads.find(t => t.chat_id === chatId);
             if (social) {
                 isSocial = true;
-                isPrivate = false; // Les threads sociaux généraux sont toujours publics
+                isPrivate = false;
                 console.log(`[ChatStore - setActiveChat] Found in 'socialThreads'. Setting isSocial: true, isPrivate: false`);
             } else {
                  console.warn(`[ChatStore - setActiveChat] Chat ID ${chatId} not found in conversations or socialThreads.`);
-                 // Garder isPrivate = false, isSocial = false par défaut
             }
         }
     }
 
-    // Mettre à jour l'état global
     _setCurrentChatId(chatId);
-    setIsLandingPageVisible(!chatId); // Afficher landing si chatId est null
+    setIsLandingPageVisible(!chatId);
     setIsSocialThreadActive(isSocial);
-    _setIsCurrentChatPrivate(isPrivate); // Utiliser la valeur calculée
-    setMessages([]); // Vider les messages
-    _setIsLoadingMessages(!!chatId); // Mettre en chargement si un chat est sélectionné
+    _setIsCurrentChatPrivate(isPrivate);
+
+    // *** Modification Start ***
+    // Vider les messages seulement si on change activement d'un chat à un autre,
+    // ou si on va vers la landing page.
+    // Ne pas vider si on active le premier chat (currentId === null).
+    if (chatId !== null && currentId !== null && chatId !== currentId) {
+        console.log("[ChatStore - setActiveChat] Switching between existing chats, clearing messages.");
+        setMessages([]);
+        _setIsLoadingMessages(true);
+    } else if (chatId === null) {
+        console.log("[ChatStore - setActiveChat] Switching to landing page, clearing messages.");
+        setMessages([]);
+        _setIsLoadingMessages(false);
+    } else if (chatId !== null && currentId === null) {
+        // Activating the very first chat (likely onboarding)
+        console.log("[ChatStore - setActiveChat] Activating first chat, NOT clearing messages optimistically.");
+        // Set loading to true because loadChatMessages will be called
+        _setIsLoadingMessages(true);
+    } else {
+        // Fallback or if chatId === currentId (already handled, but for safety)
+        _setIsLoadingMessages(false);
+    }
+    // *** Modification End ***
 
     if (chatId) {
         console.log(`[ChatStore - setActiveChat] Loading messages for chat ${chatId} (isSocial: ${isSocial}, isPrivate: ${isPrivate})`);
@@ -629,7 +658,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       };
       await setDoc(doc(db, 'chatsessions', newChatId), chatData);
       // L'ajout à la liste de l'utilisateur est crucial
-      await useAuthStore.getState().addChatIdToStoreAndFirestore(newChatId);
+      await useAuthStore.getState().addChatIdToFirestore(newChatId);
 
       console.log(`addNewConversation: Successfully created Firestore doc for chat ${newChatId}. Listener should pick it up.`);
       // Le listener mettra à jour la liste `conversations` dans la sidebar. L'état actif est déjà bon.
@@ -649,7 +678,10 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
           isLoadingMessages: originalIsLoadingMessages, // Restaurer aussi l'état de chargement
       });
       // Annuler aussi l'ajout dans AuthStore si l'erreur vient de Firestore
-      useAuthStore.getState().removeChatIdFromStore(newChatId);
+      // La logique de rollback pour addChatIdToFirestore devrait idéalement être dans cette fonction elle-même
+      // ou gérée par le fait que l'écouteur ne verra pas le nouvel ID si setDoc échoue.
+      // Pour l'instant, on retire cet appel problématique.
+      // useAuthStore.getState().removeChatIdFromStore(newChatId);
       return null;
     }
   },
@@ -739,7 +771,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     try {
       const conversationRef = doc(db, 'chatsessions', chatId);
       await deleteDoc(conversationRef);
-      await useAuthStore.getState().removeChatIdFromStore(chatId); // Celle-ci DOIT réussir ou avoir son rollback
+      await useAuthStore.getState().removeChatIdFromFirestore(chatId);
       console.log(`deleteConversation: Chat ${chatId} deleted successfully.`);
       // Si succès, et qu'on avait switché, lancer le vrai chargement
        if (currentChatId === chatId && nextActiveChatId) {
@@ -762,8 +794,6 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
           isLoadingMessages: false, // Arrêter le loading dans tous les cas d'erreur
           error: "Failed to delete conversation."
       });
-       // Annuler aussi la suppression dans AuthStore si possible
-       // (removeChatIdFromStore n'a pas de DB call, donc pas besoin de rollback ici, mais si addChatIdToStore échoue, son propre rollback est nécessaire)
     }
   },
 
