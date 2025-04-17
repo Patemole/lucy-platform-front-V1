@@ -12,7 +12,8 @@ import {
   Settings as SettingsIcon,
   History as HistoryIcon,
   People as PeopleIcon,
-  Logout as LogoutIcon
+  Logout as LogoutIcon,
+  Favorite as FavoriteIcon
 } from '@mui/icons-material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ProfileEdit from '@mui/icons-material/Edit';
@@ -31,6 +32,8 @@ type SidebarProps = {
     isLandingPageVisible: boolean;
     isHistory: boolean;
     setIsHistory: (val: boolean) => void;
+    isPennTinder: boolean;
+    setIsPennTinder: (val: boolean) => void;
     profileMenuAnchorEl: HTMLElement | null;
     handleProfileMenuClick: (e: React.MouseEvent<HTMLElement>) => void;
     handleProfileMenuClose: () => void;
@@ -60,7 +63,7 @@ type SidebarProps = {
   const Sidebar: React.FC<SidebarProps> = ({
     theme, isSmallScreen, drawerOpen, toggleDrawer,
     profilePicture, user, isLandingPageVisible,
-    isHistory, setIsHistory, profileMenuAnchorEl,
+    isHistory, setIsHistory, isPennTinder, setIsPennTinder, profileMenuAnchorEl,
     handleProfileMenuClick, handleProfileMenuClose,
     handleParametersMenuClick, handleLogout, handleDialogOpen,
     conversations, handleConversationClick, activeChatId,
@@ -278,28 +281,30 @@ type SidebarProps = {
                     tabIndex={0}
                     onClick={() => {
                         setIsHistory(false);
+                        setIsPennTinder(false);
                         if (isSmallScreen) setTimeout(toggleDrawer, 50);
                     }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         setIsHistory(false);
+                        setIsPennTinder(false);
                         if (isSmallScreen) setTimeout(toggleDrawer, 50);
                         }
                     }}
                     sx={{
                         cursor: "pointer",
                         borderRadius: "8px",
-                        backgroundColor: !isHistory ? theme.palette.button.background : "transparent",
+                        backgroundColor: !isHistory && !isPennTinder ? theme.palette.button.background : "transparent",
                         mb: 1,
                         "&:hover": {
-                        backgroundColor: !isHistory ? theme.palette.button.background : theme.palette.action.hover,
+                        backgroundColor: !isHistory && !isPennTinder ? theme.palette.button.background : theme.palette.action.hover,
                         },
                     }}
                     >
                     <ListItemIcon
                         sx={{
-                        color: !isHistory ? theme.palette.primary.main : theme.palette.sidebar,
+                        color: !isHistory && !isPennTinder ? theme.palette.primary.main : theme.palette.sidebar,
                         minWidth: "35px",
                         }}
                     >
@@ -313,7 +318,7 @@ type SidebarProps = {
                             sx={{
                                 fontWeight: "500",
                                 fontSize: "0.875rem",
-                                color: !isHistory ? theme.palette.primary.main : theme.palette.text.primary,
+                                color: !isHistory && !isPennTinder ? theme.palette.primary.main : theme.palette.text.primary,
                             }}
                             >
                             Social thread
@@ -341,13 +346,66 @@ type SidebarProps = {
                         }
                     />
                     </ListItem>
+
+                    {/* bouton Penn Tinder */}
+                    <ListItem
+                    component="li"
+                    tabIndex={0}
+                    onClick={() => {
+                        setIsHistory(false);
+                        setIsPennTinder(true);
+                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setIsHistory(false);
+                        setIsPennTinder(true);
+                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                        }
+                    }}
+                    sx={{
+                        cursor: "pointer",
+                        borderRadius: "8px",
+                        backgroundColor: isPennTinder ? theme.palette.button.background : "transparent",
+                        mb: 1,
+                        "&:hover": {
+                        backgroundColor: isPennTinder ? theme.palette.button.background : theme.palette.action.hover,
+                        },
+                    }}
+                    >
+                    <ListItemIcon
+                        sx={{
+                        color: isPennTinder ? theme.palette.primary.main : theme.palette.sidebar,
+                        minWidth: "35px",
+                        }}
+                    >
+                        <FavoriteIcon sx={{ fontSize: "22px" }} />
+                    </ListItemIcon>
+                    <ListItemText
+                        primary={
+                        <Box display="flex" alignItems="center">
+                            <Typography
+                            variant="body2"
+                            sx={{
+                                fontWeight: "500",
+                                fontSize: "0.875rem",
+                                color: isPennTinder ? theme.palette.primary.main : theme.palette.text.primary,
+                            }}
+                            >
+                            Penn Tinder
+                            </Typography>
+                        </Box>
+                        }
+                    />
+                    </ListItem>
                 </List>
                 </nav>
 
                 <Divider style={{ backgroundColor: 'lightgray' }} />
 
                 {/* en-tête de la section affichée */}
-                <section aria-label={isHistory ? "Conversation History" : "Last Public Interactions"}>
+                <section aria-label={isHistory ? "Conversation History" : isPennTinder ? "" : "Last Public Interactions"}>
                 <div
                     className="text-center text-black-500 font-semibold mt-5 mb-2 flex justify-center items-center"
                     style={{
@@ -357,9 +415,9 @@ type SidebarProps = {
                     }}
                 >
                     <span>
-                    {isHistory ? "Conversation History" : "Last Public Interactions"}
+                    {isHistory ? "Conversation History" : isPennTinder ? "" : "Last Public Interactions"}
                     </span>
-                    {!isHistory && unreadCount > 0 && (
+                    {!isHistory && !isPennTinder && unreadCount > 0 && (
                     <div
                         className="ml-2 flex items-center justify-center text-white"
                         style={{
@@ -563,6 +621,12 @@ type SidebarProps = {
                         )}
                     </List>
                     </nav>
+                ) : isPennTinder ? (
+                    <Box display="flex" justifyContent="center" alignItems="center" p={4}>
+                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
+                            
+                        </Typography>
+                    </Box>
                 ) : (
                     <nav aria-label="Social Thread list">
                     <List component="ul">

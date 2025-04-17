@@ -30,6 +30,7 @@ import Popups from './components/Popups';
 import ChatContent from './components/ChatContent';
 import RelatedQuestions from './components/RelatedQuestions';
 import ForcedFeedback from '../../components/main_components/ForcedFeedback';
+import PennTinder from './components/PennTinder';
 
 
 //For Topic of the conversations
@@ -108,6 +109,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
   //5. Conversations et Social Threads
   const [isHistory, setIsHistory] = useState(true); // Keep local UI state
+  const [isPennTinder, setIsPennTinder] = useState(false); // Keep local UI state
   const { socialThreads } = useChatStore(); // Get social threads from store
   const [isSocialThread, setIsSocialThread] = useState(false); // Use isSocialThreadActive from store?
 
@@ -326,6 +328,8 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             isLandingPageVisible={isLandingPageVisible}
             isHistory={isHistory}
             setIsHistory={setIsHistory}
+            isPennTinder={isPennTinder}
+            setIsPennTinder={setIsPennTinder}
             profileMenuAnchorEl={profileMenuAnchorEl}
             handleProfileMenuClick={handleProfileMenuClick}
             handleProfileMenuClose={handleProfileMenuClose}
@@ -386,43 +390,47 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   
 
             {/* Content Area */}
-            <ChatContent
-            isLandingPageVisible={isLandingPageVisible}
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-            messages={messages}
-            isComplete={isComplete}
-            drawerOpen={drawerOpen}
-            isSmallScreen={isSmallScreen}
-            messageMarginX={messageMarginX}
-            endDivRef={endDivRef}
-            scrollableDivRef={scrollableDivRef}
-            lastAiMessageId={lastAiMessageId}
-            relatedQuestions={relatedQuestions}
-            handleSendMessageFromLandingPage={handleSendMessageFromLandingPage}
-            handleSendTAKMessage={handleSendTAKMessage}
-            handleSendCOURSEMessage={handleSendCOURSEMessage}
-            handleFeedbackClick={handleFeedbackClick}
-            handleWrongAnswerClick={handleWrongAnswerClick}
-            handleSourceClick={handleSourceClick}
-            isStreaming={isStreaming}
-            hasNewContent={hasNewContent}
-            handleSendSCHOOLMessage={handleSendSCHOOLMessage}
-            handleSendYEARMessage={handleSendYEARMessage}
-            handleSendLINKEDINMessage={handleSendLINKEDINMessage}
-            handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
-            handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
-            hasStartedStreaming={hasStartedStreaming}
-            handlePrivacyChange={handlePrivacyToggleClick}
-            setIsAtBottom={setIsAtBottom}
-            setNewMessagesCount={setNewMessagesCount}
-          />
+            {isPennTinder ? (
+              <PennTinder theme={theme} />
+            ) : (
+              <ChatContent
+                isLandingPageVisible={isLandingPageVisible}
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+                messages={messages}
+                isComplete={isComplete}
+                drawerOpen={drawerOpen}
+                isSmallScreen={isSmallScreen}
+                messageMarginX={messageMarginX}
+                endDivRef={endDivRef}
+                scrollableDivRef={scrollableDivRef}
+                lastAiMessageId={lastAiMessageId}
+                relatedQuestions={relatedQuestions}
+                handleSendMessageFromLandingPage={handleSendMessageFromLandingPage}
+                handleSendTAKMessage={handleSendTAKMessage}
+                handleSendCOURSEMessage={handleSendCOURSEMessage}
+                handleFeedbackClick={handleFeedbackClick}
+                handleWrongAnswerClick={handleWrongAnswerClick}
+                handleSourceClick={handleSourceClick}
+                isStreaming={isStreaming}
+                hasNewContent={hasNewContent}
+                handleSendSCHOOLMessage={handleSendSCHOOLMessage}
+                handleSendYEARMessage={handleSendYEARMessage}
+                handleSendLINKEDINMessage={handleSendLINKEDINMessage}
+                handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
+                handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
+                hasStartedStreaming={hasStartedStreaming}
+                handlePrivacyChange={handlePrivacyToggleClick}
+                setIsAtBottom={setIsAtBottom}
+                setNewMessagesCount={setNewMessagesCount}
+              />
+            )}
 
           
-          <RelatedQuestions relatedQuestions={relatedQuestions} setInputValue={setInputValue} />
+          {!isPennTinder && <RelatedQuestions relatedQuestions={relatedQuestions} setInputValue={setInputValue} />}
 
 
-            {currentView === 'chat' && !isAtBottom && !isLandingPageVisible && (
+            {currentView === 'chat' && !isAtBottom && !isLandingPageVisible && !isPennTinder && (
               <button
                 onClick={scrollToBottom}
                 style={{
@@ -453,7 +461,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             
 
 
-            {currentView === 'chat' && !isLandingPageVisible && user?.onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
+            {currentView === 'chat' && !isLandingPageVisible && !isPennTinder && user?.onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
             <>
               {isSmallScreen ? (
                 // VERSION MOBILE AVEC MODIFICATIONS
