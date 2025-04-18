@@ -230,6 +230,59 @@ type SidebarProps = {
                     </ListItem>
                     */}
 
+                    {/* bouton Penn Tinder */}
+                    <ListItem
+                    component="li"
+                    tabIndex={0}
+                    onClick={() => {
+                        setIsHistory(false);
+                        setIsPennTinder(true);
+                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setIsHistory(false);
+                        setIsPennTinder(true);
+                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                        }
+                    }}
+                    sx={{
+                        cursor: "pointer",
+                        borderRadius: "8px",
+                        backgroundColor: isPennTinder ? theme.palette.button.background : "transparent",
+                        mb: 1,
+                        "&:hover": {
+                        backgroundColor: isPennTinder ? theme.palette.button.background : theme.palette.action.hover,
+                        },
+                    }}
+                    >
+                    <ListItemIcon
+                        sx={{
+                        color: isPennTinder ? theme.palette.primary.main : theme.palette.sidebar,
+                        minWidth: "35px",
+                        }}
+                    >
+                        <FavoriteIcon sx={{ fontSize: "22px" }} />
+                    </ListItemIcon>
+                    <ListItemText
+                        primary={
+                        <Box display="flex" alignItems="center">
+                            <Typography
+                            variant="body2"
+                            sx={{
+                                fontWeight: "500",
+                                fontSize: "0.875rem",
+                                color: isPennTinder ? theme.palette.primary.main : theme.palette.text.primary,
+                            }}
+                            >
+                            Penn Tinder
+                            </Typography>
+                        </Box>
+                        }
+                    />
+                    </ListItem>
+
                     {/* bouton conversation history */}
                     <ListItem
                     component="li"
@@ -342,59 +395,6 @@ type SidebarProps = {
                                 {unreadCount}
                             </Box>
                             )}
-                        </Box>
-                        }
-                    />
-                    </ListItem>
-
-                    {/* bouton Penn Tinder */}
-                    <ListItem
-                    component="li"
-                    tabIndex={0}
-                    onClick={() => {
-                        setIsHistory(false);
-                        setIsPennTinder(true);
-                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
-                    }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setIsHistory(false);
-                        setIsPennTinder(true);
-                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
-                        }
-                    }}
-                    sx={{
-                        cursor: "pointer",
-                        borderRadius: "8px",
-                        backgroundColor: isPennTinder ? theme.palette.button.background : "transparent",
-                        mb: 1,
-                        "&:hover": {
-                        backgroundColor: isPennTinder ? theme.palette.button.background : theme.palette.action.hover,
-                        },
-                    }}
-                    >
-                    <ListItemIcon
-                        sx={{
-                        color: isPennTinder ? theme.palette.primary.main : theme.palette.sidebar,
-                        minWidth: "35px",
-                        }}
-                    >
-                        <FavoriteIcon sx={{ fontSize: "22px" }} />
-                    </ListItemIcon>
-                    <ListItemText
-                        primary={
-                        <Box display="flex" alignItems="center">
-                            <Typography
-                            variant="body2"
-                            sx={{
-                                fontWeight: "500",
-                                fontSize: "0.875rem",
-                                color: isPennTinder ? theme.palette.primary.main : theme.palette.text.primary,
-                            }}
-                            >
-                            Penn Tinder
-                            </Typography>
                         </Box>
                         }
                     />

@@ -4,10 +4,9 @@ import { useTheme } from '@mui/material/styles';
 
 interface PennTinderProps {
   theme: any;
-  onAskLucy?: (question: string) => void;
 }
 
-const PennTinder: React.FC<PennTinderProps> = ({ theme, onAskLucy }) => {
+const PennTinder: React.FC<PennTinderProps> = ({ theme }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentActivity, setCurrentActivity] = useState<any>(null);
   const muiTheme = useTheme();
@@ -495,7 +494,7 @@ const PennTinder: React.FC<PennTinderProps> = ({ theme, onAskLucy }) => {
 
       // Add the JavaScript code
       const scriptElement = document.createElement('script');
-      scriptElement.textContent = `
+      const scriptContent = `
         (function() {
           const LOCAL_STORAGE_KEYS = {
               DECK: 'explorePennDeck_v2',
@@ -1023,35 +1022,12 @@ const PennTinder: React.FC<PennTinderProps> = ({ theme, onAskLucy }) => {
           document.addEventListener('pointerup', handleDragEnd, { passive: false });
           document.addEventListener('keydown', handleKeyboardSwipe);
 
-          // Add Lucy chat integration
-          function askLucyAboutActivity(activity) {
-            if (window.onAskLucy) {
-              window.onAskLucy(\`Tell me more about \${activity.title}\`);
-            }
-          }
-
-          // Modify the swipeRight function to include Lucy chat
-          const originalSwipeRight = swipeRight;
-          swipeRight = function() {
-            if (!currentCardElement) return;
-            const activityId = parseInt(currentCardElement.dataset.id);
-            const activity = getActivityById(activityId);
-            
-            if (activity) {
-              askLucyAboutActivity(activity);
-            }
-            
-            originalSwipeRight();
-          };
-
           // Initialize the app
           initApp();
         })();
       `;
+      scriptElement.textContent = scriptContent;
       document.body.appendChild(scriptElement);
-
-      // Add the onAskLucy function to the window object
-      (window as any).onAskLucy = onAskLucy;
 
       // Clean up function
       return () => {
@@ -1061,10 +1037,9 @@ const PennTinder: React.FC<PennTinderProps> = ({ theme, onAskLucy }) => {
         if (scriptElement) {
           document.body.removeChild(scriptElement);
         }
-        delete (window as any).onAskLucy;
       };
     }
-  }, [onAskLucy]);
+  }, []);
 
   return (
     <Box 
