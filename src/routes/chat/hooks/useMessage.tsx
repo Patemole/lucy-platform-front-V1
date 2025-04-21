@@ -70,7 +70,7 @@ export const useMessage = ({
     }, [messages, isAtBottom]); // Depend on messages and isAtBottom
 
 
-    //Scrolling useffect for autoscrolling I think
+    //Scrolling useffect for autoscrolling, Attached a listener to the scrollable div
     useEffect(() => {
         const handleScroll = debounce(() => {
         const scrollDiv = scrollableDivRef.current;

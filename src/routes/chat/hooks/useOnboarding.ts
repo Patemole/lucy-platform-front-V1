@@ -212,6 +212,8 @@ export const useOnboarding = ({
   }, [generateUniqueId, setMessages, updateUserField, saveOnboardingStep, setIsLandingPageVisible, setRelatedQuestions, setIsStreaming, onSubmit, fakeStreamMessage, skipLinkedInQuestion, onboardingMessages]);
 
 
+
+
   // --- useEffect Principal (pour démarrer l'onboarding) ---
   useEffect(() => {
     console.log(
@@ -255,7 +257,7 @@ export const useOnboarding = ({
       else if (user?.onboardingComplete) console.log("[useOnboarding Check] Onboarding already complete.");
       else if (hasRunOnboardingCheckRef.current) console.log("[useOnboarding Check] Check already performed in this cycle.");
     }
-  }, [isAppInitialized, user]); // Ne dépend plus de `messages` ou `sendNextOnboardingMessage`
+  }, [isAppInitialized, user?.id, user?.onboardingComplete]); // Ne dépend plus de `messages` ou `sendNextOnboardingMessage`[isAppInitialized, user]
 
 
   // --- Fonctions de Handler pour les Réponses Spécifiques ---

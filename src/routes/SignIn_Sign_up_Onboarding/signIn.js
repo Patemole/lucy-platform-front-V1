@@ -261,7 +261,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
       // Redirige vers l'onboarding, cohérent avec handleSubmit
       navigate(`/onboarding-with-lucy/${user?.id || 'defaultId'}`, { replace: true });
     }
-  }, [loading, isAuth, user, shouldRedirect, navigate]);
+  }, [loading, isAuth, user?.id, shouldRedirect, navigate]); //[loading, isAuth, user, shouldRedirect, navigate]
 
 
 

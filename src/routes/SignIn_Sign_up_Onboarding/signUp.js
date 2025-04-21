@@ -122,8 +122,9 @@ export default function SignUp() {
       console.log("[SignUp Page] User authenticated via useEffect (using Zustand state), redirecting...");
       navigate(`/onboarding-with-lucy/${user?.id || 'defaultId'}`, { replace: true });
     }
-  }, [isLoadingAuth, isAuthenticated, user, shouldRedirect, navigate]);
+  }, [isLoadingAuth, isAuthenticated, user?.id, shouldRedirect, navigate]);
 
+  
   async function handleSignUpWithSSO() {
     console.log("🚀 [SSO Harmonisée - SignUp] Début du processus de connexion/inscription SSO...");
     setShouldRedirect(false);
