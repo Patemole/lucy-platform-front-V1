@@ -241,6 +241,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const onboardingMessages = [
     { question: "What is your current school?", metadata: "SCHOOL" },
     { question: "What year are you in?", metadata: "YEAR" },
+    { question: "What's your Insta?", metadata: "INSTAGRAM" },
     { question: "What is you linkedin URL?", metadata: "LINKEDIN" },
     { question: "What is your major and minor?", metadata: "MAJOR&MINOR" },
     { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" },

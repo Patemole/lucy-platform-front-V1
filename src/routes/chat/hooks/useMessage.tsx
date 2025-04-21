@@ -60,18 +60,11 @@ export const useMessage = ({
     } = useChatStore();
 
 
-     // Autoscroll logic based on isAtBottom
-    useEffect(() => {
-        if (isAtBottom) {
-        scrollToBottom();
-        } else {
-        setNewMessagesCount((prevCount) => prevCount + 1);
-        }
-    }, [messages, isAtBottom]); // Depend on messages and isAtBottom
 
 
-    //Scrolling useffect for autoscrolling, Attached a listener to the scrollable div
-    useEffect(() => {
+    //Detector de scroll
+     //Scrolling useffect for autoscrolling, Attached a listener to the scrollable div
+     useEffect(() => {
         const handleScroll = debounce(() => {
         const scrollDiv = scrollableDivRef.current;
         if (scrollDiv) {
@@ -87,6 +80,17 @@ export const useMessage = ({
     
         return () => scrollDiv?.removeEventListener('scroll', handleScroll);
     }, []);
+
+
+    //Reactor based on the value of isAtBottom for autoscrolling
+    useEffect(() => {
+        if (isAtBottom) {
+        scrollToBottom();
+        } else {
+        setNewMessagesCount((prevCount) => prevCount + 1);
+        }
+    }, [messages, isAtBottom]); // Depend on messages and isAtBottom
+
 
 //------------------------------------------------------------------------
 
