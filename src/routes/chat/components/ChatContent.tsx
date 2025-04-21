@@ -94,15 +94,6 @@ interface ChatContentProps {
             <div
             className={`flex flex-col space-y-2 ${isSmallScreen ? 'px-1 py-4' : 'p-4'}`}
             ref={scrollableDivRef}
-            onScroll={() => {
-                const scrollDiv = scrollableDivRef.current;
-                if (scrollDiv) {
-                const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
-                const atBottom = scrollTop + clientHeight >= scrollHeight - 5;
-                setIsAtBottom(atBottom);
-                if (atBottom) setNewMessagesCount(0);
-                }
-            }}
             style={{
                 overflowY: 'auto',
                 height: '100%',
