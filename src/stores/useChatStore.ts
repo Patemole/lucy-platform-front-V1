@@ -93,7 +93,7 @@ interface ChatState {
   fetchConversations: () => Unsubscribe; // Charge la liste des conversations de l'utilisateur
   fetchSocialThreads: () => Unsubscribe; // Initialise le listener pour les threads sociaux
   loadChatMessages: (chatId: string) => Promise<void>; // Charge les messages et détails d'un chat spécifique
-  setActiveChat: (chatId: string | null) => void; // Définit le chat actif (peut appeler loadChatMessages)
+  setActiveChat: (chatId: string | null, options?: { skipLoadMessages?: boolean }) => void; // Définit le chat actif (peut appeler loadChatMessages)
 
   addNewConversation: () => Promise<string | null>; // Crée une nouvelle conversation
   renameConversation: (chatId: string, newName: string) => Promise<void>;
@@ -380,13 +380,17 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       _setError(null);
 
       // --- Logique pour le chat initial ---
-      if (isInitialLoad && !get().currentChatId && fetchedConversations.length > 0) {
+      const isInitialOnboardingLoad = isInitialLoad && !useAuthStore.getState().user?.onboardingComplete;
+      if (isInitialLoad && !isInitialOnboardingLoad && !get().currentChatId && fetchedConversations.length > 0) {
           const initialChatId = fetchedConversations[0].chat_id;
-          console.log(`[ChatStore - fetchConversations] Initial load complete. Setting initial active chat to: ${initialChatId}`);
-          setActiveChat(initialChatId); // setActiveChat déterminera la bonne valeur pour isCurrentChatPrivate
-      } else if (isInitialLoad && !get().currentChatId && fetchedConversations.length === 0) {
-          console.log("[ChatStore - fetchConversations] Initial load complete. No conversations found, setting active chat to null.");
+          console.log(`[ChatStore - fetchConversations] Initial load complete (non-onboarding). Setting initial active chat to: ${initialChatId}`);
+          setActiveChat(initialChatId); 
+      } else if (isInitialLoad && !isInitialOnboardingLoad && !get().currentChatId && fetchedConversations.length === 0) {
+          console.log("[ChatStore - fetchConversations] Initial load complete (non-onboarding). No conversations found, setting active chat to null.");
           setActiveChat(null);
+      } else if (isInitialOnboardingLoad) {
+          console.log("[ChatStore - fetchConversations] Initial load for onboarding user. Waiting for signup/onboarding flow to set active chat.");
+          // Ne rien faire ici, laisser le flux d'inscription/onboarding appeler setActiveChat
       }
 
     }, (error) => {
@@ -527,9 +531,9 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }
   },
 
-  setActiveChat: (chatId: string | null) => {
+  setActiveChat: (chatId: string | null, options?: { skipLoadMessages?: boolean }) => {
     const currentId = get().currentChatId;
-    const { setMessages, setIsLandingPageVisible, _setCurrentChatId, setIsSocialThreadActive, _setIsCurrentChatPrivate, _setIsLoadingMessages } = get();
+    const { setMessages, setIsLandingPageVisible, _setCurrentChatId, setIsSocialThreadActive, _setIsCurrentChatPrivate, _setIsLoadingMessages, loadChatMessages } = get();
 
     if (chatId === currentId && chatId !== null) {
         console.log(`[ChatStore - setActiveChat] Chat ${chatId} is already active.`);
@@ -565,7 +569,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }
 
     _setCurrentChatId(chatId);
-    setIsLandingPageVisible(!chatId);
+    //setIsLandingPageVisible(!chatId);
     setIsSocialThreadActive(isSocial);
     _setIsCurrentChatPrivate(isPrivate);
 
@@ -592,12 +596,20 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }
     // *** Modification End ***
 
-    if (chatId) {
+    // ---> MODIFICATION : Condition pour appeler loadChatMessages <--- 
+    if (chatId && !options?.skipLoadMessages) { // Ne charge que si l'ID existe ET skipLoadMessages n'est pas true
         console.log(`[ChatStore - setActiveChat] Loading messages for chat ${chatId} (isSocial: ${isSocial}, isPrivate: ${isPrivate})`);
-        get().loadChatMessages(chatId);
+        loadChatMessages(chatId); // Appel direct à loadChatMessages défini dans le store
+    } else if (chatId && options?.skipLoadMessages) {
+        console.log(`[ChatStore - setActiveChat] Active chat set to ${chatId}, but skipping message load as requested.`);
+         // Si on skippe le chargement, s'assurer que isLoadingMessages est false
+         _setIsLoadingMessages(false); 
     } else {
        console.log("[ChatStore - setActiveChat] Active chat set to null. Landing page visible.");
+       // Assurer que isLoadingMessages est false si on passe à la landing page
+       _setIsLoadingMessages(false); 
     }
+    // ---> FIN MODIFICATION <--- 
   },
 
   // --- Conversation Management Actions ---
