@@ -192,6 +192,7 @@ const App: React.FC = () => {
                     // Gestion d'erreur: Peut-être remettre `isAppInitialized` à false pour permettre une nouvelle tentative ?
                     // setAppInitialized(false);
                 });
+
         } else if (!isAuthenticated && isAppInitialized) {
              // Cas où l'utilisateur se déconnecte: Réinitialise le flag d'initialisation
              console.log("App: Utilisateur déconnecté. Réinitialisation du flag isAppInitialized.");
@@ -199,7 +200,7 @@ const App: React.FC = () => {
         }
         // Dépendances de l'effet: l'effet se redéclenchera si l'une de ces valeurs change.
         // `user` est inclus car nous dépendons de user.id et user.university.
-    }, [isLoadingAuth, isAuthenticated, user, isAppInitialized, setAppInitialized]);
+    }, [isLoadingAuth, isAuthenticated, user?.id, user?.university, isAppInitialized]); //[isLoadingAuth, isAuthenticated, user, isAppInitialized, setAppInitialized]
 
 
 

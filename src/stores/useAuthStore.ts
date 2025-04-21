@@ -99,7 +99,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
     } else {
       // Connexion ou Mise à Jour via l'écouteur Firestore:
       const chatSessions = userData.chatsessions || [];
-      
+
       // Vérifier si l'utilisateur ou les chatIds ont réellement changé pour optimiser les re-renders
       const hasUserChanged = JSON.stringify(userData) !== JSON.stringify(get().user);
       const hasChatIdsChanged = JSON.stringify(chatSessions) !== JSON.stringify(get().chatIds);
@@ -238,6 +238,52 @@ const useAuthStore = create<AuthState>((set, get) => ({
 
   // --- Initialisation des Écouteurs --- 
 
+  // Démarre l'écouteur d'état d'authentification Firebase (onAuthStateChanged).
+  // Appelle _initializeUserListener lors de la connexion.
+  // Gère la déconnexion via _setUserAndAuth(null).
+  initializeAuthListener: () => {
+    console.log("AuthStore: Initialisation de l'écouteur onAuthStateChanged.");
+    const { _setUserAndAuth, _initializeUserListener, _setLoading, _setError, userListenerUnsubscribe } = get();
+    _setLoading(true); // Indiquer le début du chargement de l'état Auth
+
+    // Nettoyer un écouteur user précédent si l'écouteur Auth est (ré)initialisé
+    if (userListenerUnsubscribe) {
+        console.warn("AuthStore: Nettoyage d'un écouteur utilisateur existant au démarrage de l'écouteur Auth.");
+        userListenerUnsubscribe();
+        set({ userListenerUnsubscribe: null });
+    }
+
+    // Création de l'écouteur Firebase Auth
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      _setLoading(false); // L'état d'authentification est maintenant connu
+
+      if (firebaseUser) {
+        // Utilisateur connecté via Firebase
+        console.log("AuthStore: onAuthStateChanged - Utilisateur Firebase détecté:", firebaseUser.uid);
+        // 1. Mettre à jour l'état de base (isAuthenticated, id, email)
+        set({ isAuthenticated: true, isLoading: false, user: { id: firebaseUser.uid, email: firebaseUser.email || ''} as User });
+        // 2. Démarrer l'écouteur Firestore pour récupérer/synchroniser le reste du profil
+        _initializeUserListener(firebaseUser.uid);
+      } else {
+        // Aucun utilisateur Firebase connecté
+        console.log("AuthStore: onAuthStateChanged - Aucun utilisateur Firebase.");
+        // Déclencher la logique de déconnexion (qui arrêtera aussi l'écouteur Firestore)
+        _setUserAndAuth(null);
+      }
+    }, (error) => {
+        // Erreur de l'écouteur Firebase Auth lui-même
+        console.error("AuthStore: Erreur dans onAuthStateChanged listener:", error);
+        _setError("Erreur d'authentification Firebase.");
+        _setUserAndAuth(null); // Déconnecter en cas d'erreur critique de l'écouteur Auth
+        _setLoading(false);
+    });
+
+    // Retourner la fonction pour arrêter l'écouteur onAuthStateChanged
+    return unsubscribeAuth;
+  },
+
+
+  
   // Démarre l'écouteur Firestore (onSnapshot) pour le document utilisateur spécifié.
   // Met à jour l'état `user` et `chatIds` à chaque modification.
   _initializeUserListener: (userId) => {
@@ -306,52 +352,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
 
 
 
-
-  // Démarre l'écouteur d'état d'authentification Firebase (onAuthStateChanged).
-  // Appelle _initializeUserListener lors de la connexion.
-  // Gère la déconnexion via _setUserAndAuth(null).
-  initializeAuthListener: () => {
-    console.log("AuthStore: Initialisation de l'écouteur onAuthStateChanged.");
-    const { _setUserAndAuth, _initializeUserListener, _setLoading, _setError, userListenerUnsubscribe } = get();
-    _setLoading(true); // Indiquer le début du chargement de l'état Auth
-
-    // Nettoyer un écouteur user précédent si l'écouteur Auth est (ré)initialisé
-    if (userListenerUnsubscribe) {
-        console.warn("AuthStore: Nettoyage d'un écouteur utilisateur existant au démarrage de l'écouteur Auth.");
-        userListenerUnsubscribe();
-        set({ userListenerUnsubscribe: null });
-    }
-
-    // Création de l'écouteur Firebase Auth
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      _setLoading(false); // L'état d'authentification est maintenant connu
-
-      if (firebaseUser) {
-        // Utilisateur connecté via Firebase
-        console.log("AuthStore: onAuthStateChanged - Utilisateur Firebase détecté:", firebaseUser.uid);
-        // 1. Mettre à jour l'état de base (isAuthenticated, id, email)
-        set({ isAuthenticated: true, isLoading: false, user: { id: firebaseUser.uid, email: firebaseUser.email || ''} as User });
-        // 2. Démarrer l'écouteur Firestore pour récupérer/synchroniser le reste du profil
-        _initializeUserListener(firebaseUser.uid);
-      } else {
-        // Aucun utilisateur Firebase connecté
-        console.log("AuthStore: onAuthStateChanged - Aucun utilisateur Firebase.");
-        // Déclencher la logique de déconnexion (qui arrêtera aussi l'écouteur Firestore)
-        _setUserAndAuth(null);
-      }
-    }, (error) => {
-        // Erreur de l'écouteur Firebase Auth lui-même
-        console.error("AuthStore: Erreur dans onAuthStateChanged listener:", error);
-        _setError("Erreur d'authentification Firebase.");
-        _setUserAndAuth(null); // Déconnecter en cas d'erreur critique de l'écouteur Auth
-        _setLoading(false);
-    });
-
-    // Retourner la fonction pour arrêter l'écouteur onAuthStateChanged
-    return unsubscribeAuth;
-  },
 }));
-
 
 
 // --- Notes Générales ---

@@ -28,7 +28,7 @@ export const useUIState = ({
 }) => {
 
 
-//Scrolling useffect for autoscrolling I think
+//Scrolling useffect for autoscrolling I think // Same as in the useMessage.tsx
 useEffect(() => {
     const handleScroll = debounce(() => {
     const scrollDiv = scrollableDivRef.current;
