@@ -202,7 +202,7 @@ interface TopHeaderProps {
                             </>
                             ) : (
                             <>
-                                {console.log('Rendering default AccountCircleIcon')}
+                               
                                 <AccountCircleIcon
                                 fontSize="inherit"
                                 component="svg"

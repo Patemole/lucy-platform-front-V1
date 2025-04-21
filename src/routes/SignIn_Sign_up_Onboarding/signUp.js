@@ -236,10 +236,9 @@ export default function SignUp() {
           // Mettre à jour le store local si l'utilisateur est toujours connecté
           const currentUser = useAuthStore.getState().user;
           if (currentUser && currentUser.id === ssoUser.uid) {
-            useAuthStore.getState().setUser({
-              ...currentUser,
-              linkedin_profile: linkedInFound
-            });
+            useAuthStore.setState(state => ({
+              user: state.user ? { ...state.user, linkedin_profile: linkedInFound } : null
+            }));
           }
         }).catch(error => {
           console.error("Erreur lors de la vérification LinkedIn:", error);
@@ -370,10 +369,9 @@ export default function SignUp() {
         // Mettre à jour le store local si l'utilisateur est toujours connecté
         const currentUser = useAuthStore.getState().user;
         if (currentUser && currentUser.id === newUser.uid) {
-          useAuthStore.getState().setUser({
-            ...currentUser,
-            linkedin_profile: linkedInFound
-          });
+          useAuthStore.setState(state => ({
+            user: state.user ? { ...state.user, linkedin_profile: linkedInFound } : null
+          }));
         }
       }).catch(error => {
         console.error("Erreur lors de la vérification LinkedIn:", error);

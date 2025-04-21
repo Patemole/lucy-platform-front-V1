@@ -284,7 +284,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
   const navigate = useNavigate();
 
-  console.log("🔍 citedDocuments:", citedDocuments);
+  //console.log("🔍 citedDocuments:", citedDocuments);
 
 
 
