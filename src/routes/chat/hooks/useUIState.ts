@@ -28,25 +28,6 @@ export const useUIState = ({
 }) => {
 
 
-//Scrolling useffect for autoscrolling I think // Same as in the useMessage.tsx
-useEffect(() => {
-    const handleScroll = debounce(() => {
-    const scrollDiv = scrollableDivRef.current;
-    if (scrollDiv) {
-        const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
-        const atBottom = scrollTop + clientHeight >= scrollHeight - 100; // Adjust threshold as needed
-        setIsAtBottom(atBottom);
-        if (atBottom) setNewMessagesCount(0);
-    }
-    }, 100); // Delay of 100ms
-
-    const scrollDiv = scrollableDivRef.current;
-    scrollDiv?.addEventListener('scroll', handleScroll);
-
-    return () => scrollDiv?.removeEventListener('scroll', handleScroll);
-}, []);
-
-
 
 //To search the number of users changing in the database firestore from the function for a global variable
 useEffect(() => {
@@ -77,7 +58,6 @@ useEffect(() => {
       unsubscribe();
     };
   }, []);
-
 
 
 
