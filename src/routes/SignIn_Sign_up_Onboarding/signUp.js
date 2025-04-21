@@ -380,8 +380,8 @@ export default function SignUp() {
       });
 
       // Continuer sans attendre la réponse
-      console.log(`[Step 6a] Setting active chat in ChatStore to: ${chatId}`);
-      useChatStore.getState().setActiveChat(chatId);
+      console.log(`[Step 6a] Setting active chat in ChatStore to: ${chatId} (skipping message load)`);
+      useChatStore.getState().setActiveChat(chatId, { skipLoadMessages: true });
 
       console.log(`[Step 7] Navigating to onboarding page for user ${newUser.uid}...`);
       setTimeout(() => {
