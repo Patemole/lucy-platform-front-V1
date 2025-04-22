@@ -53,6 +53,7 @@ interface StudentProfileDialogProps {
 }
 
 const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClose, setProfilePicture }) => {
+  console.log('<<< RENDERING StudentProfileDialog >>>');
   const { uid } = useParams<{ uid: string }>();
   // const { setUser } = useAuth(); // Supprimé
   // Correction: updateUserProfileInStore n'existe plus, l'écouteur Firestore s'en charge.

@@ -19,7 +19,7 @@ interface TopHeaderProps {
     drawerOpen: boolean;
     toggleDrawer: () => void;
     handleNewConversation: () => void;
-    user: User | null;
+    onboardingComplete: boolean | undefined;
     profilePicture: string | null;
     onlineUsers: number;
     isLastStep: boolean;
@@ -40,12 +40,13 @@ interface TopHeaderProps {
 
   const TopHeader: React.FC<TopHeaderProps> = ({
     isLandingPageVisible, isSmallScreen, drawerOpen, toggleDrawer,
-    handleNewConversation, user, profilePicture, onlineUsers,
+    handleNewConversation, onboardingComplete, profilePicture, onlineUsers,
     isLastStep, progressPercent, theme, profileMenuAnchorEl,
     parametersMenuAnchorEl, handleProfileMenuClick, handleProfileMenuClose,
     handleDialogOpen, handleParametersMenuClick, handleParametersMenuClose,
     handleDeleteAccount, handleLogout, setShowOnboardingProfilePopup,
   }) => {
+    console.log('<<< RENDERING TopHeader >>>');
     return (
 
 
@@ -70,7 +71,7 @@ interface TopHeaderProps {
                                 color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                                 cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
                                 }}
-                                disabled={isLandingPageVisible || !user?.onboardingComplete}
+                                disabled={isLandingPageVisible || !onboardingComplete}
                             >
                                 <MapsUgcRoundedIcon />
                             </IconButton>
@@ -125,7 +126,7 @@ interface TopHeaderProps {
                     </div>
                     </section>
 
-                    {!user?.onboardingComplete && (
+                    {!onboardingComplete && (
                         <div className="flex-1">
                             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div
@@ -158,7 +159,7 @@ interface TopHeaderProps {
                                 color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                                 cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
                             }}
-                            disabled={isLandingPageVisible || !user?.onboardingComplete}
+                            disabled={isLandingPageVisible || !onboardingComplete}
                             >
                             <MapsUgcRoundedIcon />
                             </IconButton>
@@ -188,7 +189,7 @@ interface TopHeaderProps {
                             >
                             {profilePicture ? (
                             <>
-                                {console.log('Rendering profile picture with URL:', profilePicture)}
+                                {/* {console.log('Rendering profile picture with URL:', profilePicture)} */}
                                 <img
                                 src={profilePicture}
                                 alt="Profile"

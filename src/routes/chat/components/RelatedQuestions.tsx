@@ -8,6 +8,7 @@ interface RelatedQuestionsProps {
 }
 
 const RelatedQuestions: React.FC<RelatedQuestionsProps> = ({ relatedQuestions, setInputValue }) => {
+  console.log('<<< RENDERING RelatedQuestions >>>');
   const theme = useTheme();
 
   if (relatedQuestions.length === 0) return null;

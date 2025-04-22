@@ -13,6 +13,9 @@ export interface User {
   linkedin_url?: string;
   linkedin_profile?: any;
   instagram_username?: string;
+  favorite_color?: string;
+  pet_name?: string;
+  favorite_test?: string;
   instagram_profile?: any;
   registered_club_status?: string;
   registered_clubs?: string;

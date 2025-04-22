@@ -99,6 +99,7 @@ const getErrorMessage = (subdomain) => {
 };
 
 export default function SignUp() {
+  console.log('<<< RENDERING SignUp >>>');
   const [errors, setErrors] = React.useState({});
   const [emailError, setEmailError] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
@@ -236,9 +237,10 @@ export default function SignUp() {
           // Mettre à jour le store local si l'utilisateur est toujours connecté
           const currentUser = useAuthStore.getState().user;
           if (currentUser && currentUser.id === ssoUser.uid) {
-            useAuthStore.setState(state => ({
-              user: state.user ? { ...state.user, linkedin_profile: linkedInFound } : null
-            }));
+            useAuthStore.getState().setUser({
+              ...currentUser,
+              linkedin_profile: linkedInFound
+            });
           }
         }).catch(error => {
           console.error("Erreur lors de la vérification LinkedIn:", error);
@@ -369,9 +371,10 @@ export default function SignUp() {
         // Mettre à jour le store local si l'utilisateur est toujours connecté
         const currentUser = useAuthStore.getState().user;
         if (currentUser && currentUser.id === newUser.uid) {
-          useAuthStore.setState(state => ({
-            user: state.user ? { ...state.user, linkedin_profile: linkedInFound } : null
-          }));
+          useAuthStore.getState().setUser({
+            ...currentUser,
+            linkedin_profile: linkedInFound
+          });
         }
       }).catch(error => {
         console.error("Erreur lors de la vérification LinkedIn:", error);

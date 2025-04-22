@@ -37,11 +37,23 @@ export const useOnboarding = ({
   const [skipLinkedInQuestion, setSkipLinkedInQuestion] = useState(false);
   const linkedInCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Cleanup lors du démontage du composant
+  useEffect(() => {
+    return () => {
+      if (linkedInCheckTimeoutRef.current) {
+        clearTimeout(linkedInCheckTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // --- Constantes ---
   const onboardingMessages = [
     { question: "What is your current school?", metadata: "SCHOOL" },
     { question: "What year are you in?", metadata: "YEAR" },
+    { question: "This is a test, are you Mathieu?", metadata: "TEST" },
     { question: "What's your Insta?", metadata: "INSTAGRAM" },
+    { question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
+    //{ question: "What's your pet's name?", metadata: "PET_NAME" },
     { question: "What is you linkedin URL?", metadata: "LINKEDIN" },
     { question: "What is your major and minor?", metadata: "MAJOR&MINOR" },
     { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" },
@@ -49,8 +61,8 @@ export const useOnboarding = ({
 
   // --- Fonction pour obtenir l'index de la prochaine question ---
   const getNextQuestionIndex = useCallback((currentIndex: number) => {
-    if (currentIndex === 2 && skipLinkedInQuestion) { // 2 est l'index après INSTAGRAM
-      return 4; // Skip LINKEDIN (index 3) et aller directement à MAJOR&MINOR (index 4)
+    if (currentIndex === 5 && skipLinkedInQuestion) {
+      return 7;
     }
     return currentIndex + 1;
   }, [skipLinkedInQuestion]);
@@ -62,7 +74,7 @@ export const useOnboarding = ({
     fieldOrObject: string | Record<string, any>,
     value?: any
   ) => {
-    const currentUserId = useAuthStore.getState().user?.id; // Lire l'ID au moment de l'exécution
+    const currentUserId = useAuthStore.getState().user?.id;
     if (!currentUserId) {
         console.error("updateUserField: User ID manquant.");
         return;
@@ -76,7 +88,7 @@ export const useOnboarding = ({
     } catch (error) {
         console.error("❌ [useOnboarding] Erreur lors de la mise à jour Firestore pour updateUserField:", error);
     }
-  }, []); // Pas de dépendances externes ici, les actions/états sont lus à l'intérieur
+  }, []);
 
 
   // Simule le streaming d'un message AI de manière plus sûre
@@ -165,7 +177,7 @@ export const useOnboarding = ({
       }
 
       if (typeof fieldToUpdate === 'object') {
-        await updateUserField(fieldToUpdate);
+        updateUserField(fieldToUpdate);
       }
 
       const loadingAiMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy', isLoading: true };
@@ -179,9 +191,9 @@ export const useOnboarding = ({
     }
 
     // Si on doit sauter la question LinkedIn
-    if (index === 3 && skipLinkedInQuestion) {
+    if (index === 6 && skipLinkedInQuestion) {
       console.log("[useOnboarding] Saut de la question LinkedIn car profil déjà trouvé");
-      return sendNextOnboardingMessage(4, messagesAfterUpdate, fieldToUpdate, previousAnswer);
+      return sendNextOnboardingMessage(7, messagesAfterUpdate, fieldToUpdate, previousAnswer);
     }
 
     console.log(`[useOnboarding] Préparation étape ${index}.`);
@@ -268,7 +280,7 @@ export const useOnboarding = ({
     nextIndex: number,
     metadata: string,
     fieldToUpdate?: string | Record<string, any>,
-    valueToUpdate?: any // Pour les cas simples (string)
+    valueToUpdate?: any
   ) => {
       const newMessage: Message = { id: generateUniqueId(), type: 'human', content: messageContent };
       const currentMessages = useChatStore.getState().messages;
@@ -286,19 +298,21 @@ export const useOnboarding = ({
               console.error(`❌ [useOnboarding] Erreur saveOnboardingStep (${metadata}):`, error);
           }
       }
-      // Mettre à jour le profil AVANT d'envoyer la question suivante
+
+      // Mettre à jour le profil SANS attendre
       if (fieldToUpdate) {
-          await updateUserField(fieldToUpdate, valueToUpdate ?? messageContent); // Utiliser valueToUpdate si fourni, sinon messageContent
+          console.log("[useOnboarding] Lancement de updateUserField (avec délai interne) en arrière-plan...");
+          updateUserField(fieldToUpdate, valueToUpdate ?? messageContent);
       }
 
-      // Passer le tableau mis à jour à la fonction suivante
-      await sendNextOnboardingMessage(nextIndex, messagesWithHuman); // Ne passe plus fieldToUpdate/previousAnswer ici
+      // Passer IMMÉDIATEMENT à la question suivante
+      await sendNextOnboardingMessage(nextIndex, messagesWithHuman);
 
   }, [generateUniqueId, setMessages, saveOnboardingStep, updateUserField, sendNextOnboardingMessage]);
 
 
   const handleSendSCHOOLMessage = useCallback((schoolMessage: string) => {
-      handleSendGeneric(schoolMessage, 1, "SCHOOL", 'faculty', schoolMessage.split(", ")); // Mettre à jour 'faculty' avec un tableau
+      handleSendGeneric(schoolMessage, 1, "SCHOOL", 'faculty', schoolMessage.split(", "));
   }, [handleSendGeneric]);
 
   const handleSendYEARMessage = useCallback((yearMessage: string) => {
@@ -378,7 +392,7 @@ export const useOnboarding = ({
     setSkipLinkedInQuestion(user?.linkedin_profile === true);
 
     // Utiliser getNextQuestionIndex pour déterminer la prochaine question
-    const nextIndex = getNextQuestionIndex(2); // 2 est l'index après INSTAGRAM
+    const nextIndex = getNextQuestionIndex(3); // 3 est l'index après INSTAGRAM
     await sendNextOnboardingMessage(nextIndex, messagesWithHuman);
 
   }, [generateUniqueId, setMessages, saveOnboardingStep, updateUserField, sendNextOnboardingMessage, getNextQuestionIndex, checkLinkedInProfile]);
@@ -387,7 +401,7 @@ export const useOnboarding = ({
 
   const handleSendLINKEDINMessage = useCallback(async (linkedinMessage: string) => {
     // Appeler handleSendGeneric pour mettre à jour le profil et passer à la question suivante
-    await handleSendGeneric(linkedinMessage, 4, "LINKEDIN", 'linkedin_url');
+    await handleSendGeneric(linkedinMessage, 7, "LINKEDIN", 'linkedin_url');
     
     // Appeler scrapeLinkedInProfile pour envoyer l'URL au backend
     try {
@@ -408,33 +422,47 @@ export const useOnboarding = ({
     }
   }, [handleSendGeneric]);
 
+
   const handleSendMAJORMINORMessage = useCallback(({ majors, minors }: { majors: string[]; minors: string[]; }) => {
       const content = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;
       // Pour MAJORMINOR, la mise à jour du profil est gérée par l'objet passé
-      handleSendGeneric(content, 5, "MAJOR&MINOR", { major: majors, minor: minors });
+      handleSendGeneric(content, 8, "MAJOR&MINOR", { major: majors, minor: minors });
   }, [handleSendGeneric]);
 
   const handleSendCOMPLIANCEMessage = useCallback((payload: { termsAccepted: boolean; ageConfirmed: boolean; }) => {
       const summary = `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
        // Pour COMPLIANCE, la mise à jour du profil est gérée par l'objet passé
-      handleSendGeneric(summary, 6, "COMPLIANCE", { complianceAccepted: true, ...payload });
+      handleSendGeneric(summary, 9, "COMPLIANCE", { complianceAccepted: true, ...payload });
   }, [handleSendGeneric]);
 
-  // Cleanup lors du démontage du composant
-  useEffect(() => {
-    return () => {
-      if (linkedInCheckTimeoutRef.current) {
-        clearTimeout(linkedInCheckTimeoutRef.current);
-      }
-    };
-  }, []);
+
+  // ---> AJOUT HANDLERS QUESTIONS TEST <-----
+  const handleSendTESTMessage = useCallback((testMessage: string) => {
+    handleSendGeneric(testMessage, 3, "TEST");
+  }, [handleSendGeneric]);
+  
+  // ---> AJOUT HANDLERS QUESTIONS TEST <-----
+  const handleSendFAVORITE_COLORMessage = useCallback((colorMessage: string) => {
+    // Index suivant (PET_NAME) est 5
+    handleSendGeneric(colorMessage, 5, "FAVORITE_COLOR"); 
+  }, [handleSendGeneric]);
+
+  const handleSendPET_NAMEMessage = useCallback((petNameMessage: string) => {
+    // Index suivant (LINKEDIN) est 6 ou 7 (si skip)
+     const nextIndex = getNextQuestionIndex(5);
+    handleSendGeneric(petNameMessage, nextIndex, "PET_NAME");
+  }, [handleSendGeneric, getNextQuestionIndex]);
+  // ---------------------------------------
 
   // --- Return ---
   return {
     handleSendSCHOOLMessage,
     handleSendYEARMessage,
-    handleSendLINKEDINMessage,
+    handleSendTESTMessage,
     handleSendINSTAGRAMMessage,
+    handleSendFAVORITE_COLORMessage, 
+    handleSendPET_NAMEMessage,
+    handleSendLINKEDINMessage,
     handleSendMAJORMINORMessage,
     handleSendCOMPLIANCEMessage,
   };

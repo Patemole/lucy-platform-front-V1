@@ -6,7 +6,7 @@ import { Conversation, SocialThread /*, Message */ } from '../../../interfaces/i
 import { Timestamp } from 'firebase/firestore';
 
 export const useConversations = () => {
-  const { user /* , setPrimaryChatId */ } = useAuthStore();
+  // const { user /* , setPrimaryChatId */ } = useAuthStore(); // LIGNE SUPPRIMÉE
   const {
     conversations,
     socialThreads,

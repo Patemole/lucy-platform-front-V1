@@ -27,7 +27,8 @@ type SidebarProps = {
     drawerOpen: boolean;
     toggleDrawer: () => void;
     profilePicture: string | null;
-    user: User | null;
+    //user: User | null;
+    onboardingComplete: boolean | undefined;
     isLandingPageVisible: boolean;
     isHistory: boolean;
     setIsHistory: (val: boolean) => void;
@@ -60,7 +61,7 @@ type SidebarProps = {
 
   const Sidebar: React.FC<SidebarProps> = ({
     theme, isSmallScreen, drawerOpen, toggleDrawer,
-    profilePicture, user, isLandingPageVisible,
+    profilePicture, onboardingComplete, isLandingPageVisible,
     isHistory, setIsHistory, profileMenuAnchorEl,
     isLoadingConversations,
     handleProfileMenuClick, handleProfileMenuClose,
@@ -71,6 +72,8 @@ type SidebarProps = {
     topicColors, setShowOnboardingModifyConvPopup, 
     setShowOnboardingSocialThreadPopup, handleNewConversation,setShowOnboardingProfilePopup, formatDate
   }) => {
+
+    console.log('<<< RENDERING Sidebar >>>');
 
     const drawerWidth = 270;
 
@@ -128,7 +131,7 @@ type SidebarProps = {
                             className="rounded-full object-cover cursor-pointer"
                             //onClick={(event) =>handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
                             onClick={(event) => {
-                                if (!user?.onboardingComplete) { // quand l onboarding n est pas fini
+                                if (!onboardingComplete) { // quand l onboarding n est pas fini
                                 setShowOnboardingProfilePopup(true);
                                 return
                                 } else {
@@ -204,7 +207,7 @@ type SidebarProps = {
                         color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                         cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
                     }}
-                    disabled={isLandingPageVisible || !user?.onboardingComplete}
+                    disabled={isLandingPageVisible || !onboardingComplete}
                     >
                     <MapsUgcRoundedIcon />
                     </IconButton>
@@ -524,7 +527,7 @@ type SidebarProps = {
                                     //onClick={(e) => {e.stopPropagation();handleMenuOpen(e, conversation.chat_id);}}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (!user?.onboardingComplete) {
+                                        if (!onboardingComplete) {
                                         setShowOnboardingModifyConvPopup(true); // Affiche la popup d'onboarding
                                         return; // Empêche explicitement l'ouverture du menu contextuel
                                         }
@@ -588,7 +591,7 @@ type SidebarProps = {
                                 role="button"
                                 tabIndex={0}
                                 onClick={() => {
-                                    if (!user?.onboardingComplete) {
+                                    if (!onboardingComplete) {
                                     setShowOnboardingSocialThreadPopup(true);
                                     } else {
                                     handleConversationClick(thread.chat_id);

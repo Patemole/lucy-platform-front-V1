@@ -57,7 +57,6 @@ const App: React.FC = () => {
     const theme = useMemo(() => getTheme(subdomain, themeMode), [subdomain, themeMode]);
 
     // --- Gestion de l'état d'initialisation de l'application ---
-    // Utilise le store Zustand pour savoir si l'initialisation (chargement données post-auth) a eu lieu
     const isAppInitialized = useAppInitializationStore((state) => state.isAppInitialized);
     const setAppInitialized = useAppInitializationStore((state) => state.setAppInitialized);
 
@@ -134,11 +133,12 @@ const App: React.FC = () => {
     
 
     // --- Gestion de l'Authentification ---
-    // Récupère l'état et les actions liés à l'authentification depuis le store Zustand
-    const initializeAuthListener = useAuthStore((state) => state.initializeAuthListener); // Action pour démarrer l'écouteur Firebase Auth
-    const isLoadingAuth = useAuthStore((state) => state.isLoading); // État: l'authentification initiale est-elle en cours ?
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated); // État: l'utilisateur est-il connecté ?
-    const user = useAuthStore((state) => state.user); // Données de l'utilisateur connecté
+    // Utiliser des sélecteurs spécifiques
+    const initializeAuthListener = useAuthStore((state) => state.initializeAuthListener);
+    const isLoadingAuth = useAuthStore((state) => state.isLoading);
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const userId = useAuthStore((state) => state.user?.id);
+    const userUniversity = useAuthStore((state) => state.user?.university);
 
 
     // --- Effet pour initialiser l'écouteur Firebase Auth ---
@@ -161,15 +161,12 @@ const App: React.FC = () => {
     // --- Effet pour déclencher l'initialisation de la logique applicative post-authentification ---
     useEffect(() => {
         // Définit les conditions nécessaires pour lancer l'initialisation principale
-        // On a besoin que l'auth soit prête, l'user authentifié, que les données user
-        // (notamment id et university) soient chargées via l'écouteur, et que l'init n'ait pas eu lieu.
         const canInitialize =
             !isLoadingAuth &&      // 1. L'authentification Firebase initiale doit être terminée
             isAuthenticated &&     // 2. L'utilisateur doit être authentifié
-            user &&                // 3. L'objet utilisateur doit exister
-            user.id &&             // 4. L'ID utilisateur doit être présent
-            user.university &&     // 5. L'université doit être présente (nécessaire pour les listeners de chat)
-            !isAppInitialized;     // 6. L'initialisation ne doit pas déjà avoir été effectuée
+            userId &&              // 3. L'ID utilisateur doit être présent (utilise le sélecteur spécifique)
+            userUniversity &&      // 4. L'université doit être présente (utilise le sélecteur spécifique)
+            !isAppInitialized;     // 5. L'initialisation ne doit pas déjà avoir été effectuée
 
         if (canInitialize) {
             console.log("App: Conditions remplies pour l'initialisation des listeners de chat. Déclenchement de initializeAppLogic...");
@@ -198,9 +195,8 @@ const App: React.FC = () => {
              console.log("App: Utilisateur déconnecté. Réinitialisation du flag isAppInitialized.");
              setAppInitialized(false);
         }
-        // Dépendances de l'effet: l'effet se redéclenchera si l'une de ces valeurs change.
-        // `user` est inclus car nous dépendons de user.id et user.university.
-    }, [isLoadingAuth, isAuthenticated, user?.id, user?.university, isAppInitialized]); //[isLoadingAuth, isAuthenticated, user, isAppInitialized, setAppInitialized]
+        // Dépendances mises à jour pour utiliser les sélecteurs spécifiques
+    }, [isLoadingAuth, isAuthenticated, userId, userUniversity, isAppInitialized, setAppInitialized]); 
 
 
 

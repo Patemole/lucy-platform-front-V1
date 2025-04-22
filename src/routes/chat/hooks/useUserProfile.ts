@@ -21,21 +21,22 @@ export const useUserProfile = ({
 
 }) => {
 
-    const { user, logoutUser: logout } = useAuthStore();
+    const userId = useAuthStore(state => state.user?.id);
+    const logout = useAuthStore(state => state.logoutUser);
     const { setIsLandingPageVisible } = useChatStore();
     const navigate = useNavigate();
 
 
     const fetchProfilePicture = async () => {
-        if (!user?.id) return;
+        if (!userId) return;
     
         try {
-          const userRef = doc(db, 'users', user.id);
+          const userRef = doc(db, 'users', userId);
           const userSnap = await getDoc(userRef);
     
           if (userSnap.exists()) {
             const userData = userSnap.data();
-            setProfilePicture(userData.profile_picture || null); // Met à jour avec l'URL ou null
+            setProfilePicture(userData.profile_picture || null);
             console.log('Fetched profile picture:', userData.profile_picture || 'No profile picture found');
           } else {
             console.warn('User document does not exist.');
