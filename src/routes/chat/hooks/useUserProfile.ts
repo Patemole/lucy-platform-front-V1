@@ -42,14 +42,16 @@ export const useUserProfile = ({
           if (userSnap.exists()) {
             const userData = userSnap.data();
             const manualPicUrl = userData.profilePicture || null; 
-            console.log('[useUserProfile fetchProfilePicture] Fetched URL:', manualPicUrl);
+            console.log('[useUserProfile fetchProfilePicture] Calling setProfilePicture with manual URL:', manualPicUrl);
             setProfilePicture(manualPicUrl);
           } else {
             console.warn('[useUserProfile fetchProfilePicture] User doc not found for:', userId);
+            console.log('[useUserProfile fetchProfilePicture] Calling setProfilePicture with null (doc not found).');
             setProfilePicture(null);
           }
         } catch (error) {
           console.error('[useUserProfile fetchProfilePicture] Error:', error);
+          console.log('[useUserProfile fetchProfilePicture] Calling setProfilePicture with null (error).');
           setProfilePicture(null);
         }
       }, [userId, setProfilePicture]);
@@ -88,16 +90,19 @@ export const useUserProfile = ({
 
     // useEffect qui réagit aux changements de user.linkedin_profile.logo_url
     useEffect(() => {
-        const linkedinUrl = user?.linkedin_profile?.logo_url;
+        console.log("[useUserProfile useEffect] Running. LinkedIn profile data:", user?.linkedin_profile);
+        
+        const linkedinUrl = user?.linkedin_profile?.profile_pic_url;
 
         if (linkedinUrl) {
             console.log("[useUserProfile useEffect] Using LinkedIn URL:", linkedinUrl);
+            console.log('[useUserProfile useEffect] Calling setProfilePicture with LinkedIn URL:', linkedinUrl);
             setProfilePicture(linkedinUrl);
         } else {
             console.log("[useUserProfile useEffect] No LinkedIn URL, calling fetchProfilePicture.");
             fetchProfilePicture();
         }
-    }, [user?.linkedin_profile?.logo_url, fetchProfilePicture, setProfilePicture]);
+    }, [user?.linkedin_profile?.profile_pic_url, fetchProfilePicture, setProfilePicture]);
 
     
     return {
