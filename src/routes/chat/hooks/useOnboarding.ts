@@ -28,6 +28,7 @@ export const useOnboarding = ({
     setIsLandingPageVisible,
     _setRelatedQuestions: setRelatedQuestions,
     _setIsStreamingResponse: setIsStreaming,
+    setActiveChat,
   } = useChatStore();
   const { isAppInitialized } = useAppInitializationStore();
 
@@ -66,6 +67,37 @@ export const useOnboarding = ({
     return currentIndex + 1;
   }, [skipLinkedInQuestion]);
 
+
+  
+  // --- Fonction pour déterminer l'index de reprise when the user didnt finish the onboarding and come back to it ---
+  const determineResumeIndex = useCallback((currentUser: User | null): number => {
+    if (!currentUser) return 0; // Sécurité: retourne la première question si pas d'utilisateur
+
+    const isLinkedInSkipped = skipLinkedInQuestion; // Utilise l'état local du hook
+
+    // Vérifier chaque étape dans l'ordre
+    if (!currentUser.faculty || currentUser.faculty.length === 0) return 0; // SCHOOL (index 0)
+    if (!currentUser.year) return 1; // YEAR (index 1)
+    // Vérifier si instagram_username est manquant (undefined, null, ou chaîne vide)
+    if (currentUser.instagram_username === undefined || currentUser.instagram_username === null || currentUser.instagram_username === '') return 2; // INSTAGRAM (index 2)
+
+    // Vérifier LinkedIn SEULEMENT si on ne doit PAS le sauter
+    if (!isLinkedInSkipped && (currentUser.linkedin_url === undefined || currentUser.linkedin_url === null || currentUser.linkedin_url === '')) return 3; // LINKEDIN (index 3)
+
+    // Déterminer l'index attendu pour MAJOR&MINOR en fonction du saut LinkedIn
+    const majorMinorIndex = isLinkedInSkipped ? 3 : 4;
+    if (!currentUser.major || currentUser.major.length === 0) return majorMinorIndex; // MAJOR&MINOR
+
+    // Déterminer l'index attendu pour COMPLIANCE
+    const complianceIndex = isLinkedInSkipped ? 4 : 5;
+     // Vérifier si complianceAccepted est manquant ou faux
+    if (currentUser.complianceAccepted === undefined || currentUser.complianceAccepted === null || !currentUser.complianceAccepted) return complianceIndex; // COMPLIANCE
+
+    // Si on arrive ici, toutes les étapes semblent remplies selon le profil.
+    // Cela ne devrait pas arriver si user.onboardingComplete est false, mais par sécurité :
+    console.warn("[useOnboarding] determineResumeIndex: All steps seem complete based on profile, but onboardingComplete is false. Defaulting to final step index.");
+    return complianceIndex; // Retourne l'index de la dernière étape (COMPLIANCE)
+  }, [skipLinkedInQuestion]); // Dépend seulement de l'état skipLinkedInQuestion
 
   // --- Fonctions Mémoisées (useCallback) ---
 
@@ -224,57 +256,6 @@ export const useOnboarding = ({
   }, [generateUniqueId, setMessages, updateUserField, saveOnboardingStep, setIsLandingPageVisible, setRelatedQuestions, setIsStreaming, onSubmit, fakeStreamMessage, skipLinkedInQuestion, onboardingMessages]);
 
 
-
-
-  // --- useEffect Principal (pour démarrer l'onboarding) ---
-  useEffect(() => {
-    console.log(
-      `[useOnboarding Check Effect Run] isAppInitialized: ${isAppInitialized}, userExists: ${!!user}, onboardingComplete: ${user?.onboardingComplete}, messagesLength: ${messages?.length}, hasRunCheckRef: ${hasRunOnboardingCheckRef.current}, startAttemptedRef: ${onboardingStartAttemptedRef.current}`
-    );
-
-    // --- Section 1: Pre-conditions ---
-    // Check if we are in a state where we *might* need to start onboarding.
-    // 1. Is the main application initialization finished?
-    // 2. Do we have the user data?
-    // 3. Is the user's onboarding NOT marked as complete in their profile?
-    // 4. Have we NOT already run this check logic in the current component lifecycle?
-    const canConsiderOnboarding = isAppInitialized && user && !user.onboardingComplete && !hasRunOnboardingCheckRef.current;
-
-    if (canConsiderOnboarding) {
-      // Mark that this check has been performed for this cycle.
-      // This prevents redundant checks if only `messages` change later without other core dependencies changing.
-      hasRunOnboardingCheckRef.current = true;
-      console.log("[useOnboarding Check] Pre-conditions met. Checking if onboarding should actually start...");
-
-      // --- Section 2: Start Conditions ---
-      const hasExistingOnboardingMessages = messages.some((msg: Message) => !!msg.METADATAONBOARDING);
-      const hasNotAttemptedStart = !onboardingStartAttemptedRef.current;
-
-      // Decision: Start onboarding only if pre-conditions met, no existing messages found, and start not previously attempted.
-      if (!hasExistingOnboardingMessages && hasNotAttemptedStart) {
-        // Mark that we are now attempting to start the sequence.
-        onboardingStartAttemptedRef.current = true;
-        console.log("🚀 [useOnboarding] Start conditions met. Starting onboarding sequence...");
-        // Lire l'état actuel des messages juste avant de démarrer
-        const initialMessages = useChatStore.getState().messages;
-        sendNextOnboardingMessage(0, initialMessages); // Passer le tableau de messages initial
-      } else {
-        if (hasExistingOnboardingMessages) console.log("ℹ️ [useOnboarding] Start conditions not met: Onboarding messages already exist.");
-        if (!hasNotAttemptedStart) console.log("ℹ️ [useOnboarding] Start conditions not met: Start sequence already attempted.");
-      }
-    } else {
-      // Log why the pre-conditions failed
-      if (!isAppInitialized) console.log("[useOnboarding Check] Waiting for app initialization...");
-      else if (!user) console.log("[useOnboarding Check] Waiting for user data...");
-      else if (user?.onboardingComplete) console.log("[useOnboarding Check] Onboarding already complete.");
-      else if (hasRunOnboardingCheckRef.current) console.log("[useOnboarding Check] Check already performed in this cycle.");
-    }
-  }, [isAppInitialized, user?.id, user?.onboardingComplete]); // Ne dépend plus de `messages` ou `sendNextOnboardingMessage`[isAppInitialized, user]
-
-
-  // --- Fonctions de Handler pour les Réponses Spécifiques ---
-  // Modifiées pour passer le tableau de messages mis à jour
-
   const handleSendGeneric = useCallback(async (
     messageContent: string,
     nextIndex: number,
@@ -309,6 +290,138 @@ export const useOnboarding = ({
       await sendNextOnboardingMessage(nextIndex, messagesWithHuman);
 
   }, [generateUniqueId, setMessages, saveOnboardingStep, updateUserField, sendNextOnboardingMessage]);
+
+
+
+  const handleSendCOMPLIANCEMessage = useCallback((payload: { termsAccepted: boolean; ageConfirmed: boolean; }) => {
+    const summary = `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
+     // Pour COMPLIANCE, la mise à jour du profil est gérée par l'objet passé
+    handleSendGeneric(summary, 6, "COMPLIANCE", { complianceAccepted: true, ...payload });
+}, [handleSendGeneric]);
+
+
+
+
+  // --- useEffect Principal (REVISITÉ POUR STABILITÉ) ---
+  useEffect(() => {
+    // Les valeurs lues ici (userId, isOnboardingComplete, etc.) viennent des sélecteurs optimisés
+    console.log(
+      `[useOnboarding Check] Init: ${isAppInitialized}, UserID: ${user?.id}, OnboardingDone: ${user?.onboardingComplete}, ChatID: ${chatIds[0]}, LoadingMsgs: ${useChatStore.getState().isLoadingMessages}, Streaming: ${useChatStore.getState().isStreamingResponse}, RanCheck: ${hasRunOnboardingCheckRef.current}, StartAttempted: ${onboardingStartAttemptedRef.current}`
+    );
+
+    // --- Condition 1: Peut-on envisager l'onboarding ? ---
+    // Utilise les primitives sélectionnées
+    const canConsiderOnboarding = isAppInitialized && user && !user.onboardingComplete;
+
+    if (!canConsiderOnboarding) {
+      hasRunOnboardingCheckRef.current = false;
+      onboardingStartAttemptedRef.current = false;
+      if (!isAppInitialized) console.log("[useOnboarding Check] Waiting for app initialization...");
+      else if (!user) console.log("[useOnboarding Check] Waiting for user data...");
+      else if (user.onboardingComplete) console.log("[useOnboarding Check] Onboarding already complete.");
+      return;
+    }
+
+    // --- Condition 2: Déterminer le Chat ID Actif ---
+    let effectiveChatId = chatIds[0]; // Utilise la primitive sélectionnée
+
+    // Logique de reprise : utilise userChatSessions sélectionné
+    if (!effectiveChatId && user.chatsessions && user.chatsessions.length === 1) {
+      const potentialOnboardingChatId = user.chatsessions[0];
+      if (potentialOnboardingChatId !== chatIds[0]) { // Compare avec la primitive
+        console.warn(`[useOnboarding] Resuming onboarding. Setting active chat to: ${potentialOnboardingChatId}. Will load messages...`);
+        setActiveChat(potentialOnboardingChatId); // Appel l'action stable
+        // ATTENTION: On sort ici pour laisser l'effet se relancer quand `chatIds` (la dépendance) changera.
+        return;
+      }
+    } else if (!effectiveChatId && (!user.chatsessions || user.chatsessions.length !== 1)) {
+      console.error(`[useOnboarding] Resuming error: Cannot determine single onboarding chat ID. Sessions:`, user.chatsessions);
+      hasRunOnboardingCheckRef.current = false;
+      return;
+    }
+
+    // --- Condition 3: Agir seulement si le Chat ID est défini ET stable ---
+    if (!effectiveChatId) {
+      console.log("[useOnboarding Check] Waiting for effectiveChatId (currentChatId) to be set...");
+      hasRunOnboardingCheckRef.current = false;
+      return;
+    }
+
+    // --- Condition 4: Agir seulement si l'état est stable (non-loading, non-streaming) ---
+    // Utilise les primitives sélectionnées
+    if (useChatStore.getState().isLoadingMessages || useChatStore.getState().isStreamingResponse) {
+      if (useChatStore.getState().isLoadingMessages) console.log(`[useOnboarding Check] Waiting for messages to load for chat ${effectiveChatId}...`);
+      if (useChatStore.getState().isStreamingResponse) console.log(`[useOnboarding Check] Waiting for AI response to finish for chat ${effectiveChatId}...`);
+      // On réinitialise le flag car on est en attente, l'action doit pouvoir se redéclencher
+      hasRunOnboardingCheckRef.current = false;
+      return;
+    }
+
+    // --- Condition 5: Éviter actions multiples ---
+    if (hasRunOnboardingCheckRef.current) {
+      console.log("[useOnboarding Check] Action already performed in this stable cycle. Skipping.");
+      return;
+    }
+
+    // --- ACTION ---
+    console.log(`[useOnboarding ACTION] Conditions met for chat ${effectiveChatId}. Deciding action...`);
+    hasRunOnboardingCheckRef.current = true; // Marquer l'action
+
+    // Lire les messages via getState UNIQUEMENT ici, car on agit.
+    const messagesInStore = useChatStore.getState().messages;
+    const hasExistingOnboardingMessages = messagesInStore.some((msg: Message) => !!msg.METADATAONBOARDING);
+    const hasNotAttemptedStart = !onboardingStartAttemptedRef.current;
+
+    if (!hasExistingOnboardingMessages && hasNotAttemptedStart) {
+      // Démarrage initial
+      onboardingStartAttemptedRef.current = true;
+      console.log(`🚀 [useOnboarding ACTION] Starting onboarding sequence for chat ${effectiveChatId}...`);
+      // Utilise les messages lus juste avant
+      sendNextOnboardingMessage(0, messagesInStore);
+    } else { // Reprise
+      console.log(`[useOnboarding ACTION] Resuming onboarding for chat ${effectiveChatId}.`);
+      // Passe userProfileForLogic (lu au début) à determineResumeIndex
+      const resumeIndex = determineResumeIndex(user);
+      console.log(`[useOnboarding ACTION] Determined resume index: ${resumeIndex}`);
+
+      const lastMessage = messagesInStore[messagesInStore.length - 1];
+      const lastMessageIsTargetQuestion = lastMessage?.type === 'ai' &&
+                                          lastMessage.METADATAONBOARDING &&
+                                          resumeIndex < onboardingMessages.length &&
+                                          lastMessage.METADATAONBOARDING === onboardingMessages[resumeIndex].metadata;
+
+      if (resumeIndex < onboardingMessages.length && !lastMessageIsTargetQuestion) {
+        console.log(`[useOnboarding ACTION] Sending resume question at index ${resumeIndex}.`);
+        // Utilise les messages lus juste avant
+        sendNextOnboardingMessage(resumeIndex, messagesInStore);
+      } else if (resumeIndex >= onboardingMessages.length) {
+        console.log("[useOnboarding ACTION] Resume index indicates completion. Finalizing...");
+        handleSendCOMPLIANCEMessage({ termsAccepted: true, ageConfirmed: true });
+      } else {
+        console.log(`[useOnboarding ACTION] Skipping resume question ${resumeIndex}. Last message might already be it.`);
+      }
+    }
+  }, [
+       // --- Dépendances Stables ou Primitives ---
+       isAppInitialized,      // Primitive (boolean)
+       user,                // Primitive (string | undefined)
+       chatIds,         // Primitive (string | null)
+       useChatStore.getState().isLoadingMessages,     // Primitive (boolean)
+       useChatStore.getState().isStreamingResponse,   // Primitive (boolean)
+
+       // --- Fonctions Stables (via useCallback ou actions Zustand) ---
+       setActiveChat,
+       determineResumeIndex,
+       sendNextOnboardingMessage,
+       handleSendCOMPLIANCEMessage
+       // NOTE: userProfileForLogic n'est PAS inclus ici pour éviter les re-renders
+       // si seule une partie non pertinente du profil change. On le lit au début
+       // de l'effet et on le passe à determineResumeIndex.
+     ]);
+  // --- FIN MODIFICATION useEffect ---
+
+  // --- Fonctions de Handler pour les Réponses Spécifiques ---
+  // Modifiées pour passer le tableau de messages mis à jour
 
 
   const handleSendSCHOOLMessage = useCallback((schoolMessage: string) => {
@@ -433,11 +546,7 @@ export const useOnboarding = ({
 
 
 
-  const handleSendCOMPLIANCEMessage = useCallback((payload: { termsAccepted: boolean; ageConfirmed: boolean; }) => {
-      const summary = `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
-       // Pour COMPLIANCE, la mise à jour du profil est gérée par l'objet passé
-      handleSendGeneric(summary, 6, "COMPLIANCE", { complianceAccepted: true, ...payload });
-  }, [handleSendGeneric]);
+  
 
 
   
