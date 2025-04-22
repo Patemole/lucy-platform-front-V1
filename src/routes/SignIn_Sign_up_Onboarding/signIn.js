@@ -354,19 +354,21 @@ const SignIn = ({ handleToggleThemeMode }) => {
         {/* Afficher l'erreur générale SSO si elle existe */}
         {errors.general && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
 
-        {/* Bouton SSO */}
-        <button
-          type="button"
-          onClick={signInWithSSO} // Utilise la nouvelle fonction SSO
-          className="w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300"
-        >
-          <AccountBalanceIcon sx={{ fontSize: 20 }} /> {/* Icône université */}
-          <span className="font-medium">Sign In with SSO</span>
-        </button>
+        {/* Bouton SSO - Afficher uniquement pour holyfamily */}
+        {subdomain === 'holyfamily' && (
+          <button
+            type="button"
+            onClick={signInWithSSO} // Utilise la nouvelle fonction SSO
+            className="w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300"
+          >
+            <AccountBalanceIcon sx={{ fontSize: 20 }} /> {/* Icône université */}
+            <span className="font-medium">Sign In with SSO</span>
+          </button>
+        )}
 
 
-        {/* Séparateur avec "OR" */}
-        {subdomain !== 'holyfamily' && (
+        {/* Séparateur avec "OR" - N'afficher que si SSO est affiché (donc pour holyfamily) */}
+        {subdomain === 'holyfamily' && (
         <div className="flex items-center my-6">
           <div className="flex-grow border-t border-gray-300"></div>
           <span className="mx-4 text-gray-500 text-xs font-semibold">OR</span>
@@ -377,66 +379,63 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
         <form onSubmit={handleSubmit} noValidate>
         {/* Afficher l'erreur générale Email/Password si elle existe */}
+        {/* NOTE: On pourrait aussi cacher cette erreur si holyfamily est le seul moyen */}
         {errors.general && subdomain !== 'holyfamily' && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
 
+        {/* Cacher le formulaire email/password si holyfamily */}
         {subdomain !== 'holyfamily' && (
-          <div className="mb-6">
-            <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={email} // Bind to state
-              onChange={(e) => setEmail(e.target.value)} // x state
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-              placeholder="Email address"
-            />
-            {errors.email && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.email}</p>}
-          </div>
+          <>
+            <div className="mb-6">
+              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={email} // Bind to state
+                onChange={(e) => setEmail(e.target.value)} // x state
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                placeholder="Email address"
+              />
+              {errors.email && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.email}</p>}
+            </div>
+
+            <div className="mb-6">
+              <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={password} // Bind to state
+                onChange={(e) => setPassword(e.target.value)} // Update state
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                placeholder="Password"
+              />
+              {errors.password && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.password}</p>}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 ${
+                isLoading ? 'cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <CircularProgress size={20} color="inherit" />
+                </div>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+
+            <p className="mt-6 text-xs text-center text-gray-600">
+              <a href="/auth/reset-password" className="text-blue-600 underline hover:underline">
+                Forgot your password?
+              </a>
+            </p>
+          </>
         )}
-
-          {subdomain !== 'holyfamily' && (
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={password} // Bind to state
-              onChange={(e) => setPassword(e.target.value)} // Update state
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-              placeholder="Password"
-            />
-            {errors.password && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mt-1">{errors.password}</p>}
-          </div>
-          )}
-
-
-          {subdomain !== 'holyfamily' && (
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 ${
-              isLoading ? 'cursor-not-allowed' : ''
-            }`}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <CircularProgress size={20} color="inherit" />
-              </div>
-            ) : (
-              'Sign In'
-            )}
-          </button>
-          )}
-
-          {subdomain !== 'holyfamily' && (
-          <p className="mt-6 text-xs text-center text-gray-600">
-            <a href="/auth/reset-password" className="text-blue-600 underline hover:underline">
-              Forgot your password?
-            </a>
-          </p>
-          )}
 
           <p className="mt-5 text-xs text-center text-gray-600">
             Don't have an account?{' '}
