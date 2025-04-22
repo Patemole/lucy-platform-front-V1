@@ -142,6 +142,9 @@ interface AIMessageProps {
   handleSendINSTAGRAMMessage?: (instagram_message: string) => void; // 👈 optionnel
   handleSendMAJORMINORMessage?: (data: { majors: string[]; minors: string[] }) => void;
   handleSendCOMPLIANCEMessage?: (payload: {termsAccepted: boolean; ageConfirmed: boolean;}) => void;
+  handleSendTESTMessage?: (value: string) => void; // Optionnel
+  handleSendFAVORITE_COLORMessage?: (value: string) => void; // Optionnel
+  handleSendPET_NAMEMessage?: (value: string) => void; // Optionnel
 
   handleSendCOURSEMessage: (COURSE_message: string) => void;
   drawerOpen: boolean;
@@ -190,6 +193,9 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   handleSendMAJORMINORMessage,
   handleSendCOMPLIANCEMessage,
   handleSendINSTAGRAMMessage,
+  handleSendTESTMessage,
+  handleSendFAVORITE_COLORMessage,
+  handleSendPET_NAMEMessage,
   handleSendCOURSEMessage,
   drawerOpen,
   chartData,
@@ -205,9 +211,17 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   metadataOnboarding,
   hasStartedStreaming
 }) => {
+
+  console.log('<<< RENDERING AIMessage >>>');
   // États pour la gestion des interactions utilisateur
-  const { user } = useAuthStore(); // Au lieu de useAuth()
+  // const { user } = useAuthStore(); // REMPLACÉ
   const { currentChatId } = useChatStore();
+
+  // ---> RÉCUPÉRATION NON RÉACTIVE <--- 
+  const user = useAuthStore.getState().user;
+  const userId = user?.id;
+  // ------------------------------------
+
   const [copyClicked, setCopyClicked] = useState(false);
   const [feedbackClicked, setFeedbackClicked] = useState(false);
   const [thumbsUpClicked, setThumbsUpClicked] = useState(false);
@@ -237,8 +251,14 @@ export const AIMessage: React.FC<AIMessageProps> = ({
     user && Array.isArray(user.minor) && user.minor.length > 0 ? user.minor : ['']
   );
   const [learnerType, setLearnerType] = useState(user?.year || '');
+  
   const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || '');
   const [instagramUsername, setInstagramUsername] = useState(user?.instagram_username || '');
+
+  const [favoriteTest, setFavoriteTest] = useState(user?.favorite_test || '');
+  const [favoriteColor, setFavoriteColor] = useState(user?.favorite_color || '');
+  const [petName, setPetName] = useState(user?.pet_name || '');
+
   const [termsChecked, setTermsChecked] = useState(user?.termsAccepted || false);
   const [ageChecked, setAgeChecked] = useState(user?.ageConfirmed || false); 
   
@@ -524,8 +544,11 @@ useEffect(() => {
 
   // Fonction pour gérer les clics sur le pouce en l'air
   const handleThumbsUp = async () => {
-    if (!messageId || !currentChatId || !user?.id) return;
-    
+    // La vérification de user?.id est implicite car userId est défini au début
+    if (!messageId || !currentChatId || !userId) { 
+      console.error("Feedback Error: Missing messageId, currentChatId, or userId (getState)");
+      return;
+    }
     // Trouver le message actuel et le message humain précédent dans les messages du store
     const allMessages = useChatStore.getState().messages;
     const currentMessage = allMessages.find(msg => msg.id === messageId);
@@ -544,7 +567,7 @@ useEffect(() => {
         messageId,
         chatSessionId: currentChatId,
         isPositive: true,
-        userId: user.id,
+        userId: userId, // Utilisation de userId (non réactif)
         aiMessageContent: currentMessage?.content || '',
         humanMessageContent: previousHumanMessage?.content || ''
       });
@@ -559,8 +582,10 @@ useEffect(() => {
   };
 
   const handleThumbsDown = async () => {
-    if (!messageId || !currentChatId || !user?.id) return;
-    
+    if (!messageId || !currentChatId || !userId) { 
+      console.error("Feedback Error: Missing messageId, currentChatId, or userId (getState)");
+      return;
+    }
     // Trouver le message actuel et le message humain précédent dans les messages du store
     const allMessages = useChatStore.getState().messages;
     const currentMessage = allMessages.find(msg => msg.id === messageId);
@@ -579,7 +604,7 @@ useEffect(() => {
         messageId,
         chatSessionId: currentChatId,
         isPositive: false,
-        userId: user.id,
+        userId: userId, // Utilisation de userId (non réactif)
         aiMessageContent: currentMessage?.content || '',
         humanMessageContent: previousHumanMessage?.content || ''
       });
@@ -650,15 +675,33 @@ useEffect(() => {
     if (handleSendLINKEDINMessage && linkedinUrl) {
       handleSendLINKEDINMessage(linkedinUrl);
     }
-    //setLinkedinUrl('');
   };
 
   const handleSendINSTAGRAMClick = () => {
     if (handleSendINSTAGRAMMessage && instagramUsername) {
       handleSendINSTAGRAMMessage(instagramUsername);
     }
-    //setInstagramUsername('');
   };
+
+    const handleSendTESTClick = () => {
+      if (handleSendTESTMessage && favoriteTest) {
+        handleSendTESTMessage(favoriteTest);
+      }
+    };
+
+    const handleSendFavoriteColorClick = () => {
+      if (handleSendFAVORITE_COLORMessage && favoriteColor) {
+        handleSendFAVORITE_COLORMessage(favoriteColor);
+      }
+    };
+
+    const handleSendPetNameClick = () => {
+      if (handleSendPET_NAMEMessage && petName) {
+        handleSendPET_NAMEMessage(petName);
+      }
+    };
+    
+  
 
   const handleSendMajorMinorClick = () => {
     const cleanedMajors = majors.filter((m: string) => m.trim() !== '');
@@ -714,14 +757,35 @@ useEffect(() => {
   (linkedinData && linkedinData.length > 0) ||
   (insta2Data && insta2Data.length > 0);
 
+  // ... states et hooks internes (useState, useEffect, etc.) ...
+
+  // ---> PREMIER BLOC (GARDER CELUI-CI) <-----
+  const shouldDisplaySchoolBlock = metadataOnboarding === 'SCHOOL' && !isMessageLoading;
+  const shouldDisplayYearBlock = metadataOnboarding === 'YEAR' && !isMessageLoading;
+  const shouldDisplayTestBlock = metadataOnboarding === 'TEST' && !isMessageLoading;
+  const shouldDisplayInstagramBlock = metadataOnboarding === 'INSTAGRAM' && !isMessageLoading;
+  const shouldDisplayFavoriteColorBlock = metadataOnboarding === 'FAVORITE_COLOR' && !isMessageLoading;
+  const shouldDisplayPetNameBlock = metadataOnboarding === 'PET_NAME' && !isMessageLoading;
+  const shouldDisplayLinkedInBlock = metadataOnboarding === 'LINKEDIN' && !isMessageLoading;
+  const shouldDisplayMajorMinorBlock = metadataOnboarding === 'MAJOR&MINOR' && !isMessageLoading;
+  const shouldDisplayComplianceBlock = metadataOnboarding === 'COMPLIANCE' && !isMessageLoading;
+  // -----------------------------------------
+
+  // ---> DEUXIÈME BLOC (SUPPRIMER CELUI-CI EN ENTIER) <---
+/*
   // --- Correction pour les blocs d'onboarding (Condition simplifiée) ---
   // Dépend maintenant uniquement de la présence de metadata et de la fin du chargement du message
   const shouldDisplaySchoolBlock = metadataOnboarding === 'SCHOOL' && !isMessageLoading;
   const shouldDisplayYearBlock = metadataOnboarding === 'YEAR' && !isMessageLoading;
+  const shouldDisplayTestBlock = metadataOnboarding === 'TEST' && !isMessageLoading;
   const shouldDisplayInstagramBlock = metadataOnboarding === 'INSTAGRAM' && !isMessageLoading;
+  const shouldDisplayFavoriteColorBlock = metadataOnboarding === 'FAVORITE_COLOR' && !isMessageLoading;
+  const shouldDisplayPetNameBlock = metadataOnboarding === 'PET_NAME' && !isMessageLoading;
   const shouldDisplayLinkedInBlock = metadataOnboarding === 'LINKEDIN' && !isMessageLoading;
   const shouldDisplayMajorMinorBlock = metadataOnboarding === 'MAJOR&MINOR' && !isMessageLoading;
   const shouldDisplayComplianceBlock = metadataOnboarding === 'COMPLIANCE' && !isMessageLoading;
+*/
+  // -------------------------------------------------------
 
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">
@@ -2025,6 +2089,49 @@ useEffect(() => {
           )}
 
 
+          {shouldDisplayTestBlock && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
+                What is your favorite test?
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center border border-gray-300 rounded-lg bg-white px-2 py-1 w-full">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                    alt="Instagram"
+                    className="w-5 h-5 mr-2"
+                  />
+                  <input
+                    type="text"
+                    value={favoriteTest}
+                    onChange={(e) => setFavoriteTest(e.target.value)}
+                    placeholder="Favorite test"
+                    className="w-full text-sm focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleSendTESTClick}
+                  disabled={!favoriteTest}
+                  className={`flex items-center px-4 py-2 text-sm rounded-lg ${
+                    !favoriteTest
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-600'
+                      : 'text-white bg-gray-800 hover:bg-gray-900'
+                  }`}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
 
           {shouldDisplayInstagramBlock && (
             <div
@@ -2070,6 +2177,98 @@ useEffect(() => {
           )}
 
 
+
+
+{shouldDisplayFavoriteColorBlock && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
+                What is your favorite color?
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center border border-gray-300 rounded-lg bg-white px-2 py-1 w-full">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                    alt="Instagram"
+                    className="w-5 h-5 mr-2"
+                  />
+                  <input
+                    type="text"
+                    value={favoriteColor}
+                    onChange={(e) => setFavoriteColor(e.target.value)}
+                    placeholder="Favorite color"
+                    className="w-full text-sm focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleSendFavoriteColorClick}
+                  disabled={!favoriteColor}
+                  className={`flex items-center px-4 py-2 text-sm rounded-lg ${
+                    !favoriteColor
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-600'
+                      : 'text-white bg-gray-800 hover:bg-gray-900'
+                  }`}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+
+{shouldDisplayLinkedInBlock && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
+                Paste your LinkedIn profile URL
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center border border-gray-300 rounded-lg bg-white px-2 py-1 w-full">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+                    alt="Instagram"
+                    className="w-5 h-5 mr-2"
+                  />
+                  <input
+                    type="url"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    placeholder="LinkedIn URL"
+                    className="w-full text-sm focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleSendLINKEDINClick}
+                  disabled={!linkedinUrl}
+                  className={`flex items-center px-4 py-2 text-sm rounded-lg ${
+                    !linkedinUrl
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-600'
+                      : 'text-white bg-gray-800 hover:bg-gray-900'
+                  }`}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+
+
+{/*}
           {shouldDisplayLinkedInBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
@@ -2113,6 +2312,7 @@ useEffect(() => {
               </div>
             </div>
           )}
+            */}
 
 
           {shouldDisplayMajorMinorBlock && (

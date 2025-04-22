@@ -105,6 +105,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
       const hasChatIdsChanged = JSON.stringify(chatSessions) !== JSON.stringify(get().chatIds);
 
       if (hasUserChanged || hasChatIdsChanged) {
+          console.log(`%c>>> AuthStore updating user state <<<`, 'color: red; font-weight: bold;', userData); 
           set({
             user: userData, // Mettre à jour le profil complet
             isAuthenticated: true, // Confirmer l'authentification
@@ -283,7 +284,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
   },
 
 
-  
+
   // Démarre l'écouteur Firestore (onSnapshot) pour le document utilisateur spécifié.
   // Met à jour l'état `user` et `chatIds` à chaque modification.
   _initializeUserListener: (userId) => {
@@ -300,6 +301,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
     // Création de l'écouteur Firestore
     const unsubscribe = onSnapshot(docRef,
       (docSnap) => {
+        console.log(`%cFirestore Listener Received Update for user ${userId}`, 'color: orange; font-weight: bold;', docSnap.data());
         // Callback exécuté à chaque mise à jour du document
         if (docSnap.exists()) {
           // Le document existe, extraire les données

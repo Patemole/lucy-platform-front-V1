@@ -29,8 +29,11 @@ interface ChatContentProps {
     hasNewContent: boolean;
     handleSendSCHOOLMessage: (value: string) => void;
     handleSendYEARMessage: (value: string) => void;
+    handleSendTESTMessage: (value: string) => void;
     handleSendLINKEDINMessage: (value: string) => void;
     handleSendINSTAGRAMMessage: (value: string) => void;
+    handleSendFAVORITE_COLORMessage: (value: string) => void;
+    handleSendPET_NAMEMessage: (value: string) => void;
     handleSendMAJORMINORMessage: (data: { majors: string[]; minors: string[] }) => void;
     handleSendCOMPLIANCEMessage: (data: { termsAccepted: boolean; ageConfirmed: boolean }) => void;
     hasStartedStreaming: boolean;
@@ -60,8 +63,11 @@ interface ChatContentProps {
     hasNewContent,
     handleSendSCHOOLMessage,
     handleSendYEARMessage,
+    handleSendTESTMessage,
     handleSendLINKEDINMessage,
     handleSendINSTAGRAMMessage,
+    handleSendFAVORITE_COLORMessage,
+    handleSendPET_NAMEMessage,
     handleSendMAJORMINORMessage,
     handleSendCOMPLIANCEMessage,
     hasStartedStreaming,
@@ -69,6 +75,7 @@ interface ChatContentProps {
     setIsAtBottom,
     setNewMessagesCount,
   }) => {
+    console.log('<<< RENDERING ChatContent >>>');
 
     const theme = useTheme();
 
@@ -94,6 +101,15 @@ interface ChatContentProps {
             <div
             className={`flex flex-col space-y-2 ${isSmallScreen ? 'px-1 py-4' : 'p-4'}`}
             ref={scrollableDivRef}
+            onScroll={() => {
+                const scrollDiv = scrollableDivRef.current;
+                if (scrollDiv) {
+                const { scrollTop, scrollHeight, clientHeight } = scrollDiv;
+                const atBottom = scrollTop + clientHeight >= scrollHeight - 5;
+                setIsAtBottom(atBottom);
+                if (atBottom) setNewMessagesCount(0);
+                }
+            }}
             style={{
                 overflowY: 'auto',
                 height: '100%',
@@ -173,8 +189,11 @@ interface ChatContentProps {
                         metadataOnboarding={message.METADATAONBOARDING || null}
                         handleSendSCHOOLMessage={handleSendSCHOOLMessage}
                         handleSendYEARMessage={handleSendYEARMessage}
+                        handleSendTESTMessage={handleSendTESTMessage}
                         handleSendLINKEDINMessage={handleSendLINKEDINMessage}
                         handleSendINSTAGRAMMessage={handleSendINSTAGRAMMessage}
+                        handleSendFAVORITE_COLORMessage={handleSendFAVORITE_COLORMessage}
+                        handleSendPET_NAMEMessage={handleSendPET_NAMEMessage}
                         handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
                         handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
                         hasStartedStreaming={hasStartedStreaming}

@@ -75,6 +75,7 @@ interface PopupsContainerProps {
     snackbarMessage,
     closeSnackbar,
   }) => {
+    console.log('<<< RENDERING PopupsContainer >>>');
     return (
       <>
         <PopupWrongAnswer

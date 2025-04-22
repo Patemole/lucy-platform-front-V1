@@ -30,6 +30,7 @@ import Popups from './components/Popups';
 import ChatContent from './components/ChatContent';
 import RelatedQuestions from './components/RelatedQuestions';
 import ForcedFeedback from '../../components/main_components/ForcedFeedback';
+import { shallow } from 'zustand/shallow';
 
 
 //For Topic of the conversations
@@ -46,6 +47,7 @@ const topicColors: { [key: string]: string } = {
 const drawerWidth = 270;
 
 const OnboardingLucyQuestions: React.FC = ()=> {
+  console.log('<<< RENDERING OnboardingLucyQuestions >>>');
 
   //1. Paramètres graphiques et responsivité
   const theme = useTheme();
@@ -53,7 +55,10 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const messageMarginX = isSmallScreen ? 'mx-2' : 'mx-20';
 
   //2. Contexte utilisateur et Authentification (Utilisation des stores Zustand)
-  const { user, chatIds } = useAuthStore(); // Use Zustand store
+  const chatIds = useAuthStore((state) => state.chatIds);
+  const onboardingComplete = useAuthStore((state) => state.user?.onboardingComplete);
+  //const user = useAuthStore((state) => state.user);
+
   const {
     conversations,
     setConversations,
@@ -199,8 +204,11 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const {
       handleSendSCHOOLMessage,
       handleSendYEARMessage,
-      handleSendLINKEDINMessage,
+      handleSendTESTMessage,
       handleSendINSTAGRAMMessage,
+      handleSendFAVORITE_COLORMessage,
+      handleSendPET_NAMEMessage,
+      handleSendLINKEDINMessage,
       handleSendMAJORMINORMessage,
       handleSendCOMPLIANCEMessage,
   } = useOnboarding({
@@ -241,7 +249,10 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const onboardingMessages = [
     { question: "What is your current school?", metadata: "SCHOOL" },
     { question: "What year are you in?", metadata: "YEAR" },
+    { question: "This is a test, are you Mathieu?", metadata: "TEST" },
     { question: "What's your Insta?", metadata: "INSTAGRAM" },
+    { question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
+    //{ question: "What's your pet's name?", metadata: "PET_NAME" },
     { question: "What is you linkedin URL?", metadata: "LINKEDIN" },
     { question: "What is your major and minor?", metadata: "MAJOR&MINOR" },
     { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" },
@@ -325,7 +336,8 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             drawerOpen={drawerOpen}
             toggleDrawer={toggleDrawer}
             profilePicture={profilePicture}
-            user={user}
+            //user={user}
+            onboardingComplete={onboardingComplete}
             isLandingPageVisible={isLandingPageVisible}
             isHistory={isHistory}
             setIsHistory={setIsHistory}
@@ -369,7 +381,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
               drawerOpen={drawerOpen}
               toggleDrawer={toggleDrawer}
               handleNewConversation={handleNewConversationClick}
-              user={user}
+              //user={user}
               profilePicture={profilePicture}
               onlineUsers={onlineUsers}
               isLastStep={isLastStep}
@@ -385,6 +397,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
               handleDeleteAccount={handleDeleteAccount}
               handleLogout={handleLogout}
               setShowOnboardingProfilePopup={setShowOnboardingProfilePopup}
+              onboardingComplete={onboardingComplete}
             />
             
   
@@ -413,8 +426,11 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             hasNewContent={hasNewContent}
             handleSendSCHOOLMessage={handleSendSCHOOLMessage}
             handleSendYEARMessage={handleSendYEARMessage}
-            handleSendLINKEDINMessage={handleSendLINKEDINMessage}
+            handleSendTESTMessage={handleSendTESTMessage}
             handleSendINSTAGRAMMessage={handleSendINSTAGRAMMessage}
+            handleSendFAVORITE_COLORMessage={handleSendFAVORITE_COLORMessage}
+            handleSendPET_NAMEMessage={handleSendPET_NAMEMessage}
+            handleSendLINKEDINMessage={handleSendLINKEDINMessage}
             handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
             handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
             hasStartedStreaming={hasStartedStreaming}
@@ -458,7 +474,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             
 
 
-            {currentView === 'chat' && !isLandingPageVisible && user?.onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
+            {currentView === 'chat' && !isLandingPageVisible && onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
             <>
               {isSmallScreen ? (
                 // VERSION MOBILE AVEC MODIFICATIONS
