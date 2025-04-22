@@ -75,7 +75,7 @@ type SidebarProps = {
 
     console.log('<<< RENDERING Sidebar >>>');
 
-    const drawerWidth = 270;
+    const drawerWidth = 315;
 
     
 
