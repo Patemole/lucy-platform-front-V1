@@ -1984,6 +1984,12 @@ useEffect(() => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !(selectedSchools.length === 0 || selectedSchools.every(school => school === ''))) {
+                  e.preventDefault(); // Empêche le comportement par défaut (ex: saut de ligne si dans un textarea)
+                  handleSendSCHOOLClick();
+                }
+              }}
             >
               <label className="block text-sm font-medium text-gray-800 mb-3">Select your school(s)</label>
 
@@ -2142,6 +2148,12 @@ useEffect(() => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && instagramUsername) {
+                  e.preventDefault();
+                  handleSendINSTAGRAMClick();
+                }
+              }}
             >
               <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
                 Don't worry, just helps me get your vibe a bit better
@@ -2234,6 +2246,12 @@ useEffect(() => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && linkedinUrl) {
+                  e.preventDefault();
+                  handleSendLINKEDINClick();
+                }
+              }}
             >
               <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
                 Paste your LinkedIn profile URL
@@ -2278,6 +2296,12 @@ useEffect(() => {
                 backdropFilter: 'blur(60px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && majors.filter((m: string) => m.trim()).length > 0) {
+                  e.preventDefault();
+                  handleSendMajorMinorClick();
+                }
               }}
             >
               <label className="block text-sm font-medium text-gray-800 mb-3">What is your major and minor?</label>
