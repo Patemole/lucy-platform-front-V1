@@ -326,8 +326,11 @@ const useAuthStore = create<AuthState>((set, get) => ({
             onboardingComplete: userDataFromDb.onboardingComplete !== undefined ? userDataFromDb.onboardingComplete : true,
             linkedin_url: userDataFromDb.linkedin_url || '',
             linkedin_profile: userDataFromDb.linkedin_profile || {},
+            instagram_username: userDataFromDb.instagram_username || '',
+            instagram_profile: userDataFromDb.instagram_profile || {},
+            termsAccepted: userDataFromDb.termsAccepted !== undefined ? userDataFromDb.termsAccepted : true,
+            ageConfirmed: userDataFromDb.ageConfirmed !== undefined ? userDataFromDb.ageConfirmed : true,
             onboardingMessageSent: userDataFromDb.onboardingMessageSent !== undefined ? userDataFromDb.onboardingMessageSent : true,
-            
           };
           // Mettre à jour l'état centralisé via _setUserAndAuth
           _setUserAndAuth(fullUserData);
