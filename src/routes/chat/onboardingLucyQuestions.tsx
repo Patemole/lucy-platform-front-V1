@@ -11,6 +11,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import {
   ThemeProvider, TextField, Button, Typography, IconButton,InputAdornment, 
+  Tooltip
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -31,6 +32,7 @@ import ChatContent from './components/ChatContent';
 import RelatedQuestions from './components/RelatedQuestions';
 import ForcedFeedback from '../../components/main_components/ForcedFeedback';
 import { shallow } from 'zustand/shallow';
+import { Box } from '@mui/material';
 
 
 //For Topic of the conversations
@@ -83,7 +85,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
     relatedQuestions, // From store
     _setRelatedQuestions: setRelatedQuestions, // Action in store
     abortController, // From store
-    setAbortController, // Action in store
+    setAbortController, // Action from store
     fetchConversations, // Action from store
     fetchSocialThreads, // Action from store
     loadChatMessages, // Action from store
@@ -505,9 +507,22 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                           onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}
                           aria-label={isPrivate ? "Set conversation to public" : "Set conversation to private"}
                           size="medium" // Ajuster la taille si besoin
-                          sx={{ color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main, padding: '6px' /* Ajuster padding */ }}
+                          sx={{ 
+                            color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
+                            padding: '6px' /* Ajuster padding */ 
+                          }}
                         >
-                          {isPrivate ? <LockIcon fontSize="small" /> : <LockOpenIcon fontSize="small" />}
+                          {isPrivate ? <LockIcon fontSize="small"/> : <LockOpenIcon fontSize="small"/>} 
+                          {/* Typography is now styled */}
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
+                              marginLeft: '4px' // Add spacing if needed, or adjust IconButton padding
+                            }}
+                          >
+                            {isPrivate ? 'Private' : 'Public'}
+                          </Typography>
                         </IconButton>
 
                         {/* Champ de saisie occupant l'espace restant */}
@@ -641,11 +656,25 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                           InputProps={{
                             startAdornment: (
                               !isSocialThread && (
-                                <InputAdornment position="start">
-                                  <IconButton onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}>
-                                    {isPrivate ? <LockIcon/> : <LockOpenIcon/>}
-                                    <Typography variant="caption">{isPrivate ? 'Private' : 'Public'}</Typography>
-                                  </IconButton>
+                                <InputAdornment position="start" sx={{ marginRight: '8px' }}>
+                                  <Tooltip title={isPrivate ? "Make conversation Public" : "Make conversation Private"} enterDelay={100} arrow>
+                                    <Box
+                                      onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}
+                                      sx={{
+                                        fontSize: '0.8rem',
+                                        fontWeight: 'bold',
+                                        color: isPrivate ? '#6F6F6F' : '#4A90E2',
+                                        backgroundColor: isPrivate ? '#F0F0F0' : '#E0F2FF',
+                                        padding: '4px 10px',
+                                        borderRadius: '5px',
+                                        display: 'inline-block',
+                                        cursor: 'pointer',
+                                        userSelect: 'none'
+                                      }}
+                                    >
+                                      {isPrivate ? 'Private' : 'Public'}
+                                    </Box>
+                                  </Tooltip>
                                 </InputAdornment>
                               )
                             ),
