@@ -428,17 +428,21 @@ export default function SignUp() {
         <h1 className="text-xl font-semibold text-center mb-4">Create your account</h1>
         <p className="text-gray-500 text-center mb-8 text-sm">Welcome! Sign-up with your university credentials.</p>
 
-        <button
-          type="button"
-          onClick={handleSignUpWithSSO}
-          disabled={isLoading || isSSOLoading}
-          className={`w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300 ${isLoading || isSSOLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-        >
-          <AccountBalanceIcon sx={{ fontSize: 20 }} />
-          {isSSOLoading ? <CircularProgress size={20} color="inherit" /> : 'Sign Up with SSO'}
-        </button>
+        {/* Afficher le bouton SSO uniquement pour holyfamily */}
+        {subdomain === 'holyfamily' && (
+          <button
+            type="button"
+            onClick={handleSignUpWithSSO}
+            disabled={isLoading || isSSOLoading}
+            className={`w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300 ${isLoading || isSSOLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            <AccountBalanceIcon sx={{ fontSize: 20 }} />
+            {isSSOLoading ? <CircularProgress size={20} color="inherit" /> : 'Sign Up with SSO'}
+          </button>
+        )}
 
-        {subdomain !== 'holyfamily' && (
+        {/* Afficher le séparateur "OR" uniquement pour holyfamily */}
+        {subdomain === 'holyfamily' && (
           <div className="flex items-center my-6">
             <div className="flex-grow border-t border-gray-300"></div>
             <span className="mx-4 text-gray-500 text-xs font-semibold">OR</span>
@@ -447,70 +451,68 @@ export default function SignUp() {
         )}
 
         <form onSubmit={handleSubmit} noValidate>
-          {errors.general && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
+          {/* Afficher l'erreur générale seulement si le formulaire email/pwd est visible */}
+          {errors.general && subdomain !== 'holyfamily' && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
 
+          {/* Cacher le formulaire email/password si holyfamily */}
           {subdomain !== 'holyfamily' && (
-            <div className="mb-6">
-              <label htmlFor="firstname" className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
-              <input
-                id="firstname"
-                type="text"
-                name="firstName"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-                placeholder="First Name"
-                aria-invalid={!!errors.firstName}
-                aria-describedby={errors.firstName ? "firstname-error" : undefined}
-              />
-              {errors.firstName && <p id="firstname-error" role="alert" className="text-xs text-red-600 mt-1">{errors.firstName}</p>}
-            </div>
-          )}
+            <>
+              <div className="mb-6">
+                <label htmlFor="firstname" className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
+                <input
+                  id="firstname"
+                  type="text"
+                  name="firstName"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                  placeholder="First Name"
+                  aria-invalid={!!errors.firstName}
+                  aria-describedby={errors.firstName ? "firstname-error" : undefined}
+                />
+                {errors.firstName && <p id="firstname-error" role="alert" className="text-xs text-red-600 mt-1">{errors.firstName}</p>}
+              </div>
 
-          {subdomain !== 'holyfamily' && (
-            <div className="mb-6">
-              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                required
-                onBlur={handleEmailBlur}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-                placeholder="Your university email address"
-                aria-invalid={!!errors.email || !!emailError}
-                aria-describedby={errors.email ? "email-error-submit" : (emailError ? "email-error-blur" : undefined)}
-              />
-              {emailError && <p id="email-error-blur" role="alert" className="text-xs text-red-600 mt-1">{emailError}</p>}
-              {errors.email && !emailError && <p id="email-error-submit" role="alert" className="text-xs text-red-600 mt-1">{errors.email}</p>}
-            </div>
-          )}
+              <div className="mb-6">
+                <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  required
+                  onBlur={handleEmailBlur}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                  placeholder="Your university email address"
+                  aria-invalid={!!errors.email || !!emailError}
+                  aria-describedby={errors.email ? "email-error-submit" : (emailError ? "email-error-blur" : undefined)}
+                />
+                {emailError && <p id="email-error-blur" role="alert" className="text-xs text-red-600 mt-1">{emailError}</p>}
+                {errors.email && !emailError && <p id="email-error-submit" role="alert" className="text-xs text-red-600 mt-1">{errors.email}</p>}
+              </div>
 
-          {subdomain !== 'holyfamily' && (
-            <div className="mb-6">
-              <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">Password</label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                required
-                minLength={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-                placeholder="Create a password (min. 6 characters)"
-                aria-invalid={!!errors.password}
-                aria-describedby={errors.password ? "password-error" : undefined}
-              />
-              {errors.password && <p id="password-error" role="alert" className="text-xs text-red-600 mt-1">{errors.password}</p>}
-            </div>
-          )}
+              <div className="mb-6">
+                <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">Password</label>
+                <input
+                  id="password"
+                  type="password"
+                  name="password"
+                  required
+                  minLength={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                  placeholder="Create a password (min. 6 characters)"
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? "password-error" : undefined}
+                />
+                {errors.password && <p id="password-error" role="alert" className="text-xs text-red-600 mt-1">{errors.password}</p>}
+              </div>
 
-          {subdomain !== 'holyfamily' && (
-            <button
-              type="submit"
-              disabled={isLoading || isSSOLoading}
-              className={`w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 transition duration-150 ease-in-out ${isLoading || isSSOLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
-              {isLoading ? <CircularProgress size={20} color="inherit" /> : 'Continue \u2192'}
-            </button>
+              <button
+                type="submit"
+                disabled={isLoading || isSSOLoading}
+                className={`w-full py-2 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 transition duration-150 ease-in-out ${isLoading || isSSOLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isLoading ? <CircularProgress size={20} color="inherit" /> : 'Continue \u2192'}
+              </button>
+            </>
           )}
 
           <p className="mt-8 text-xs text-center text-gray-600">
