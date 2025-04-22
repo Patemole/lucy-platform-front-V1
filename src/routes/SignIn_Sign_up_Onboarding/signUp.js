@@ -205,6 +205,18 @@ export default function SignUp() {
         };
         await setDoc(chatDocRef, initialChatData);
 
+        // ---> AJOUT : Mise à jour optimiste de l'état du chat store <---
+        useChatStore.setState({
+          currentChatId: initialChatId,
+          messages: [], // Nouvelle conversation, pas de messages initiaux à afficher
+          isLoadingMessages: false,
+          isSocialThreadActive: false,
+          isCurrentChatPrivate: true, // <-- Force l'état privé !
+          isLandingPageVisible: false, // On va direct sur le chat (ou la page qui l'affichera)
+        });
+        console.log(`[SSO Harmonisée - SignUp] Optimistically set chat store state for onboarding chat ${initialChatId} (private).`);
+        // ---> FIN AJOUT <---
+
         // Mettre à jour le store avec les données initiales
         const userForStore = {
           id: newUserFirestoreData.uid,
@@ -358,6 +370,18 @@ export default function SignUp() {
       await setDoc(chatDocRef, chatData);
       console.log("✅ Firestore documents created manually.");
 
+      // ---> AJOUT : Mise à jour optimiste de l'état du chat store <---
+      useChatStore.setState({
+        currentChatId: chatId,
+        messages: [], // Nouvelle conversation, pas de messages initiaux à afficher
+        isLoadingMessages: false,
+        isSocialThreadActive: false,
+        isCurrentChatPrivate: true, // <-- Force l'état privé !
+        isLandingPageVisible: false // On va direct sur le chat
+      });
+      console.log(`[Step 6] Optimistically set chat store state for onboarding chat ${chatId} (private).`);
+      // ---> FIN AJOUT <---
+
       // Lancer la requête LinkedIn en parallèle
       sendUserInfoLinkedInScraping({
         firstName,
@@ -379,10 +403,6 @@ export default function SignUp() {
       }).catch(error => {
         console.error("Erreur lors de la vérification LinkedIn:", error);
       });
-
-      // Continuer sans attendre la réponse
-      console.log(`[Step 6a] Setting active chat in ChatStore to: ${chatId} (skipping message load)`);
-      useChatStore.getState().setActiveChat(chatId, { skipLoadMessages: true });
 
       console.log(`[Step 7] Navigating to onboarding page for user ${newUser.uid}...`);
       setTimeout(() => {

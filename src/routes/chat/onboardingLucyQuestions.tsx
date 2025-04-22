@@ -59,6 +59,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   //2. Contexte utilisateur et Authentification (Utilisation des stores Zustand)
   const chatIds = useAuthStore((state) => state.chatIds);
   const onboardingComplete = useAuthStore((state) => state.user?.onboardingComplete);
+  const userYear = useAuthStore((state) => state.user?.year);
   //const user = useAuthStore((state) => state.user);
 
   const {
@@ -353,6 +354,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             handleNewConversation={handleNewConversationClick}
             setShowOnboardingProfilePopup={setShowOnboardingProfilePopup}
             handleConversationClick={handleConversationClick}
+            userYear={userYear}
             activeChatId={useChatStore.getState().currentChatId}
             unreadCount={unreadCount}
             menuAnchorEl={conversationsMenuAnchorEl}
@@ -372,7 +374,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
   
           <div
-            className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-[315px] pl-5' : 'pl-4'} ${
+            className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? `ml-[296px]` : ''} ${drawerOpen ? 'pl-5' : 'pl-4'} ${
               iframeSrc ? 'mr-[33vw]' : ''
             }`}
           >
