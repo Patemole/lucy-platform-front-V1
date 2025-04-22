@@ -44,7 +44,7 @@ const topicColors: { [key: string]: string } = {
   "Default": "#7F8C8D" // Gris
 };
 
-const drawerWidth = 270;
+const drawerWidth = 315;
 
 const OnboardingLucyQuestions: React.FC = ()=> {
   console.log('<<< RENDERING OnboardingLucyQuestions >>>');
@@ -370,7 +370,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
   
           <div
-            className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-60 pl-5' : 'pl-4'} ${
+            className={`flex flex-col flex-grow transition-all duration-300 ${drawerOpen ? 'ml-[315px] pl-5' : 'pl-4'} ${
               iframeSrc ? 'mr-[33vw]' : ''
             }`}
           >
