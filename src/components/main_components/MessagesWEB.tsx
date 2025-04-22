@@ -2223,52 +2223,7 @@ useEffect(() => {
           )}
 
 
-{shouldDisplayLinkedInBlock && (
-            <div
-              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                backdropFilter: 'blur(60px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              }}
-            >
-              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
-                Paste your LinkedIn profile URL
-              </label>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center border border-gray-300 rounded-lg bg-white px-2 py-1 w-full">
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
-                    alt="Instagram"
-                    className="w-5 h-5 mr-2"
-                  />
-                  <input
-                    type="url"
-                    value={linkedinUrl}
-                    onChange={(e) => setLinkedinUrl(e.target.value)}
-                    placeholder="LinkedIn URL"
-                    className="w-full text-sm focus:outline-none"
-                  />
-                </div>
-                <button
-                  onClick={handleSendLINKEDINClick}
-                  disabled={!linkedinUrl}
-                  className={`flex items-center px-4 py-2 text-sm rounded-lg ${
-                    !linkedinUrl
-                      ? 'bg-gray-300 cursor-not-allowed text-gray-600'
-                      : 'text-white bg-gray-800 hover:bg-gray-900'
-                  }`}
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
-          )}
 
-
-
-{/*}
           {shouldDisplayLinkedInBlock && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
@@ -2312,7 +2267,7 @@ useEffect(() => {
               </div>
             </div>
           )}
-            */}
+      
 
 
           {shouldDisplayMajorMinorBlock && (
