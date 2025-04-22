@@ -48,24 +48,24 @@ export const useOnboarding = ({
 
   // --- Constantes ---
   const onboardingMessages = [
-    { question: "What is your current school?", metadata: "SCHOOL" },
-    { question: "What year are you in?", metadata: "YEAR" },
-    { question: "This is a test, are you Mathieu?", metadata: "TEST" },
-    { question: "What's your Insta?", metadata: "INSTAGRAM" },
-    { question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
-    //{ question: "What's your pet's name?", metadata: "PET_NAME" },
-    { question: "What is you linkedin URL?", metadata: "LINKEDIN" },
-    { question: "What is your major and minor?", metadata: "MAJOR&MINOR" },
-    { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" },
+    { question: "What is your current school?", metadata: "SCHOOL" },       // 0
+    { question: "What year are you in?", metadata: "YEAR" },         // 1
+    { question: "What's your Insta?", metadata: "INSTAGRAM" },    // 2
+    { question: "What is you linkedin URL?", metadata: "LINKEDIN" }, // 3
+    { question: "What is your major and minor?", metadata: "MAJOR&MINOR" }, // 4
+    { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" }, // 5
   ];
 
   // --- Fonction pour obtenir l'index de la prochaine question ---
   const getNextQuestionIndex = useCallback((currentIndex: number) => {
-    if (currentIndex === 5 && skipLinkedInQuestion) {
-      return 7;
+    // Après INSTAGRAM (index 2), vérifier si on saute LINKEDIN (index 3)
+    if (currentIndex === 2 && skipLinkedInQuestion) {
+      return 4; // Aller à MAJOR&MINOR (index 4)
     }
+    // Sinon, passer simplement à l'étape suivante
     return currentIndex + 1;
   }, [skipLinkedInQuestion]);
+
 
   // --- Fonctions Mémoisées (useCallback) ---
 
@@ -191,9 +191,9 @@ export const useOnboarding = ({
     }
 
     // Si on doit sauter la question LinkedIn
-    if (index === 6 && skipLinkedInQuestion) {
+    if (index === 3 && skipLinkedInQuestion) {
       console.log("[useOnboarding] Saut de la question LinkedIn car profil déjà trouvé");
-      return sendNextOnboardingMessage(7, messagesAfterUpdate, fieldToUpdate, previousAnswer);
+      return sendNextOnboardingMessage(4, messagesAfterUpdate, fieldToUpdate, previousAnswer);
     }
 
     console.log(`[useOnboarding] Préparation étape ${index}.`);
@@ -315,6 +315,8 @@ export const useOnboarding = ({
       handleSendGeneric(schoolMessage, 1, "SCHOOL", 'faculty', schoolMessage.split(", "));
   }, [handleSendGeneric]);
 
+
+  
   const handleSendYEARMessage = useCallback((yearMessage: string) => {
       handleSendGeneric(yearMessage, 2, "YEAR", 'year');
   }, [handleSendGeneric]);
@@ -392,7 +394,7 @@ export const useOnboarding = ({
     setSkipLinkedInQuestion(user?.linkedin_profile === true);
 
     // Utiliser getNextQuestionIndex pour déterminer la prochaine question
-    const nextIndex = getNextQuestionIndex(3); // 3 est l'index après INSTAGRAM
+    const nextIndex = getNextQuestionIndex(2); // 2 est l'index après INSTAGRAM
     await sendNextOnboardingMessage(nextIndex, messagesWithHuman);
 
   }, [generateUniqueId, setMessages, saveOnboardingStep, updateUserField, sendNextOnboardingMessage, getNextQuestionIndex, checkLinkedInProfile]);
@@ -401,7 +403,7 @@ export const useOnboarding = ({
 
   const handleSendLINKEDINMessage = useCallback(async (linkedinMessage: string) => {
     // Appeler handleSendGeneric pour mettre à jour le profil et passer à la question suivante
-    await handleSendGeneric(linkedinMessage, 7, "LINKEDIN", 'linkedin_url');
+    await handleSendGeneric(linkedinMessage, 4, "LINKEDIN", 'linkedin_url');
     
     // Appeler scrapeLinkedInProfile pour envoyer l'URL au backend
     try {
@@ -426,17 +428,23 @@ export const useOnboarding = ({
   const handleSendMAJORMINORMessage = useCallback(({ majors, minors }: { majors: string[]; minors: string[]; }) => {
       const content = `Majors: ${majors.join(', ')} | Minors: ${minors.join(', ')}`;
       // Pour MAJORMINOR, la mise à jour du profil est gérée par l'objet passé
-      handleSendGeneric(content, 8, "MAJOR&MINOR", { major: majors, minor: minors });
+      handleSendGeneric(content, 5, "MAJOR&MINOR", { major: majors, minor: minors });
   }, [handleSendGeneric]);
+
+
 
   const handleSendCOMPLIANCEMessage = useCallback((payload: { termsAccepted: boolean; ageConfirmed: boolean; }) => {
       const summary = `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
        // Pour COMPLIANCE, la mise à jour du profil est gérée par l'objet passé
-      handleSendGeneric(summary, 9, "COMPLIANCE", { complianceAccepted: true, ...payload });
+      handleSendGeneric(summary, 6, "COMPLIANCE", { complianceAccepted: true, ...payload });
   }, [handleSendGeneric]);
 
 
-  // ---> AJOUT HANDLERS QUESTIONS TEST <-----
+  
+
+
+
+  // ---> TEST QUESTIONS OUTDATING NOT IN THE LOGIC <-----
   const handleSendTESTMessage = useCallback((testMessage: string) => {
     handleSendGeneric(testMessage, 3, "TEST");
   }, [handleSendGeneric]);
@@ -452,6 +460,7 @@ export const useOnboarding = ({
      const nextIndex = getNextQuestionIndex(5);
     handleSendGeneric(petNameMessage, nextIndex, "PET_NAME");
   }, [handleSendGeneric, getNextQuestionIndex]);
+  
   // ---------------------------------------
 
   // --- Return ---
