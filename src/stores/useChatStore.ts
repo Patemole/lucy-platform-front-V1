@@ -649,7 +649,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         messages: [],
         isLoadingMessages: false, // <-- Pas besoin de charger pour un nouveau chat
         isSocialThreadActive: false, // Les nouveaux chats sont privés par défaut
-        isCurrentChatPrivate: true, // Les nouveaux chats sont privés par défaut
+        isCurrentChatPrivate: false, // Les nouveaux chats sont privés par défaut
     });
     console.log(`[ChatStore - addNewConversation] Optimistically set state for new chat ${newChatId}. Landing page should be visible.`);
 
@@ -662,7 +662,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         created_at: currentTime,
         modified_at: currentTime,
         university: user.university,
-        thread_type: 'Private',
+        thread_type: 'Public',
         user_ids: [user.id],
         is_private: true,
         last_message_preview: '', // Vide au début

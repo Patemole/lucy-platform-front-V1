@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Drawer, Box, IconButton, Menu, MenuItem, List, ListItem, ListItemIcon, ListItemText, Divider, Typography, CircularProgress
+  Drawer, Box, IconButton, Menu, MenuItem, List, ListItem, ListItemIcon, ListItemText, Divider, Typography, CircularProgress, Tooltip
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -56,6 +56,7 @@ type SidebarProps = {
     setShowOnboardingModifyConvPopup: (v: boolean) => void;
     setShowOnboardingSocialThreadPopup: (v: boolean) => void;
     formatDate: (timestamp: { toDate: () => Date }) => string;
+    userYear: string | null | undefined;
   };
 
 
@@ -70,10 +71,28 @@ type SidebarProps = {
     unreadCount, menuAnchorEl, handleMenuOpen, handleMenuClose,
     handleRename, handleDelete, socialThreads, loadingSocialThreads,
     topicColors, setShowOnboardingModifyConvPopup, 
-    setShowOnboardingSocialThreadPopup, handleNewConversation,setShowOnboardingProfilePopup, formatDate
+    setShowOnboardingSocialThreadPopup, handleNewConversation,setShowOnboardingProfilePopup, formatDate, userYear
   }) => {
 
     console.log('<<< RENDERING Sidebar >>>');
+
+    // Fonction pour déterminer le titre du bouton Social Thread
+    const getSocialThreadTitle = (year: string | null | undefined): string => {
+      switch (year) {
+        case 'Freshman':
+          return "Other freshman questions";
+        case 'Sophomore':
+          return "Other sophomore questions";
+        case 'Junior':
+          return "Other junior questions";
+        case 'Grad 1':
+        case 'Grad 2':
+          return "Other grad questions";
+        default:
+          return "Social thread"; // Titre par défaut
+      }
+    };
+    
 
     const drawerWidth = 315;
 
@@ -233,119 +252,127 @@ type SidebarProps = {
                     */}
 
                     {/* bouton conversation history */}
-                    <ListItem
-                    component="li"
-                    tabIndex={0}
-                    onClick={() => {
-                        setIsHistory(true);
-                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
-                    }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setIsHistory(true);
-                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
-                        }
-                    }}
-                    sx={{
-                        cursor: "pointer",
-                        borderRadius: "8px",
-                        backgroundColor: isHistory ? theme.palette.button.background : "transparent",
-                        mb: 1,
-                        "&:hover": {
-                        backgroundColor: isHistory ? theme.palette.button.background : theme.palette.action.hover,
-                        },
-                    }}
-                    >
-                    <ListItemIcon
-                        sx={{
-                        color: isHistory ? theme.palette.primary.main : theme.palette.sidebar,
-                        minWidth: "35px",
-                        }}
-                    >
-                        <HistoryIcon sx={{ fontSize: "22px" }} />
-                    </ListItemIcon>
-                    <ListItemText
-                        primary="Conversation history"
-                        primaryTypographyProps={{
-                        style: {
-                            fontWeight: "500",
-                            fontSize: "0.875rem",
-                            color: isHistory ? theme.palette.primary.main : theme.palette.text.primary,
-                        },
-                        }}
-                    />
-                    </ListItem>
+                    <Tooltip title="View your past private and public conversations" enterDelay={100} arrow placement="right">
+                     <div>
+                        <ListItem
+                          component="li"
+                          tabIndex={0}
+                          onClick={() => {
+                              setIsHistory(true);
+                              if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                          }}
+                          onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setIsHistory(true);
+                              if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                              }
+                          }}
+                          sx={{
+                              cursor: "pointer",
+                              borderRadius: "8px",
+                              backgroundColor: isHistory ? theme.palette.button.background : "transparent",
+                              mb: 1,
+                              "&:hover": {
+                              backgroundColor: isHistory ? theme.palette.button.background : theme.palette.action.hover,
+                              },
+                          }}
+                          >
+                          <ListItemIcon
+                              sx={{
+                              color: isHistory ? theme.palette.primary.main : theme.palette.sidebar,
+                              minWidth: "35px",
+                              }}
+                          >
+                              <HistoryIcon sx={{ fontSize: "22px" }} />
+                          </ListItemIcon>
+                          <ListItemText
+                              primary="Conversation history"
+                              primaryTypographyProps={{
+                              style: {
+                                  fontWeight: "500",
+                                  fontSize: "0.875rem",
+                                  color: isHistory ? theme.palette.primary.main : theme.palette.text.primary,
+                              },
+                              }}
+                          />
+                          </ListItem>
+                     </div>
+                    </Tooltip>
 
                     {/* bouton social thread */}
-                    <ListItem
-                    component="li"
-                    tabIndex={0}
-                    onClick={() => {
-                        setIsHistory(false);
-                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
-                    }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setIsHistory(false);
-                        if (isSmallScreen) setTimeout(toggleDrawer, 50);
-                        }
-                    }}
-                    sx={{
-                        cursor: "pointer",
-                        borderRadius: "8px",
-                        backgroundColor: !isHistory ? theme.palette.button.background : "transparent",
-                        mb: 1,
-                        "&:hover": {
-                        backgroundColor: !isHistory ? theme.palette.button.background : theme.palette.action.hover,
-                        },
-                    }}
-                    >
-                    <ListItemIcon
-                        sx={{
-                        color: !isHistory ? theme.palette.primary.main : theme.palette.sidebar,
-                        minWidth: "35px",
-                        }}
-                    >
-                        <PeopleIcon sx={{ fontSize: "22px" }} />
-                    </ListItemIcon>
-                    <ListItemText
-                        primary={
-                        <Box display="flex" alignItems="center">
-                            <Typography
-                            variant="body2"
-                            sx={{
-                                fontWeight: "500",
-                                fontSize: "0.875rem",
-                                color: !isHistory ? theme.palette.primary.main : theme.palette.text.primary,
-                            }}
-                            >
-                            Social thread
-                            </Typography>
-                            {unreadCount > 0 && (
-                            <Box
-                                sx={{
-                                backgroundColor: "red",
-                                color: "white",
-                                borderRadius: "8px",
-                                padding: "2px 6px",
-                                marginLeft: "8px",
-                                fontSize: "0.75rem",
-                                fontWeight: "500",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                minWidth: "20px",
-                                }}
-                            >
-                                {unreadCount}
-                            </Box>
-                            )}
-                        </Box>
-                        }
-                    />
-                    </ListItem>
+                    <Tooltip title="See recent public conversations from other students" enterDelay={100} arrow placement="right">
+                     <div>
+                        <ListItem
+                          component="li"
+                          tabIndex={0}
+                          onClick={() => {
+                              setIsHistory(false);
+                              if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                          }}
+                          onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setIsHistory(false);
+                              if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                              }
+                          }}
+                          sx={{
+                              cursor: "pointer",
+                              borderRadius: "8px",
+                              backgroundColor: !isHistory ? theme.palette.button.background : "transparent",
+                              mb: 1,
+                              "&:hover": {
+                              backgroundColor: !isHistory ? theme.palette.button.background : theme.palette.action.hover,
+                              },
+                          }}
+                          >
+                          <ListItemIcon
+                              sx={{
+                              color: !isHistory ? theme.palette.primary.main : theme.palette.sidebar,
+                              minWidth: "35px",
+                              }}
+                          >
+                              <PeopleIcon sx={{ fontSize: "22px" }} />
+                          </ListItemIcon>
+                          <ListItemText
+                              primary={
+                              <Box display="flex" alignItems="center">
+                                  <Typography
+                                  variant="body2"
+                                  sx={{
+                                      fontWeight: "500",
+                                      fontSize: "0.875rem",
+                                      color: !isHistory ? theme.palette.primary.main : theme.palette.text.primary,
+                                  }}
+                                  >
+                                  {getSocialThreadTitle(userYear)}
+                                  </Typography>
+                                  {unreadCount > 0 && (
+                                  <Box
+                                      sx={{
+                                      backgroundColor: "red",
+                                      color: "white",
+                                      borderRadius: "8px",
+                                      padding: "2px 6px",
+                                      marginLeft: "8px",
+                                      fontSize: "0.75rem",
+                                      fontWeight: "500",
+                                      display: "flex",
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                      minWidth: "20px",
+                                      }}
+                                  >
+                                      {unreadCount}
+                                  </Box>
+                                  )}
+                              </Box>
+                              }
+                          />
+                          </ListItem>
+                     </div>
+                    </Tooltip>
                 </List>
                 </nav>
 

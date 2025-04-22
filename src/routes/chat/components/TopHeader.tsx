@@ -131,8 +131,8 @@ interface TopHeaderProps {
                             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div
                                 className={`
-                                h-2 bg-blue-600 rounded-full transition-all duration-500
-                                ${isLastStep ? 'animate-[pulse_1.2s_ease-in-out_infinite]  ' : ''}
+                                h-2 rounded-full transition-all duration-500
+                                ${isLastStep ? 'bg-[#27AE60] animate-[pulse_1.2s_ease-in-out_infinite]' : 'bg-blue-600'}
                                 `}
                                 style={{
                                 width: progressPercent > 0 ? `${progressPercent}%` : '4px'
