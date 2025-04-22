@@ -38,6 +38,7 @@ export const useOnboarding = ({
   const userId = useAuthStore(state => state.user?.id);
   const isOnboardingComplete = useAuthStore(state => state.user?.onboardingComplete);
   const userChatSessions = useAuthStore(state => state.user?.chatsessions);
+  const userName = useAuthStore(state => state.user?.name);
 
 
   // --- Refs ---
@@ -210,9 +211,19 @@ export const useOnboarding = ({
     setRelatedQuestions([]);
     setIsStreaming(true);
 
-    const { question, metadata } = onboardingMessages[index];
+    // Récupérer la question originale et le métadata
+    const { question: originalQuestion, metadata } = onboardingMessages[index];
+    let questionToSend = originalQuestion;
+
+    // Personnaliser la première question si le nom est disponible
+    if (index === 0 && userName) {
+        questionToSend = `Hi ${userName}, ${originalQuestion.charAt(0).toLowerCase() + originalQuestion.slice(1)}`;
+        console.log(`[useOnboarding] Question personnalisée pour index 0: "${questionToSend}"`);
+    }
+
     const onboardingMessageId = generateUniqueId();
 
+    // Utiliser questionToSend ici
     const loadingMessage: Message = { id: onboardingMessageId, type: 'ai', content: '', personaName: 'Lucy', METADATAONBOARDING: metadata, isLoading: true };
     messagesAfterUpdate = [...messagesAfterUpdate, loadingMessage];
     setMessages(messagesAfterUpdate);
@@ -220,17 +231,19 @@ export const useOnboarding = ({
     if (currentUserId && currentChatId) {
       try {
         console.log(`[useOnboarding] Sauvegarde étape AI (métadata: ${metadata}).`);
-        await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, metadata, message: question, type: 'ai' });
+        // Utiliser questionToSend ici
+        await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, metadata, message: questionToSend, type: 'ai' });
       } catch (error) { console.error(`❌ Erreur saveOnboardingStep (AI) pour ${metadata}:`, error); }
     }
 
     await new Promise((resolve) => setTimeout(resolve, 300));
-    messagesAfterUpdate = await fakeStreamMessage(question, metadata, onboardingMessageId, messagesAfterUpdate);
+    // Utiliser questionToSend ici
+    messagesAfterUpdate = await fakeStreamMessage(questionToSend, metadata, onboardingMessageId, messagesAfterUpdate);
 
     setIsStreaming(false);
     console.log(`[useOnboarding] Étape ${index} ("${metadata}") affichée.`);
 
-  }, [generateUniqueId, setMessages, updateUserField, saveOnboardingStep, setIsLandingPageVisible, setRelatedQuestions, setIsStreaming, onSubmit, fakeStreamMessage, skipLinkedInQuestion, onboardingMessages]);
+  }, [generateUniqueId, setMessages, updateUserField, saveOnboardingStep, setIsLandingPageVisible, setRelatedQuestions, setIsStreaming, onSubmit, fakeStreamMessage, skipLinkedInQuestion, onboardingMessages, userName]);
 
 
 
