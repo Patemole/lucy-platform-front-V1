@@ -1,7 +1,7 @@
-import { useEffect} from 'react';
+import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 //import { sendUserInfoToBackend } from '../../../api/calendar-event-studentProfile';
-import { StudentProfile, EventStudentProfile } from '../../../interfaces/interfaces_eleve';
+import { StudentProfile, EventStudentProfile, User } from '../../../interfaces/interfaces_eleve';
 import { MouseEvent } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../auth/firebase';
@@ -21,14 +21,19 @@ export const useUserProfile = ({
 
 }) => {
 
-    const userId = useAuthStore(state => state.user?.id);
+    const user = useAuthStore(state => state.user);
+    const userId = user?.id;
     const logout = useAuthStore(state => state.logoutUser);
     const { setIsLandingPageVisible } = useChatStore();
     const navigate = useNavigate();
 
-
-    const fetchProfilePicture = async () => {
-        if (!userId) return;
+    const fetchProfilePicture = useCallback(async () => {
+        console.log("[useUserProfile fetchProfilePicture] Attempting fetch for user:", userId);
+        if (!userId) {
+            console.log("[useUserProfile fetchProfilePicture] No userId.");
+             setProfilePicture(null);
+            return;
+        }
     
         try {
           const userRef = doc(db, 'users', userId);
@@ -36,16 +41,18 @@ export const useUserProfile = ({
     
           if (userSnap.exists()) {
             const userData = userSnap.data();
-            setProfilePicture(userData.profile_picture || null);
-            console.log('Fetched profile picture:', userData.profile_picture || 'No profile picture found');
+            const manualPicUrl = userData.profilePicture || null; 
+            console.log('[useUserProfile fetchProfilePicture] Fetched URL:', manualPicUrl);
+            setProfilePicture(manualPicUrl);
           } else {
-            console.warn('User document does not exist.');
+            console.warn('[useUserProfile fetchProfilePicture] User doc not found for:', userId);
+            setProfilePicture(null);
           }
         } catch (error) {
-          console.error('Error fetching profile picture:', error);
+          console.error('[useUserProfile fetchProfilePicture] Error:', error);
+          setProfilePicture(null);
         }
-      };
-
+      }, [userId, setProfilePicture]);
 
     const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
         setProfileMenuAnchorEl(event.currentTarget);
@@ -79,7 +86,20 @@ export const useUserProfile = ({
         handleParametersMenuClose();
     };
 
+    // useEffect qui réagit aux changements de user.linkedin_profile.logo_url
+    useEffect(() => {
+        const linkedinUrl = user?.linkedin_profile?.logo_url;
 
+        if (linkedinUrl) {
+            console.log("[useUserProfile useEffect] Using LinkedIn URL:", linkedinUrl);
+            setProfilePicture(linkedinUrl);
+        } else {
+            console.log("[useUserProfile useEffect] No LinkedIn URL, calling fetchProfilePicture.");
+            fetchProfilePicture();
+        }
+    }, [user?.linkedin_profile?.logo_url, fetchProfilePicture, setProfilePicture]);
+
+    
     return {
         handleProfileMenuClick,
         handleLogout,
