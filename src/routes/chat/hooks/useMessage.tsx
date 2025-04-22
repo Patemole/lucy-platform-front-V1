@@ -502,7 +502,7 @@ export const useMessage = ({
         console.log("wasEmpty (was the conversation empty before this message?):", wasEmpty);
     
         const newMessage: Message = { id: Date.now(), type: 'human', content: message };
-        const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy' };
+        const loadingMessage: Message = { id: Date.now() + 1, type: 'ai', content: '', personaName: 'Lucy', isLoading: true };
     
         // Créer un nouveau tableau de messages, incluant le message humain et le message "en cours"
         const newMessagesArray = [...messages, newMessage, loadingMessage];
