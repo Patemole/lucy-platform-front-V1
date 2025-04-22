@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Box, Paper, Typography, Button } from '@mui/material';
+import { Box, Paper, Typography, Button, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import ChatIcon from '@mui/icons-material/Chat';
+import LucyChatSidebar from './LucyChatSidebar';
 
 interface PennTinderProps {
   theme: any;
@@ -1043,14 +1045,33 @@ const PennTinder: React.FC<PennTinderProps> = ({ theme }) => {
 
   return (
     <Box 
-      ref={containerRef}
       sx={{ 
+        display: 'flex',
         height: '100%', 
-        width: '100%', 
-        overflow: 'auto',
-        backgroundColor: '#f0f2f5'
+        width: '100%',
+        position: 'relative',
+        overflow: 'hidden'
       }}
-    />
+    >
+      <Box
+        ref={containerRef}
+        sx={{ 
+          flex: 1,
+          height: '100%', 
+          overflow: 'auto',
+          backgroundColor: '#f0f2f5',
+          marginRight: '350px', // Make space for the sidebar
+          '& .container': {
+            maxWidth: '100%',
+            padding: '20px',
+          }
+        }}
+      />
+      <LucyChatSidebar 
+        isOpen={true}
+        onClose={() => {}} // Empty function since we don't want to close it
+      />
+    </Box>
   );
 };
 
