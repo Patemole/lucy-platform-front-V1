@@ -21,15 +21,24 @@ export const useOnboarding = ({
   onSubmit: (history: Message[], inputValue: string, isOnboardingMessage?: boolean) => Promise<void>;
 }) => {
   // --- Stores ---
-  const { user, chatIds } = useAuthStore();
+  const { chatIds } = useAuthStore();
   const {
     messages,
     setMessages,
     setIsLandingPageVisible,
+    setActiveChat,
     _setRelatedQuestions: setRelatedQuestions,
     _setIsStreamingResponse: setIsStreaming,
+    currentChatId,
+    isLoadingMessages,
+    isStreamingResponse,
   } = useChatStore();
   const { isAppInitialized } = useAppInitializationStore();
+
+  const userId = useAuthStore(state => state.user?.id);
+  const isOnboardingComplete = useAuthStore(state => state.user?.onboardingComplete);
+  const userChatSessions = useAuthStore(state => state.user?.chatsessions);
+
 
   // --- Refs ---
   const hasRunOnboardingCheckRef = useRef(false);
@@ -226,50 +235,88 @@ export const useOnboarding = ({
 
 
 
-  // --- useEffect Principal (pour démarrer l'onboarding) ---
+  // --- useEffect Principal (Logique Très Simplifiée) ---
   useEffect(() => {
+    // --- Étape 1: Lire les états nécessaires ---
+    // Action stable: setActiveChat
+    // Fonctions stables : sendNextOnboardingMessage
     console.log(
-      `[useOnboarding Check Effect Run] isAppInitialized: ${isAppInitialized}, userExists: ${!!user}, onboardingComplete: ${user?.onboardingComplete}, messagesLength: ${messages?.length}, hasRunCheckRef: ${hasRunOnboardingCheckRef.current}, startAttemptedRef: ${onboardingStartAttemptedRef.current}`
+      `[useOnboarding Check - Simple] Init: ${isAppInitialized}, UserID: ${userId}, OnboardingDone: ${isOnboardingComplete}, ChatID: ${currentChatId}, LoadingMsgs: ${isLoadingMessages}, Streaming: ${isStreamingResponse}, RanCheck: ${hasRunOnboardingCheckRef.current}, StartAttempted: ${onboardingStartAttemptedRef.current}`
     );
 
-    // --- Section 1: Pre-conditions ---
-    // Check if we are in a state where we *might* need to start onboarding.
-    // 1. Is the main application initialization finished?
-    // 2. Do we have the user data?
-    // 3. Is the user's onboarding NOT marked as complete in their profile?
-    // 4. Have we NOT already run this check logic in the current component lifecycle?
-    const canConsiderOnboarding = isAppInitialized && user && !user.onboardingComplete && !hasRunOnboardingCheckRef.current;
+    // --- Étape 2: Vérifier si l'onboarding doit être géré ---
+    const shouldManageOnboarding = isAppInitialized && userId && !isOnboardingComplete;
 
-    if (canConsiderOnboarding) {
-      // Mark that this check has been performed for this cycle.
-      // This prevents redundant checks if only `messages` change later without other core dependencies changing.
-      hasRunOnboardingCheckRef.current = true;
-      console.log("[useOnboarding Check] Pre-conditions met. Checking if onboarding should actually start...");
-
-      // --- Section 2: Start Conditions ---
-      const hasExistingOnboardingMessages = messages.some((msg: Message) => !!msg.METADATAONBOARDING);
-      const hasNotAttemptedStart = !onboardingStartAttemptedRef.current;
-
-      // Decision: Start onboarding only if pre-conditions met, no existing messages found, and start not previously attempted.
-      if (!hasExistingOnboardingMessages && hasNotAttemptedStart) {
-        // Mark that we are now attempting to start the sequence.
-        onboardingStartAttemptedRef.current = true;
-        console.log("🚀 [useOnboarding] Start conditions met. Starting onboarding sequence...");
-        // Lire l'état actuel des messages juste avant de démarrer
-        const initialMessages = useChatStore.getState().messages;
-        sendNextOnboardingMessage(0, initialMessages); // Passer le tableau de messages initial
-      } else {
-        if (hasExistingOnboardingMessages) console.log("ℹ️ [useOnboarding] Start conditions not met: Onboarding messages already exist.");
-        if (!hasNotAttemptedStart) console.log("ℹ️ [useOnboarding] Start conditions not met: Start sequence already attempted.");
-      }
-    } else {
-      // Log why the pre-conditions failed
-      if (!isAppInitialized) console.log("[useOnboarding Check] Waiting for app initialization...");
-      else if (!user) console.log("[useOnboarding Check] Waiting for user data...");
-      else if (user?.onboardingComplete) console.log("[useOnboarding Check] Onboarding already complete.");
-      else if (hasRunOnboardingCheckRef.current) console.log("[useOnboarding Check] Check already performed in this cycle.");
+    if (!shouldManageOnboarding) {
+      hasRunOnboardingCheckRef.current = false;
+      onboardingStartAttemptedRef.current = false;
+      return;
     }
-  }, [isAppInitialized, user?.id, user?.onboardingComplete]); // Ne dépend plus de `messages` ou `sendNextOnboardingMessage`[isAppInitialized, user]
+
+    // --- Étape 3: Gérer le cas où currentChatId est manquant (Reprise) ---
+    if (!currentChatId) {
+      console.log("[useOnboarding Check - Simple] Onboarding active, but currentChatId is null. Attempting resume setup...");
+      if (userChatSessions && userChatSessions.length === 1) {
+        const onboardingChatId = userChatSessions[0];
+        console.warn(`[useOnboarding - Simple] Setting active chat for resume: ${onboardingChatId}. Loading history...`);
+        setActiveChat(onboardingChatId); // Déclenche chargement historique
+        return; // Attendre la mise à jour et le chargement
+      } else {
+        console.error(`[useOnboarding - Simple] Cannot resume: Unable to find single chat ID. Sessions:`, userChatSessions);
+        hasRunOnboardingCheckRef.current = false;
+        return;
+      }
+    }
+
+    // --- Étape 4: Attendre la stabilité (messages chargés, pas de streaming) ---
+    if (isLoadingMessages || isStreamingResponse) {
+      if (isLoadingMessages) console.log(`[useOnboarding Check - Simple] Waiting for messages for chat ${currentChatId}...`);
+      if (isStreamingResponse) console.log(`[useOnboarding Check - Simple] Waiting for AI response for chat ${currentChatId}...`);
+      hasRunOnboardingCheckRef.current = false; // On attend, on pourra agir après
+      return;
+    }
+
+    // --- Étape 5: Éviter actions multiples dans un état stable ---
+    if (hasRunOnboardingCheckRef.current) {
+      console.log("[useOnboarding Check - Simple] Action already performed in this stable cycle. Skipping.");
+      return;
+    }
+
+    // --- Étape 6: ACTION (Uniquement pour le démarrage initial / reprise à zéro) ---
+    console.log(`[useOnboarding ACTION - Simple] Stable state for chat ${currentChatId}. Checking if first message needed...`);
+    hasRunOnboardingCheckRef.current = true; // Marquer qu'on a évalué ce cycle
+
+    const messagesInStore = useChatStore.getState().messages;
+    const hasExistingOnboardingMessages = messagesInStore.some((msg: Message) => !!msg.METADATAONBOARDING);
+    const hasNotAttemptedStart = !onboardingStartAttemptedRef.current;
+
+    // Envoyer la première question SEULEMENT si aucune question d'onboarding n'a jamais été envoyée
+    // ET qu'on n'a pas déjà essayé de démarrer dans un cycle précédent.
+    if (!hasExistingOnboardingMessages && hasNotAttemptedStart) {
+      onboardingStartAttemptedRef.current = true; // Marquer la tentative de démarrage
+      console.log(`🚀 [useOnboarding ACTION - Simple] Starting onboarding sequence / Sending first message for chat ${currentChatId}...`);
+      sendNextOnboardingMessage(0, messagesInStore); // Envoyer question 0
+    } else {
+       console.log(`[useOnboarding ACTION - Simple] Skipping message send: Either messages exist, or start already attempted.`);
+       // Si des messages existent déjà (reprise), cet effet ne fait rien de plus.
+       // L'utilisateur devra interagir pour continuer.
+    }
+
+  }, [
+       // Dépendances Primitives ou Stables
+       isAppInitialized,
+       userId,
+       isOnboardingComplete,
+       userChatSessions,
+       currentChatId,
+       isLoadingMessages,
+       isStreamingResponse,
+       // Fonctions Stables
+       setActiveChat,
+       sendNextOnboardingMessage 
+       // determineResumeIndex n'est plus nécessaire
+  ]);
+  // --- FIN MODIFICATION useEffect ---
 
 
   // --- Fonctions de Handler pour les Réponses Spécifiques ---
