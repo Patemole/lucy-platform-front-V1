@@ -169,3 +169,44 @@ export const sendUserInfoLinkedInScraping = async ({
     return false; // En cas d'erreur, on retourne false pour poser la question
   }
 };
+
+// Nouvelle fonction pour appeler l'endpoint proxy
+export const fetchProxiedImage = async (imageUrl: string): Promise<Blob | null> => {
+    console.log(`[API fetchProxiedImage] Requesting image from proxy for URL: ${imageUrl}`);
+    try {
+        const response = await fetch(`${apiUrlPrefix}/files/proxy-image`, { // Utilisation de la nouvelle route '/api/proxy-image'
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Ajouter d'autres headers si nécessaire (ex: Authentification si votre API l'exige)
+            },
+            body: JSON.stringify({
+                imageUrl: imageUrl, // Envoyer l'URL dans le corps JSON comme attendu par le backend FastAPI
+            }),
+        });
+
+        if (!response.ok) {
+            // Essayer de lire le message d'erreur du backend s'il existe
+            let errorDetail = `HTTP error! status: ${response.status}`;
+            try {
+                const errorJson = await response.json();
+                errorDetail = errorJson.detail || errorDetail; // Utiliser le détail de l'erreur FastAPI si disponible
+            } catch (e) {
+                // Ignorer si la réponse n'est pas du JSON valide
+                errorDetail = `${errorDetail} - ${response.statusText}`;
+            }
+            console.error(`[API fetchProxiedImage] Error fetching proxied image: ${errorDetail}`);
+            throw new Error(errorDetail);
+        }
+
+        // Si la réponse est ok, le corps est le Blob de l'image
+        const imageBlob = await response.blob();
+        console.log(`[API fetchProxiedImage] Successfully fetched image blob. Size: ${imageBlob.size}, Type: ${imageBlob.type}`);
+        return imageBlob;
+
+    } catch (error) {
+        console.error('[API fetchProxiedImage] Failed to fetch proxied image:', error);
+        // Renvoyer null ou relancer l'erreur selon la gestion souhaitée dans le hook
+        return null;
+    }
+};

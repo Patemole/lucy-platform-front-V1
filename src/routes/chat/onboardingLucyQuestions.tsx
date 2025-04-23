@@ -251,7 +251,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
   const onboardingMessages = [
     //{ question: "What is your current school?", metadata: "SCHOOL" },       // 0
-    { question: "quick q’s for you—this’ll help me grasp the real you so i can answer your question properly. Please answer as much as you can so i can help you the right way:", metadata: "SCHOOL" },   
+    { question: "quick q's for you — this'll help me grasp the real you so I can answer your questions properly.\nPlease answer as much as you can so I can help you the right way:", metadata: "SCHOOL" },
     { question: "What year are you in?", metadata: "YEAR" },
     { question: "This is a test, are you Mathieu?", metadata: "TEST" },
     { question: "What's your Insta?", metadata: "INSTAGRAM" },
