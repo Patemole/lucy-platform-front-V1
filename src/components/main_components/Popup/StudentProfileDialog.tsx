@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../auth/firebase';
-// import { useAuth } from '../../../auth/hooks/useAuth'; // Supprimé
-import useAuthStore from '../../../stores/useAuthStore'; // Import default corrigé
-import { User } from '../../../interfaces/interfaces_eleve';
 import { useParams } from 'react-router-dom';
 import { useTheme, Theme } from '@mui/material/styles';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
