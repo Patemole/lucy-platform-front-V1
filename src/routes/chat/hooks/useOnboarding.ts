@@ -59,15 +59,15 @@ export const useOnboarding = ({
   // --- Constantes ---
   const onboardingMessages = [
     //{ question: "What is your current school?", metadata: "SCHOOL" },       // 0
-    { question: "let's get this started! Help me get to know the **real** you — I promise it'll be worth it ✨\nWhich school are you in?", metadata: "SCHOOL" },
+    { question: "let's get this started! help me get to know the *real* you — the more you share the more accurate we get in helping out ✨\nwhich school are you in?", metadata: "SCHOOL" },
     { question: "And what year are you rockin' right now?", metadata: "YEAR" },
     //{ question: "This is a test, are you Mathieu?", metadata: "TEST" },
-    { question: "What’s your insta? won’t be public — just helps me get your social vibe 🏄", metadata: "INSTAGRAM" },
+    { question: "What’s your insta? won’t be public — just helps me get your vibe ", metadata: "INSTAGRAM" },
     //{ question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
     //{ question: "What's your pet's name?", metadata: "PET_NAME" },
-    { question: "Second to last question! if you’ve got a LinkedIn, paste it here — it won’t be shared, just helps me get your pro side 💼", metadata: "LINKEDIN" },
+    { question: "What is you linkedin URL?", metadata: "LINKEDIN" },
     { question: "Got a major or minor picked out yet? if you're still figuring it out, totally fine — just type 'undecided'", metadata: "MAJOR&MINOR" },
-    { question: "Final step! Just check these boxes so we can vibe legally ✅", metadata: "COMPLIANCE" },
+    { question: "Final step! Just check these boxes so we can vibe legally", metadata: "COMPLIANCE" },
   ];
 
   // --- Fonction pour obtenir l'index de la prochaine question ---
