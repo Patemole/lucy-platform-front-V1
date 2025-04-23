@@ -59,7 +59,7 @@ export const useOnboarding = ({
   // --- Constantes ---
   const onboardingMessages = [
     //{ question: "What is your current school?", metadata: "SCHOOL" },       // 0
-    { question: "quick q’s for you—this’ll help me grasp the real you so i can answer your question properly. Please answer as much as you can so i can help you the right way:", metadata: "SCHOOL" },   
+    { question: "quick q's for you — this'll help me grasp the real you so I can answer your questions properly.\nPlease answer as much as you can so I can help you the right way:", metadata: "SCHOOL" },  
     { question: "What year are you in?", metadata: "YEAR" },         // 1
     { question: "What's your Insta?", metadata: "INSTAGRAM" },    // 2
     { question: "What is you linkedin URL?", metadata: "LINKEDIN" }, // 3
