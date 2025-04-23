@@ -1,0 +1,14 @@
+[
+  {
+    "origin": [
+      "http://*.localhost:3000", 
+      "http://localhost:3001", 
+      "http://upenn.localhost:3001", 
+      "http://*.localhost:3001", 
+      "https://*.my-lucy.com"
+    ],
+    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Authorization", "X-Requested-With", "Access-Control-Allow-Origin"],
+    "maxAgeSeconds": 3600
+  }
+] 
