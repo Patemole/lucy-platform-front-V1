@@ -153,7 +153,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
 
   //from userprofile
-  const {handleProfileMenuClick,handleLogout,handleDeleteAccount,handleProfileMenuClose, handleParametersMenuClick, handleParametersMenuClose } = useUserProfile({setEvents,setProfileMenuAnchorEl,setParametersMenuAnchorEl,setProfilePicture,});
+  const {handleProfileMenuClick,handleLogout,handleDeleteAccount,handleProfileMenuClose, handleParametersMenuClick, handleParametersMenuClose } = useUserProfile({setProfileMenuAnchorEl,setParametersMenuAnchorEl,setProfilePicture,});
 
   //from UIstate
   const {toggleDrawer,hasTak,lastAiMessageId} = useUIState({isSmallScreen,messages,drawerOpen,scrollableDivRef,setDrawerOpen,setOnlineUsers,setIsAtBottom,setNewMessagesCount,setParametersMenuAnchorEl,});
@@ -251,15 +251,15 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
   const onboardingMessages = [
     //{ question: "What is your current school?", metadata: "SCHOOL" },       // 0
-    { question: "let's get this started! help me get to know the *real* you — the more you share the more accurate we get in helping out ✨\nwhich school are you in?", metadata: "SCHOOL" },
+    { question: "let's get this started! Help me get to know the **real** you.\nThe **more you share** the **more accurate** we get in helping out ✨\n\nWhich school are you in?", metadata: "SCHOOL" },
     { question: "And what year are you rockin' right now?", metadata: "YEAR" },
     //{ question: "This is a test, are you Mathieu?", metadata: "TEST" },
-    { question: "What’s your insta? won’t be public — just helps me get your vibe ", metadata: "INSTAGRAM" },
+    { question: "What’s your insta? won’t be public — just helps me get your vibe 🏄", metadata: "INSTAGRAM" },
     //{ question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
     //{ question: "What's your pet's name?", metadata: "PET_NAME" },
-    { question: "What is you linkedin URL?", metadata: "LINKEDIN" },
-    { question: "Got a major or minor picked out yet? if you're still figuring it out, totally fine — just type 'undecided'", metadata: "MAJOR&MINOR" },
-    { question: "Final step! Just check these boxes so we can vibe legally", metadata: "COMPLIANCE" },
+    { question: "Second to last question! If you've got a LinkedIn, paste it here, just helps me get your pro side 💼", metadata: "LINKEDIN" },
+    { question: "Got a major or minor picked out yet? if you're still figuring it out, totally fine — just click on 'Undecided'", metadata: "MAJOR&MINOR" },
+    { question: "Final step! Just check these boxes so we can vibe legally ✅", metadata: "COMPLIANCE" },
   ];
 
   // Récupère précisément le dernier message qui possède la propriété METADATAONBOARDING
