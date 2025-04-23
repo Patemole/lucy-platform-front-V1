@@ -172,14 +172,14 @@ interface TopHeaderProps {
                             onClick={(event) => {
 
                                 handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>);
-                                {/*
-                                if (!user?.onboardingComplete) {
+
+                                if (!onboardingComplete) {
                                 setShowOnboardingProfilePopup(true);
                                 return
                                 } else {
                                 handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>);
                                 }
-                                */}
+                            
                             }}
                             aria-label="Open profile menu"
                             aria-haspopup="true"
@@ -194,8 +194,8 @@ interface TopHeaderProps {
                                 src={profilePicture}
                                 alt="Profile"
                                 style={{
-                                    width: '55px',
-                                    height: '55px',
+                                    width: '50px',
+                                    height: '50px',
                                 }}
                                 className="rounded-full object-cover cursor-pointer"
                                 //onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
