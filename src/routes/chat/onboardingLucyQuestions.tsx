@@ -251,15 +251,15 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
   const onboardingMessages = [
     //{ question: "What is your current school?", metadata: "SCHOOL" },       // 0
-    { question: "quick q's for you — this'll help me grasp the real you so I can answer your questions properly.\nPlease answer as much as you can so I can help you the right way:", metadata: "SCHOOL" },
-    { question: "What year are you in?", metadata: "YEAR" },
-    { question: "This is a test, are you Mathieu?", metadata: "TEST" },
-    { question: "What's your Insta?", metadata: "INSTAGRAM" },
-    { question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
+    { question: "let's get this started! help me get to know the *real* you — I promise it'll be worth it ✨\nwhich school are you in?", metadata: "SCHOOL" },
+    { question: "And what year are you rockin' right now?", metadata: "YEAR" },
+    //{ question: "This is a test, are you Mathieu?", metadata: "TEST" },
+    { question: "What’s your insta? won’t be public — just helps me get your vibe ", metadata: "INSTAGRAM" },
+    //{ question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
     //{ question: "What's your pet's name?", metadata: "PET_NAME" },
     { question: "What is you linkedin URL?", metadata: "LINKEDIN" },
-    { question: "What is your major and minor?", metadata: "MAJOR&MINOR" },
-    { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" },
+    { question: "Got a major or minor picked out yet? if you're still figuring it out, totally fine — just type 'undecided'", metadata: "MAJOR&MINOR" },
+    { question: "Final step! Just check these boxes so we can vibe legally", metadata: "COMPLIANCE" },
   ];
 
   // Récupère précisément le dernier message qui possède la propriété METADATAONBOARDING

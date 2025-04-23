@@ -59,12 +59,15 @@ export const useOnboarding = ({
   // --- Constantes ---
   const onboardingMessages = [
     //{ question: "What is your current school?", metadata: "SCHOOL" },       // 0
-    { question: "quick q's for you — this'll help me grasp the real you so I can answer your questions properly.\nPlease answer as much as you can so I can help you the right way:", metadata: "SCHOOL" },  
-    { question: "What year are you in?", metadata: "YEAR" },         // 1
-    { question: "What's your Insta?", metadata: "INSTAGRAM" },    // 2
-    { question: "What is you linkedin URL?", metadata: "LINKEDIN" }, // 3
-    { question: "What is your major and minor?", metadata: "MAJOR&MINOR" }, // 4
-    { question: "To finish, you need to check these boxes", metadata: "COMPLIANCE" }, // 5
+    { question: "let's get this started! Help me get to know the **real** you — I promise it'll be worth it ✨\nWhich school are you in?", metadata: "SCHOOL" },
+    { question: "And what year are you rockin' right now?", metadata: "YEAR" },
+    //{ question: "This is a test, are you Mathieu?", metadata: "TEST" },
+    { question: "What’s your insta? won’t be public — just helps me get your social vibe 🏄", metadata: "INSTAGRAM" },
+    //{ question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
+    //{ question: "What's your pet's name?", metadata: "PET_NAME" },
+    { question: "Second to last question! if you’ve got a LinkedIn, paste it here — it won’t be shared, just helps me get your pro side 💼", metadata: "LINKEDIN" },
+    { question: "Got a major or minor picked out yet? if you're still figuring it out, totally fine — just type 'undecided'", metadata: "MAJOR&MINOR" },
+    { question: "Final step! Just check these boxes so we can vibe legally ✅", metadata: "COMPLIANCE" },
   ];
 
   // --- Fonction pour obtenir l'index de la prochaine question ---
@@ -218,7 +221,7 @@ export const useOnboarding = ({
 
     // Personnaliser la première question si le nom est disponible
     if (index === 0 && userName) {
-        questionToSend = `Hi ${userName}, ${originalQuestion.charAt(0).toLowerCase() + originalQuestion.slice(1)}`;
+        questionToSend = `Ok ${userName}, ${originalQuestion.charAt(0).toLowerCase() + originalQuestion.slice(1)}`;
         console.log(`[useOnboarding] Question personnalisée pour index 0: "${questionToSend}"`);
     }
 

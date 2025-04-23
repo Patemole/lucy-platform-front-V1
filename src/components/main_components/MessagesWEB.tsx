@@ -683,6 +683,14 @@ useEffect(() => {
     }
   };
 
+  // Nouvelle fonction pour gérer le clic sur "Don't have/want to share"
+  const handleSkipInstagramClick = () => {
+    if (handleSendINSTAGRAMMessage) {
+      // Envoyer la valeur spécifique
+      handleSendINSTAGRAMMessage("Don't want to answer");
+    }
+  };
+
     const handleSendTESTClick = () => {
       if (handleSendTESTMessage && favoriteTest) {
         handleSendTESTMessage(favoriteTest);
@@ -692,6 +700,14 @@ useEffect(() => {
     const handleSendFavoriteColorClick = () => {
       if (handleSendFAVORITE_COLORMessage && favoriteColor) {
         handleSendFAVORITE_COLORMessage(favoriteColor);
+      }
+    };
+
+    // Nouvelle fonction pour gérer le clic sur "Don't have/want to share"
+    const handleSkipLinkedInClick = () => {
+      if (handleSendLINKEDINMessage) {
+        // Envoyer la valeur spécifique
+        handleSendLINKEDINMessage("Don't want to answer");
       }
     };
 
@@ -714,6 +730,13 @@ useEffect(() => {
     // reset if needed
     //setMajors(['']);
     //setMinors(['']);
+  };
+
+  // Nouvelle fonction pour 'Undecided'
+  const handleUndecidedMajorMinorClick = () => {
+    if (handleSendMAJORMINORMessage) {
+      handleSendMAJORMINORMessage({ majors: ["Undecided"], minors: ["Undecided"] });
+    }
   };
 
 
@@ -1979,6 +2002,7 @@ useEffect(() => {
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
+                maxWidth: 'max-content', // Ajout de cette ligne
                 backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(60px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -2099,6 +2123,7 @@ useEffect(() => {
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
+                maxWidth: 'max-content',
                 backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(60px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -2143,6 +2168,7 @@ useEffect(() => {
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
+                maxWidth: 'max-content',
                 backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(60px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -2156,7 +2182,7 @@ useEffect(() => {
               }}
             >
               <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
-                Don't worry, just helps me get your vibe a bit better
+                What's your Instagram username ? 
               </label>
               <div className="flex items-center gap-2">
                 <div className="flex items-center border border-gray-300 rounded-lg bg-white px-2 py-1 w-full">
@@ -2169,7 +2195,7 @@ useEffect(() => {
                     type="text"
                     value={instagramUsername}
                     onChange={(e) => setInstagramUsername(e.target.value)}
-                    placeholder="Instagram username"
+                    placeholder="@ username"
                     className="w-full text-sm focus:outline-none"
                   />
                 </div>
@@ -2185,6 +2211,14 @@ useEffect(() => {
                   Continue
                 </button>
               </div>
+              {/* Bouton ajouté ici */}
+              <button
+                type="button"
+                onClick={handleSkipInstagramClick}
+                className="text-xs text-blue-700 hover:underline mt-3 text-left w-full" // Changement de style ici
+              >
+                &gt;&gt; Don't have insta / Don't want to share it {/* Utilisation de &gt; pour les flèches */}
+              </button>
             </div>
           )}
 
@@ -2195,6 +2229,7 @@ useEffect(() => {
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
+                maxWidth: 'max-content',
                 backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(60px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -2254,7 +2289,7 @@ useEffect(() => {
               }}
             >
               <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-3">
-                Paste your LinkedIn profile URL
+                Copy the URL of your LinkedIn profile
               </label>
               <div className="flex items-center gap-2">
                 <div className="flex items-center border border-gray-300 rounded-lg bg-white px-2 py-1 w-full">
@@ -2283,6 +2318,14 @@ useEffect(() => {
                   Continue
                 </button>
               </div>
+               {/* Bouton ajouté ici */}
+               <button
+                type="button"
+                onClick={handleSkipLinkedInClick}
+                className="text-xs text-blue-700 hover:underline mt-3 text-left w-full" // Style pour le nouveau bouton
+              >
+                &gt;&gt; Don't have LinkedIn / Don't want to share it {/* Ajout des flèches */}
+              </button>
             </div>
           )}
       
@@ -2292,6 +2335,7 @@ useEffect(() => {
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
+                maxWidth: 'max-content',
                 backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(60px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -2378,8 +2422,23 @@ useEffect(() => {
                 </button>
               </div>
 
-              {/* CONTINUE */}
-              <div className="flex justify-end">
+              {/* CONTINUE et Undecided */}
+              <div className="flex justify-between items-center mt-4"> {/* Changement ici: justify-between et items-center */}
+                {/* Bouton Undecided */}
+                <button
+                  type="button"
+                  onClick={handleUndecidedMajorMinorClick}
+                  disabled={majors.some(m => m.trim() !== '') || minors.some(m => m.trim() !== '')} // Ajout de la condition disabled
+                  className={`px-4 py-2 text-sm rounded-lg text-white bg-gray-800 hover:bg-gray-900 mr-4 ${
+                    (majors.some(m => m.trim() !== '') || minors.some(m => m.trim() !== ''))
+                      ? 'opacity-50 cursor-not-allowed' // Styles pour l'état désactivé
+                      : ''
+                  }`}
+                >
+                  Undecided
+                </button>
+
+                {/* Bouton Continue */}
                 <button
                   onClick={handleSendMajorMinorClick}
                   disabled={majors.filter((m: string) => m.trim()).length === 0}
@@ -2401,6 +2460,7 @@ useEffect(() => {
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
+                maxWidth: 'max-content',
                 backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(60px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
