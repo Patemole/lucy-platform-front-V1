@@ -126,6 +126,8 @@ export const useMessage = ({
         let flattenedACCURACYSCORE: AnswerACCURACYSCORE[] = [];
         let error: string | null = null;
 
+        // Flag to track if the first text piece has arrived
+        let firstTextPacketReceived = false;
 
         const abortController = new AbortController();
         setAbortController(abortController);
@@ -219,8 +221,10 @@ export const useMessage = ({
                         if (typeof packet === 'string') {
                             setHasNewContent(true); // Detects new content
                             answer = packet.replace(/\|/g, '');
+                            if (!firstTextPacketReceived) firstTextPacketReceived = true; // Mark first text packet
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_piece')) {
                             answer = (packet as AnswerPiecePacket).answer_piece;
+                            if (!firstTextPacketReceived) firstTextPacketReceived = true; // Mark first text packet
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'image_data')) {
                             answerImages.push((packet as any).image_data);
                         } else if (Object.prototype.hasOwnProperty.call(packet, 'answer_TAK_data')) {
@@ -386,7 +390,7 @@ export const useMessage = ({
                             LINKEDIN: flattenedLINKEDIN,
                             INSTA2: flattenedINSTA2,
                             // Ensure isLoading is handled if needed, maybe set to false here?
-                            isLoading: false, // Explicitly set isLoading to false when updating
+                            isLoading: !firstTextPacketReceived, // Update isLoading based on the flag
                         };
                          setMessages(updatedMessages);
                     } else {
