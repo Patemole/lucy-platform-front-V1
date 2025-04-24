@@ -6,7 +6,7 @@ export const sendWelcomeEmail = async (email: string, name: string, university: 
 
     const firstName = name ? name.split(' ')[0] : "there";
     try {
-        const response = await fetch(`${apiUrlPrefix}files/send-email`, {
+        const response = await fetch(`${apiUrlPrefix}/send-email`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export const sendWelcomeEmail = async (email: string, name: string, university: 
 
 export const sendUniversityRequestEmail = async (email: string, university: string) => {
     try {
-        const response = await fetch(`${apiUrlPrefix}files/send-email`, {
+            const response = await fetch(`${apiUrlPrefix}/send-email`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ export const sendUniversityRequestEmail = async (email: string, university: stri
 
 export const scrapeLinkedInProfile = async (linkedinUrl: string, userId: string) => {
     try {
-        const response = await fetch(`${apiUrlPrefix}/files/linkedin_scraping_onboarding`, {
+        const response = await fetch(`${apiUrlPrefix}/linkedin_scraping_onboarding`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ export const scrapeLinkedInProfile = async (linkedinUrl: string, userId: string)
 
 export const scrapeInstagramProfile = async (instagramnUrl: string, userId: string) => {
     try {
-        const response = await fetch(`${apiUrlPrefix}files/instagram_scraping_onboarding`, {
+        const response = await fetch(`${apiUrlPrefix}/instagram_scraping_onboarding`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export const sendUserInfoLinkedInScraping = async ({
   userId: string;
 }): Promise<boolean> => {
   try {
-    const response = await fetch(`${apiUrlPrefix}files/linkedin_scraping_sign_up`, {
+    const response = await fetch(`${apiUrlPrefix}/linkedin_scraping_sign_up`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ export const sendUserInfoLinkedInScraping = async ({
 export const fetchProxiedImage = async (imageUrl: string): Promise<Blob | null> => {
     console.log(`[API fetchProxiedImage] Requesting image from proxy for URL: ${imageUrl}`);
     try {
-        const response = await fetch(`${apiUrlPrefix}files/proxy-image`, { // Utilisation de la nouvelle route '/api/proxy-image'
+        const response = await fetch(`${apiUrlPrefix}/proxy-image`, { // Utilisation de la nouvelle route '/api/proxy-image'
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

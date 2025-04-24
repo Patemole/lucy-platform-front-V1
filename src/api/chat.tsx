@@ -32,7 +32,7 @@ export interface SendMessageRequest {
 export async function getChatHistory(chat_id: string) {
     console.log(`🔍 Fetching chat history for chat_id: ${chat_id}`);
 
-    const response = await fetch(`${apiUrlPrefix}/chat/get_chat_history/${chat_id}`, {
+    const response = await fetch(`${apiUrlPrefix}/get_chat_history/${chat_id}`, {
         method: "GET",
     });
 
@@ -129,7 +129,7 @@ export async function* sendMessageSocraticLangGraph({
 
 {
     console.log("SENDING MESSAGE");
-    const sendMessageResponse = await fetch(`${apiUrlPrefix}/chat/send_message_socratic_langgraph`, {
+    const sendMessageResponse = await fetch(`${apiUrlPrefix}/send_message_socratic_langgraph`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -177,7 +177,7 @@ export async function* sendMessageFakeDemo({
 
 }: SendMessageRequest) {
     console.log("SENDING MESSAGE");
-    const sendMessageResponse = await fetch(`${apiUrlPrefix}/chat/send_message_fake_demo`, {
+    const sendMessageResponse = await fetch(`${apiUrlPrefix}/send_message_fake_demo`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -228,7 +228,7 @@ export const saveMessageAIToBackend = async ({
 }) => {
     try {
         console.log("Entering saveMessageAIToBackend with message:", message);
-        const response = await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
+        const response = await fetch(`${apiUrlPrefix}/save_ai_message`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -274,7 +274,7 @@ export const saveOnboardingStep = async ({
     try {
       const username = type === 'ai' ? 'Lucy' : 'onboardingstudent';
   
-      await fetch(`${apiUrlPrefix}/chat/save_ai_message`, {
+      await fetch(`${apiUrlPrefix}/save_ai_message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -331,7 +331,7 @@ export const saveFeedback = async ({
             humain_message_content: humanMessageContent,
         };
 
-        const response = await fetch(`${apiUrlPrefix}/chat/save_feedback`, {
+        const response = await fetch(`${apiUrlPrefix}/save_feedback`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
