@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid'; // <-- AJOUTER CET IMPORT
 
 
 const allowedDomains = {
-  upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
+  upenn: [/^.+@.+$/i],
   harvard: [/^.+@([a-zA-Z0-9._-]+\.)*harvard\.edu$/i, /^.+@my-lucy\.com$/i],
   mit: [/^.+@([a-zA-Z0-9._-]+\.)*mit\.edu$/i, /^.+@my-lucy\.com$/i],
   lasell: [/^.+@([a-zA-Z0-9._-]+\.)*lasell\.edu$/i, /^.+@my-lucy\.com$/i],
@@ -38,6 +38,7 @@ const allowedDomains = {
   hofstra: [/^.+@([a-zA-Z0-9._-]+\.)*hofstra\.edu$/i, /^.+@my-lucy\.com$/i],
   brynmawr: [/^.+@([a-zA-Z0-9._-]+\.)*brynmawr\.edu$/i, /^.+@my-lucy\.com$/i],
   charteroak: [/^.+@([a-zA-Z0-9._-]+\.)*charteroak\.edu$/i, /^.+@my-lucy\.com$/i],
+  yale: [/^.+@([a-zA-Z0-9._-]+\.)*yale\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i],
   // other allowed domains...
 };
@@ -46,6 +47,7 @@ const getErrorMessage = (subdomain) => {
   const universityNames = {
     upenn: 'Upenn email',
     harvard: 'Harvard email',
+    yale: 'Yale email',
     mit: 'MIT email',
     lasell: 'Lasell email',
     oakland: 'Oakland email',

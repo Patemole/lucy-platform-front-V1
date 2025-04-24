@@ -25,7 +25,7 @@ import { sendUserInfoLinkedInScraping } from '../../api/auth_and_onboarding';
 const isEmail = (email) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email);
 
 const allowedDomains = {
-  upenn: [/^.+@([a-zA-Z0-9._-]+\.)*upenn\.edu$/i, /^.+@my-lucy\.com$/i],
+  upenn: [/^.+@.+$/i],
   harvard: [/^.+@([a-zA-Z0-9._-]+\.)*harvard\.edu$/i, /^.+@my-lucy\.com$/i],
   mit: [/^.+@([a-zA-Z0-9._-]+\.)*mit\.edu$/i, /^.+@my-lucy\.com$/i],
   lasell: [/^.+@([a-zA-Z0-9._-]+\.)*lasell\.edu$/i, /^.+@my-lucy\.com$/i],
@@ -53,6 +53,7 @@ const allowedDomains = {
   usc: [/^.+@([a-zA-Z0-9._-]+\.)*usc\.edu$/i, /^.+@my-lucy\.com$/i],
   brynmawr: [/^.+@([a-zA-Z0-9._-]+\.)*brynmawr\.edu$/i, /^.+@my-lucy\.com$/i],
   charteroak: [/^.+@([a-zA-Z0-9._-]+\.)*charteroak\.edu$/i, /^.+@my-lucy\.com$/i],
+  yale: [/^.+@([a-zA-Z0-9._-]+\.)*yale\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i]
 };
 
@@ -66,6 +67,7 @@ const isAllowedEmail = (email, subdomain) => {
 const getErrorMessage = (subdomain) => {
   const universityNames = {
     upenn: 'Upenn email',
+    yale: 'Yale email',
     harvard: 'Harvard email',
     mit: 'MIT email',
     lasell: 'Lasell email',

@@ -28,6 +28,7 @@ import {adminTheme,  adminDarkTheme } from './adminTheme';
 import { hofstraDarkTheme, hofstraTheme } from './hofstraTheme';
 import { brynMawrDarkTheme, brynMawrTheme } from './brynmawrTheme';
 import { charteroakDarkTheme, charteroakTheme } from './charteroakTheme';
+import { yaleDarkTheme, yaleTheme } from './yaleTheme';
 
 // Function to get the theme based on subdomain and selected mode
 const getTheme = (subdomain, themeMode) => {
@@ -86,7 +87,10 @@ const getTheme = (subdomain, themeMode) => {
           return themeMode == 'dark' ? brynMawrDarkTheme : brynMawrTheme;
 
     case 'charteroak':
-          return themeMode == 'dark' ? charteroakDarkTheme : charteroakTheme;
+            return themeMode == 'dark' ? charteroakDarkTheme : charteroakTheme;
+
+    case 'yale':
+      return themeMode == 'dark' ? yaleDarkTheme : yaleTheme;
 
     case 'admin':
       return themeMode === 'dark' ? adminDarkTheme : adminTheme;
