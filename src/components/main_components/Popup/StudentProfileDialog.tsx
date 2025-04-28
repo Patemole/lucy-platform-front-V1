@@ -47,9 +47,10 @@ interface StudentProfileDialogProps {
   open: boolean;
   onClose: () => void;
   setProfilePicture: (url: string | null) => void;
+  userUniversity?: string;
 }
 
-const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClose, setProfilePicture }) => {
+const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClose, setProfilePicture, userUniversity }) => {
   console.log('<<< RENDERING StudentProfileDialog >>>');
   const { uid } = useParams<{ uid: string }>();
   // const { setUser } = useAuth(); // Supprimé
@@ -155,11 +156,11 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
       }
 
       if (firstName.trim() === '') {
-        setErrors((prev) => ({ ...prev, firstName: 'name is required.' }));
+        setErrors((prev) => ({ ...prev, firstName: userUniversity === 'kedge' ? 'Le prénom est requis.' : 'Name is required.' }));
         return;
       }
       if (year === '') {
-        setErrors((prev) => ({ ...prev, year: 'please select your current year.' }));
+        setErrors((prev) => ({ ...prev, year: userUniversity === 'kedge' ? 'Veuillez sélectionner votre année actuelle.' : 'Please select your current year.' }));
         return;
       }
 
@@ -182,7 +183,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
       onClose();
     } catch (error) {
       console.error('error updating profile:', error);
-      alert('an error occurred while updating the profile.');
+      alert(userUniversity === 'kedge' ? 'Une erreur est survenue lors de la mise à jour du profil.' : 'An error occurred while updating the profile.');
     } finally {
       setIsSubmitting(false);
     }
@@ -221,7 +222,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
       setIsChangingProfilePicture(false);
     } catch (error) {
       console.error('error updating profile picture:', error);
-      alert('an error occurred while updating the profile picture.');
+      alert(userUniversity === 'kedge' ? 'Une erreur est survenue lors de la mise à jour de la photo de profil.' : 'An error occurred while updating the profile picture.');
     }
   };
 
@@ -342,14 +343,16 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                )}
              </div>
             </div>
-            <h1 id="student-profile-title" className="text-2xl font-semibold text-center mb-6">student profile</h1>
+            {/* Traduction Titre principal */}
+            <h1 id="student-profile-title" className="text-2xl font-semibold text-center mb-6">{userUniversity === 'kedge' ? 'Profil Étudiant' : 'Student Profile'}</h1>
           </>
         )}
         </section>
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="spinner-border animate-spin w-8 h-8 border-4 rounded-full"></div>
+             {/* Traduction Message de chargement */}
+             <p>{userUniversity === 'kedge' ? 'Chargement du profil...' : 'Loading profile...'}</p>
           </div>
         ) : (
           isChangingProfilePicture ? (
@@ -382,10 +385,14 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
               </div>
 
               <div className="relative">
-                <h2 className="text-2xl font-semibold text-center mb-6">student profile</h2>
-                <label className="block mb-5 text-sm font-medium text-gray-700">select a new picture profile</label>
+                 {/* Traduction Titre secondaire */}
+                 <h2 className="text-2xl font-semibold text-center mb-6">{userUniversity === 'kedge' ? 'Profil Étudiant' : 'Student Profile'}</h2>
+                 {/* Traduction Label sélection image */}
+                 <label className="block mb-5 text-sm font-medium text-gray-700">{userUniversity === 'kedge' ? 'Sélectionnez une nouvelle photo de profil' : 'Select a new profile picture'}</label>
                 <div className="absolute top-[90px] left-0 right-0 h-[50px] rounded-[15px] bg-gradient-to-b from-black/5 to-transparent z-10" />
 
+                 {/* Traduction Message chargement images */}
+                 {isLoadingImages && <p className="text-center text-gray-500 mb-4">{userUniversity === 'kedge' ? 'Chargement des images...' : 'Loading images...'}</p>}
                 <div className="grid grid-cols-5 gap-4 mb-5 overflow-y-auto mx-auto max-h-[450px] w-fit">
                   {defaultImages.map((url, index) => (
                     <img
@@ -407,18 +414,18 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                   type="button"
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
                   onClick={() => setIsChangingProfilePicture(false)}
-                  aria-label="Cancel"
+                  aria-label={userUniversity === 'kedge' ? 'Annuler' : 'Cancel'}
                 >
-                  cancel
+                  {userUniversity === 'kedge' ? 'Annuler' : 'Cancel'}
                 </button>
                 <button
                   type="button"
                   className={`px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300 ${selectedImageUrl ? '' : 'opacity-50 cursor-not-allowed'}`}
                   disabled={!selectedImageUrl}
                   onClick={handleUpdatePicture}
-                  aria-label="Update Picture"
+                  aria-label={userUniversity === 'kedge' ? 'Mettre à jour la photo' : 'Update Picture'}
                 >
-                  update picture
+                  {userUniversity === 'kedge' ? 'Mettre à jour la photo' : 'Update Picture'}
                 </button>
               </div>
             </div>
@@ -427,7 +434,8 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
               <div className="grid grid-cols-1 gap-4 mb-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">name</label>
+                    {/* Traduction Label Prénom */}
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">{userUniversity === 'kedge' ? 'Prénom*' : 'Name*'}</label>
                     <input
                       id="firstName"
                       type="text"
@@ -441,7 +449,8 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                   </div>
 
                   <div>
-                    <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700">current year?*</label>
+                    {/* Traduction Label Année */}
+                    <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700">{userUniversity === 'kedge' ? 'Année actuelle ?*' : 'Current year?*'}</label>
                     <select
                       id="yearSelect"
                       value={year}
@@ -449,15 +458,21 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                       className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500 appearance-none"
                       style={{
                         backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCI2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
+                        backgroundSize: '8px 6px'
                       }}
                     >
-                      <option value="" disabled>select your year</option>
-                      <option value="Freshman">freshman (1st year)</option>
-                      <option value="Sophomore">sophomore (2nd year)</option>
-                      <option value="Junior">junior (3rd year)</option>
-                      <option value="Senior">senior (4th year)</option>
-                      <option value="Grad 1">grad 1 (5th year)</option>
-                      <option value="Grad 2">grad 2 (6th year)</option>
+                      {/* Traduction Option par défaut Année */}
+                      <option value="" disabled>{userUniversity === 'kedge' ? 'Sélectionnez votre année' : 'Select your year'}</option>
+                       {/* Traduction Options Année */}
+                      <option value="1st Year">{userUniversity === 'kedge' ? '1ère Année' : '1st Year'}</option>
+                      <option value="2nd Year">{userUniversity === 'kedge' ? '2ème Année' : '2nd Year'}</option>
+                      <option value="3rd Year">{userUniversity === 'kedge' ? '3ème Année' : '3rd Year'}</option>
+                      <option value="4th Year">{userUniversity === 'kedge' ? '4ème Année' : '4th Year'}</option>
+                      <option value="Master">Master</option> // Pas de traduction spécifique nécessaire
+                      <option value="PhD">{userUniversity === 'kedge' ? 'Doctorat' : 'PhD'}</option>
+                      {/* Traduction Options Grad */}
+                      <option value="Grad 1">{userUniversity === 'kedge' ? 'Master 1 / 5ème année' : 'Grad 1 (5th year)'}</option>
+                      <option value="Grad 2">{userUniversity === 'kedge' ? 'Master 2 / 6ème année' : 'Grad 2 (6th year)'}</option>
                     </select>
                     {errors.year && (
                       <p role="alert" aria-live="assertive" className="text-red-500 text-xs mt-1">{errors.year}</p>
@@ -466,8 +481,9 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                 </div>
 
                 <div>
+                   {/* Traduction Label Conseiller */}
                    <label htmlFor="academicAdvisorInput" className="block text-sm font-medium text-gray-700">
-                     academic advisor
+                     {userUniversity === 'kedge' ? 'Conseiller Académique' : 'Academic Advisor'}
                    </label>
                   <input
                     id="academicAdvisorInput"
@@ -475,6 +491,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                     value={academicAdvisor}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAcademicAdvisor(e.target.value)}
                     className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
+                    placeholder={userUniversity === 'kedge' ? 'Nom du conseiller (optionnel)' : 'Advisor\'s name (optional)'}
                   />
                   {errors.academicAdvisor && (
                     <p role="alert" aria-live="assertive" className="text-red-500 text-xs mt-1">{errors.academicAdvisor}</p>
@@ -483,16 +500,17 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label htmlFor="FacultySelect" className="block text-sm font-medium text-gray-700">faculty</label>
+                    {/* Traduction Label Filière */}
+                    <label htmlFor="FacultySelect" className="block text-sm font-medium text-gray-700">{userUniversity === 'kedge' ? 'Filière' : 'Faculty'}</label>
                     {faculty.length < 3 && (
                       <button
-                        
                         type="button"
                         onClick={() => {
                           if (faculty.length < 3) setFaculty([...faculty, '']);
                         }}
                         className="text-green-500 text-2xl hover:text-green-700"
-                        aria-label="add a faculty"
+                        // Traduction aria-label bouton Ajouter Filière
+                        aria-label={userUniversity === 'kedge' ? 'Ajouter une filière' : 'Add a faculty'}
                       >
                         +
                       </button>
@@ -502,6 +520,7 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                     <div key={index} className="relative mb-2">
                       <select
                         value={facultyValue}
+                        // L'aria-label ici reste en anglais car il est plus technique (pour accessibilité)
                         aria-label={`faculty ${index + 1}`}
                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                           const updatedFaculties = [...faculty];
@@ -509,11 +528,19 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                           setFaculty(updatedFaculties);
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500 appearance-none"
+                        style={{
+                            backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCI2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'right 0.75rem center',
+                            backgroundSize: '8px 6px'
+                        }}
                       >
+                        {/* Traduction Option par défaut Filière */}
                         <option value="" disabled>
-                          select your faculty
+                          {userUniversity === 'kedge' ? 'Sélectionnez votre filière' : 'Select your faculty'}
                         </option>
-                        {theme.facultyOptions.map((option: string, optionIndex: number) => (
+                        {/* Les options viennent du thème, pas de traduction ici */}
+                        {theme.facultyOptions?.map((option: string, optionIndex: number) => (
                           <option key={optionIndex} value={option}>
                             {option}
                           </option>
@@ -526,7 +553,8 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                             if (faculty.length > 1) setFaculty(faculty.filter((_, i) => i !== index));
                           }}
                           className="absolute top-1/2 right-2 transform -translate-y-1/2 text-red-500 text-2xl hover:text-red-700"
-                          aria-label="remove this faculty"
+                           // Traduction aria-label bouton Supprimer Filière
+                          aria-label={userUniversity === 'kedge' ? 'Supprimer cette filière' : 'Remove this faculty'}
                         >
                           -
                         </button>
@@ -542,13 +570,15 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="block text-sm font-medium text-gray-700">major (if declared)</label>
+                    {/* Traduction Label Majeure */}
+                    <label className="block text-sm font-medium text-gray-700">{userUniversity === 'kedge' ? 'Majeure (si déclarée)' : 'Major (if declared)'}</label>
                     {major.length < 10 && (
                       <button
                         type="button"
                         onClick={() => setMajor([...major, ''])}
                         className="text-green-500 text-2xl hover:text-green-700"
-                        aria-label="add a major"
+                        // Traduction aria-label bouton Ajouter Majeure
+                        aria-label={userUniversity === 'kedge' ? 'Ajouter une majeure' : 'Add a major'}
                       >
                         +
                       </button>
@@ -565,14 +595,16 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                           setMajor(updatedMajors);
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-                        placeholder="enter your major"
+                        // Traduction Placeholder Majeure
+                        placeholder={userUniversity === 'kedge' ? 'Entrez votre majeure' : 'Enter your major'}
                       />
                       {index > 0 && (
                         <button
                           type="button"
                           onClick={() => setMajor(major.filter((_, i) => i !== index))}
                           className="absolute top-1/2 right-2 transform -translate-y-1/2 text-red-500 text-2xl hover:text-red-700"
-                          aria-label="remove this major"
+                          // Traduction aria-label bouton Supprimer Majeure
+                          aria-label={userUniversity === 'kedge' ? 'Supprimer cette majeure' : 'Remove this major'}
                         >
                           -
                         </button>
@@ -586,13 +618,15 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="block text-sm font-medium text-gray-700">minor (optional)</label>
+                     {/* Traduction Label Mineure */}
+                    <label className="block text-sm font-medium text-gray-700">{userUniversity === 'kedge' ? 'Mineure (optionnel)' : 'Minor (optional)'}</label>
                     {minor.length < 10 && (
                       <button
                         type="button"
                         onClick={() => setMinor([...minor, ''])}
                         className="text-green-500 text-2xl hover:text-green-700"
-                        aria-label="add a minor"
+                         // Traduction aria-label bouton Ajouter Mineure
+                        aria-label={userUniversity === 'kedge' ? 'Ajouter une mineure' : 'Add a minor'}
                       >
                         +
                       </button>
@@ -609,14 +643,16 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                           setMinor(updatedMinors);
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-                        placeholder="enter your minor"
+                        // Traduction Placeholder Mineure
+                        placeholder={userUniversity === 'kedge' ? 'Entrez votre mineure' : 'Enter your minor'}
                       />
                       {index > 0 && (
                         <button
                           type="button"
                           onClick={() => setMinor(minor.filter((_, i) => i !== index))}
                           className="absolute top-1/2 right-2 transform -translate-y-1/2 text-red-500 text-2xl hover:text-red-700"
-                          aria-label="remove this minor"
+                           // Traduction aria-label bouton Supprimer Mineure
+                          aria-label={userUniversity === 'kedge' ? 'Supprimer cette mineure' : 'Remove this minor'}
                         >
                           -
                         </button>
@@ -630,8 +666,9 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
               </div>
 
               <div className="mb-8">
+                 {/* Traduction Label Intérêts */}
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  select at least 5 interest tags*
+                  {userUniversity === 'kedge' ? 'Sélectionnez au moins 5 centres d\'intérêt*' : 'Select at least 5 interest tags*'}
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {interests.filter(tag => tag.trim() !== "").map((tag, index) => (
@@ -642,7 +679,8 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                       {tag}
                       <button
                        type="button"
-                       aria-label="remove this interest"
+                       // Traduction aria-label bouton Supprimer Intérêt
+                       aria-label={userUniversity === 'kedge' ? 'Supprimer cet intérêt' : 'Remove this interest'}
                        className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer
                                   flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white"
                        onClick={() => setInterests(interests.filter((_, i) => i !== index))}
@@ -672,7 +710,8 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                         setNewInterest("");
                       }
                     }}
-                    placeholder="add a new interest"
+                    // Traduction Placeholder Intérêt
+                    placeholder={userUniversity === 'kedge' ? 'Ajouter un nouvel intérêt' : 'Add a new interest'}
                     className="inline-block w-auto max-w-xs px-2 py-1 border border-gray-300 rounded-full text-sm text-gray-700 focus:outline-none focus:ring focus:ring-blue-100"
                   />
                 </div>
@@ -684,18 +723,20 @@ const StudentProfileDialog: React.FC<StudentProfileDialogProps> = ({ open, onClo
                   type="button"
                   onClick={onClose}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                  aria-label="Cancel"
+                   // Traduction aria-label et texte bouton Annuler final
+                  aria-label={userUniversity === 'kedge' ? 'Annuler' : 'Cancel'}
                 >
-                  cancel
+                  {userUniversity === 'kedge' ? 'Annuler' : 'Cancel'}
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
                   className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-900 focus:ring focus:ring-blue-300"
                   disabled={isSubmitting}
-                  aria-label="Update Profile"
+                   // Traduction aria-label et texte bouton Mettre à jour final
+                  aria-label={userUniversity === 'kedge' ? 'Mettre à jour le profil' : 'Update Profile'}
                 >
-                  {isSubmitting ? 'updating...' : 'update profile'}
+                  {isSubmitting ? (userUniversity === 'kedge' ? 'Mise à jour...' : 'Updating...') : (userUniversity === 'kedge' ? 'Mettre à jour le profil' : 'Update Profile')}
                 </button>
               </div>
             </form>

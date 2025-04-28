@@ -842,6 +842,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             snackbarOpen={snackbarOpen}
             snackbarMessage={snackbarMessage}
             closeSnackbar={() => setSnackbarOpen(false)}
+            userUniversity={userUniversity}
           />
   
        </div>

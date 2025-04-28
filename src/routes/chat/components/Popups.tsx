@@ -47,6 +47,7 @@ interface PopupsContainerProps {
     snackbarMessage: string;
     closeSnackbar: () => void;
     setProfilePicture: (val: string | null) => void;
+    userUniversity?: string;
   }
 
 
@@ -74,6 +75,7 @@ interface PopupsContainerProps {
     snackbarOpen,
     snackbarMessage,
     closeSnackbar,
+    userUniversity,
   }) => {
     console.log('<<< RENDERING PopupsContainer >>>');
     return (
@@ -86,7 +88,7 @@ interface PopupsContainerProps {
           humanMessageContent={humanMessageContent}
         />
   
-        <StudentProfileDialog open={dialogOpen} onClose={onCloseDialog} setProfilePicture={setProfilePicture} />
+        <StudentProfileDialog open={dialogOpen} onClose={onCloseDialog} setProfilePicture={setProfilePicture} userUniversity={userUniversity} />
   
         <EventDetailsSidebar event={selectedEvent} open={sidebarOpen} onClose={onCloseSidebar} />
   
