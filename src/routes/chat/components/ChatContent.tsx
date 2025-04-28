@@ -40,6 +40,7 @@ interface ChatContentProps {
     handlePrivacyChange: (newState: boolean) => void;
     setIsAtBottom: (val: boolean) => void;
     setNewMessagesCount: React.Dispatch<React.SetStateAction<number>>;
+    userUniversity: string | null | undefined;
   }
 
 
@@ -74,6 +75,7 @@ interface ChatContentProps {
     handlePrivacyChange,
     setIsAtBottom,
     setNewMessagesCount,
+    userUniversity,
   }) => {
     console.log('<<< RENDERING ChatContent >>>');
 
@@ -85,6 +87,7 @@ interface ChatContentProps {
         <>
             <LandingPage 
             onSend={handleSendMessageFromLandingPage} 
+            userUniversity={userUniversity}
             />
         </>
         ) : (
@@ -197,6 +200,7 @@ interface ChatContentProps {
                         handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
                         handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
                         hasStartedStreaming={hasStartedStreaming}
+                        userUniversity={userUniversity}
                     />
                     </div>
                 </div>

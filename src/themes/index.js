@@ -29,7 +29,7 @@ import { hofstraDarkTheme, hofstraTheme } from './hofstraTheme';
 import { brynMawrDarkTheme, brynMawrTheme } from './brynmawrTheme';
 import { charteroakDarkTheme, charteroakTheme } from './charteroakTheme';
 import { yaleDarkTheme, yaleTheme } from './yaleTheme';
-
+import { kedgeDarkTheme, kedgeTheme } from './kedgeTheme';
 // Function to get the theme based on subdomain and selected mode
 const getTheme = (subdomain, themeMode) => {
   const mode = localStorage.getItem('themeMode') || 'light'; // Default to light mode
@@ -91,6 +91,9 @@ const getTheme = (subdomain, themeMode) => {
 
     case 'yale':
       return themeMode == 'dark' ? yaleDarkTheme : yaleTheme;
+
+    case 'kedge':
+      return themeMode == 'dark' ? kedgeDarkTheme : kedgeTheme;
 
     case 'admin':
       return themeMode === 'dark' ? adminDarkTheme : adminTheme;

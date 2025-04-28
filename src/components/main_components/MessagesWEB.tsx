@@ -160,6 +160,7 @@ interface AIMessageProps {
   insta2Data?: AnswerINSTA2[] | null;
   metadataOnboarding?: string | null; //for onboarding
   hasStartedStreaming?: boolean; // ✅ indique que le stream a démarré
+  userUniversity?: string | null | undefined; // <-- Ajouter la prop ici
 }
 
 export const AIMessage: React.FC<AIMessageProps> = ({
@@ -209,18 +210,19 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   linkedinData,
   insta2Data,
   metadataOnboarding,
-  hasStartedStreaming
+  hasStartedStreaming,
+  userUniversity, // <-- Récupérer la prop ici
 }) => {
 
   console.log('<<< RENDERING AIMessage >>>');
   // États pour la gestion des interactions utilisateur
-  // const { user } = useAuthStore(); // REMPLACÉ
   const { currentChatId } = useChatStore();
 
-  // ---> RÉCUPÉRATION NON RÉACTIVE <--- 
+  // ---> RÉCUPÉRATION NON RÉACTIVE & DÉFINITION isKedgeUser <--- 
+  const isKedgeUser = userUniversity === 'kedge'; // Assurer la définition ici
   const user = useAuthStore.getState().user;
   const userId = user?.id;
-  // ------------------------------------
+  // -----------------------------------------------------------
 
   const [copyClicked, setCopyClicked] = useState(false);
   const [feedbackClicked, setFeedbackClicked] = useState(false);
@@ -812,6 +814,8 @@ useEffect(() => {
 */
   // -------------------------------------------------------
 
+  const isKedge = userUniversity === 'kedge'; // <-- Définir isKedge
+
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">
     <section
@@ -940,7 +944,7 @@ useEffect(() => {
                                             alignItems: 'center',
                                         }}
                                     >
-                                        <span>Reasoning Steps</span>
+                                        <span>{isKedge ? "Étapes du raisonnement" : "Reasoning Steps"}</span> {/* <-- Traduction ici */}
                                     </div>
                                     {/* Icône pour expander même lorsque "Reasoning Steps" est affiché */}
                                     <IconButton aria-label="Expand reasoning steps" onClick={() => setShowAllSteps(true)} style={{ marginLeft: '10px' }}>
@@ -965,7 +969,7 @@ useEffect(() => {
               <div className="flex items-center mb-3">
                 <LanguageIcon sx={{ width: 20, height: 20, marginRight: 1 }} />
                 <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
-                  Sources
+                  {isKedge ? "Sources" : "Sources"} {/* <-- Traduire ici (même mot) */}
                 </span>
               </div>
             )}
@@ -1219,7 +1223,7 @@ useEffect(() => {
                     <div className={`${!isSmallScreen ? "ml-8" : ""} mb-3 flex items-center animate-fadeIn`}>
                       <FiUsers style={{ width: 20, height: 20, marginRight: 8, color: theme.palette.text.primary }} />
                       <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
-                        Student Testimonials
+                        {isKedge ? "Témoignages Étudiants" : "Student Testimonials"} {/* <-- Traduire ici */}
                       </span>
                     </div>
                 </>
@@ -1581,7 +1585,7 @@ useEffect(() => {
               <div className={`mt-0 ${!isSmallScreen ? "ml-8" : ""} pb-2 flex items-center`}>
                 <FiMessageSquare style={{ width: 20, height: 20, marginRight: 8, color: theme.palette.text.primary }} />
                 <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
-                  Answer
+                  {isKedge ? "Réponse" : "Answer"} {/* <-- Traduire ici */}
                 </span>
               </div>
             )}
@@ -1979,14 +1983,14 @@ useEffect(() => {
                     <button
                       onClick={handleSendClick}
                       disabled={isSendDisabled || (selectedAnswers.includes("Other") && !otherInput)}
-                      className={`flex items-center px-4 py-2 text-gray-700 rounded-lg ${
+                      className={`flex items-center px-4 py-2 text-gray-700 rounded-lg ${ 
                         isSendDisabled || (selectedAnswers.includes("Other") && !otherInput)
                           ? "bg-gray-300 cursor-not-allowed"
                           : "text-white bg-gray-800 hover:bg-gray-900"
                       } transition-colors`}
                     >
                       <FiSend className="mr-2" />
-                      Send
+                      {isKedge ? "Envoyer" : "Send"} {/* <-- Traduction conservée */}
                     </button>
                   </div>
                 </div>
@@ -2458,7 +2462,8 @@ useEffect(() => {
 
 
 
-          {shouldDisplayComplianceBlock && (
+          {/* Bloc de conformité original (Anglais) - Conditionnel */}
+          {shouldDisplayComplianceBlock && !isKedgeUser && (
             <div
               className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
               style={{
@@ -2477,7 +2482,7 @@ useEffect(() => {
               <div className="flex items-start gap-2 mb-4">
                 <input
                   type="checkbox"
-                  id="termsCheckbox"
+                  id="termsCheckbox_en"
                   checked={termsChecked}
                   onChange={(e) => {
                     setTermsChecked(e.target.checked);
@@ -2485,7 +2490,7 @@ useEffect(() => {
                   }}
                   className="mt-1"
                 />
-                <label htmlFor="termsCheckbox" className="text-sm text-gray-700 leading-snug">
+                <label htmlFor="termsCheckbox_en" className="text-sm text-gray-700 leading-snug">
                   You agree to our{' '}
                   <a href="#" className="underline text-blue-700 hover:text-blue-900">
                     Terms of Service
@@ -2506,7 +2511,7 @@ useEffect(() => {
               <div className="flex items-start gap-2">
                 <input
                   type="checkbox"
-                  id="ageCheckbox"
+                  id="ageCheckbox_en"
                   checked={ageChecked}
                   onChange={(e) => {
                     setAgeChecked(e.target.checked);
@@ -2514,7 +2519,7 @@ useEffect(() => {
                   }}
                   className="mt-1"
                 />
-                <label htmlFor="ageCheckbox" className="text-sm text-gray-700 leading-snug">
+                <label htmlFor="ageCheckbox_en" className="text-sm text-gray-700 leading-snug">
                 I confirm that I am at least 18 years old or have parental consent if aged 13-17. Users under 13 are not permitted.{" "}
                 <a
                   href="/documents/age-consent.pdf"
@@ -2529,22 +2534,77 @@ useEffect(() => {
             </div>
           )}
 
+          {/* Nouveau bloc de conformité (Français) - Conditionnel pour Kedge */}
+          {shouldDisplayComplianceBlock && isKedge && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                maxWidth: 'max-content',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <label className="block text-sm font-medium text-gray-800 mb-4">
+                Dernière étape avant de commencer !
+              </label>
 
+              {/* Checkbox 1 (FR) */}
+              <div className="flex items-start gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  id="termsCheckbox_fr" // ID unique
+                  checked={termsChecked}
+                  onChange={(e) => {
+                    setTermsChecked(e.target.checked);
+                    if (e.target.checked && ageChecked) handleSendCompliance();
+                  }}
+                  className="mt-1"
+                />
+                <label htmlFor="termsCheckbox_fr" className="text-sm text-gray-700 leading-snug">
+                  Vous acceptez nos{' '}
+                  <a href="#" className="underline text-blue-700 hover:text-blue-900">
+                    Conditions d'utilisation
+                  </a>{' '}
+                  et notre{' '}
+                  <a
+                    href="https://trust-ressources.s3.us-east-1.amazonaws.com/Privacy+Policy+-+My+Lucy+Corp+-+2024+-+11%3A11%3A24.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-blue-700 hover:text-blue-900"
+                  >
+                    Politique de confidentialité
+                  </a>. Vous reconnaissez également être magnifique.
+                </label>
+              </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+              {/* Checkbox 2 (FR) */}
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="ageCheckbox_fr" // ID unique
+                  checked={ageChecked}
+                  onChange={(e) => {
+                    setAgeChecked(e.target.checked);
+                    if (termsChecked && e.target.checked) handleSendCompliance();
+                  }}
+                  className="mt-1"
+                />
+                <label htmlFor="ageCheckbox_fr" className="text-sm text-gray-700 leading-snug">
+                  Je confirme avoir au moins 18 ans ou avoir le consentement parental si j'ai entre 13 et 17 ans. Les utilisateurs de moins de 13 ans ne sont pas autorisés.{" "}
+                  <a
+                    href="/documents/age-consent.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-700 underline"
+                  >
+                    Détails
+                  </a>.
+                </label>
+              </div>
+            </div>
+          )}
 
 
 

@@ -39,6 +39,7 @@ export const useOnboarding = ({
   const isOnboardingComplete = useAuthStore(state => state.user?.onboardingComplete);
   const userChatSessions = useAuthStore(state => state.user?.chatsessions);
   const userName = useAuthStore(state => state.user?.name);
+  const userUniversity = useAuthStore(state => state.user?.university);
 
 
   // --- Refs ---
@@ -159,8 +160,30 @@ export const useOnboarding = ({
     fieldToUpdate?: string | Record<string, any>,
     previousAnswer?: string
   ): Promise<void> => {
+    // ---> Ajout: Vérification KEDGE <---
+    const isKedgeUser = userUniversity === 'kedge';
+    const complianceIndex = onboardingMessages.findIndex(q => q.metadata === 'COMPLIANCE'); // Normalement 5
+
+    // Si Kedge et on demande une question avant COMPLIANCE (sauf la première), ne rien faire.
+    if (isKedgeUser && index < complianceIndex && index !== 0) {
+        console.warn(`[useOnboarding - sendNext] Utilisateur Kedge: Saut de la question ${index} (avant conformité).`);
+        return;
+    }
+    // Si Kedge et c'est la première question (index 0), on saute directement à COMPLIANCE
+    if (isKedgeUser && index === 0) {
+        console.log(`[useOnboarding - sendNext] Utilisateur Kedge: Saut de la première étape vers la conformité (index ${complianceIndex}).`);
+        // On appelle récursivement avec l'index de conformité et les messages actuels
+        // Pas besoin de délai ici car il sera appliqué dans l'appel récursif si complianceIndex est 0 (ce qui n'est pas le cas)
+        // ou pas appliqué du tout si complianceIndex > 0 (ce qui est le cas)
+        return sendNextOnboardingMessage(complianceIndex, currentMessagesSnom, fieldToUpdate, previousAnswer);
+    }
+    // ---> Fin Ajout KEDGE <---
+
+
     // ---> SÉCURITÉ SUPPLÉMENTAIRE + DÉLAI pour la première question <--- 
-    if (index === 0) {
+    // On applique le délai seulement si ce n'est PAS un utilisateur Kedge
+    // OU si c'est un Kedge mais que la question de conformité est la première (index 0, cas peu probable)
+    if (index === 0 && !isKedgeUser) {
       // Re-vérifier si l'onboarding n'est pas déjà complet juste avant d'envoyer
       const currentUser = useAuthStore.getState().user;
       if (currentUser?.onboardingComplete) {
@@ -219,11 +242,23 @@ export const useOnboarding = ({
     const { question: originalQuestion, metadata } = onboardingMessages[index];
     let questionToSend = originalQuestion;
 
-    // Personnaliser la première question si le nom est disponible
-    if (index === 0 && userName) {
+    // Personnaliser la première question si le nom est disponible ET NON Kedge
+    if (index === 0 && userName && !isKedgeUser) {
         questionToSend = `Ok ${userName}, ${originalQuestion.charAt(0).toLowerCase() + originalQuestion.slice(1)}`;
         console.log(`[useOnboarding] Question personnalisée pour index 0: "${questionToSend}"`);
     }
+
+    // ---> NOUVELLE LOGIQUE: Personnaliser la question de conformité pour Kedge <---
+    if (isKedgeUser && index === complianceIndex) {
+        if (userName) {
+            questionToSend = `Salut ${userName} ! Coche des checkbox pour qu on soit sur la meme longueur d onde! ✅`;
+            console.log(`[useOnboarding] Question de conformité personnalisée pour Kedge (avec nom): "${questionToSend}"`);
+        } else {
+            questionToSend = `Salut, coche des checkbox pour qu on soit sur la meme longueur d onde! ✅`;
+            console.log(`[useOnboarding] Question de conformité personnalisée pour Kedge (sans nom): "${questionToSend}"`);
+        }
+    }
+    // ---> FIN NOUVELLE LOGIQUE <---
 
     const onboardingMessageId = generateUniqueId();
 
@@ -240,14 +275,17 @@ export const useOnboarding = ({
       } catch (error) { console.error(`❌ Erreur saveOnboardingStep (AI) pour ${metadata}:`, error); }
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
     // Utiliser questionToSend ici
     messagesAfterUpdate = await fakeStreamMessage(questionToSend, metadata, onboardingMessageId, messagesAfterUpdate);
 
     setIsStreaming(false);
     console.log(`[useOnboarding] Étape ${index} ("${metadata}") affichée.`);
 
-  }, [generateUniqueId, setMessages, updateUserField, saveOnboardingStep, setIsLandingPageVisible, setRelatedQuestions, setIsStreaming, onSubmit, fakeStreamMessage, skipLinkedInQuestion, onboardingMessages, userName]);
+  }, [
+    generateUniqueId, setMessages, updateUserField, saveOnboardingStep, setIsLandingPageVisible,
+    setRelatedQuestions, setIsStreaming, onSubmit, fakeStreamMessage,
+    skipLinkedInQuestion, onboardingMessages, userName, userUniversity
+  ]);
 
 
 
@@ -311,8 +349,16 @@ export const useOnboarding = ({
     // ET qu'on n'a pas déjà essayé de démarrer dans un cycle précédent.
     if (!hasExistingOnboardingMessages && hasNotAttemptedStart) {
       onboardingStartAttemptedRef.current = true; // Marquer la tentative de démarrage
-      console.log(`🚀 [useOnboarding ACTION - Simple] Starting onboarding sequence / Sending first message for chat ${currentChatId}...`);
-      sendNextOnboardingMessage(0, messagesInStore); // Envoyer question 0
+      const isKedgeAtStart = userUniversity === 'kedge';
+      const complianceIndexAtStart = onboardingMessages.findIndex(q => q.metadata === 'COMPLIANCE'); // Normalement 5
+
+      if (isKedgeAtStart) {
+        console.log(`🚀 [useOnboarding ACTION - Simple - Kedge] Starting onboarding directly at COMPLIANCE step for chat ${currentChatId}...`);
+        sendNextOnboardingMessage(complianceIndexAtStart, messagesInStore); // Envoyer question COMPLIANCE
+      } else {
+        console.log(`🚀 [useOnboarding ACTION - Simple - Non-Kedge] Starting onboarding sequence / Sending first message for chat ${currentChatId}...`);
+        sendNextOnboardingMessage(0, messagesInStore); // Envoyer question 0
+      }
     } else {
        console.log(`[useOnboarding ACTION - Simple] Skipping message send: Either messages exist, or start already attempted.`);
        // Si des messages existent déjà (reprise), cet effet ne fait rien de plus.
@@ -328,6 +374,7 @@ export const useOnboarding = ({
        currentChatId,
        isLoadingMessages,
        isStreamingResponse,
+       userUniversity,
        // Fonctions Stables
        setActiveChat,
        sendNextOnboardingMessage 
@@ -498,10 +545,14 @@ export const useOnboarding = ({
 
 
   const handleSendCOMPLIANCEMessage = useCallback((payload: { termsAccepted: boolean; ageConfirmed: boolean; }) => {
-      const summary = `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
+      // Déterminer le texte du résumé en fonction de l'université
+      const isKedgeUser = userUniversity === 'kedge';
+      const summary = isKedgeUser
+        ? `Termes acceptés : ${payload.termsAccepted ? '✔️' : '❌'} | Âge confirmé : ${payload.ageConfirmed ? '✔️' : '❌'}`
+        : `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
        // Pour COMPLIANCE, la mise à jour du profil est gérée par l'objet passé
       handleSendGeneric(summary, 6, "COMPLIANCE", { complianceAccepted: true, ...payload });
-  }, [handleSendGeneric]);
+  }, [handleSendGeneric, userUniversity]);
 
 
   

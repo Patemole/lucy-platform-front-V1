@@ -57,6 +57,7 @@ type SidebarProps = {
     setShowOnboardingSocialThreadPopup: (v: boolean) => void;
     formatDate: (timestamp: { toDate: () => Date }) => string;
     userYear: string | null | undefined;
+    userUniversity: string | null | undefined;
   };
 
 
@@ -71,10 +72,12 @@ type SidebarProps = {
     unreadCount, menuAnchorEl, handleMenuOpen, handleMenuClose,
     handleRename, handleDelete, socialThreads, loadingSocialThreads,
     topicColors, setShowOnboardingModifyConvPopup, 
-    setShowOnboardingSocialThreadPopup, handleNewConversation,setShowOnboardingProfilePopup, formatDate, userYear
+    setShowOnboardingSocialThreadPopup, handleNewConversation,setShowOnboardingProfilePopup, formatDate, userYear,
+    userUniversity
   }) => {
 
     console.log('<<< RENDERING Sidebar >>>');
+    const isKedge = userUniversity === 'kedge'; // Variable pour la traduction
 
     // Fonction pour déterminer le titre du bouton Social Thread
     const getSocialThreadTitle = (year: string | null | undefined): string => {
@@ -191,7 +194,7 @@ type SidebarProps = {
                             <ListItemIcon>
                             <ProfileEdit fontSize="small" sx={{ color: '#011F5B' }} />
                             </ListItemIcon>
-                            <ListItemText primary="edit profile" />
+                            <ListItemText primary={isKedge ? "Modifier le profil" : "edit profile"} />
                         </MenuItem>
                         <MenuItem
                             onClick={(event) => {
@@ -202,13 +205,13 @@ type SidebarProps = {
                             <ListItemIcon>
                             <SettingsIcon fontSize="small" sx={{ color: '#011F5B' }} />
                             </ListItemIcon>
-                            <ListItemText primary="parameters" />
+                            <ListItemText primary={isKedge ? "Paramètres" : "parameters"} />
                         </MenuItem>
                         <MenuItem onClick={handleLogout}>
                             <ListItemIcon>
                             <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
                             </ListItemIcon>
-                            <ListItemText primary="log-out" />
+                            <ListItemText primary={isKedge ? "Se déconnecter" : "log-out"} />
                         </MenuItem>
                         </Menu>
                     </Box>
@@ -252,7 +255,7 @@ type SidebarProps = {
                     */}
 
                     {/* bouton conversation history */}
-                    <Tooltip title="View your past private and public conversations" enterDelay={100} arrow placement="right">
+                    <Tooltip title={isKedge ? "Voir vos conversations passées" : "View your past private and public conversations"} enterDelay={100} arrow placement="right">
                      <div>
                         <ListItem
                           component="li"
@@ -287,7 +290,7 @@ type SidebarProps = {
                               <HistoryIcon sx={{ fontSize: "22px" }} />
                           </ListItemIcon>
                           <ListItemText
-                              primary="Conversation history"
+                              primary={isKedge ? "Historique des conversations" : "Conversation history"}
                               primaryTypographyProps={{
                               style: {
                                   fontWeight: "500",
@@ -300,8 +303,9 @@ type SidebarProps = {
                      </div>
                     </Tooltip>
 
-                    {/* bouton social thread */}
-                    <Tooltip title="See recent public conversations from other students" enterDelay={100} arrow placement="right">
+                    {/* bouton social thread - CONDITIONNEL */}
+                    {(userUniversity !== 'kedge') && (
+                      <Tooltip title={isKedge ? "Voir les conversations publiques récentes des autres étudiants" : "See recent public conversations from other students"} enterDelay={100} arrow placement="right">
                      <div>
                         <ListItem
                           component="li"
@@ -373,13 +377,14 @@ type SidebarProps = {
                           </ListItem>
                      </div>
                     </Tooltip>
+                    )}
                 </List>
                 </nav>
 
                 <Divider style={{ backgroundColor: 'lightgray' }} />
 
                 {/* en-tête de la section affichée */}
-                <section aria-label={isHistory ? "Conversation History" : "Last Public Interactions"}>
+                <section aria-label={isHistory ? (isKedge ? "Historique des conversations" : "Conversation History") : (isKedge ? "Dernières interactions publiques" : "Last Public Interactions")}>
                 <div
                     className="text-center text-black-500 font-semibold mt-5 mb-2 flex justify-center items-center"
                     style={{
@@ -389,7 +394,7 @@ type SidebarProps = {
                     }}
                 >
                     <span>
-                    {isHistory ? "Conversation History" : "Last Public Interactions"}
+                    {isHistory ? (isKedge ? "Historique" : "Conversation History") : (isKedge ? "Interactions Publiques" : "Last Public Interactions")}
                     </span>
                     {!isHistory && unreadCount > 0 && (
                     <div
@@ -512,19 +517,21 @@ type SidebarProps = {
                                         marginTop: '2px',
                                         }}
                                     >
-                                        <Box
-                                        sx={{
-                                            fontSize: '0.7rem',
-                                            fontWeight: 'bold',
-                                            color: conversation.thread_type === 'Private' ? '#6F6F6F' : '#4A90E2',
-                                            backgroundColor: conversation.thread_type === 'Private' ? '#F0F0F0' : '#E0F2FF',
-                                            padding: '2px 6px',
-                                            borderRadius: '5px',
-                                            display: 'inline-block',
-                                        }}
-                                        >
-                                        {conversation.thread_type === 'Private' ? 'Private' : 'Public'}
-                                        </Box>
+                                        {(userUniversity !== 'kedge') && (
+                                          <Box
+                                            sx={{
+                                                fontSize: '0.7rem',
+                                                fontWeight: 'bold',
+                                                color: conversation.thread_type === 'Private' ? '#6F6F6F' : '#4A90E2',
+                                                backgroundColor: conversation.thread_type === 'Private' ? '#F0F0F0' : '#E0F2FF',
+                                                padding: '2px 6px',
+                                                borderRadius: '5px',
+                                                display: 'inline-block',
+                                            }}
+                                            >
+                                            {conversation.thread_type === 'Private' ? 'Private' : 'Public'}
+                                          </Box>
+                                        )}
                                         {conversation.topic && (
                                         <Box
                                             sx={{
@@ -594,7 +601,7 @@ type SidebarProps = {
                             marginTop: '30px',
                             }}
                         >
-                            You have no conversations yet
+                            {isKedge ? "Vous n'avez pas encore de conversations" : "You have no conversations yet"}
                         </Typography>
                         )}
                     </List>
@@ -738,7 +745,7 @@ type SidebarProps = {
                             marginTop: '30px',
                             }}
                         >
-                            You have no social threads yet
+                            {isKedge ? "Il n'y a pas encore de fils sociaux" : "You have no social threads yet"}
                         </Typography>
                         )}
                     </List>
@@ -772,7 +779,7 @@ type SidebarProps = {
                 }}
                 >
                 <MenuItem
-                    aria-label="Rename Conversation"
+                    aria-label={isKedge ? "Renommer la conversation" : "Rename Conversation"}
                     onClick={handleRename}
                     sx={{
                     padding: '8px',
@@ -789,12 +796,12 @@ type SidebarProps = {
                         fontWeight: '400',
                     }}
                     >
-                    Rename
+                    {isKedge ? "Renommer" : "Rename"}
                     </Typography>
                 </MenuItem>
 
                 <MenuItem
-                    aria-label="Delete conversation"
+                    aria-label={isKedge ? "Supprimer la conversation" : "Delete conversation"}
                     onClick={handleDelete}
                     sx={{
                     padding: '8px',
@@ -812,7 +819,7 @@ type SidebarProps = {
                         fontWeight: '400',
                     }}
                     >
-                    Delete
+                    {isKedge ? "Supprimer" : "Delete"}
                     </Typography>
                 </MenuItem>
                 </Menu>

@@ -40,10 +40,12 @@ const allowedDomains = {
   charteroak: [/^.+@([a-zA-Z0-9._-]+\.)*charteroak\.edu$/i, /^.+@my-lucy\.com$/i],
   yale: [/^.+@([a-zA-Z0-9._-]+\.)*yale\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i],
-  // other allowed domains...
+  kedge: [/^.+@([a-zA-Z0-9._-]+\.)*kedge\.edu$/i, /^.+@my-lucy\.com$/i],
 };
 
+// Fonction pour obtenir les messages d'erreur par sous-domaine (EN/FR)
 const getErrorMessage = (subdomain) => {
+  const isKedge = subdomain === 'kedge';
   const universityNames = {
     upenn: 'Upenn email',
     harvard: 'Harvard email',
@@ -74,10 +76,20 @@ const getErrorMessage = (subdomain) => {
     hofstra: 'Hofstra email',
     charteroak: 'Charter Oak email',
     brynmawr: 'Bryn Mawr email',
-    admin: 'Admin email'
+    admin: 'Admin email',
+    kedge: 'Kedge email'
   };
 
-  return `Only ${universityNames[subdomain] || 'email addresses from allowed domains'} can register`;
+  const baseMessage = isKedge ? "Seuls les e-mails" : "Only";
+  const suffixMessage = isKedge ? "peuvent s'inscrire" : "email addresses from allowed domains can register";
+  const universityName = universityNames[subdomain] || (isKedge ? "des domaines autorisés" : "");
+  const emailWord = isKedge ? "e-mail" : "email";
+
+  if (universityNames[subdomain]) {
+    return `${baseMessage} ${universityName} ${emailWord} ${suffixMessage}`.trim();
+  } else {
+    return isKedge ? "Seuls les e-mails des domaines autorisés peuvent s'inscrire" : "Only email addresses from allowed domains can register";
+  }
 };
 
 
@@ -103,6 +115,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false); // Tracks spinner in button
   const subdomain = config.subdomain;
+  const isKedge = subdomain === 'kedge'; // Déterminer si Kedge pour les traductions
   const [shouldRedirect, setShouldRedirect] = useState(true); // Par défaut, on redirige
 
   // ============================================================
@@ -112,7 +125,6 @@ const SignIn = ({ handleToggleThemeMode }) => {
     console.log("🚀 [SSO Harmonisée - SignIn] Début du processus de connexion/inscription SSO...");
     setShouldRedirect(false); // Désactive temporairement le useEffect pour éviter double redirection
     setErrors({}); // Reset errors
-    // Note: On ne gère pas de spinner spécifique pour le bouton SSO ici, mais on pourrait
 
     try {
       const university = config.subdomain;
@@ -178,10 +190,10 @@ const SignIn = ({ handleToggleThemeMode }) => {
           modified_at: currentTime,
           is_private: true, // Chat d'onboarding est privé
           user_ids: [ssoUser.uid], // Lié à l'utilisateur
-          last_message_preview: "Welcome! Let's get you started.",
+          last_message_preview: "Welcome! Let's get you started.", // Peut être traduit plus tard si nécessaire
           university: university,
           thread_type: 'Private', // Type privé
-          topic: 'Onboarding',
+          topic: 'Onboarding', // Peut être traduit plus tard si nécessaire
         };
         await setDoc(chatDocRef, initialChatData);
 
@@ -242,7 +254,9 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
     } catch (error) {
       console.error("❌ [SSO Harmonisée - SignIn] Erreur lors de la connexion/inscription SSO:", error);
-      setErrors({ general: `SSO failed. Please try again. (${error.code || error.message})` });
+      // Traduction de l'erreur générale SSO
+      const ssoErrorMessage = isKedge ? `Échec SSO. Veuillez réessayer. (${error.code || error.message})` : `SSO failed. Please try again. (${error.code || error.message})`;
+      setErrors({ general: ssoErrorMessage });
     } finally {
         // Important: Réactiver la redirection via useEffect après la tentative SSO
         setShouldRedirect(true);
@@ -276,15 +290,15 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
     const newErrors = {};
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = isKedge ? 'L\'e-mail est requis' : 'Email is required';
     } else if (!isEmail(email)) {
-      newErrors.email = 'Please provide a valid email';
+      newErrors.email = isKedge ? 'Veuillez fournir une adresse e-mail valide' : 'Please provide a valid email';
     } else if (!isAllowedEmail(email, config.subdomain)) {
       newErrors.email = getErrorMessage(config.subdomain);
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = isKedge ? 'Le mot de passe est requis' : 'Password is required';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -307,14 +321,14 @@ const SignIn = ({ handleToggleThemeMode }) => {
     } catch (error) {
       const newErrors = {};
       if (error.code === 'auth/user-not-found') {
-        newErrors.email = 'No user found with this email';
+        newErrors.email = isKedge ? 'Aucun utilisateur trouvé avec cet e-mail' : 'No user found with this email';
       } else if (error.code === 'auth/wrong-password') {
-        newErrors.password = 'Incorrect password';
+        newErrors.password = isKedge ? 'Mot de passe incorrect' : 'Incorrect password';
       } else if (error.code === 'auth/too-many-requests') {
-        newErrors.email = 'Account access blocked! Try again later';
+        newErrors.email = isKedge ? 'Accès au compte bloqué ! Réessayez plus tard' : 'Account access blocked! Try again later';
       } else {
         // Utiliser errors.general pour les erreurs non spécifiques
-        newErrors.general = 'Login failed. Please check your credentials.';
+        newErrors.general = isKedge ? 'Échec de la connexion. Veuillez vérifier vos identifiants.' : 'Login failed. Please check your credentials.';
       }
       setErrors(newErrors);
 
@@ -348,32 +362,38 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
 
       <main className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4" role="main">
-        <h1 className="text-xl font-semibold text-center mb-4">Sign In to your account</h1>
+        <h1 className="text-xl font-semibold text-center mb-4">
+          {isKedge ? 'Connectez-vous à votre compte' : 'Sign In to your account'}
+        </h1>
         <p className="text-gray-500 text-center mb-5 text-sm">
-          Sign In with your university credentials.
+          {isKedge ? 'Connectez-vous avec vos identifiants universitaires.' : 'Sign In with your university credentials.'}
         </p>
 
         {/* Afficher l'erreur générale SSO si elle existe */}
-        {errors.general && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
+        {errors.general && (subdomain === 'holyfamily' || subdomain === 'kedge') && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
 
-        {/* Bouton SSO - Afficher uniquement pour holyfamily */}
-        {subdomain === 'holyfamily' && (
+        {/* Bouton SSO - Afficher uniquement pour holyfamily et kedge */}
+        {(subdomain === 'holyfamily' || subdomain === 'kedge') && (
           <button
             type="button"
             onClick={signInWithSSO} // Utilise la nouvelle fonction SSO
             className="w-full flex items-center justify-center gap-3 py-2 bg-blue-600 text-white border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:ring focus:ring-blue-300"
           >
             <AccountBalanceIcon sx={{ fontSize: 20 }} /> {/* Icône université */}
-            <span className="font-medium">Sign In with SSO</span>
+            <span className="font-medium">
+              {isKedge ? 'Se connecter avec SSO' : 'Sign In with SSO'}
+            </span>
           </button>
         )}
 
 
-        {/* Séparateur avec "OR" - N'afficher que si SSO est affiché (donc pour holyfamily) */}
-        {subdomain === 'holyfamily' && (
+        {/* Séparateur avec "OR" - N'afficher que si SSO est affiché (donc pour holyfamily ou kedge) */}
+        {(subdomain === 'holyfamily' || subdomain === 'kedge') && (
         <div className="flex items-center my-6">
           <div className="flex-grow border-t border-gray-300"></div>
-          <span className="mx-4 text-gray-500 text-xs font-semibold">OR</span>
+          <span className="mx-4 text-gray-500 text-xs font-semibold">
+            {isKedge ? 'OU' : 'OR'}
+          </span>
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
         )}
@@ -381,14 +401,16 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
         <form onSubmit={handleSubmit} noValidate>
         {/* Afficher l'erreur générale Email/Password si elle existe */}
-        {/* NOTE: On pourrait aussi cacher cette erreur si holyfamily est le seul moyen */}
-        {errors.general && subdomain !== 'holyfamily' && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
+        {/* NOTE: On pourrait aussi cacher cette erreur si holyfamily/kedge est le seul moyen */}
+        {errors.general && !(subdomain === 'holyfamily' || subdomain === 'kedge') && <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-4 text-center">{errors.general}</p>}
 
-        {/* Cacher le formulaire email/password si holyfamily */}
-        {subdomain !== 'holyfamily' && (
+        {/* Cacher le formulaire email/password si holyfamily ou kedge */}
+        {!(subdomain === 'holyfamily' || subdomain === 'kedge') && (
           <>
             <div className="mb-6">
-              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
+                {isKedge ? 'Adresse e-mail' : 'Email Address'}
+              </label>
               <input
                 type="email"
                 id="email"
@@ -439,15 +461,19 @@ const SignIn = ({ handleToggleThemeMode }) => {
           </>
         )}
 
+          {/* Traduction de la section "Don't have an account?" */}
           <p className="mt-5 text-xs text-center text-gray-600">
-            Don't have an account?{' '}
+            {isKedge ? "Vous n'avez pas de compte ?" : "Don't have an account?"}{' '}
             <a href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} className="text-blue-600 underline hover:underline">
-              Sign up now!
+              {isKedge ? 'Inscrivez-vous !' : 'Sign up now!'}
             </a>
           </p>
 
+          {/* Traduction de la section "Powered by Lucy" */}
           <div className="mt-8 flex items-center justify-center">
-            <p className="text-xs text-gray-600 mr-2">Powered by Lucy</p>
+            <p className="text-xs text-gray-600 mr-2">
+              {isKedge ? 'Propulsé par Lucy' : 'Powered by Lucy'}
+            </p>
             <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
           </div>
         </form>

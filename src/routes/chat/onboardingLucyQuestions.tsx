@@ -60,6 +60,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const chatIds = useAuthStore((state) => state.chatIds);
   const onboardingComplete = useAuthStore((state) => state.user?.onboardingComplete);
   const userYear = useAuthStore((state) => state.user?.year);
+  const userUniversity = useAuthStore((state) => state.user?.university);
   //const user = useAuthStore((state) => state.user);
 
   const {
@@ -120,6 +121,9 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const { socialThreads } = useChatStore(); // Get social threads from store
   const [isSocialThread, setIsSocialThread] = useState(false); // Use isSocialThreadActive from store?
 
+  // ---> AJOUT : Vérifier si l'utilisateur est de Kedge <---
+  const isKedgeUser = userUniversity === 'kedge';
+
   //6. Événements et gestion du Calendrier
   const [events, setEvents] = useState<EventStudentProfile[]>([]);
   const [currentView, setCurrentView] = useState('chat'); // 'chat' ou 'events'
@@ -156,7 +160,17 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const {handleProfileMenuClick,handleLogout,handleDeleteAccount,handleProfileMenuClose, handleParametersMenuClick, handleParametersMenuClose } = useUserProfile({setProfileMenuAnchorEl,setParametersMenuAnchorEl,setProfilePicture,});
 
   //from UIstate
-  const {toggleDrawer,hasTak,lastAiMessageId} = useUIState({isSmallScreen,messages,drawerOpen,scrollableDivRef,setDrawerOpen,setOnlineUsers,setIsAtBottom,setNewMessagesCount,setParametersMenuAnchorEl,});
+  const {toggleDrawer,hasTak,lastAiMessageId} = useUIState({
+    isSmallScreen,
+    messages,
+    drawerOpen,
+    scrollableDivRef,
+    setDrawerOpen,
+    setOnlineUsers,
+    setIsAtBottom,
+    setNewMessagesCount,
+    setParametersMenuAnchorEl,
+  });
 
   //from conversations
   const {
@@ -254,7 +268,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
     { question: "let's get this started! Help me get to know the **real** you.\nThe **more you share** the **more accurate** we get in helping out ✨\n\nWhich school are you in?", metadata: "SCHOOL" },
     { question: "And what year are you rockin' right now?", metadata: "YEAR" },
     //{ question: "This is a test, are you Mathieu?", metadata: "TEST" },
-    { question: "What’s your insta? won’t be public — just helps me get your vibe 🏄", metadata: "INSTAGRAM" },
+    { question: "What's your insta? won't be public — just helps me get your vibe 🏄", metadata: "INSTAGRAM" },
     //{ question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
     //{ question: "What's your pet's name?", metadata: "PET_NAME" },
     { question: "Second to last question! If you've got a LinkedIn, paste it here, just helps me get your pro side 💼", metadata: "LINKEDIN" },
@@ -272,10 +286,21 @@ const OnboardingLucyQuestions: React.FC = ()=> {
     );
     // Calcule précisément la progression en fonction de l'étape actuelle
   const totalSteps = onboardingMessages.length;
-  const completedSteps = currentStepIndex >= 0 ? currentStepIndex : 0;
-  const progressPercent = ((completedSteps + 1) / totalSteps) * 100; //dans le return
-  // Vérifie précisément si c'est la dernière étape
-  const isLastStep = currentStepIndex === totalSteps - 1; //dans le return
+
+  // ---> MODIFICATION : Ajuster le calcul de completedSteps pour Kedge <---
+  let completedSteps = 0;
+  if (isKedgeUser) {
+    // Si Kedge, on considère toujours être à la dernière étape pour la barre de progression
+    completedSteps = totalSteps > 0 ? totalSteps - 1 : 0;
+  } else {
+    // Sinon, calcul normal basé sur l'index actuel
+    completedSteps = currentStepIndex >= 0 ? currentStepIndex : 0;
+  }
+  const progressPercent = totalSteps > 0 ? ((completedSteps + 1) / totalSteps) * 100 : 0;
+  // ---> FIN MODIFICATION <---
+
+  // Vérifie précisément si c'est la dernière étape (pour la logique UI, pas la barre de progression)
+  const isLastStep = currentStepIndex === totalSteps - 1;
 
 
   const variants = {
@@ -356,6 +381,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             setShowOnboardingProfilePopup={setShowOnboardingProfilePopup}
             handleConversationClick={handleConversationClick}
             userYear={userYear}
+            userUniversity={userUniversity}
             activeChatId={useChatStore.getState().currentChatId}
             unreadCount={unreadCount}
             menuAnchorEl={conversationsMenuAnchorEl}
@@ -392,6 +418,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
               isLastStep={isLastStep}
               progressPercent={progressPercent}
               theme={theme}
+              userUniversity={userUniversity}
               profileMenuAnchorEl={profileMenuAnchorEl}
               parametersMenuAnchorEl={parametersMenuAnchorEl}
               handleProfileMenuClick={handleProfileMenuClick}
@@ -442,6 +469,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             handlePrivacyChange={handlePrivacyToggleClick}
             setIsAtBottom={setIsAtBottom}
             setNewMessagesCount={setNewMessagesCount}
+            userUniversity={userUniversity}
           />
 
           
@@ -505,36 +533,38 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                     <>
                       {/* Nouvelle ligne pour icône, input, bouton envoi */}
                       <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '8px' }}>
-                        {/* Icône Cadenas cliquable */}
-                        <IconButton
-                          onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}
-                          aria-label={isPrivate ? "Set conversation to public" : "Set conversation to private"}
-                          size="medium" // Ajuster la taille si besoin
-                          sx={{ 
-                            color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
-                            padding: '6px' /* Ajuster padding */ 
-                          }}
-                        >
-                          {isPrivate ? <LockIcon fontSize="small"/> : <LockOpenIcon fontSize="small"/>} 
-                          {/* Typography is now styled */}
-                          <Typography 
-                            variant="caption" 
-                            sx={{ 
-                              color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
-                              marginLeft: '4px' // Add spacing if needed, or adjust IconButton padding
-                            }}
-                          >
-                            {isPrivate ? 'Private' : 'Public'}
-                          </Typography>
-                        </IconButton>
+                        {/* Icône Cadenas cliquable - CONDITIONNEL */}
+                        {(userUniversity !== 'kedge') && (
+                            <IconButton
+                              onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}
+                              aria-label={isPrivate ? "Set conversation to public" : "Set conversation to private"}
+                              size="medium" // Ajuster la taille si besoin
+                              sx={{ 
+                                color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
+                                padding: '6px' /* Ajuster padding */ 
+                              }}
+                            >
+                              {isPrivate ? <LockIcon fontSize="small"/> : <LockOpenIcon fontSize="small"/>} 
+                              {/* Typography is now styled */}
+                              <Typography 
+                                variant="caption" 
+                                sx={{ 
+                                  color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
+                                  marginLeft: '4px' // Add spacing if needed, or adjust IconButton padding
+                                }}
+                              >
+                                {isPrivate ? 'Private' : 'Public'}
+                              </Typography>
+                            </IconButton>
+                        )}
 
-                        {/* Champ de saisie occupant l'espace restant */}
+                        {/* Champ de saisie occupant l'espace restant - Traduction Placeholder */}
                         <TextField
                           variant="outlined"
                           multiline
                           minRows={1}
                           maxRows={4} // Limiter un peu plus ?
-                          placeholder="Ask Lucy..."
+                          placeholder={userUniversity === 'kedge' ? "Demandez à Lucy..." : "Ask Lucy..."}
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
                           onKeyDown={handleInputKeyPressSocraticLangGraph} // Utiliser onKeyDown
@@ -592,10 +622,10 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                         </IconButton>
                       </div>
 
-                      {/* Phrase d'information sous le champ de saisie */}
+                      {/* Phrase d'information sous le champ de saisie - Traduction */}
                       <div className="flex justify-center w-full mt-2"> {/* Ajouter un peu de marge top */}
                         <p className="text-center text-[0.6rem] text-[#6F6F6F] opacity-80">
-                          Lucy can make mistake. Consider checking important information.
+                          {userUniversity === 'kedge' ? "Lucy peut faire des erreurs. Pensez à vérifier les informations importantes." : "Lucy can make mistake. Consider checking important information."}
                         </p>
                       </div>
                     </>
@@ -646,11 +676,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                           minRows={1}
                           maxRows={6}
                           placeholder={
-                            isSmallScreen && drawerOpen
-                              ? ""
-                              : isSocialThread
-                              ? "Write a public message in this discussion..."
-                              : "Type your message..."
+                            userUniversity === 'kedge' ? "Tapez votre message..." : (isSocialThread ? "Write a public message in this discussion..." : "Type your message...")
                           }
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
@@ -658,7 +684,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                           onKeyDown = {handleInputKeyPressSocraticLangGraph}
                           InputProps={{
                             startAdornment: (
-                              !isSocialThread && (
+                              !isSocialThread && (userUniversity !== 'kedge') && (
                                 <InputAdornment position="start" sx={{ marginRight: '8px' }}>
                                   <Tooltip title={isPrivate ? "Make conversation Public" : "Make conversation Private"} enterDelay={100} arrow>
                                     <Box
@@ -779,7 +805,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                           <p
                             className="hidden sm:block mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80 sm:mt-3 sm:mb-0"
                           >
-                            Lucy can make mistakes. Look at the confidence score and consider checking important information.
+                            {userUniversity === 'kedge' ? "Lucy peut faire des erreurs. Regardez le score de confiance et pensez à vérifier les informations importantes." : "Lucy can make mistakes. Look at the confidence score and consider checking important information."}
                           </p>
                         </div>
                       </>

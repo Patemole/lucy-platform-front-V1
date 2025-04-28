@@ -35,6 +35,7 @@ interface TopHeaderProps {
     handleDeleteAccount: () => void;
     handleLogout: () => void;
     setShowOnboardingProfilePopup: (v: boolean) => void;
+    userUniversity: string | null | undefined;
   }
 
 
@@ -45,8 +46,11 @@ interface TopHeaderProps {
     parametersMenuAnchorEl, handleProfileMenuClick, handleProfileMenuClose,
     handleDialogOpen, handleParametersMenuClick, handleParametersMenuClose,
     handleDeleteAccount, handleLogout, setShowOnboardingProfilePopup,
+    userUniversity
   }) => {
     console.log('<<< RENDERING TopHeader >>>');
+    const isKedge = userUniversity === 'kedge';
+
     return (
 
 
@@ -60,13 +64,13 @@ interface TopHeaderProps {
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         {!drawerOpen && (
                         <>
-                            <IconButton aria-label="Open menu" onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
+                            <IconButton aria-label={isKedge ? "Ouvrir le menu" : "Open menu"} onClick={toggleDrawer} sx={{ color: theme.palette.sidebar }}>
                             <MenuIcon />
                             </IconButton>
                             {!isSmallScreen && !isLandingPageVisible && (
                             <IconButton
                                 onClick={handleNewConversation}
-                                aria-label="New conversation"
+                                aria-label={isKedge ? "Nouvelle conversation" : "New conversation"}
                                 sx={{
                                 color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                                 cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
@@ -113,7 +117,7 @@ interface TopHeaderProps {
                         }}
                     >
                         {/*{onlineUsers} online users*/}
-                        {onlineUsers} {isSmallScreen ? "online" : "online users"}
+                        {onlineUsers} {isSmallScreen ? (isKedge ? "en ligne" : "online") : (isKedge ? "utilisateurs en ligne" : "online users")}
                         <div
                         style={{
                             width: '8.5px',
@@ -154,7 +158,7 @@ interface TopHeaderProps {
                         <>
                             <IconButton
                             onClick={handleNewConversation}
-                            aria-label="New conversation"
+                            aria-label={isKedge ? "Nouvelle conversation" : "New conversation"}
                             sx={{
                                 color: isLandingPageVisible ? 'grey' : theme.palette.sidebar,
                                 cursor: isLandingPageVisible ? 'not-allowed' : 'pointer',
@@ -181,7 +185,7 @@ interface TopHeaderProps {
                                 }
                             
                             }}
-                            aria-label="Open profile menu"
+                            aria-label={isKedge ? "Ouvrir le menu profil" : "Open profile menu"}
                             aria-haspopup="true"
                             aria-controls={profileMenuAnchorEl ? 'profile-menu' : undefined}
                             aria-expanded={Boolean(profileMenuAnchorEl)}
@@ -192,7 +196,7 @@ interface TopHeaderProps {
                                 {/* {console.log('Rendering profile picture with URL:', profilePicture)} */}
                                 <img
                                 src={profilePicture}
-                                alt="Profile"
+                                alt={isKedge ? "Profil" : "Profile"}
                                 style={{
                                     width: '50px',
                                     height: '50px',
@@ -236,7 +240,7 @@ interface TopHeaderProps {
                                 <ListItemText
                                 primary={
                                     <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
-                                    Edit Profile
+                                    {isKedge ? "Modifier le profil" : "Edit Profile"}
                                     </Typography>
                                 }
                                 />
@@ -254,7 +258,7 @@ interface TopHeaderProps {
                                 <ListItemText
                                 primary={
                                     <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#011F5B' }}>
-                                    Parameters
+                                    {isKedge ? "Paramètres" : "Parameters"}
                                     </Typography>
                                 }
                                 />
@@ -266,7 +270,7 @@ interface TopHeaderProps {
                                 <ListItemText
                                 primary={
                                     <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
-                                    Log-out
+                                    {isKedge ? "Se déconnecter" : "Log-out"}
                                     </Typography>
                                 }
                                 />
@@ -302,7 +306,7 @@ interface TopHeaderProps {
                                 <ListItemText
                                 primary={
                                     <Typography sx={{ fontWeight: '500', fontSize: '0.875rem', color: '#F04261' }}>
-                                    Delete Account
+                                    {isKedge ? "Supprimer le compte" : "Delete Account"}
                                     </Typography>
                                 }
                                 />

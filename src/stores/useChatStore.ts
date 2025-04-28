@@ -106,6 +106,7 @@ interface ChatState {
 
 // --- Création du Store Zustand avec typage explicite ---
 const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
+
   // --- État Initial ---
   messages: [],
   conversations: [],
@@ -407,8 +408,9 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   fetchSocialThreads: () => {
     // Log au début de l'action
     console.log("[ChatStore - fetchSocialThreads] Action started.");
-    const { user } = useAuthStore.getState();
-    const university = user?.university;
+    //const university = useAuthStore((state) => state.user?.university);
+    const university = useAuthStore.getState().user?.university;
+   
 
     // Log l'université utilisée
     console.log(`[ChatStore - fetchSocialThreads] Using university: ${university}`);
@@ -422,49 +424,46 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     set({ isLoadingSocialThreads: true });
     console.log(`[ChatStore - fetchSocialThreads] Setting up Firestore listener for university: ${university}`);
 
+    // Déterminer le nom de conversation par défaut à exclure
+    const isKedge = university === 'kedge';
+    const defaultChatNameToExclude = isKedge ? "Nouvelle Conversation" : "New Chat";
+
     const q = query(
       collection(db, "chatsessions"),
       where("university", "==", university),
-      where("thread_type", "==", "Public"), // Firestore filter for Public
+      where("thread_type", "==", "Public"),
       orderBy("created_at", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      // Log quand le listener reçoit des données
       console.log(`[ChatStore - fetchSocialThreads] onSnapshot triggered. Received ${snapshot.docs.length} documents.`);
-      const userId = useAuthStore.getState().user?.id; // Re-fetch user state in case it changed? Safer.
+      const userId = useAuthStore.getState().user?.id;
       let unreadCount = 0;
 
       const threads: SocialThread[] = snapshot.docs
         .map((doc) => {
           const data = doc.data();
-          // Log les données brutes de chaque document reçu
-          // console.log(`[ChatStore - fetchSocialThreads] Processing doc ${doc.id}:`, data);
-          if (!data || typeof data !== 'object' || !data.name || data.name === "New Chat") {
-             console.log(`[ChatStore - fetchSocialThreads] Filtering out doc ${doc.id} due to invalid name or data.`);
-              return null; // Filter out invalid threads
+          // Filtrer les noms invalides OU le nom par défaut dynamique
+          if (!data || typeof data !== 'object' || !data.name || data.name === defaultChatNameToExclude) {
+             console.log(`[ChatStore - fetchSocialThreads] Filtering out doc ${doc.id} due to invalid name or default name.`);
+              return null;
           }
           const isRead = !!userId && Array.isArray(data.ReadBy) && data.ReadBy.includes(userId);
-          if (!isRead) {
-            unreadCount++;
-          }
+          if (!isRead) { unreadCount++; }
           const thread: SocialThread = {
             chat_id: doc.id,
             name: data.name,
-            // Safely handle timestamp conversion
             created_at: data.created_at instanceof Timestamp ? data.created_at.toDate() : (data.created_at?.seconds ? new Date(data.created_at.seconds * 1000) : new Date(0)),
             topic: data.topic || "Default",
             thread_type: "Public",
-            university: data.university || "Default", // Ensure university is added if missing in source data
+            university: data.university || "Default",
             isRead: isRead,
           };
           return thread;
         })
-        .filter((thread): thread is SocialThread => thread !== null); // Type guard to remove nulls
+        .filter((thread): thread is SocialThread => thread !== null);
 
-      // Log le résultat final avant de mettre à jour l'état
       console.log(`[ChatStore - fetchSocialThreads] Processed ${threads.length} valid social threads. Unread count: ${unreadCount}`);
-      console.log("[ChatStore - fetchSocialThreads] Updating state with processed threads.");
       set({
         socialThreads: threads,
         unreadSocialThreadsCount: unreadCount,
@@ -473,13 +472,12 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       });
 
     }, (error) => {
-      // Log crucial en cas d'erreur du listener
       console.error("[ChatStore - fetchSocialThreads] onSnapshot listener error:", error);
       set({ error: "Failed to load social threads.", isLoadingSocialThreads: false });
     });
 
     console.log("[ChatStore - fetchSocialThreads] Returning actual unsubscribe function.");
-    return unsubscribe; // Return the unsubscribe function for cleanup
+    return unsubscribe;
   },
 
   loadChatMessages: async (chatId: string) => {
@@ -615,6 +613,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   // --- Conversation Management Actions ---
 
   addNewConversation: async () => {
+    // 1. Récupérer l'utilisateur et son université
     const { user } = useAuthStore.getState();
     if (!user?.id || !user.university) {
       console.error("addNewConversation: User ID or University missing.");
@@ -622,7 +621,11 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       return null;
     }
 
-    // Stop any ongoing streaming response
+    // 2. Déterminer le nom par défaut
+    const isKedge = user.university === 'kedge';
+    const defaultChatName = isKedge ? "Nouvelle Conversation" : "New Chat";
+
+    // ... (arrêter le streaming si nécessaire)
     if (get().isStreamingResponse) {
         console.log("addNewConversation: Stopping ongoing AI response.");
         get().abortController?.abort();
@@ -631,10 +634,9 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
 
     set({ error: null });
     const newChatId = uuidv4();
-    console.log(`addNewConversation: Attempting to create new chat with ID: ${newChatId}`);
+    console.log(`addNewConversation: Attempting to create new chat with ID: ${newChatId} and default name: ${defaultChatName}`);
 
-    // --- Mise à jour optimiste de l'état pour un NOUVEAU chat ---
-    // Sauvegarder l'état précédent au cas où la création Firestore échoue
+    // ... (sauvegarde de l'état précédent pour rollback - inchangé)
     const originalCurrentChatId = get().currentChatId;
     const originalMessages = get().messages;
     const originalIsLandingVisible = get().isLandingPageVisible;
@@ -642,58 +644,49 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     const originalIsSocial = get().isSocialThreadActive;
     const originalIsLoadingMessages = get().isLoadingMessages;
 
-    // Définir l'état directement: nouveau chat ID actif, landing page visible, pas de messages, pas de chargement
+    // Mise à jour optimiste (inchangée)
     set({
         currentChatId: newChatId,
-        isLandingPageVisible: true, // <-- Afficher la landing page !
+        isLandingPageVisible: true,
         messages: [],
-        isLoadingMessages: false, // <-- Pas besoin de charger pour un nouveau chat
-        isSocialThreadActive: false, // Les nouveaux chats sont privés par défaut
-        isCurrentChatPrivate: false, // Les nouveaux chats sont privés par défaut
+        isLoadingMessages: false,
+        isSocialThreadActive: false,
+        isCurrentChatPrivate: false,
     });
-    console.log(`[ChatStore - addNewConversation] Optimistically set state for new chat ${newChatId}. Landing page should be visible.`);
-
 
     try {
       const currentTime = serverTimestamp();
+      // 3. Utiliser le nom par défaut dans les données pour Firestore
       const chatData = {
         chat_id: newChatId,
-        name: 'New Chat', // Sera mis à jour par le backend si nécessaire
+        name: defaultChatName, // <-- Utilisation du nom déterminé
         created_at: currentTime,
         modified_at: currentTime,
         university: user.university,
         thread_type: 'Public',
         user_ids: [user.id],
-        is_private: true,
-        last_message_preview: '', // Vide au début
-        topic: 'General', // Default topic
+        is_private: false,
+        last_message_preview: '',
+        topic: 'General',
       };
       await setDoc(doc(db, 'chatsessions', newChatId), chatData);
-      // L'ajout à la liste de l'utilisateur est crucial
       await useAuthStore.getState().addChatIdToFirestore(newChatId);
 
-      console.log(`addNewConversation: Successfully created Firestore doc for chat ${newChatId}. Listener should pick it up.`);
-      // Le listener mettra à jour la liste `conversations` dans la sidebar. L'état actif est déjà bon.
+      console.log(`addNewConversation: Successfully created Firestore doc for chat ${newChatId}.`);
       return newChatId;
 
     } catch (error) {
       console.error("❌ addNewConversation: Failed to create new conversation:", error);
-      // !! ROLLBACK !!
+      // !! ROLLBACK !! (inchangé)
       set({
           error: "Failed to create new conversation.",
-          // Restaurer l'état précédent
           currentChatId: originalCurrentChatId,
           messages: originalMessages,
           isLandingPageVisible: originalIsLandingVisible,
           isCurrentChatPrivate: originalIsPrivate,
           isSocialThreadActive: originalIsSocial,
-          isLoadingMessages: originalIsLoadingMessages, // Restaurer aussi l'état de chargement
+          isLoadingMessages: originalIsLoadingMessages,
       });
-      // Annuler aussi l'ajout dans AuthStore si l'erreur vient de Firestore
-      // La logique de rollback pour addChatIdToFirestore devrait idéalement être dans cette fonction elle-même
-      // ou gérée par le fait que l'écouteur ne verra pas le nouvel ID si setDoc échoue.
-      // Pour l'instant, on retire cet appel problématique.
-      // useAuthStore.getState().removeChatIdFromStore(newChatId);
       return null;
     }
   },

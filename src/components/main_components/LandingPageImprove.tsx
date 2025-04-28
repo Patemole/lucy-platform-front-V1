@@ -7,6 +7,8 @@ import {
   IconButton,
   InputAdornment,
   useMediaQuery,
+  Button,
+  Divider,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -28,16 +30,20 @@ import config from '../../config';
 
 interface LandingPageProps {
   onSend: (message: string) => void;
+  userUniversity: string | null | undefined;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onSend, userUniversity }) => {
   console.log('<<< RENDERING LandingPage >>>');
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
+  const isKedge = userUniversity === 'kedge'; // Variable pour la traduction
 
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(true);
+  // Traduire le placeholder initial
+  const initialPlaceholder = isKedge ? "Demandez à Lucy..." : "Ask Lucy...";
   const [placeholderText, setPlaceholderText] = useState('');
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [isHoveringQuestions, setIsHoveringQuestions] = useState(false);
@@ -51,16 +57,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const initialText = 'Ask Lucy...';
+  const initialText = initialPlaceholder;
 
   const tickerQuestions = [
-    { question: "What are the event of the week?", topic: "Events" },
-    { question: "Are there study abroad opportunities?", topic: "Policies" },
-    { question: "How can I get involved in research?", topic: "Courses" },
-    { question: "What support services are available?", topic: "Housing" },
-    { question: "How do I apply for financial aid?", topic: "Financial Aids" },
-    { question: "What is the process to change my major?", topic: "Courses" },
-    { question: "Are there scholarships for current students?", topic: "Financial Aids" },
+    // Traduire les questions du ticker
+    { question: isKedge ? "Quels sont les événements de la semaine ?" : "What are the event of the week?", topic: "Events" },
+    { question: isKedge ? "Y a-t-il des opportunités d'étudier à l'étranger ?" : "Are there study abroad opportunities?", topic: "Policies" },
+    { question: isKedge ? "Comment puis-je m'impliquer dans la recherche ?" : "How can I get involved in research?", topic: "Courses" },
+    { question: isKedge ? "Quels services de soutien sont disponibles ?" : "What support services are available?", topic: "Housing" },
+    { question: isKedge ? "Comment postuler à l'aide financière ?" : "How do I apply for financial aid?", topic: "Financial Aids" },
+    { question: isKedge ? "Quel est le processus pour changer de majeure ?" : "What is the process to change my major?", topic: "Courses" },
+    { question: isKedge ? "Y a-t-il des bourses pour les étudiants actuels ?" : "Are there scholarships for current students?", topic: "Financial Aids" },
   ];
   
   
@@ -98,7 +105,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       console.log('LandingPageImprove: handleSend - Après la fonction onSend');
       setInputValue('');
       setActiveButton(null);
-      setPlaceholderText('Ask Lucy...');
+      setPlaceholderText(initialPlaceholder);
     } else {
       console.log('LandingPageImprove: handleSend - Message is empty');
     }
@@ -144,7 +151,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         clearInterval(typingInterval);
         setIsTyping(false);
         setInputValue('');
-        setPlaceholderText('Ask Lucy...');
+        setPlaceholderText(initialPlaceholder);
         console.log('LandingPageImprove: Typing animation complete');
       }
     }, typingSpeed);
@@ -153,15 +160,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       console.log('LandingPageImprove: useEffect for typing animation unmount/cleanup');
       clearInterval(typingInterval);
     };
-  }, []); // Empty dependency array means this runs once on mount
+  }, []); // Utilisation de initialText qui est maintenant basé sur isKedge
 
   useEffect(() => {
     if (!isTyping && inputValue.trim() === '') {
        console.log('LandingPageImprove: useEffect [inputValue, isTyping] - Input empty after typing, resetting placeholder.');
       setActiveButton(null);
-      setPlaceholderText('Ask Lucy...');
+      setPlaceholderText(initialPlaceholder);
     }
-  }, [inputValue, isTyping]);
+  }, [inputValue, isTyping, initialPlaceholder]);
 
   useEffect(() => {
     console.log('LandingPageImprove: useEffect for click outside listener mount');
@@ -176,7 +183,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         console.log('LandingPageImprove: Click outside detected, resetting state.');
         setActiveButton(null);
         setInputValue('');
-        setPlaceholderText('Ask Lucy...');
+        setPlaceholderText(initialPlaceholder);
       }
     };
 
@@ -186,71 +193,52 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
       console.log('LandingPageImprove: useEffect for click outside listener unmount/cleanup');
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isHoveringQuestions]); // Depends on hovering state
+  }, [isHoveringQuestions, initialPlaceholder]); // Depends on hovering state
 
   const allButtons = [
     {
-      label: 'Academic Info',
+      label: isKedge ? "Infos Académiques" : 'Academic Info',
       value: 'Academic Info',
       icon: <FaGraduationCap style={{ color: '#3DD957' }} size={20} />,
     },
     {
-      label: 'Events',
+      label: isKedge ? "Événements" : 'Events',
       value: 'Events',
       icon: <FaRegCalendarAlt style={{ color: '#F97315' }} size={20} />,
     },
     {
-      label: 'Policies',
+      label: isKedge ? "Règles & Procédures" : 'Policies',
       value: 'Policies',
       icon: <FaBalanceScale style={{ color: '#1565D8' }} size={20} />,
     },
     {
-      label: 'Facilities',
+      label: isKedge ? "Installations" : 'Facilities',
       value: 'Facilities',
       icon: <FaBuilding style={{ color: '#7C3BEC' }} size={20} />,
     },
     {
-      label: 'Financial Aid',
+      label: isKedge ? "Aides Financières" : 'Financial Aid',
       value: 'Financial Aid',
       icon: <FaHandHoldingUsd style={{ color: '#EF4361' }} size={20} />,
     },
   ];
 
-  const buttons = isSmallScreen
-    ? allButtons.filter((button) => button.label !== 'Admission')
-    : allButtons;
+  const buttons = isSmallScreen ? allButtons : [...allButtons, { label: isKedge ? "Admission" : 'Admission', value: 'Admission', icon: <FaBalanceScale style={{ color: '#1565D8' }} size={20} /> }];
 
-  const questionsMap: { [key: string]: string[] } = {
-    'Academic Info': [
-      'What are the most popular majors or programs?',
-      'Are there honors programs or special academic tracks?',
-      'Are there research opportunities available for undergraduate students?',
-      'What options are there for studying abroad in Europe?',
-    ],
-    'Event & Tours': [
-      'How can I book an in-person campus tour?',
-      'Are there virtual tours available?',
-      'What major campus events take place each semester?',
-      'What student clubs or organizations are active on campus, and how can I join?',
-    ],
-    Admission: [
-      'What are the average GPA and test scores for admitted students?',
-      'Do international students need to take additional tests or submit specific documents?',
-      'Can I connect with current students or alumni to learn about their experiences?',
-      'How can I track the status of my application after submitting it?',
-    ],
-    Facilities: [
-      'What types of housing options are available for freshmen students?',
-      'Are the gym and fitness facilities open to all students?',
-      'What dining options are available for first year students?',
-      'Are laundry facilities available in the dorms?',
-    ],
-    'Financial Aid': [
-      'How do I apply for financial aid, and what types of aid are offered?',
-      'Will applying to financial aid impact my application?',
-      'What is the work-study program, and how can I participate?',
-      'How does the financial aid package compare year-to-year?',
-    ],
+  const questionsMap: { [key: string]: string[] } = isKedge ? {
+    'Academic Info': [ 'Quelles sont les majeures/programmes les plus populaires ?', 'Y a-t-il des programmes honorifiques ou des parcours spéciaux ?', 'Des opportunités de recherche sont-elles disponibles pour les licences ?', 'Quelles sont les options pour étudier à l\'étranger en Europe ?' ],
+    'Events': [ 'Comment réserver une visite du campus en personne ?', 'Des visites virtuelles sont-elles disponibles ?', 'Quels événements majeurs ont lieu chaque semestre sur le campus ?', 'Quels clubs ou organisations étudiantes sont actifs et comment les rejoindre ?' ],
+    'Policies': [ 'Comment puis-je changer de majeure ou de mineure ?', 'Quelle est la politique concernant les crédits de transfert ?', 'Où puis-je trouver le calendrier académique ?', 'Quelles sont les règles de conduite étudiante ?' ],
+    'Facilities': [ 'Quels types de logements sont disponibles pour les étudiants de première année ?', 'La salle de sport et les installations de fitness sont-elles ouvertes à tous les étudiants ?', 'Quelles options de restauration sont disponibles pour les étudiants de première année ?', 'Des laveries sont-elles disponibles dans les résidences ?' ],
+    'Financial Aid': [ 'Comment postuler à l\'aide financière et quels types d\'aides sont proposés ?', 'Postuler à l\'aide financière impactera-t-il ma candidature ?', 'Qu\'est-ce que le programme travail-études et comment y participer ?', 'Comment le package d\'aide financière se compare-t-il d\'une année à l\'autre ?' ],
+    'Admission': [ 'Quels sont les GPA et scores moyens des étudiants admis ?', 'Les étudiants internationaux doivent-ils passer des tests supplémentaires ou soumettre des documents spécifiques ?', 'Puis-je contacter des étudiants actuels ou des anciens élèves pour en savoir plus sur leurs expériences ?', 'Comment puis-je suivre le statut de ma candidature après l\'avoir soumise ?' ]
+  } : {
+    'Academic Info': [ 'What are the most popular majors or programs?', 'Are there honors programs or special academic tracks?', 'Are there research opportunities available for undergraduate students?', 'What options are there for studying abroad in Europe?' ],
+    'Events': [ 'How can I book an in-person campus tour?', 'Are there virtual tours available?', 'What major campus events take place each semester?', 'What student clubs or organizations are active on campus, and how can I join?' ],
+    'Policies': [ 'How can I change my major or minor?', 'What is the policy on transfer credits?', 'Where can I find the academic calendar?', 'What are the student conduct policies?' ], // Assuming policies category is needed
+    'Facilities': [ 'What types of housing options are available for freshmen students?', 'Are the gym and fitness facilities open to all students?', 'What dining options are available for first year students?', 'Are laundry facilities available in the dorms?' ],
+    'Financial Aid': [ 'How do I apply for financial aid, and what types of aid are offered?', 'Will applying to financial aid impact my application?', 'What is the work-study program, and how can I participate?', 'How does the financial aid package compare year-to-year?' ],
+    'Admission': [ 'What are the average GPA and test scores for admitted students?', 'Do international students need to take additional tests or submit specific documents?', 'Can I connect with current students or alumni to learn about their experiences?', 'How can I track the status of my application after submitting it?' ] // Admission category if needed
   };
   
 
@@ -258,67 +246,31 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
   const startAdornment = useMemo(() => {
      // Log when useMemo recalculates
      console.log('[LandingPageImprove useMemo startAdornment] Recalculating with:', { currentChatId, isCurrentChatPrivate });
+    if (userUniversity === 'kedge') {
+        return null; // Pas d'adornment pour Kedge
+    }
     return (
-      <InputAdornment position="start">
-        <IconButton
-          disabled={!currentChatId}
-          onClick={async () => {
-             // Log when the button is clicked
-             console.log('[LandingPageImprove startAdornment onClick] Button clicked. State:', { currentChatId, isCurrentChatPrivate });
-            if (!currentChatId) {
-              console.warn("Cannot change privacy: No active chat selected.");
-              return;
-            }
-            const newPrivacyState = !isCurrentChatPrivate;
-            console.log(`LandingPage: Toggling privacy for chat ${currentChatId} to ${newPrivacyState ? 'Private' : 'Public'}`);
-            try {
-              await updateConversationPrivacy(currentChatId, newPrivacyState);
-              console.log(`[LandingPageImprove startAdornment onClick] updateConversationPrivacy called successfully.`);
-            } catch (error) {
-              console.error('[LandingPageImprove startAdornment onClick] Error calling updateConversationPrivacy:', error);
-            }
-          }}
-          edge="start"
-          aria-label={isCurrentChatPrivate ? "Set to Public" : "Set to Private"}
+      <InputAdornment position="start" sx={{ marginRight: '8px' }}>
+        <Box
+          onClick={() => updateConversationPrivacy(currentChatId || '', !isCurrentChatPrivate)}
           sx={{
-            opacity: !currentChatId ? 0.5 : 1,
-            cursor: !currentChatId ? 'not-allowed' : 'pointer',
-            backgroundColor: isCurrentChatPrivate ? '#E0E0E0' : '#D6DDF5',
-            color: isCurrentChatPrivate ? '#6F6F6F' : '#3155CC',
-            borderRadius: '12px',
-            padding: '6px 12px',
-            marginLeft: '8px',
-            marginRight: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '80px',
-            height: '35px',
-            '&:hover': !currentChatId ? {} : {
-              backgroundColor: isCurrentChatPrivate ? '#D5D5D5' : '#C4A4D8',
-              color: isCurrentChatPrivate ? '#5A5A5A' : '#4A0B8A',
-            },
+            fontSize: '0.8rem',
+            fontWeight: 'bold',
+            color: isCurrentChatPrivate ? '#6F6F6F' : '#4A90E2',
+            backgroundColor: isCurrentChatPrivate ? '#F0F0F0' : '#E0F2FF',
+            padding: '4px 10px',
+            borderRadius: '5px',
+            display: 'inline-block',
+            cursor: 'pointer',
+            userSelect: 'none'
           }}
         >
-          {isCurrentChatPrivate ? (
-            <>
-              <LockIcon fontSize="small" sx={{ marginRight: '4px' }} />
-              <Typography variant="caption" sx={{ color: '#000' }}>
-                Private
-              </Typography>
-            </>
-          ) : (
-            <>
-              <LockOpenIcon fontSize="small" sx={{ marginRight: '4px' }} />
-              <Typography variant="caption" sx={{ color: '#3155CC' }}>
-                Public
-              </Typography>
-            </>
-          )}
-        </IconButton>
+          {isCurrentChatPrivate ? <LockIcon sx={{ fontSize: 'inherit', verticalAlign: 'middle', mr: 0.5 }} /> : <LockOpenIcon sx={{ fontSize: 'inherit', verticalAlign: 'middle', mr: 0.5 }} />}
+          {isCurrentChatPrivate ? 'Private' : 'Public'}
+        </Box>
       </InputAdornment>
     );
-  }, [currentChatId, isCurrentChatPrivate]); // Removed updateConversationPrivacy from deps
+  }, [currentChatId, isCurrentChatPrivate, updateConversationPrivacy, userUniversity]);
   // ---> Fin Mémoïsation <---
 
   // Log before returning the component JSX
@@ -418,7 +370,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
             }),
           }}
         >
-          What are you looking for?
+          {isKedge ? "Que cherchez-vous ?" : "What are you looking for?"}
         </Typography>
 
         <TextField
@@ -430,10 +382,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
           onKeyPress={handleKeyPress}
           placeholder={placeholderText}
           InputProps={{
-            startAdornment: startAdornment,
+            startAdornment,
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={handleSend} aria-label="Send message">
+                <IconButton onClick={handleSend} aria-label={isKedge ? "Envoyer message" : "Send message"}>
                   <ArrowForwardIcon style={{ color: '#011F5B', fontSize: '1.5rem' }} />
                 </IconButton>
               </InputAdornment>
@@ -499,27 +451,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSend }) => {
         {isSmallScreen && (
           <Box mt={2}>
             <Box display="flex" flexWrap="wrap" justifyContent="center" gap={1}>
-              {Object.keys(questionsMap).map((category) => (
+              {buttons.map((button) => (
                 <Typography
-                  key={category}
-                  onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
+                  key={button.value}
+                  onClick={() => setSelectedCategory(selectedCategory === button.value ? null : button.value)}
                   sx={{
                     cursor: "pointer",
                     fontSize: "0.9rem",
                     fontWeight: "500",
                     padding: "8px 12px",
                     borderRadius: "12px",
-                    color: selectedCategory === category ? "#FFFFFF" : "#1565D8",
-                    backgroundColor: selectedCategory === category ? "#1565D8" : "#E3F2FD",
-                    '&:hover': { backgroundColor: selectedCategory === category ? "#115293" : "#BBDEFB" },
+                    color: selectedCategory === button.value ? "#FFFFFF" : "#1565D8",
+                    backgroundColor: selectedCategory === button.value ? "#1565D8" : "#E3F2FD",
+                    '&:hover': { backgroundColor: selectedCategory === button.value ? "#115293" : "#BBDEFB" },
                   }}
                 >
-                  {category}
+                  {button.label}
                 </Typography>
               ))}
             </Box>
 
-            {selectedCategory && (
+            {selectedCategory && questionsMap[selectedCategory] && (
               <Box mt={2}>
                 {questionsMap[selectedCategory].map((question, index) => (
                   <Typography
