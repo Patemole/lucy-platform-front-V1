@@ -294,6 +294,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
 
   const yearOptions = [
+    { label: "Incoming Freshman", value: "Incoming Freshman" },
+    { label: "Exchange Student", value: "Exchange" },
     { label: "Freshman (1st year)", value: "Freshman" },
     { label: "Sophomore (2nd year)", value: "Sophomore" },
     { label: "Junior (3rd year)", value: "Junior" },
