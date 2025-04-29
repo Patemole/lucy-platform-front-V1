@@ -19,8 +19,8 @@ const UsefulLinksSection: React.FC<UsefulLinksSectionProps> = ({ usefulLinks }) 
     }
 
     return (
-        <Box sx={{ width: '100%', maxWidth: 500, mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Useful links</Typography>
+        <Box sx={{ width: '100%', maxWidth: 480, mb: 4 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>Useful links</Typography>
             <List dense sx={{ p: 0 }}>
                 {usefulLinks.map((link, index) => (
                     <ListItem key={index} sx={{ p: 0, alignItems: 'baseline' }}>

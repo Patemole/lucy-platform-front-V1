@@ -22,21 +22,21 @@ const FocusHeader: React.FC<FocusHeaderProps> = ({
 }) => {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
-            <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 1, textAlign: 'center' }}>
+            <Typography component="h2" sx={{ mb: 0.5, textAlign: 'center', fontSize: '1.1rem' }}>
                 Your focus of
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <IconButton size="small" onClick={onPreviousWeek} disabled={isFirstWeek}>
                     <ChevronLeftIcon />
                 </IconButton>
-                <Typography variant="h4" component="span" sx={{ fontWeight: 'bold', mx: 2 }}>
+                <Typography component="span" sx={{ fontWeight: 'bold', mx: 2, fontSize: '2rem' }}>
                     {dateRange}
                 </Typography>
                 <IconButton size="small" onClick={onNextWeek} disabled={isLastWeek}>
                     <ChevronRightIcon />
                 </IconButton>
             </Box>
-            <Typography variant="subtitle1" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+            <Typography component="p" sx={{ color: 'text.secondary', textAlign: 'center', fontSize: '1.15rem' }}>
                 {focusTitle}
             </Typography>
         </Box>

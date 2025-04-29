@@ -1,9 +1,9 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import FocusHeader from './weekly_focus_components/FocusHeader';
 import DeadlinesSection from './weekly_focus_components/DeadlinesSection';
 import UsefulLinksSection from './weekly_focus_components/UsefulLinksSection';
-import TryThisSection from './weekly_focus_components/TryThisSection';
+import FeatureHighlightCard from './weekly_focus_components/FeatureHighlightCard';
 
 // Interface pour une tâche individuelle (copiée/synchronisée depuis DeadlinesSection)
 interface DeadlineItem {
@@ -28,17 +28,20 @@ interface UsefulLink {
     description: string;
 }
 
-interface TryThis {
+// --- Interface pour une Feature (reçue de LandingPageV2) --- 
+// Assurez-vous que cette définition correspond à celle de LandingPageV2
+interface FeatureItemProp {
     title: string;
-    image?: string; // URL de l'image
+    image?: string;
 }
 
+// Mettre à jour WeeklyFocusProps pour accepter features[]
 interface WeeklyFocusProps {
     dateRange: string;
     focusTitle: string;
-    deadlines: Deadline[]; // Peut être vide
+    deadlines: Deadline[]; 
     usefulLinks: UsefulLink[];
-    tryThis: TryThis;
+    features: FeatureItemProp[]; // Utiliser l'interface définie ci-dessus
     onSelectItem: (itemText: string) => void;
     onNextWeek: () => void;
     onPreviousWeek: () => void;
@@ -52,7 +55,7 @@ const WeeklyFocus: React.FC<WeeklyFocusProps> = ({
     focusTitle, 
     deadlines, 
     usefulLinks, 
-    tryThis, 
+    features, 
     onSelectItem,
     onNextWeek,
     onPreviousWeek,
@@ -60,6 +63,9 @@ const WeeklyFocus: React.FC<WeeklyFocusProps> = ({
     isFirstWeek,
     isLastWeek
 }) => {
+    const hasFeatures = features && features.length > 0;
+    const displayFeaturesInline = features && features.length > 1;
+
     return (
         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <FocusHeader 
@@ -76,7 +82,41 @@ const WeeklyFocus: React.FC<WeeklyFocusProps> = ({
                 onTaskToggle={onTaskToggle}
             />
             <UsefulLinksSection usefulLinks={usefulLinks} />
-            <TryThisSection tryThis={tryThis} />
+            
+            {/* --- Section Features --- */}
+            {hasFeatures && (
+                <Box sx={{ width: '100%', maxWidth: 480, mb: 4 }}>
+                    {/* Titre fixe pour la section */}
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2, width: '100%', textAlign: 'left' }}>
+                        Try this
+                    </Typography>
+                    
+                    {/* Conteneur pour les cartes, gère l'affichage en ligne/colonne */}
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: displayFeaturesInline ? 'row' : 'column',
+                        gap: displayFeaturesInline ? 2 : 0, // Espace entre les cartes si en ligne
+                        justifyContent: 'center', // Centre les cartes si elles sont moins larges
+                        alignItems: 'stretch' // Étire les cartes en hauteur
+                    }}>
+                        {features.map((feature) => (
+                            <Box 
+                                key={feature.title} 
+                                sx={{ 
+                                    // Chaque carte prend 50% de la largeur moins l'espacement si en ligne, sinon 100%
+                                    width: displayFeaturesInline ? 'calc(50% - 8px)' : '100%',
+                                    // Appliquer flex pour que FeatureHighlightCard s'étende bien
+                                    display: 'flex' 
+                                }}
+                            >
+                                <FeatureHighlightCard 
+                                    featureItem={feature} // Passe directement l'objet feature
+                                />
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
+            )}
         </Box>
     );
 };

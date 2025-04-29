@@ -1,24 +1,26 @@
 import React from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 
-// Renommé depuis TryThis - Idéalement, ce type pourrait être dans un fichier partagé
+// L'interface FeatureItem ne contient plus sectionTitle
 interface FeatureItem {
     title: string;
     image?: string;
 }
 
-// Renommé depuis TryThisSectionProps et ajout de sectionTitle
+// FeatureHighlightCardProps ne contient plus sectionTitle
 interface FeatureHighlightCardProps {
-    sectionTitle: string; // Nouveau prop pour le titre de la section
-    featureItem: FeatureItem; // Renommé depuis tryThis
+    featureItem: FeatureItem;
+    // On pourrait ajouter une prop optionnelle pour la largeur si besoin
+    // sx?: object;
 }
 
-// Renommé depuis TryThisSection
-const FeatureHighlightCard: React.FC<FeatureHighlightCardProps> = ({ sectionTitle, featureItem }) => {
+// Le composant ne reçoit plus sectionTitle
+const FeatureHighlightCard: React.FC<FeatureHighlightCardProps> = ({ featureItem/*, sx*/ }) => {
     return (
-        <Box sx={{ width: '100%', maxWidth: 480, mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            {/* Utilisation de la nouvelle prop sectionTitle */}
-            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2, width: '100%', textAlign: 'left' }}>{sectionTitle}</Typography>
+        // La Box externe pourrait recevoir des styles (sx) du parent pour gérer la largeur
+        <Box sx={{ width: '100%', /*maxWidth: 480,*/ mb: 4 /*, ...sx*/ }}> 
+            {/* Suppression du Typography pour sectionTitle */}
+            {/* <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2, width: '100%', textAlign: 'left' }}>{sectionTitle}</Typography> */}
             <Paper
                 variant="outlined"
                 sx={{
@@ -27,15 +29,14 @@ const FeatureHighlightCard: React.FC<FeatureHighlightCardProps> = ({ sectionTitl
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'flex-end',
-                    width: '100%',
-                    height: 200,
+                    width: '100%', // Prendra la largeur de la Box parente
+                    height: 200, // Hauteur fixe pour l'instant
                     bgcolor: 'grey.200',
                     textAlign: 'center',
                     overflow: 'hidden',
                     position: 'relative',
                 }}
             >
-                {/* Utilisation de featureItem au lieu de tryThis */}
                 {featureItem.image && (
                     <Box
                         component="img"
@@ -60,7 +61,6 @@ const FeatureHighlightCard: React.FC<FeatureHighlightCardProps> = ({ sectionTitl
                     p: 1,
                     mt: 'auto'
                 }}>
-                    {/* Utilisation de featureItem au lieu de tryThis */}
                     <Typography variant="body1" sx={{ color: 'white', fontWeight: '500' }}>
                         {featureItem.title}
                     </Typography>
@@ -70,5 +70,4 @@ const FeatureHighlightCard: React.FC<FeatureHighlightCardProps> = ({ sectionTitl
     );
 };
 
-// Renommage de l'exportation par défaut
 export default FeatureHighlightCard; 

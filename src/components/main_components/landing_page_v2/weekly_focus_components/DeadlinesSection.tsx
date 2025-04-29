@@ -70,8 +70,8 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
     const hasDeadlines = deadlines.length > 0;
 
     return (
-        <Box sx={{ width: '100%', maxWidth: 500, mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Deadlines</Typography>
+        <Box sx={{ width: '100%', maxWidth: 480, mb: 4 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>Deadlines</Typography>
             {!hasDeadlines ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: '#E0F8E7', p: 1, borderRadius: '8px' }}>
                     <EmojiEmotionsIcon sx={{ mr: 1, color: '#25C35E' }} />
