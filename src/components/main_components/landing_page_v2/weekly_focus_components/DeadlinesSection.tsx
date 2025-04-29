@@ -9,6 +9,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 // Interface pour une tâche individuelle dans une deadline
 interface DeadlineItem {
@@ -34,7 +35,12 @@ interface DeadlinesSectionProps {
 
 // Helper pour calculer les tâches restantes
 const countRemainingTasks = (items: DeadlineItem[]): number => {
-    return items.filter(item => !item.isDone).length;
+    return Array.isArray(items) ? items.filter(item => !item.isDone).length : 0;
+};
+
+// Helper pour vérifier si toutes les tâches d'une deadline sont complètes
+const isDeadlineComplete = (deadline: Deadline): boolean => {
+    return Array.isArray(deadline.items) && deadline.items.length > 0 && deadline.items.every(item => item.isDone);
 };
 
 const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelectItem, onTaskToggle }) => {
@@ -49,12 +55,12 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
                 newOpenState[deadlines[0].id] = true; 
             } else {
                 deadlines.forEach(d => {
-                    newOpenState[d.id] = prev[d.id] ?? false; 
+                    newOpenState[d.id] = prev[d.id] ?? (deadlines.length === 1 && d.id === deadlines[0]?.id); 
                 });
             }
             return newOpenState;
         });
-    }, [deadlines.length]);
+    }, [deadlines]);
 
     const handleDeadlineToggle = (id: string) => {
         setOpenDeadlines(prev => ({ ...prev, [id]: !prev[id] }));
@@ -80,9 +86,18 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
             ) : (
                 <Box sx={{ display: 'flex' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mr: 2, alignSelf: 'stretch' }}>
-                        {deadlinesToday.length > 0 && <TodayIcon sx={{ color: 'primary.main', mb: 0.5 }} />}
-                        <Box sx={{ flexGrow: 1, width: '2px', bgcolor: 'primary.main', opacity: 0.5 }}></Box>
-                        {deadlinesTomorrow.length > 0 && <EventNoteIcon sx={{ color: 'primary.main', mt: 0.5 }} />}
+                        {(deadlinesToday.length > 0 || deadlinesTomorrow.length > 0) && (
+                            <>
+                                {deadlinesToday.length > 0 && <TodayIcon sx={{ color: 'primary.main', mb: 0.5 }} />}
+                                <Box sx={{ 
+                                    flexGrow: 1, 
+                                    width: '2px', 
+                                    bgcolor: 'primary.light',
+                                    my: (deadlinesToday.length > 0 && deadlinesTomorrow.length > 0) ? 0.5 : 0
+                                }}></Box>
+                                {deadlinesTomorrow.length > 0 && <EventNoteIcon sx={{ color: 'primary.main', mt: 0.5 }} />}
+                            </>
+                        )}
                     </Box>
                     <Box sx={{ flexGrow: 1 }}>
                         {deadlinesToday.length > 0 && (
@@ -90,6 +105,7 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
                                 <Typography sx={{ fontWeight: 'bold', mb: 1 }}>Today</Typography>
                                 {deadlinesToday.map((deadline) => {
                                     const remainingTasks = countRemainingTasks(deadline.items);
+                                    const isComplete = isDeadlineComplete(deadline);
                                     const isOpen = openDeadlines[deadline.id] ?? false;
                                     const showExpandIcon = deadline.items && deadline.items.length > 0;
                                     const ExpandCollapseIcon = deadlines.length > 1 ? ArrowForwardIosIcon : (isOpen ? ExpandLessIcon : ExpandMoreIcon);
@@ -97,29 +113,43 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
                                     return (
                                         <Box key={deadline.id} sx={{ mb: 1 }}>
                                             <ListItem
+                                                button
+                                                onClick={() => handleDeadlineToggle(deadline.id)}
                                                 sx={{
                                                     p: 1,
                                                     mb: 0.5,
-                                                    bgcolor: '#FFF0F0',
+                                                    bgcolor: isComplete ? '#E6F4EA' : '#FFF0F0',
                                                     borderRadius: '8px',
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                    justifyContent: 'space-between'
+                                                    justifyContent: 'space-between',
+                                                    cursor: 'pointer',
+                                                    '&:hover': {
+                                                        bgcolor: isComplete ? '#D9EDE2' : '#FEE8E8'
+                                                    }
                                                 }}
                                             >
                                                 <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, mr: 1 }}>
-                                                    {deadline.isWarning && <ListItemIcon sx={{ minWidth: 'auto', mr: 0.5 }}> <WarningAmberIcon color="warning" sx={{ fontSize: '1.1rem' }} /> </ListItemIcon>}
+                                                    {isComplete ? (
+                                                        <ListItemIcon sx={{ minWidth: 'auto', mr: 0.5 }}> 
+                                                            <CheckCircleIcon sx={{ fontSize: '1.1rem', color: '#25C35E', mr: 0.5 }} /> 
+                                                        </ListItemIcon>
+                                                    ) : deadline.isWarning ? (
+                                                        <ListItemIcon sx={{ minWidth: 'auto', mr: 0.5 }}> 
+                                                            <WarningAmberIcon color="warning" sx={{ fontSize: '1.1rem', mr: 0.5 }} /> 
+                                                        </ListItemIcon>
+                                                    ) : (
+                                                        <Box sx={{ width: '1.1rem', mr: 1 }} />
+                                                    )}
                                                     <ListItemText primary={deadline.title} sx={{ m: 0 }} primaryTypographyProps={{fontWeight: 'medium'}} />
                                                 </Box>
                                                 
                                                 <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                                                    {remainingTasks > 0 && (
+                                                    {!isComplete && remainingTasks > 0 && (
                                                         <Chip label={remainingTasks} color="error" size="small" sx={{ height: '18px', fontSize: '0.7rem', fontWeight: 'bold', mr: showExpandIcon ? 0.5 : 0 }} />
                                                     )}
                                                     {showExpandIcon && (
-                                                        <IconButton edge="end" size="small" onClick={() => handleDeadlineToggle(deadline.id)} sx={{ p: 0.2 }}>
-                                                            <ExpandCollapseIcon sx={{ fontSize: '1.1rem', transform: (deadlines.length > 1 && !isOpen) ? 'rotate(0deg)' : (deadlines.length > 1 && isOpen) ? 'rotate(90deg)' : 'none' }} />
-                                                        </IconButton>
+                                                        <ExpandCollapseIcon sx={{ fontSize: '1.1rem', transform: (deadlines.length > 1 && !isOpen) ? 'rotate(0deg)' : (deadlines.length > 1 && isOpen) ? 'rotate(90deg)' : 'none', ml: 1 }} />
                                                     )}
                                                 </Box>
                                             </ListItem>
@@ -134,7 +164,7 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
                                                                 sx={{ pl: 1 }}
                                                             >
                                                                 <ListItemIcon sx={{ minWidth: 'auto', mr: 1 }}>
-                                                                    {item.isDone ? <CheckCircleOutlineIcon color="disabled" sx={{ fontSize: '1.1rem' }} /> : <RadioButtonUncheckedIcon color="action" sx={{ fontSize: '1.1rem' }} />}
+                                                                    {item.isDone ? <CheckCircleOutlineIcon color="success" sx={{ fontSize: '1.1rem' }} /> : <RadioButtonUncheckedIcon color="action" sx={{ fontSize: '1.1rem' }} />}
                                                                 </ListItemIcon>
                                                                 <ListItemText
                                                                     primary={item.text}
@@ -155,13 +185,14 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
                                 <Typography sx={{ fontWeight: 'bold', mb: 1 }}>Tomorrow</Typography>
                                 {deadlinesTomorrow.map((deadline) => {
                                     const remainingTasks = countRemainingTasks(deadline.items);
+                                    const isComplete = isDeadlineComplete(deadline);
                                     const isOpen = openDeadlines[deadline.id] ?? false;
                                     const showExpandIcon = deadline.items && deadline.items.length > 0;
                                     const ExpandCollapseIcon = deadlines.length > 1 ? ArrowForwardIosIcon : (isOpen ? ExpandLessIcon : ExpandMoreIcon);
 
-                                    if (remainingTasks === 0 && deadline.items.length === 0 && !deadline.isWarning) {
+                                    if (!isComplete && remainingTasks === 0 && deadline.items?.length === 0 && !deadline.isWarning) {
                                         return (
-                                            <Box key={deadline.id} sx={{ display: 'flex', alignItems: 'center', bgcolor: '#E0F8E7', p: 1, borderRadius: '8px' }}>
+                                            <Box key={deadline.id} sx={{ display: 'flex', alignItems: 'center', bgcolor: '#E0F8E7', p: 1, borderRadius: '8px', mb:1 }}>
                                                 <EmojiEmotionsIcon sx={{ mr: 1, color: '#25C35E' }} />
                                                 <Typography sx={{ fontStyle: 'italic', color: '#006400' }}>{deadline.title}</Typography>
                                             </Box>
@@ -171,29 +202,43 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
                                     return (
                                         <Box key={deadline.id} sx={{ mb: 1 }}>
                                             <ListItem
+                                                button
+                                                onClick={() => handleDeadlineToggle(deadline.id)}
                                                 sx={{
                                                     p: 1,
                                                     mb: 0.5,
-                                                    bgcolor: '#FFF0F0',
+                                                    bgcolor: isComplete ? '#E6F4EA' : '#FFF0F0',
                                                     borderRadius: '8px',
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                    justifyContent: 'space-between'
+                                                    justifyContent: 'space-between',
+                                                    cursor: 'pointer',
+                                                    '&:hover': {
+                                                        bgcolor: isComplete ? '#D9EDE2' : '#FEE8E8'
+                                                    }
                                                 }}
                                             >
                                                 <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, mr: 1 }}>
-                                                    {deadline.isWarning && <ListItemIcon sx={{ minWidth: 'auto', mr: 0.5 }}> <WarningAmberIcon color="warning" sx={{ fontSize: '1.1rem' }} /> </ListItemIcon>}
+                                                    {isComplete ? (
+                                                        <ListItemIcon sx={{ minWidth: 'auto', mr: 0.5 }}> 
+                                                            <CheckCircleIcon sx={{ fontSize: '1.1rem', color: '#25C35E', mr: 0.5 }} /> 
+                                                        </ListItemIcon>
+                                                    ) : deadline.isWarning ? (
+                                                        <ListItemIcon sx={{ minWidth: 'auto', mr: 0.5 }}> 
+                                                            <WarningAmberIcon color="warning" sx={{ fontSize: '1.1rem', mr: 0.5 }} /> 
+                                                        </ListItemIcon>
+                                                    ) : (
+                                                        <Box sx={{ width: '1.1rem', mr: 1 }} />
+                                                    )}
                                                     <ListItemText primary={deadline.title} sx={{ m: 0 }} primaryTypographyProps={{fontWeight: 'medium'}} />
                                                 </Box>
                                                 
                                                 <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                                                    {remainingTasks > 0 && (
+                                                    {!isComplete && remainingTasks > 0 && (
                                                         <Chip label={remainingTasks} color="error" size="small" sx={{ height: '18px', fontSize: '0.7rem', fontWeight: 'bold', mr: showExpandIcon ? 0.5 : 0 }} />
                                                     )}
                                                     {showExpandIcon && (
-                                                        <IconButton edge="end" size="small" onClick={() => handleDeadlineToggle(deadline.id)} sx={{ p: 0.2 }}>
-                                                            <ExpandCollapseIcon sx={{ fontSize: '1.1rem', transform: (deadlines.length > 1 && !isOpen) ? 'rotate(0deg)' : (deadlines.length > 1 && isOpen) ? 'rotate(90deg)' : 'none' }} />
-                                                        </IconButton>
+                                                        <ExpandCollapseIcon sx={{ fontSize: '1.1rem', transform: (deadlines.length > 1 && !isOpen) ? 'rotate(0deg)' : (deadlines.length > 1 && isOpen) ? 'rotate(90deg)' : 'none', ml: 1 }} />
                                                     )}
                                                 </Box>
                                             </ListItem>
@@ -208,7 +253,7 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
                                                                 sx={{ pl: 1 }}
                                                             >
                                                                 <ListItemIcon sx={{ minWidth: 'auto', mr: 1 }}>
-                                                                    {item.isDone ? <CheckCircleOutlineIcon color="disabled" sx={{ fontSize: '1.1rem' }} /> : <RadioButtonUncheckedIcon color="action" sx={{ fontSize: '1.1rem' }} />}
+                                                                    {item.isDone ? <CheckCircleOutlineIcon color="success" sx={{ fontSize: '1.1rem' }} /> : <RadioButtonUncheckedIcon color="action" sx={{ fontSize: '1.1rem' }} />}
                                                                 </ListItemIcon>
                                                                 <ListItemText
                                                                     primary={item.text}

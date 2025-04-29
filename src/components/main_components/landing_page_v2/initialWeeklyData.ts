@@ -27,7 +27,7 @@ export interface WeeklyData {
     // Note: Pas d'ID Firestore ici car ce sont les données *avant* insertion
     dateRange: string;
     focusTitle: string;
-    // startDate?: Date; // Si vous l'ajoutez
+    startDate: Date;
     deadlines: Deadline[];
     usefulLinks: UsefulLink[];
     features: FeatureItem[]; 
@@ -36,9 +36,10 @@ export interface WeeklyData {
 
 // --- Données Initiales --- 
 export const initialAllWeeksData: WeeklyData[] = [
-    { // Semaine 1: April 15-21
+    { // Semaine 1
         currentMonth: 'April',
         dateRange: 'April 15-21',
+        startDate: new Date('2025-04-15T00:00:00'),
         focusTitle: 'Checking your transfer credits & AP scores',
         deadlines: [
             {
@@ -78,11 +79,90 @@ export const initialAllWeeksData: WeeklyData[] = [
             }
         ],
     },
-    { // Semaine 2: May 20-26
+    { // Semaine 2: April 22-28
+        currentMonth: 'April',
+        dateRange: 'April 22-28', 
+        startDate: new Date('2025-04-22T00:00:00'),
+        focusTitle: 'Financial Aid & Housing Deposit',
+        deadlines: [ 
+            {
+                id: 'finaid-today-apr2',
+                title: 'Accept Financial Aid Package', 
+                day: 'Today',
+                isWarning: true,
+                items: [
+                    { id: 'fa1', text: 'Review financial aid offer', isDone: false },
+                    { id: 'fa2', text: 'Accept/Decline specific awards', isDone: false },
+                    { id: 'fa3', text: 'Complete required loan entrance counseling', isDone: false },
+                ]
+            },
+            {
+                id: 'housing-deposit-tmr-apr2',
+                title: 'Pay Housing Deposit',
+                day: 'Tomorrow',
+                isWarning: true,
+                items: [
+                    { id: 'hd1', text: 'Find housing deposit amount and deadline', isDone: false },
+                    { id: 'hd2', text: 'Submit deposit payment online', isDone: false },
+                ]
+            }
+        ],
+        usefulLinks: [
+            { text: 'Understanding your Financial Aid', linkText: 'Financial Aid Office', description: 'Detailed explanations and FAQs.' },
+            { text: 'Housing Options and Deposits', linkText: 'Housing Portal', description: 'View residence halls and payment info.' }
+        ],
+        features: [
+            {
+                title: 'Budgeting Tools & Resources', 
+                image: '/Campus-min.png' // Placeholder image
+            }
+        ],
+    },
+    { // Semaine 3: April 29 - May 5 (La nouvelle semaine demandée)
+        currentMonth: 'May', // Chevauche Avril/Mai, mettre Mai?
+        dateRange: 'April 29 - May 5', 
+        startDate: new Date('2025-04-29T00:00:00'),
+        focusTitle: 'Explore Campus Resources & Health Forms',
+        deadlines: [
+            {
+                id: 'health-forms-today-apr3',
+                title: 'Submit Immunization Records', 
+                day: 'Today',
+                isWarning: false,
+                items: [
+                    { id: 'hf1', text: 'Gather required vaccination documents', isDone: false },
+                    { id: 'hf2', text: 'Upload forms to Health Services portal', isDone: false },
+                ]
+            },
+            {
+                id: 'campus-map-tmr-apr3',
+                title: 'Explore Campus Map',
+                day: 'Tomorrow',
+                isWarning: false,
+                items: [
+                    { id: 'cm1', text: 'Locate key buildings (library, student union)', isDone: false },
+                    { id: 'cm2', text: 'Identify dining hall locations', isDone: false },
+                ]
+            }
+        ],
+        usefulLinks: [
+            { text: 'Student Health Services', linkText: 'Health Portal', description: 'Access forms and health requirements.' },
+            { text: 'Interactive Campus Map', linkText: 'Campus Map', description: 'Find your way around campus.' },
+            { text: 'Academic Support Centers', linkText: 'Learning Resources', description: 'Info on tutoring and writing centers.' },
+        ],
+        features: [
+            {
+                title: 'Virtual Campus Tour Available',
+                image: '/Castle-min.png' // Placeholder
+            }
+        ],
+    },
+    { // Semaine 4: May 6-12
         currentMonth: 'May',
-        dateRange: 'May 20-26',
+        dateRange: 'May 6-12',
+        startDate: new Date('2025-05-06T00:00:00'),
         focusTitle: 'Finding communities and clubs',
-        deadlines: [], // Pas de deadlines cette semaine
+        deadlines: [], 
         usefulLinks: [
             { text: 'Explore student organizations', linkText: 'Club Directory', description: 'Find groups based on your interests.' },
             { text: 'Upcoming campus events', linkText: 'Events Calendar', description: 'See what\'s happening on campus.' }
@@ -94,9 +174,10 @@ export const initialAllWeeksData: WeeklyData[] = [
             }
         ],
     },
-    { // Semaine 3: June 5-12
+    { // Semaine 5: June 5-12 (Anciennement semaine 3)
         currentMonth: 'June',
         dateRange: 'June 5-12',
+        startDate: new Date('2025-06-05T00:00:00'),
         focusTitle: 'Choosing and register for you classes',
         deadlines: [
             {
@@ -122,9 +203,10 @@ export const initialAllWeeksData: WeeklyData[] = [
         usefulLinks: [], 
         features: [],
     },
-     { // Semaine 4: June 13-19
-        currentMonth: 'June', // Toujours Juin
+     { // Semaine 6: June 13-19 (Anciennement semaine 4)
+        currentMonth: 'June',
         dateRange: 'June 13-19',
+        startDate: new Date('2025-06-13T00:00:00'),
         focusTitle: 'Finalize schedule and check prerequisites',
         deadlines: [
             {
@@ -141,7 +223,7 @@ export const initialAllWeeksData: WeeklyData[] = [
                 id: 'advisor-today-june2',
                 title: 'Meet Advisor',
                 day: 'Today',
-                isWarning: false, // Pas d'alerte pour celle-ci
+                isWarning: false,
                 items: [
                     { id: 'adv1', text: 'Prepare questions for advisor', isDone: false },
                 ]

@@ -11,6 +11,9 @@ import useAuthStore from '../../../stores/useAuthStore'; // Importer le store d'
 // Importer la fonction de seeding
 import { seedFirestoreData } from './seedFirestoreData';
 
+// Importer le nouveau hook
+import { useInitialWeekIndex } from './hooks/useInitialWeekIndex';
+
 // Interfaces (pourraient être dans un fichier partagé)
 /*
 interface DeadlineItem {
@@ -66,11 +69,10 @@ const progressBarData = {
 };
 
 const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity }) => {
-    console.log('<<< RENDERING LandingPageV2 >>>');
-    const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+    console.log("--- LandingPageV2 Component Rendering --- NOW WITH EXTRA LOGS ---"); 
+    // S'assurer que l'état inputValue est bien déclaré ici
     const [inputValue, setInputValue] = useState('');
     
-    // Récupérer l'état depuis les stores
     const {
         weeks,
         isLoading,
@@ -79,151 +81,96 @@ const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity })
         toggleTask
     } = useWeeklyFocusStore();
 
-    // Récupérer l'état d'onboarding depuis le store d'authentification
     const onboardingComplete = useAuthStore((state) => state.user?.onboardingComplete);
 
-    // --- UseEffect pour récupérer les données au montage (conditionné par l'onboarding) --- 
+    // Utiliser le hook personnalisé
+    const { currentWeekIndex, setCurrentWeekIndex, isIndexInitialized } = useInitialWeekIndex(
+        weeks, 
+        isLoading, 
+        onboardingComplete
+    );
+
+    // --- UseEffect pour charger les données (Conditionné, inchangé) --- 
     useEffect(() => {
-        // Ne charger que si l'onboarding est terminé ET si les données ne sont pas déjà là ou en cours de chargement
         if (onboardingComplete === true && weeks.length === 0 && !isLoading) {
-             console.log("Onboarding terminé, chargement des données WeeklyFocus...");
+             console.log("Onboarding OK, fetching WeeklyFocus data...");
              fetchWeeklyFocusData();
         } else if (onboardingComplete === false) {
-             console.log("Attente de la fin de l'onboarding pour charger WeeklyFocus...");
-             // Optionnel: On pourrait vouloir afficher un état spécifique ici
+             console.log("Waiting for onboarding to fetch WeeklyFocus data...");
         }
-    }, [onboardingComplete, fetchWeeklyFocusData, weeks.length, isLoading]); // Ajouter onboardingComplete aux dépendances
+    }, [onboardingComplete, fetchWeeklyFocusData, weeks.length, isLoading]);
 
-    // --- UseEffect pour l'insertion initiale (Seeding) --- 
-    // --- À n'exécuter qu'UNE SEULE FOIS --- 
+    // --- UseEffect pour le Seeding (inchangé) --- 
     useEffect(() => {
-        // Décommentez la ligne suivante UNIQUEMENT pour insérer les données initiales
-        // seedFirestoreData();
-        // Puis RE-COMMENTEZ la ligne après l'exécution réussie !
-    }, []); // Le tableau vide assure que cet effet ne s'exécute qu'une fois au montage
+        // Décommentez pour insérer les données
+         seedFirestoreData();
+        // Re-commentez après!
+    }, []); 
 
 
-
-
-    
-
-    // --- Fonctions de navigation et sélection ---
+    // --- Fonctions de navigation (utilisent maintenant setCurrentWeekIndex du hook) --- 
     const handleNextWeek = () => {
-        // Utiliser weeks.length du store
         setCurrentWeekIndex((prevIndex) => Math.min(prevIndex + 1, weeks.length - 1));
     };
     const handlePreviousWeek = () => {
         setCurrentWeekIndex((prevIndex) => Math.max(prevIndex - 1, 0));
     };
-     const handleDeadlineItemSelect = (itemText: string) => {
-        console.log("Item sélectionné pour input:", itemText);
-        setInputValue(itemText); 
-    };
-     const handleSendFromInput = (message: string) => {
-        onSend(message); 
-        setInputValue(''); 
-    };
-
-    // --- Mettre à jour handleTaskToggle pour utiliser l'action du store --- 
+    // --- Autres fonctions (inchangées) --- 
+     const handleDeadlineItemSelect = (itemText: string) => { setInputValue(itemText); };
+     const handleSendFromInput = (message: string) => { onSend(message); setInputValue(''); };
      const handleTaskToggle = (weekId: string, deadlineId: string, itemId: string) => {
-        // Appeler directement l'action du store
         toggleTask(weekId, deadlineId, itemId);
-        // La mise à jour de l'état est gérée par Zustand
     };
 
-    // --- Calcul dynamique du statut des mois pour la ProgressBar (utiliser weeks du store) --- 
+    // --- Calcul ProgressBar (inchangé) --- 
     const monthOrder = progressBarData.months.map(m => m.name); 
-
     const dynamicMonthsStatus = useMemo(() => {
-        // Vérifier si les données sont chargées
         if (isLoading || weeks.length === 0) {
-             // Retourner un état par défaut ou l'état précédent si possible
-             // Ici, on retourne l'état initial statique pour l'instant
              return progressBarData.months;
         }
-        console.log("Recalculating month statuses..."); 
-        // Utiliser weeks du store
         const currentViewedMonth = weeks[currentWeekIndex]?.currentMonth;
         const currentViewedMonthIndex = monthOrder.indexOf(currentViewedMonth);
-
         return progressBarData.months.map((month, index) => {
             const weeksInThisMonth = weeks.filter(week => week.currentMonth === month.name);
-            
             let allTasksDone = true;
             if (weeksInThisMonth.length > 0) {
                  allTasksDone = weeksInThisMonth.every(week => 
                     week.deadlines.every(deadline => 
-                        deadline.items.every(item => item.isDone)
+                        Array.isArray(deadline.items) && deadline.items.every(item => item.isDone)
                     )
                 );
-            } else {
-                 allTasksDone = true; 
-            }
-
+            } else { allTasksDone = true; }
             let status: 'valid' | 'pending' | 'invalid' = 'invalid';
-
-             if (index < currentViewedMonthIndex) { 
-                 status = allTasksDone ? 'valid' : 'invalid'; 
-             } else if (index === currentViewedMonthIndex) { 
-                 status = allTasksDone ? 'valid' : 'pending'; 
-             } else { 
-                 status = 'invalid'; 
-             }
-
+             if (index < currentViewedMonthIndex) { status = allTasksDone ? 'valid' : 'invalid'; 
+             } else if (index === currentViewedMonthIndex) { status = allTasksDone ? 'valid' : 'pending'; 
+             } else { status = 'invalid'; } 
             return { ...month, status };
         });
-    }, [weeks, currentWeekIndex, isLoading]); // Ajouter isLoading aux dépendances
+    }, [weeks, currentWeekIndex, isLoading]); 
 
-    // --- Gestion de l'affichage pendant le chargement ou en cas d'erreur OU si onboarding incomplet --- 
-    
-    // Si l'onboarding n'est pas encore marqué comme terminé, afficher un message ou rien
+    // --- Rendu conditionnel (utilise isIndexInitialized du hook) --- 
     if (onboardingComplete === false) {
-         return (
-             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', p: 2 }}>
-                 {/* Option 1: Message d'attente */}
-                 <Typography>Finalisez votre profil pour accéder au focus hebdomadaire.</Typography>
-                 {/* Option 2: Ne rien afficher ou un placeholder différent */}
-                 {/* null */}
-             </Box>
-         );
+         return <Box sx={{ p: 2, textAlign: 'center' }}><Typography>Finalisez votre profil...</Typography></Box>;
     }
-    
-    // Si l'onboarding est terminé (ou indéfini/en chargement initial), on vérifie le chargement des données weekly
-    if (isLoading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                <CircularProgress />
-            </Box>
-        );
+    // Afficher chargement si les données chargent OU si l'index initial n'est pas encore prêt
+    if (isLoading || !isIndexInitialized) { 
+        return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>;
     }
-
     if (error) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', p: 2 }}>
-                <Typography color="error">Erreur lors du chargement des données: {error.message}</Typography>
-            </Box>
-        );
+        return <Box sx={{ p: 2, textAlign: 'center' }}><Typography color="error">Erreur: {error.message}</Typography></Box>;
     }
-    
-    // Si l'onboarding est terminé mais pas de données (après chargement)
-    if (onboardingComplete === true && weeks.length === 0 && !isLoading) {
-         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', p: 2 }}>
-                <Typography>Aucune donnée de semaine trouvée pour le moment.</Typography>
-            </Box>
-        );
+    if (weeks.length === 0) {
+         return <Box sx={{ p: 2, textAlign: 'center' }}><Typography>Aucune donnée trouvée.</Typography></Box>;
     }
 
-    // --- Affichage principal si onboarding terminé et données chargées --- 
+    // --- Affichage principal --- 
     const currentWeekData = weeks[currentWeekIndex]; 
+    if (!currentWeekData) {
+        console.error(`Erreur: currentWeekData est indéfini pour l'index ${currentWeekIndex}`);
+        return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>;
+    }
     const isFirstWeek = currentWeekIndex === 0;
     const isLastWeek = currentWeekIndex === weeks.length - 1;
-
-    // Vérification de sécurité, même si l'affichage précédent devrait couvrir ce cas
-     if (!currentWeekData) {
-         // Peut arriver brièvement si weeks est vidé puis re-rempli?
-         return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>; 
-     }
 
     return (
         <Box sx={{ 

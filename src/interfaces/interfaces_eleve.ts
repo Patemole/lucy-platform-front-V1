@@ -28,6 +28,7 @@ export interface User {
   createdAt?: string;
   lastLogin?: string;
   profilePicture?: string;
+  completedTaskIds?: string[];
 
 }
 

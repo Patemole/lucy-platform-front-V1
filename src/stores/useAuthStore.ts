@@ -25,7 +25,7 @@ Ce store est la source unique de vérité pour les informations de l'utilisateur
 
 import { create } from 'zustand';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, updateDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, onSnapshot, Unsubscribe, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { auth, db } from '../auth/firebase';
 import { User } from '../interfaces/interfaces_eleve';
 
@@ -50,13 +50,12 @@ interface AuthState {
   addChatIdToFirestore: (chatId: string) => Promise<void>; // Ajoute un chatId au tableau 'chatsessions' dans Firestore. L'état local est mis à jour par l'écouteur.
   removeChatIdFromFirestore: (chatId: string) => Promise<void>; // Supprime un chatId du tableau 'chatsessions' dans Firestore. L'état local est mis à jour par l'écouteur.
   logoutUser: () => Promise<void>; // Arrête l'écouteur Firestore et déconnecte de Firebase Auth.
+  updateCompletedTasksInFirestore: (taskId: string, markAsDone: boolean) => Promise<void>;
 
   // --- Initialisation des Écouteurs ---
   initializeAuthListener: () => () => void; // Démarre l'écouteur Firebase Auth et retourne sa fonction d'arrêt.
   _initializeUserListener: (userId: string) => void; // Démarre l'écouteur Firestore pour le document utilisateur donné.
 }
-
-
 
 const useAuthStore = create<AuthState>((set, get) => ({
   // --- État Initial ---
@@ -66,8 +65,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   chatIds: [],
   userListenerUnsubscribe: null,
-
-
 
   // --- ACTIONS INTERNES --- 
   _setLoading: (loading) => set({ isLoading: loading }),
@@ -99,12 +96,14 @@ const useAuthStore = create<AuthState>((set, get) => ({
     } else {
       // Connexion ou Mise à Jour via l'écouteur Firestore:
       const chatSessions = userData.chatsessions || [];
+      const completedTaskIds = userData.completedTaskIds || [];
 
       // Vérifier si l'utilisateur ou les chatIds ont réellement changé pour optimiser les re-renders
       const hasUserChanged = JSON.stringify(userData) !== JSON.stringify(get().user);
       const hasChatIdsChanged = JSON.stringify(chatSessions) !== JSON.stringify(get().chatIds);
+      const hasCompletedTasksChanged = JSON.stringify(completedTaskIds) !== JSON.stringify(get().user?.completedTaskIds || []);
 
-      if (hasUserChanged || hasChatIdsChanged) {
+      if (hasUserChanged || hasChatIdsChanged || hasCompletedTasksChanged) {
           console.log(`%c>>> AuthStore updating user state <<<`, 'color: red; font-weight: bold;', userData); 
           set({
             user: userData, // Mettre à jour le profil complet
@@ -115,6 +114,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
           });
           if (hasUserChanged) console.log("AuthStore: Données utilisateur mises à jour depuis Firestore (via _setUserAndAuth):", userData);
           if (hasChatIdsChanged) console.log("AuthStore: Chat IDs mis à jour depuis Firestore:", chatSessions);
+          if (hasCompletedTasksChanged) console.log("AuthStore: Completed Task IDs mis à jour:", completedTaskIds);
       } else {
           // Si les données reçues sont identiques, s'assurer au moins que isLoading est false.
            if (get().isLoading) {
@@ -123,9 +123,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
       }
     }
   },
-
-
-
 
   // --- ACTIONS PUBLIQUES --- 
 
@@ -152,7 +149,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
             const currentDbChatIds = userSnap.data().chatsessions || [];
             // S'assurer qu'on ne l'ajoute que s'il n'est pas DÉJÀ dans Firestore
             if (!currentDbChatIds.includes(chatId)) {
-                await updateDoc(userDocRef, { chatsessions: [...currentDbChatIds, chatId] });
+                await updateDoc(userDocRef, { chatsessions: arrayUnion(chatId) });
                 console.log(`AuthStore: ChatId ${chatId} ajouté à Firestore. L'écouteur devrait mettre à jour le store.`);
             } else {
                  console.warn(`AuthStore: ChatId ${chatId} déjà présent dans Firestore. Aucune mise à jour Firestore effectuée.`);
@@ -167,8 +164,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-
-  
   // Supprime un chatId de la liste 'chatsessions' de l'utilisateur dans Firestore.
   // La mise à jour de l'état local (chatIds) est gérée par l'écouteur Firestore.
   removeChatIdFromFirestore: async (chatId) => {
@@ -187,8 +182,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
         const currentDbChatIds = userSnap.data().chatsessions || [];
         // Supprimer seulement si l'ID existe dans Firestore
         if (currentDbChatIds.includes(chatId)) {
-          const newDbChatIds = currentDbChatIds.filter((id: string) => id !== chatId);
-          await updateDoc(userDocRef, { chatsessions: newDbChatIds });
+          await updateDoc(userDocRef, { chatsessions: arrayRemove(chatId) });
           console.log(`AuthStore: ChatId ${chatId} supprimé de Firestore. L'écouteur devrait mettre à jour le store.`);
         } else {
           console.warn(`AuthStore: ChatId ${chatId} non trouvé dans Firestore. Aucune suppression effectuée.`);
@@ -232,10 +226,28 @@ const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-
-
-
-
+  // --- Assurer que l'implémentation de l'action existe --- 
+  updateCompletedTasksInFirestore: async (taskId, markAsDone) => {
+      const { user, _setError } = get();
+      if (!user || !user.id) {
+          console.error("AuthStore: Utilisateur non connecté...");
+          _setError("Vous devez être connecté...");
+          return;
+      }
+      const userDocRef = doc(db, 'users', user.id);
+      try {
+          console.log(`AuthStore: Mise à jour Firestore pour taskId ${taskId}, markAsDone: ${markAsDone}`);
+          if (markAsDone) {
+              await updateDoc(userDocRef, { completedTaskIds: arrayUnion(taskId) });
+          } else {
+              await updateDoc(userDocRef, { completedTaskIds: arrayRemove(taskId) });
+          }
+          console.log(`AuthStore: Mise à jour Firestore réussie pour ${taskId}.`);
+      } catch (error) {
+          console.error(`❌ AuthStore: Erreur Firestore pour ${taskId}:`, error);
+          _setError("Erreur sauvegarde tâche.");
+      }
+  },
 
   // --- Initialisation des Écouteurs --- 
 
@@ -283,8 +295,6 @@ const useAuthStore = create<AuthState>((set, get) => ({
     return unsubscribeAuth;
   },
 
-
-
   // Démarre l'écouteur Firestore (onSnapshot) pour le document utilisateur spécifié.
   // Met à jour l'état `user` et `chatIds` à chaque modification.
   _initializeUserListener: (userId) => {
@@ -305,7 +315,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
         // Callback exécuté à chaque mise à jour du document
         if (docSnap.exists()) {
           // Le document existe, extraire les données
-          const userDataFromDb = docSnap.data() as Omit<User, 'id' | 'email'>;
+          const userDataFromDb = docSnap.data() as Partial<Omit<User, 'id' | 'email'>>;
           const authUser = get().user; // Récupérer l'utilisateur actuel (peut contenir l'email de l'auth)
           // Construire l'objet utilisateur complet
           const fullUserData: User = {
@@ -331,6 +341,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
             termsAccepted: userDataFromDb.termsAccepted !== undefined ? userDataFromDb.termsAccepted : false,
             ageConfirmed: userDataFromDb.ageConfirmed !== undefined ? userDataFromDb.ageConfirmed : false,
             onboardingMessageSent: userDataFromDb.onboardingMessageSent !== undefined ? userDataFromDb.onboardingMessageSent : true,
+            completedTaskIds: Array.isArray(userDataFromDb.completedTaskIds) ? userDataFromDb.completedTaskIds : [],
           };
           // Mettre à jour l'état centralisé via _setUserAndAuth
           _setUserAndAuth(fullUserData);
@@ -342,11 +353,9 @@ const useAuthStore = create<AuthState>((set, get) => ({
           set({ user: null, chatIds: [] });
         }
       },
-      (error) => {
-        // Erreur lors de l'écoute Firestore
+      (error: Error) => { // Typage explicite de l'erreur ici
         console.error("AuthStore: Erreur dans l'écouteur onSnapshot utilisateur:", error);
         _setError("Erreur de synchronisation du profil.");
-        // Option: Déconnecter?
       }
     );
 
@@ -354,11 +363,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
     _setUserListenerUnsubscribe(unsubscribe);
     console.log(`AuthStore: Écouteur Firestore pour ${userId} activé.`);
   },
-
-
-
 }));
-
 
 // --- Notes Générales ---
 // L'écouteur `initializeAuthListener` doit être appelé une seule fois au démarrage
