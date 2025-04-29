@@ -1,7 +1,8 @@
 import React from 'react';
 import { Box, Button } from '@mui/material';
 import { AIMessage } from '../../../components/main_components/MessagesWEB';
-import LandingPage from '../../../components/main_components/LandingPageImprove';
+// import LandingPage from '../../../components/main_components/LandingPageImprove'; // Ancienne Landing Page
+import LandingPageV2 from '../../../components/main_components/landing_page_v2/LandingPageV2'; // Nouvelle Landing Page
 import { Message } from '../../../interfaces/interfaces_eleve';
 import { useTheme } from '@mui/material/styles';
 
@@ -85,9 +86,15 @@ interface ChatContentProps {
         <>
            {isLandingPageVisible ? (
         <>
-            <LandingPage 
+            {/* Ancienne Landing Page */}
+            {/* <LandingPage 
             onSend={handleSendMessageFromLandingPage} 
             userUniversity={userUniversity}
+            /> */}
+            {/* Nouvelle Landing Page */}
+            <LandingPageV2 
+                onSend={handleSendMessageFromLandingPage} 
+                userUniversity={userUniversity}
             />
         </>
         ) : (
