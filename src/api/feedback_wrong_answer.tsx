@@ -50,7 +50,7 @@ export const submitFeedbackWrongAnswer = async (feedback: WrongAnswerFeedback): 
     console.log(`Feedback sources: ${feedback.sources}`);
     console.log(`Feedback overall_satisfaction: ${feedback.overall_satisfaction}`);
 
-    const response = await fetch(`${apiUrlPrefix}/feedback/wrong_answer`, {
+    const response = await fetch(`${apiUrlPrefix}/wrong_answer`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

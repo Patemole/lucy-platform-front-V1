@@ -56,9 +56,12 @@ import Tooltip from "@mui/material/Tooltip";
 
 import useAuthStore from '../../stores/useAuthStore';
 import { saveFeedback } from '../../api/chat';
+import { submitFeedbackWrongAnswer } from '../../api/feedback_wrong_answer'; // Ajouté pour dev/preprod
 import { Snackbar } from '@mui/material';
 import useChatStore from '../../stores/useChatStore';
 import useFeedbackStore from '../../stores/useFeedbackStore';
+import PopupWrongAnswer from './Popup/PopupWrongAnswer'; // Ajouté pour la popup
+import config from '../../config'; // Ajouté pour vérifier l'environnement
 
 
 
@@ -239,6 +242,12 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [showSourcesSidebar, setShowSourcesSidebar] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  // Nouveaux états pour la popup de feedback détaillée (dev/preprod)
+  const [isFeedbackPopupOpen, setIsFeedbackPopupOpen] = useState(false);
+  const [selectedAiContent, setSelectedAiContent] = useState<string | null>(null);
+  const [selectedHumanContent, setSelectedHumanContent] = useState<string | null>(null);
+  const [feedbackIsPositive, setFeedbackIsPositive] = useState<boolean | null>(null);
 
   
   const [selectedSchools, setSelectedSchools] = useState(
@@ -546,9 +555,19 @@ useEffect(() => {
   };
 
 
-  // Fonction pour gérer les clics sur le pouce en l'air
+  // Fonction pour obtenir le message humain précédent
+  const getPreviousHumanMessageContent = (currentMessageId: number): string | null => {
+    const allMessages = useChatStore.getState().messages;
+    const currentMessageIndex = allMessages.findIndex(msg => msg.id === currentMessageId);
+    if (currentMessageIndex <= 0) return null;
+    
+    const previousHumanMessage = allMessages.slice(0, currentMessageIndex).reverse().find(msg => msg.type === 'human');
+    return previousHumanMessage?.content || null;
+  };
+
+
+  // Fonction pour gérer les clics sur le pouce en l'air (PRODUCTION)
   const handleThumbsUp = async () => {
-    // La vérification de user?.id est implicite car userId est défini au début
     if (!messageId || !currentChatId || !userId) { 
       console.error("Feedback Error: Missing messageId, currentChatId, or userId (getState)");
       return;
@@ -585,6 +604,7 @@ useEffect(() => {
     }
   };
 
+  // Fonction pour gérer les clics sur le pouce vers le bas (PRODUCTION)
   const handleThumbsDown = async () => {
     if (!messageId || !currentChatId || !userId) { 
       console.error("Feedback Error: Missing messageId, currentChatId, or userId (getState)");
@@ -619,6 +639,95 @@ useEffect(() => {
       console.error('Error saving negative feedback:', error);
       setSnackbarMessage('An error occurred while saving your feedback, but your choice has been taken into account locally');
       setSnackbarOpen(true);
+    }
+  };
+
+  // NOUVELLE Fonction pour ouvrir la popup sur clic pouce HAUT (DEV/PREPROD)
+  const handleThumbsUpPopup = () => {
+    if (!messageId) {
+      console.error("Feedback Popup Error: Missing messageId");
+      return;
+    }
+    const currentMessageContent = content || '';
+    const previousHumanMessageContent = getPreviousHumanMessageContent(messageId);
+    console.log("DEV/PREPROD environment: Opening feedback popup for positive feedback.");
+    setThumbsUpClicked(true);
+    setThumbsDownClicked(false);
+    setSelectedAiContent(currentMessageContent);
+    setSelectedHumanContent(previousHumanMessageContent);
+    setFeedbackIsPositive(true);
+    setIsFeedbackPopupOpen(true);
+  };
+
+  // NOUVELLE Fonction pour ouvrir la popup sur clic pouce BAS (DEV/PREPROD)
+  const handleThumbsDownPopup = () => {
+    if (!messageId) {
+      console.error("Feedback Popup Error: Missing messageId");
+      return;
+    }
+    const currentMessageContent = content || '';
+    const previousHumanMessageContent = getPreviousHumanMessageContent(messageId);
+    console.log("DEV/PREPROD environment: Opening feedback popup for negative feedback.");
+    setThumbsDownClicked(true);
+    setThumbsUpClicked(false);
+    setSelectedAiContent(currentMessageContent);
+    setSelectedHumanContent(previousHumanMessageContent);
+    setFeedbackIsPositive(false);
+    setIsFeedbackPopupOpen(true);
+  };
+
+  // Fonction appelée lors de la soumission de la popup de feedback détaillée (dev/preprod)
+  const handleSubmitFeedbackPopup = async (
+    feedbackText: string,
+    aiMsgContent: string | null,
+    humanMsgContent: string | null,
+    ratings: {
+      relevance?: number;
+      accuracy?: number;
+      format?: number;
+      sources?: number;
+      overall_satisfaction?: number;
+    }
+  ) => {
+    if (!messageId || !currentChatId || !userId) {
+      console.error("Feedback Popup Submit Error: Missing messageId, currentChatId, or userId");
+      setSnackbarMessage('Error submitting feedback: Missing required IDs.');
+      setSnackbarOpen(true);
+      setIsFeedbackPopupOpen(false); // Fermer la popup même en cas d'erreur initiale
+      return;
+    }
+
+    console.log("Submitting detailed feedback from popup...");
+    try {
+      await submitFeedbackWrongAnswer({
+        userId: userId,
+        chatId: currentChatId,
+        aiMessageContent: aiMsgContent || '',
+        humanMessageContent: humanMsgContent || '',
+        feedback: feedbackText,
+        // Inclure les notations
+        relevance: ratings.relevance,
+        accuracy: ratings.accuracy,
+        format: ratings.format,
+        sources: ratings.sources,
+        overall_satisfaction: ratings.overall_satisfaction,
+      });
+
+      setSnackbarMessage('Thank you for your detailed feedback!');
+      setSnackbarOpen(true);
+      useFeedbackStore.getState().setFeedbackStatus(messageId, true); // Marquer comme traité localement
+
+    } catch (error) {
+      console.error('Error submitting detailed feedback:', error);
+      setSnackbarMessage('An error occurred while submitting your detailed feedback.');
+      setSnackbarOpen(true);
+      // Ne pas marquer comme traité localement en cas d'erreur API ? À discuter.
+    } finally {
+      setIsFeedbackPopupOpen(false); // Fermer la popup
+      // Réinitialiser les états liés à la popup si nécessaire
+      setSelectedAiContent(null);
+      setSelectedHumanContent(null);
+      setFeedbackIsPositive(null);
     }
   };
 
@@ -2992,7 +3101,10 @@ useEffect(() => {
                   <FiCopy style={{ color: theme.palette.text.primary }} />
                 )}
               </Hoverable>
-              <Hoverable onClick={handleThumbsUp} isActive={thumbsUpClicked}>
+              <Hoverable 
+                onClick={config.node_env === 'production' ? handleThumbsUp : handleThumbsUpPopup}
+                isActive={thumbsUpClicked}
+              >
                 <FiThumbsUp
                   className={thumbsUpClicked ? "text-green-400 fill-current" : ""}
                   style={{ 
@@ -3001,7 +3113,10 @@ useEffect(() => {
                   }}
                 />
               </Hoverable>
-              <Hoverable onClick={handleThumbsDown} isActive={thumbsDownClicked}>
+              <Hoverable 
+                onClick={config.node_env === 'production' ? handleThumbsDown : handleThumbsDownPopup}
+                isActive={thumbsDownClicked}
+              >
                 <FiThumbsDown
                   className={thumbsDownClicked ? "text-red-400 fill-current" : ""}
                   style={{ 
@@ -3021,6 +3136,16 @@ useEffect(() => {
             message={snackbarMessage}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
           />
+
+          {/* Popup de feedback détaillée (pour dev/preprod) */}
+          <PopupWrongAnswer
+            open={isFeedbackPopupOpen}
+            onClose={() => setIsFeedbackPopupOpen(false)}
+            onSubmit={handleSubmitFeedbackPopup}
+            aiMessageContent={selectedAiContent}
+            humanMessageContent={selectedHumanContent}
+          />
+
         </div>
       </div>
     </section>
