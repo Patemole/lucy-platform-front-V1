@@ -40,7 +40,7 @@ const allowedDomains = {
   charteroak: [/^.+@([a-zA-Z0-9._-]+\.)*charteroak\.edu$/i, /^.+@my-lucy\.com$/i],
   yale: [/^.+@([a-zA-Z0-9._-]+\.)*yale\.edu$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i],
-  kedge: [/^.+@([a-zA-Z0-9._-]+\.)*kedge\.edu$/i, /^.+@my-lucy\.com$/i],
+  kedge: [/^.+@([a-zA-Z0-9._-]+\.)*kedge\.com$/i, /^.+@my-lucy\.com$/i],
 };
 
 // Fonction pour obtenir les messages d'erreur par sous-domaine (EN/FR)
@@ -357,7 +357,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
 
       {/* header landmark */}
       <header aria-label="University branding" className="absolute top-4 left-4">
-        <img src={theme.logo} alt="University Logo" className="h-12" />
+        <img src={theme.logo} alt="University Logo" className="h-16" />
       </header>
 
 
@@ -472,7 +472,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
           {/* Traduction de la section "Powered by Lucy" */}
           <div className="mt-8 flex items-center justify-center">
             <p className="text-xs text-gray-600 mr-2">
-              {isKedge ? 'Propulsé par Lucy' : 'Powered by Lucy'}
+              {isKedge ? 'Lucy' : 'Powered by Lucy'}
             </p>
             <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
           </div>

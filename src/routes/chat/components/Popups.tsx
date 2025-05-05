@@ -86,6 +86,7 @@ interface PopupsContainerProps {
           onSubmit={onSubmitWrongAnswer}
           aiMessageContent={aiMessageContent}
           humanMessageContent={humanMessageContent}
+          userUniversity={userUniversity}
         />
   
         <StudentProfileDialog open={dialogOpen} onClose={onCloseDialog} setProfilePicture={setProfilePicture} userUniversity={userUniversity} />

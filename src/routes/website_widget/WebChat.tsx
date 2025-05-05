@@ -63,7 +63,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const theme = useTheme();
   const { uid } = useParams<{ uid: string }>();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { popup, setPopup } = usePopup();
 
   const [showChat, setShowChat] = useState(false);
@@ -1366,6 +1366,7 @@ const Dashboard_eleve_template: React.FC = () => {
           onSubmit={handleSubmitWrongAnswerFeedback}
           aiMessageContent={selectedAiMessage}
           humanMessageContent={selectedHumanMessage}
+          userUniversity={user?.university}
         />
   
         <PopupFeedback

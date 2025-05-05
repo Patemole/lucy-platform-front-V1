@@ -54,7 +54,7 @@ const allowedDomains = {
   brynmawr: [/^.+@([a-zA-Z0-9._-]+\.)*brynmawr\.edu$/i, /^.+@my-lucy\.com$/i],
   charteroak: [/^.+@([a-zA-Z0-9._-]+\.)*charteroak\.edu$/i, /^.+@my-lucy\.com$/i],
   yale: [/^.+@([a-zA-Z0-9._-]+\.)*yale\.edu$/i, /^.+@my-lucy\.com$/i],
-  kedge: [/^.+@([a-zA-Z0-9._-]+\.)*kedge\.edu$/i, /^.+@my-lucy\.com$/i],
+  kedge: [/^.+@([a-zA-Z0-9._-]+\.)*kedge\.com$/i, /^.+@my-lucy\.com$/i],
   admin: [/^.+@my-lucy\.com$/i]
 };
 
@@ -458,7 +458,7 @@ export default function SignUp() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <header aria-label="University branding" className="absolute top-4 left-4">
-        <img src={theme.logo} alt="University Logo" className="h-12" />
+        <img src={theme.logo} alt="University Logo" className="h-16" />
       </header>
 
       <main className="w-full max-w-md bg-white rounded-xl shadow-md p-10 mx-4" role="main">
@@ -573,7 +573,7 @@ export default function SignUp() {
 
           <div className="mt-8 flex items-center justify-center">
             <p className="text-xs text-gray-600 mr-2">
-              {isKedge ? 'Propulsé par Lucy' : 'Powered by Lucy'}
+              {isKedge ? 'Lucy' : 'Powered by Lucy'}
             </p>
             <Avatar src={lucyLogo} alt="Lucy Logo" sx={{ width: 20, height: 20 }} />
           </div>

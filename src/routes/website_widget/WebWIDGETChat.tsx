@@ -62,6 +62,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const messageMarginX = isSmallScreen ? 'mx-0' : 'mx-25';
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
+  const [userUniversity, setUserUniversity] = useState<string | null>(null);
 
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
 
@@ -134,6 +135,7 @@ useEffect(() => {
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
+        setUserUniversity(userData.university || null);
         const courseIds = userData.courses || [];
         const chatSessionIds = userData.chatsessions || [];
 
@@ -980,6 +982,7 @@ useEffect(() => {
           onSubmit={handleSubmitWrongAnswerFeedback}
           aiMessageContent={selectedAiMessage}
           humanMessageContent={selectedHumanMessage}
+          userUniversity={userUniversity}
         />
 
         <PopupFeedback

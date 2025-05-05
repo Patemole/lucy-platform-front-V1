@@ -3144,6 +3144,7 @@ useEffect(() => {
             onSubmit={handleSubmitFeedbackPopup}
             aiMessageContent={selectedAiContent}
             humanMessageContent={selectedHumanContent}
+            userUniversity={userUniversity}
           />
 
         </div>

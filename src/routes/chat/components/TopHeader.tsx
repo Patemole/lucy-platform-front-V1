@@ -88,7 +88,10 @@ interface TopHeaderProps {
                         <img 
                         src={theme.logo} 
                         alt="University Logo" 
-                        style={{ height: '40px', marginRight: '10px' }} 
+                        style={{ 
+                          height: isKedge ? '70px' : '40px',
+                          marginRight: '10px' 
+                        }} 
                         />
                     </header>
                     
@@ -102,33 +105,35 @@ interface TopHeaderProps {
         
                     {/* Vignette avec le nombre d'étudiants en ligne */}
                     <div className="flex items-center flex-1 gap-x-4 overflow-hidden">
-                    <section aria-label="Online users" className="shrink-0">
-                    <div
-                        style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        marginLeft: '0px',
-                        padding: '5px 10px',
-                        borderRadius: '15px',
-                        border: '1.3px solid #27AE60',
-                        backgroundColor: 'transparent',
-                        color: '#011F5B',
-                        fontSize: '0.83rem',
-                        }}
-                    >
-                        {/*{onlineUsers} online users*/}
-                        {onlineUsers} {isSmallScreen ? (isKedge ? "en ligne" : "online") : (isKedge ? "utilisateurs en ligne" : "online users")}
+                    {!isKedge && (
+                        <section aria-label="Online users" className="shrink-0">
                         <div
-                        style={{
-                            width: '8.5px',
-                            height: '8.5px',
-                            borderRadius: '50%',
-                            backgroundColor: '#27AE60',
-                            marginLeft: '6px',
-                        }}
-                        />
-                    </div>
-                    </section>
+                            style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            marginLeft: '0px',
+                            padding: '5px 10px',
+                            borderRadius: '15px',
+                            border: '1.3px solid #27AE60',
+                            backgroundColor: 'transparent',
+                            color: '#011F5B',
+                            fontSize: '0.83rem',
+                            }}
+                        >
+                            {/*{onlineUsers} online users*/}
+                            {onlineUsers} {isSmallScreen ? (isKedge ? "en ligne" : "online") : (isKedge ? "utilisateurs en ligne" : "online users")}
+                            <div
+                            style={{
+                                width: '8.5px',
+                                height: '8.5px',
+                                borderRadius: '50%',
+                                backgroundColor: '#27AE60',
+                                marginLeft: '6px',
+                            }}
+                            />
+                        </div>
+                        </section>
+                    )}
 
                     {!onboardingComplete && (
                         <div className="flex-1">
@@ -189,37 +194,35 @@ interface TopHeaderProps {
                             aria-haspopup="true"
                             aria-controls={profileMenuAnchorEl ? 'profile-menu' : undefined}
                             aria-expanded={Boolean(profileMenuAnchorEl)}
-                            sx={{ padding: 0, marginLeft: '5px' }}
+                            sx={{
+                              padding: 0, 
+                              marginLeft: '5px',
+                              width: '50px',
+                              height: '50px',
+                              ...(!profilePicture && {
+                                borderRadius: '50%',
+                              })
+                            }}
                             >
                             {profilePicture ? (
-                            <>
-                                {/* {console.log('Rendering profile picture with URL:', profilePicture)} */}
-                                <img
+                              <img
                                 src={profilePicture}
                                 alt={isKedge ? "Profil" : "Profile"}
                                 style={{
-                                    width: '50px',
-                                    height: '50px',
+                                    width: '55px',
+                                    height: '55px',
                                 }}
                                 className="rounded-full object-cover cursor-pointer"
-                                //onClick={(event) => handleProfileMenuClick(event as unknown as React.MouseEvent<HTMLElement>)}
-                                />
-                            </>
+                              />
                             ) : (
-                            <>
-                               
-                                <AccountCircleIcon
-                                fontSize="inherit"
-                                component="svg"
+                              <AccountCircleIcon
                                 style={{
                                     color: '#9e9e9e',
                                     cursor: 'pointer',
-                                    margin: '0 auto 0 16px',
-                                    fontSize: '2.5rem',
+                                    width: '100%',
+                                    height: '100%',
                                 }}
-                                
-                                />
-                            </>
+                              />
                             )}
                             </IconButton>
                             <Menu
