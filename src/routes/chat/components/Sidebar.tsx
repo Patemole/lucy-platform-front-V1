@@ -12,7 +12,9 @@ import {
   Settings as SettingsIcon,
   History as HistoryIcon,
   People as PeopleIcon,
-  Logout as LogoutIcon
+  Logout as LogoutIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon
 } from '@mui/icons-material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ProfileEdit from '@mui/icons-material/Edit';
@@ -58,6 +60,8 @@ type SidebarProps = {
     formatDate: (timestamp: { toDate: () => Date }) => string;
     userYear: string | null | undefined;
     userUniversity: string | null | undefined;
+    showChatContent: boolean;
+    toggleChatContentVisibility: () => void;
   };
 
 
@@ -73,7 +77,9 @@ type SidebarProps = {
     handleRename, handleDelete, socialThreads, loadingSocialThreads,
     topicColors, setShowOnboardingModifyConvPopup, 
     setShowOnboardingSocialThreadPopup, handleNewConversation,setShowOnboardingProfilePopup, formatDate, userYear,
-    userUniversity
+    userUniversity,
+    showChatContent,
+    toggleChatContentVisibility
   }) => {
 
     console.log('<<< RENDERING Sidebar >>>');
@@ -253,6 +259,54 @@ type SidebarProps = {
                     <ListItemText primary="your events" ... />
                     </ListItem>
                     */}
+
+                    {/* Bouton Masquer/Afficher le chat */}
+                    <Tooltip title={showChatContent ? (isKedge ? "Masquer le chat" : "Go to Housing") : (isKedge ? "Afficher le chat" : "Back to chat")} enterDelay={100} arrow placement="right">
+                      <div>
+                        <ListItem
+                          component="li"
+                          tabIndex={0}
+                          onClick={() => {
+                              toggleChatContentVisibility();
+                              if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                          }}
+                          onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  toggleChatContentVisibility();
+                                  if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                              }
+                          }}
+                          sx={{
+                              cursor: "pointer",
+                              borderRadius: "8px",
+                              mb: 1,
+                              "&:hover": {
+                                  backgroundColor: theme.palette.action.hover,
+                              },
+                          }}
+                          >
+                          <ListItemIcon
+                              sx={{
+                                  color: theme.palette.sidebar,
+                                  minWidth: "35px",
+                              }}
+                          >
+                              {showChatContent ? <VisibilityOffIcon sx={{ fontSize: "22px" }} /> : <VisibilityIcon sx={{ fontSize: "22px" }} />}
+                          </ListItemIcon>
+                          <ListItemText
+                              primary={showChatContent ? (isKedge ? "Masquer le chat" : "Go to Housing") : (isKedge ? "Afficher le chat" : "Back to chat")}
+                              primaryTypographyProps={{
+                                  style: {
+                                      fontWeight: "500",
+                                      fontSize: "0.875rem",
+                                      color: theme.palette.text.primary,
+                                  },
+                              }}
+                          />
+                          </ListItem>
+                      </div>
+                    </Tooltip>
 
                     {/* bouton conversation history */}
                     <Tooltip title={isKedge ? "Voir vos conversations passées" : "View your past private and public conversations"} enterDelay={100} arrow placement="right">

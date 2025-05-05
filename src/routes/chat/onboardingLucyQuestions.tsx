@@ -33,6 +33,11 @@ import RelatedQuestions from './components/RelatedQuestions';
 import ForcedFeedback from '../../components/main_components/ForcedFeedback';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/material';
+// Import Visibility icons
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+// ---> NOUVEL IMPORT <--- 
+import HousingMain from '../../components/main_components/housing/HousingMain';
 
 
 //For Topic of the conversations
@@ -109,6 +114,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const [newMessagesCount, setNewMessagesCount] = useState(0); // Keep local UI state
   const scrollableDivRef = useRef<HTMLDivElement>(null); // Keep local ref
   const endDivRef = useRef<HTMLDivElement>(null); // Keep local ref
+  const [showChatContent, setShowChatContent] = useState(true); // NOUVEL ETAT
 
   //4. Onboarding
   const hasMetadataOnboarding = Array.isArray(messages) && messages.some(msg => msg.METADATAONBOARDING);
@@ -325,6 +331,11 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   // Récupérer l'état de chargement directement depuis le store
   const isLoadingSocialThreads = useChatStore((state) => state.isLoadingSocialThreads);
 
+  // Fonction pour basculer la visibilité du contenu du chat
+  const toggleChatContentVisibility = () => {
+    setShowChatContent(prev => !prev);
+  };
+
  return (
     <ThemeProvider theme={theme}>
       {/* Éléments d'arrière-plan */}
@@ -396,6 +407,8 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             setShowOnboardingSocialThreadPopup={setShowOnboardingSocialThreadPopup}
             formatDate={formatDate}
             isLoadingConversations={isLoadingConversations}
+            showChatContent={showChatContent}
+            toggleChatContentVisibility={toggleChatContentVisibility}
           />
 
 
@@ -434,49 +447,54 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             
   
 
-            {/* Content Area */}
-            <ChatContent
-            isLandingPageVisible={isLandingPageVisible}
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-            messages={messages}
-            isComplete={isComplete}
-            drawerOpen={drawerOpen}
-            isSmallScreen={isSmallScreen}
-            messageMarginX={messageMarginX}
-            endDivRef={endDivRef}
-            scrollableDivRef={scrollableDivRef}
-            lastAiMessageId={lastAiMessageId}
-            relatedQuestions={relatedQuestions}
-            handleSendMessageFromLandingPage={handleSendMessageFromLandingPage}
-            handleSendTAKMessage={handleSendTAKMessage}
-            handleSendCOURSEMessage={handleSendCOURSEMessage}
-            handleFeedbackClick={handleFeedbackClick}
-            handleWrongAnswerClick={handleWrongAnswerClick}
-            handleSourceClick={handleSourceClick}
-            isStreaming={isStreaming}
-            hasNewContent={hasNewContent}
-            handleSendSCHOOLMessage={handleSendSCHOOLMessage}
-            handleSendYEARMessage={handleSendYEARMessage}
-            handleSendTESTMessage={handleSendTESTMessage}
-            handleSendINSTAGRAMMessage={handleSendINSTAGRAMMessage}
-            handleSendFAVORITE_COLORMessage={handleSendFAVORITE_COLORMessage}
-            handleSendPET_NAMEMessage={handleSendPET_NAMEMessage}
-            handleSendLINKEDINMessage={handleSendLINKEDINMessage}
-            handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
-            handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
-            hasStartedStreaming={hasStartedStreaming}
-            handlePrivacyChange={handlePrivacyToggleClick}
-            setIsAtBottom={setIsAtBottom}
-            setNewMessagesCount={setNewMessagesCount}
-            userUniversity={userUniversity}
-          />
+            {/* Content Area - CONDITIONALLY RENDERED */}
+            {showChatContent ? (
+              <ChatContent
+                isLandingPageVisible={isLandingPageVisible}
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+                messages={messages}
+                isComplete={isComplete}
+                drawerOpen={drawerOpen}
+                isSmallScreen={isSmallScreen}
+                messageMarginX={messageMarginX}
+                endDivRef={endDivRef}
+                scrollableDivRef={scrollableDivRef}
+                lastAiMessageId={lastAiMessageId}
+                relatedQuestions={relatedQuestions}
+                handleSendMessageFromLandingPage={handleSendMessageFromLandingPage}
+                handleSendTAKMessage={handleSendTAKMessage}
+                handleSendCOURSEMessage={handleSendCOURSEMessage}
+                handleFeedbackClick={handleFeedbackClick}
+                handleWrongAnswerClick={handleWrongAnswerClick}
+                handleSourceClick={handleSourceClick}
+                isStreaming={isStreaming}
+                hasNewContent={hasNewContent}
+                handleSendSCHOOLMessage={handleSendSCHOOLMessage}
+                handleSendYEARMessage={handleSendYEARMessage}
+                handleSendTESTMessage={handleSendTESTMessage}
+                handleSendLINKEDINMessage={handleSendLINKEDINMessage}
+                handleSendINSTAGRAMMessage={handleSendINSTAGRAMMessage}
+                handleSendFAVORITE_COLORMessage={handleSendFAVORITE_COLORMessage}
+                handleSendPET_NAMEMessage={handleSendPET_NAMEMessage}
+                handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
+                handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
+                hasStartedStreaming={hasStartedStreaming}
+                handlePrivacyChange={handlePrivacyToggleClick}
+                setIsAtBottom={setIsAtBottom}
+                setNewMessagesCount={setNewMessagesCount}
+                userUniversity={userUniversity}
+              />
+            ) : (
+              <HousingMain />
+            )}
 
-          
-          <RelatedQuestions relatedQuestions={relatedQuestions} setInputValue={setInputValue} />
+            {/* Related Questions - CONDITIONALLY RENDERED */}
+            {showChatContent && <RelatedQuestions relatedQuestions={relatedQuestions} setInputValue={setInputValue} />}
 
 
-            {currentView === 'chat' && !isAtBottom && !isLandingPageVisible && (
+            {/* Scroll to Bottom Button - CONDITIONALLY RENDERED */}
+            {showChatContent && currentView === 'chat' && !isAtBottom && !isLandingPageVisible && (
               <button
                 onClick={scrollToBottom}
                 style={{
@@ -507,7 +525,8 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             
 
 
-            {currentView === 'chat' && !isLandingPageVisible && onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
+            {/* Footer Input Section - CONDITIONALLY RENDERED */}
+            {showChatContent && currentView === 'chat' && !isLandingPageVisible && onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
             <>
               {isSmallScreen ? (
                 // VERSION MOBILE AVEC MODIFICATIONS
