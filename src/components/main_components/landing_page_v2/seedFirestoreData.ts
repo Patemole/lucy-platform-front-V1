@@ -1,6 +1,7 @@
 import { db } from '../../../auth/firebase'; // Adaptez le chemin
 import { collection, writeBatch, doc, query, limit, getDocs } from 'firebase/firestore';
-import { initialAllWeeksData } from './initialWeeklyData'; // Importe les données
+import weeklyDataJson from './weekly_deadline_data.json'; 
+import { WeeklyData, Deadline } from './initialWeeklyData'; // Garder pour l'interface si utile
 
 const COLLECTION_NAME = 'weeklyFocusData';
 
@@ -24,12 +25,57 @@ export const seedFirestoreData = async () => {
     }
 
     console.log(`Début de l'insertion initiale dans la collection : ${COLLECTION_NAME}...`);
+    // Log ajouté pour confirmer la source
+    console.log('[SEEDING INFO] Tentative d\'insertion depuis weekly_deadline_data.json'); 
     const batch = writeBatch(db);
     try {
-        initialAllWeeksData.forEach((weekData) => {
-            const docRef = doc(collectionRef); // ID auto-généré par Firestore
-            const dataToInsert = { ...weekData }; 
-            // Gérer startDate si ajouté: Firestore le convertira en Timestamp
+        // Utiliser les données JSON importées et les transformer
+        weeklyDataJson.forEach((weekJsonItem: any, index: number) => { // Ajouter l'index pour le log
+            const docRef = doc(collectionRef);
+            
+            // Log ajouté pour la première entrée
+            if (index === 0) {
+                console.log('[SEEDING INFO] Première entrée JSON à insérer (titre): ', weekJsonItem.focusTitle);
+            }
+
+            // Convertir startDate et dueDate
+            let processedDueDate: Date | { start: Date; end: Date } | undefined = undefined;
+            if (weekJsonItem.dueDate) {
+                if (typeof weekJsonItem.dueDate === 'string') {
+                    processedDueDate = new Date(weekJsonItem.dueDate);
+                } else if (typeof weekJsonItem.dueDate === 'object' && weekJsonItem.dueDate.start && weekJsonItem.dueDate.end) {
+                    processedDueDate = {
+                        start: new Date(weekJsonItem.dueDate.start),
+                        end: new Date(weekJsonItem.dueDate.end)
+                    };
+                }
+            }
+
+            const dataToInsert: Omit<WeeklyData, 'deadlines'> & { deadlines: Omit<Deadline, 'dueDate'> & { dueDate?: Date | { start: Date; end: Date } }[] } = {
+                ...weekJsonItem,
+                startDate: new Date(weekJsonItem.startDate),
+                deadlines: weekJsonItem.deadlines.map((deadline: any) => {
+                    let deadlineDueDate: Date | { start: Date; end: Date } | undefined = undefined;
+                    if (deadline.dueDate) {
+                         if (typeof deadline.dueDate === 'string') {
+                            deadlineDueDate = new Date(deadline.dueDate);
+                        } else if (typeof deadline.dueDate === 'object' && deadline.dueDate.start && deadline.dueDate.end) {
+                            deadlineDueDate = {
+                                start: new Date(deadline.dueDate.start),
+                                end: new Date(deadline.dueDate.end)
+                            };
+                        }
+                    }
+                    return {
+                        ...deadline,
+                        ...(deadlineDueDate && { dueDate: deadlineDueDate }) // Ajoute dueDate seulement s'il existe et a été traité
+                    };
+                })
+            };
+            
+            // Supprimer explicitement le champ non traité s'il existait au niveau racine (peu probable mais par sécurité)
+            // delete (dataToInsert as any).dueDate; 
+
             batch.set(docRef, dataToInsert);
         });
 

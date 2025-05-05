@@ -69,6 +69,8 @@ const progressBarData = {
 };
 
 const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity }) => {
+    // Log ajouté au tout début pour confirmer le rendu initial
+    console.log("--- LandingPageV2 Component Start Render ---");
     console.log("--- LandingPageV2 Component Rendering --- NOW WITH EXTRA LOGS ---"); 
     // S'assurer que l'état inputValue est bien déclaré ici
     const [inputValue, setInputValue] = useState('');
@@ -103,6 +105,7 @@ const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity })
     // --- UseEffect pour le Seeding (inchangé) --- 
     useEffect(() => {
         // Décommentez pour insérer les données
+        console.log("Seeding Firestore data...");
          seedFirestoreData();
         // Re-commentez après!
     }, []); 

@@ -12,7 +12,8 @@ export interface Deadline {
     title: string;
     items: DeadlineItem[];
     isWarning?: boolean;
-    day: 'Today' | 'Tomorrow';
+    day: string;
+    dueDate?: Date | { start: Date; end: Date };
 }
 export interface UsefulLink {
     text: string;
