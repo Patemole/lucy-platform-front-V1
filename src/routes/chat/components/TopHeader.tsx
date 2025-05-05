@@ -11,6 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ProfileEdit from '@mui/icons-material/Edit';
 import { Theme } from '@mui/material/styles';
 import { User } from '../../../interfaces/interfaces_eleve';
+import ChatIcon from '@mui/icons-material/Chat';
 
 
 interface TopHeaderProps {
@@ -46,7 +47,7 @@ interface TopHeaderProps {
     parametersMenuAnchorEl, handleProfileMenuClick, handleProfileMenuClose,
     handleDialogOpen, handleParametersMenuClick, handleParametersMenuClose,
     handleDeleteAccount, handleLogout, setShowOnboardingProfilePopup,
-    userUniversity
+    userUniversity,
   }) => {
     console.log('<<< RENDERING TopHeader >>>');
     const isKedge = userUniversity === 'kedge';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef,} from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../auth/firebase';
 import { doc, updateDoc} from 'firebase/firestore';
@@ -11,7 +11,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import {
   ThemeProvider, TextField, Button, Typography, IconButton,InputAdornment, 
-  Tooltip
+  Tooltip, Drawer
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -31,6 +31,7 @@ import Popups from './components/Popups';
 import ChatContent from './components/ChatContent';
 import RelatedQuestions from './components/RelatedQuestions';
 import ForcedFeedback from '../../components/main_components/ForcedFeedback';
+import SidebarChat from '../../components/sidebar_chat/SidebarChat';
 import { shallow } from 'zustand/shallow';
 import { Box } from '@mui/material';
 
@@ -325,6 +326,16 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   // Récupérer l'état de chargement directement depuis le store
   const isLoadingSocialThreads = useChatStore((state) => state.isLoadingSocialThreads);
 
+  const [isSidebarChatOpen, setIsSidebarChatOpen] = useState(false); // <-- État pour la visibilité
+
+  // --- Condition pour afficher le footer --- 
+  const shouldShowFooter = !isSidebarChatOpen && currentView === 'chat' && !isLandingPageVisible && onboardingComplete && (!hasTak || inputValue.trim() !== "");
+
+  // Toggle function for sidebar chat
+  const toggleSidebarChat = () => {
+    setIsSidebarChatOpen(!isSidebarChatOpen);
+  };
+
  return (
     <ThemeProvider theme={theme}>
       {/* Éléments d'arrière-plan */}
@@ -346,17 +357,21 @@ const OnboardingLucyQuestions: React.FC = ()=> {
         style={{ display: 'contents' }} // Ne crée pas de conteneur visuel
       >
 
+        {/* --- Rétablissement du Conteneur Principal original --- */}
         <div
           className="main-content flex h-screen"
           style={{
-            position: 'fixed', // Fixe le conteneur
+            position: 'fixed', 
             top: 0,
             left: 0,
-            right: isSmallScreen && drawerOpen ? '20vw' : '0', // Laisse 20% de l'écran à droite si Drawer ouvert
-            width: isSmallScreen && drawerOpen ? '80vw' : '100%', // Ajuste la largeur
-            overflow: 'hidden', // Désactive le scroll interne
+            // Retour à l'ancienne logique de largeur/position
+            right: isSidebarChatOpen ? '350px' : (isSmallScreen && drawerOpen ? '20vw' : '0'), // Utilise 350px fixe
+            width: isSidebarChatOpen ? 'calc(100% - 350px)' : (isSmallScreen && drawerOpen ? '80vw' : '100%'), // Utilise 350px fixe
+            overflow: 'hidden',
+            transition: 'width 0.3s ease-in-out, right 0.3s ease-in-out', 
           }}
         >
+          {/* --- FIN Rétablissement --- */}
 
           {/* Sidebar with menu conversation history or socialThreads */}
           <Sidebar
@@ -396,6 +411,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             setShowOnboardingSocialThreadPopup={setShowOnboardingSocialThreadPopup}
             formatDate={formatDate}
             isLoadingConversations={isLoadingConversations}
+            toggleSidebarChat={toggleSidebarChat}
           />
 
 
@@ -435,48 +451,55 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   
 
             {/* Content Area */}
-            <ChatContent
-            isLandingPageVisible={isLandingPageVisible}
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-            messages={messages}
-            isComplete={isComplete}
-            drawerOpen={drawerOpen}
-            isSmallScreen={isSmallScreen}
-            messageMarginX={messageMarginX}
-            endDivRef={endDivRef}
-            scrollableDivRef={scrollableDivRef}
-            lastAiMessageId={lastAiMessageId}
-            relatedQuestions={relatedQuestions}
-            handleSendMessageFromLandingPage={handleSendMessageFromLandingPage}
-            handleSendTAKMessage={handleSendTAKMessage}
-            handleSendCOURSEMessage={handleSendCOURSEMessage}
-            handleFeedbackClick={handleFeedbackClick}
-            handleWrongAnswerClick={handleWrongAnswerClick}
-            handleSourceClick={handleSourceClick}
-            isStreaming={isStreaming}
-            hasNewContent={hasNewContent}
-            handleSendSCHOOLMessage={handleSendSCHOOLMessage}
-            handleSendYEARMessage={handleSendYEARMessage}
-            handleSendTESTMessage={handleSendTESTMessage}
-            handleSendINSTAGRAMMessage={handleSendINSTAGRAMMessage}
-            handleSendFAVORITE_COLORMessage={handleSendFAVORITE_COLORMessage}
-            handleSendPET_NAMEMessage={handleSendPET_NAMEMessage}
-            handleSendLINKEDINMessage={handleSendLINKEDINMessage}
-            handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
-            handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
-            hasStartedStreaming={hasStartedStreaming}
-            handlePrivacyChange={handlePrivacyToggleClick}
-            setIsAtBottom={setIsAtBottom}
-            setNewMessagesCount={setNewMessagesCount}
-            userUniversity={userUniversity}
-          />
+            {isSidebarChatOpen ? null : (
+                <> 
+                    <ChatContent
+                        isLandingPageVisible={isLandingPageVisible}
+                        inputValue={inputValue}
+                        setInputValue={setInputValue}
+                        messages={messages}
+                        isComplete={isComplete}
+                        drawerOpen={drawerOpen}
+                        isSmallScreen={isSmallScreen}
+                        messageMarginX={messageMarginX}
+                        endDivRef={endDivRef}
+                        scrollableDivRef={scrollableDivRef}
+                        lastAiMessageId={lastAiMessageId}
+                        relatedQuestions={relatedQuestions}
+                        handleSendMessageFromLandingPage={handleSendMessageFromLandingPage}
+                        handleSendTAKMessage={handleSendTAKMessage}
+                        handleSendCOURSEMessage={handleSendCOURSEMessage}
+                        handleFeedbackClick={handleFeedbackClick}
+                        handleWrongAnswerClick={handleWrongAnswerClick}
+                        handleSourceClick={handleSourceClick}
+                        isStreaming={isStreaming}
+                        hasNewContent={hasNewContent}
+                        handleSendSCHOOLMessage={handleSendSCHOOLMessage}
+                        handleSendYEARMessage={handleSendYEARMessage}
+                        handleSendTESTMessage={handleSendTESTMessage}
+                        handleSendINSTAGRAMMessage={handleSendINSTAGRAMMessage}
+                        handleSendFAVORITE_COLORMessage={handleSendFAVORITE_COLORMessage}
+                        handleSendPET_NAMEMessage={handleSendPET_NAMEMessage}
+                        handleSendLINKEDINMessage={handleSendLINKEDINMessage}
+                        handleSendMAJORMINORMessage={handleSendMAJORMINORMessage}
+                        handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
+                        hasStartedStreaming={hasStartedStreaming}
+                        handlePrivacyChange={handlePrivacyToggleClick}
+                        setIsAtBottom={setIsAtBottom}
+                        setNewMessagesCount={setNewMessagesCount}
+                        userUniversity={userUniversity}
+                    />
+                  
+                    <RelatedQuestions 
+                        relatedQuestions={relatedQuestions} 
+                        setInputValue={setInputValue} 
+                    />
+                </>
+            )}
 
-          
-          <RelatedQuestions relatedQuestions={relatedQuestions} setInputValue={setInputValue} />
-
-
-            {currentView === 'chat' && !isAtBottom && !isLandingPageVisible && (
+            {/* Bouton Scroll to bottom */}
+            {/* On le cache aussi si la sidebar chat est ouverte */}
+            {!isSidebarChatOpen && currentView === 'chat' && !isAtBottom && !isLandingPageVisible && (
               <button
                 onClick={scrollToBottom}
                 style={{
@@ -506,315 +529,303 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             )}
             
 
-
-            {currentView === 'chat' && !isLandingPageVisible && onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
-            <>
-              {isSmallScreen ? (
-                // VERSION MOBILE AVEC MODIFICATIONS
-                <div
-                  className="fixed bottom-0 left-0 w-full flex flex-col items-center"
-                  style={{
-                    backgroundColor: 'rgba(255,255,255,0.6)', // effet glace avec semi-transparence
-                    backdropFilter: 'blur(50px)',
-                    WebkitBackdropFilter: 'blur(50px)',
-                    borderTopLeftRadius: '20px',
-                    borderTopRightRadius: '20px',
-                    padding: '12px 15px', // Ajuster le padding horizontal
-                    minHeight: '70px', // Réduire un peu la hauteur min
-                    // maxHeight: 'auto', // Laisser la hauteur s'adapter
-                    // overflow: 'hidden', // Peut causer des problèmes avec multiline
-                    transition: 'max-height 0.2s ease-in-out',
-                    zIndex: 2,
-                  }}
-                >
-                  {shouldShowFeedback(messages, isStreaming) ? (
-                    <ForcedFeedback />
-                  ) : (
-                    <>
-                      {/* Nouvelle ligne pour icône, input, bouton envoi */}
-                      <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '8px' }}>
-                        {/* Icône Cadenas cliquable - CONDITIONNEL */}
-                        {(userUniversity !== 'kedge') && (
+            {/* Footer Input Area */}
+            {/* Utilisation de la variable pour la condition */}
+             {shouldShowFooter && (
+              <> 
+                  {isSmallScreen ? (
+                    // VERSION MOBILE AVEC MODIFICATIONS
+                    <div
+                      className="fixed bottom-0 left-0 w-full flex flex-col items-center"
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.6)', // effet glace avec semi-transparence
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
+                        borderTopLeftRadius: '20px',
+                        borderTopRightRadius: '20px',
+                        padding: '12px 15px', // Ajuster le padding horizontal
+                        minHeight: '70px', // Réduire un peu la hauteur min
+                        transition: 'max-height 0.2s ease-in-out',
+                        zIndex: 2,
+                      }}
+                    >
+                      {shouldShowFeedback(messages, isStreaming) ? (
+                        <ForcedFeedback />
+                      ) : (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '8px' }}>
+                            {(userUniversity !== 'kedge') && (
+                                <IconButton
+                                  onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}
+                                  aria-label={isPrivate ? "Set conversation to public" : "Set conversation to private"}
+                                  size="medium"
+                                  sx={{ 
+                                    color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
+                                    padding: '6px'
+                                  }}
+                                >
+                                  {isPrivate ? <LockIcon fontSize="small"/> : <LockOpenIcon fontSize="small"/>}
+                                  <Typography 
+                                    variant="caption" 
+                                    sx={{ 
+                                      color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
+                                      marginLeft: '4px'
+                                    }}
+                                  >
+                                    {isPrivate ? 'Private' : 'Public'}
+                                  </Typography>
+                                </IconButton>
+                            )}
+                            <TextField
+                              variant="outlined"
+                              multiline
+                              minRows={1}
+                              maxRows={4}
+                              placeholder={userUniversity === 'kedge' ? "Demandez à Lucy..." : "Ask Lucy..."}
+                              value={inputValue}
+                              onChange={(e) => setInputValue(e.target.value)}
+                              onKeyDown={handleInputKeyPressSocraticLangGraph}
+                              InputProps={{
+                                style: {
+                                  backgroundColor: 'rgba(255,255,255,0.8)',
+                                  borderRadius: '15px',
+                                  padding: '8px 12px',
+                                  fontSize: '1rem',
+                                  fontWeight: '500',
+                                  border: 'none',
+                                  flexGrow: 1,
+                                  minWidth: 0,
+                                },
+                              }}
+                              inputProps={{ style: { color: '#333' } }}
+                              sx={{
+                                flexGrow: 1,
+                                minWidth: 0,
+                                '& fieldset': { border: 'none' },
+                              }}
+                            />
                             <IconButton
-                              onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}
-                              aria-label={isPrivate ? "Set conversation to public" : "Set conversation to private"}
-                              size="medium" // Ajuster la taille si besoin
-                              sx={{ 
-                                color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
-                                padding: '6px' /* Ajuster padding */ 
+                              onClick={() => {
+                                if (isStreaming) {
+                                  if (abortController) {
+                                    console.log("Onboarding: Stopping stream via button click...");
+                                    abortController.abort();
+                                    setAbortController(null);
+                                    setIsStreaming(false);
+                                  }
+                                } else {
+                                  handleSendMessageSocraticLangGraph(inputValue);
+                                }
+                              }}
+                              aria-label={isStreaming ? "Stop response" : "Send message"}
+                              size="medium"
+                              sx={{
+                                backgroundColor: isStreaming ? '#F04261' : theme.palette.button_sign_in,
+                                color: '#fff',
+                                width: '36px',
+                                height: '36px',
+                                '&:hover': {
+                                  backgroundColor: isStreaming ? '#D03050' : theme.palette.augmentColor({ color: { main: theme.palette.button_sign_in } }).dark,
+                                }
                               }}
                             >
-                              {isPrivate ? <LockIcon fontSize="small"/> : <LockOpenIcon fontSize="small"/>} 
-                              {/* Typography is now styled */}
-                              <Typography 
-                                variant="caption" 
-                                sx={{ 
-                                  color: isPrivate ? theme.palette.text.secondary : theme.palette.primary.main,
-                                  marginLeft: '4px' // Add spacing if needed, or adjust IconButton padding
-                                }}
-                              >
-                                {isPrivate ? 'Private' : 'Public'}
-                              </Typography>
+                              {isStreaming ? (
+                                <StopIcon style={{ fontSize: '20px' }} />
+                              ) : (
+                                <ArrowUpwardIcon style={{ fontSize: '20px' }} />
+                              )}
                             </IconButton>
-                        )}
-
-                        {/* Champ de saisie occupant l'espace restant - Traduction Placeholder */}
-                        <TextField
-                          variant="outlined"
-                          multiline
-                          minRows={1}
-                          maxRows={4} // Limiter un peu plus ?
-                          placeholder={userUniversity === 'kedge' ? "Demandez à Lucy..." : "Ask Lucy..."}
-                          value={inputValue}
-                          onChange={(e) => setInputValue(e.target.value)}
-                          onKeyDown={handleInputKeyPressSocraticLangGraph} // Utiliser onKeyDown
-                          InputProps={{
-                            style: {
-                              backgroundColor: 'rgba(255,255,255,0.8)', // Légèrement plus opaque pour la lisibilité
-                              borderRadius: '15px',
-                              padding: '8px 12px', // Ajuster le padding interne
-                              fontSize: '1rem',
-                              fontWeight: '500',
-                              border: 'none',
-                              flexGrow: 1, // Important
-                              minWidth: 0, // Important pour flexbox
-                            },
-                          }}
-                          inputProps={{ style: { color: '#333' } }}
-                          sx={{
-                            flexGrow: 1, // Important
-                            minWidth: 0, // Important pour flexbox
-                            '& fieldset': { border: 'none' },
-                          }}
-                        />
-
-                        {/* Bouton d'envoi (identique) */}
-                        <IconButton
-                          onClick={() => {
-                            if (isStreaming) {
-                              if (abortController) {
-                                console.log("Onboarding: Stopping stream via button click...");
-                                abortController.abort();
-                                setAbortController(null);
-                                setIsStreaming(false);
+                          </div>
+                          <div className="flex justify-center w-full mt-2">
+                            <p className="text-center text-[0.6rem] text-[#6F6F6F] opacity-80">
+                              {userUniversity === 'kedge' ? "Lucy peut faire des erreurs. Pensez à vérifier les informations importantes." : "Lucy can make mistake. Consider checking important information."}
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <footer
+                      role="contentinfo"
+                      aria-label="Chat input footer"
+                      className="footer"
+                      style={{
+                        position: 'fixed',
+                        backgroundColor: '#F0F4FC',
+                        bottom: 0,
+                        left: drawerOpen ? `${drawerWidth}px` : '0',
+                        width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(12px)',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.3)',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingTop: isSmallScreen ? '10px' : '20px',
+                        paddingBottom: isSmallScreen ? '1px' : '20px',
+                        zIndex: 2,
+                        transition: 'left 0.3s, width 0.3s',
+                        display: isLandingPageVisible ? 'none' : 'flex',
+                      }}
+                    >
+                      <div
+                        style={{
+                          maxWidth: isSmallScreen ? '90%' : '800px',
+                          width: '100%',
+                          margin: '0 auto',
+                          padding: isSmallScreen ? '10px 0px 30px' : '0',
+                          position: 'relative',
+                        }}
+                      >
+                        {shouldShowFeedback(messages, isStreaming) ? (
+                          <ForcedFeedback />
+                        ) : (
+                          <>
+                            <section aria-label="Chat input section">
+                            <TextField
+                              fullWidth
+                              variant="outlined"
+                              multiline
+                              minRows={1}
+                              maxRows={6}
+                              placeholder={
+                                userUniversity === 'kedge' ? "Tapez votre message..." : (isSocialThread ? "Write a public message in this discussion..." : "Type your message...")
                               }
-                            } else {
-                              handleSendMessageSocraticLangGraph(inputValue);
-                            }
-                          }}
-                          aria-label={isStreaming ? "Stop response" : "Send message"}
-                          size="medium"
-                          sx={{
-                            backgroundColor: isStreaming ? '#F04261' : theme.palette.button_sign_in,
-                            color: '#fff',
-                            width: '36px', // Légèrement plus grand ?
-                            height: '36px',
-                            '&:hover': {
-                              backgroundColor: isStreaming ? '#D03050' : theme.palette.augmentColor({ color: { main: theme.palette.button_sign_in } }).dark,
-                            }
-                          }}
-                        >
-                          {isStreaming ? (
-                            <StopIcon style={{ fontSize: '20px' }} />
-                          ) : (
-                            <ArrowUpwardIcon style={{ fontSize: '20px' }} />
-                          )}
-                        </IconButton>
-                      </div>
+                              value={inputValue}
+                              onChange={(e) => setInputValue(e.target.value)}
+                              onKeyDown = {handleInputKeyPressSocraticLangGraph}
+                              InputProps={{
+                                startAdornment: (
+                                  !isSocialThread && (userUniversity !== 'kedge') && (
+                                    <InputAdornment position="start" sx={{ marginRight: '8px' }}>
+                                      <Tooltip title={isPrivate ? "Make conversation Public" : "Make conversation Private"} enterDelay={100} arrow>
+                                        <Box
+                                          onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}
+                                          sx={{
+                                            fontSize: '0.8rem',
+                                            fontWeight: 'bold',
+                                            color: isPrivate ? '#6F6F6F' : '#4A90E2',
+                                            backgroundColor: isPrivate ? '#F0F0F0' : '#E0F2FF',
+                                            padding: '4px 10px',
+                                            borderRadius: '5px',
+                                            display: 'inline-block',
+                                            cursor: 'pointer',
+                                            userSelect: 'none'
+                                          }}
+                                        >
+                                          {isPrivate ? 'Private' : 'Public'}
+                                        </Box>
+                                      </Tooltip>
+                                    </InputAdornment>
+                                  )
+                                ),
+                                endAdornment: (
+                                  <InputAdornment position="end">
+                                    <IconButton
+                                      color="primary"
+                                      onClick={() => {
+                                        if (isStreaming) {
+                                          if (abortController) {
+                                            console.log("Onboarding: Stopping stream via button click...");
+                                            abortController.abort();
+                                            setAbortController(null);
+                                            setIsStreaming(false);
+                                          }
+                                        } else {
+                                          handleSendMessageSocraticLangGraph(inputValue);
+                                        }
+                                      }}
+                                      aria-label={isStreaming ? "Stop response" : "Send message"}
+                                      edge="end"
+                                    >
+                                      {isStreaming ? (
+                                        <div
+                                          style={{
+                                            backgroundColor: theme.palette.error.main,
+                                            borderRadius: '50%',
+                                            width: '30px',
+                                            height: '30px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                          }}
+                                        >
+                                          <StopIcon
+                                            style={{
+                                              color: '#fff',
+                                              fontSize: '20px',
+                                            }}
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div
+                                          style={{
+                                            backgroundColor: theme.palette.button_sign_in,
+                                            borderRadius: '50%',
+                                            width: '30px',
+                                            height: '30px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                          }}
+                                        >
+                                          <ArrowForwardIcon
+                                            style={{
+                                              color: '#fff',
+                                              fontSize: '20px',
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                    </IconButton>
+                                  </InputAdornment>
+                                ),
+                                style: {
+                                  backgroundColor: '#F4F4F4',
+                                  fontSize: '1rem',
+                                  padding: '17px 8px',
+                                  borderRadius: '20px',
+                                  fontWeight: '500',
+                                  color: theme.palette.text.primary,
+                                  paddingRight: '20px',
+                                  paddingLeft: '20px',
+                                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                                  border: 'none',
+                                },
+                              }}
+                              inputProps={{
+                                style: { color: theme.palette.text.primary },
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': { border: 'none' },
+                                  '&:hover fieldset': {
+                                    boxShadow: messages.some((msg:any) => msg.TAK && msg.TAK.length > 0)
+                                      ? "none"
+                                      : "0 4px 8px rgba(0, 0, 0, 0.2)",
+                                  },
+                                },
+                                '& .MuiInputBase-input::placeholder': {
+                                  color: '#6F6F6F',
+                                  opacity: 1,
+                                },
+                              }}
+                            />
+                            </section>
 
-                      {/* Phrase d'information sous le champ de saisie - Traduction */}
-                      <div className="flex justify-center w-full mt-2"> {/* Ajouter un peu de marge top */}
-                        <p className="text-center text-[0.6rem] text-[#6F6F6F] opacity-80">
-                          {userUniversity === 'kedge' ? "Lucy peut faire des erreurs. Pensez à vérifier les informations importantes." : "Lucy can make mistake. Consider checking important information."}
-                        </p>
+                            <div className="flex justify-center w-full">
+                              <p
+                                className="hidden sm:block mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80 sm:mt-3 sm:mb-0"
+                              >
+                                {userUniversity === 'kedge' ? "Lucy peut faire des erreurs. Regardez le score de confiance et pensez à vérifier les informations importantes." : "Lucy can make mistakes. Look at the confidence score and consider checking important information."}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    </>
+                    </footer>
                   )}
-                </div>
-              ) : (
-                // VERSION DESKTOP : exactement identique à l'ancien code
-                <footer
-                  role="contentinfo"
-                  aria-label="Chat input footer"
-                  className="footer"
-                  style={{
-                    position: 'fixed',
-                    backgroundColor: '#F0F4FC',
-                    bottom: 0,
-                    left: drawerOpen ? `${drawerWidth}px` : '0',
-                    width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
-                    backdropFilter: 'blur(50px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.3)',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingTop: isSmallScreen ? '10px' : '20px',
-                    paddingBottom: isSmallScreen ? '1px' : '20px',
-                    zIndex: 2,
-                    transition: 'left 0.3s, width 0.3s',
-                    display: isLandingPageVisible ? 'none' : 'flex',
-                  }}
-                >
-                  <div
-                    style={{
-                      maxWidth: isSmallScreen ? '90%' : '800px',
-                      width: '100%',
-                      margin: '0 auto',
-                      padding: isSmallScreen ? '10px 0px 30px' : '0',
-                      position: 'relative',
-                    }}
-                  >
-                    {shouldShowFeedback(messages, isStreaming) ? (
-                      <ForcedFeedback />
-                    ) : (
-                      <>
-                        <section aria-label="Chat input section">
-                        <TextField
-                          fullWidth
-                          variant="outlined"
-                          multiline
-                          minRows={1}
-                          maxRows={6}
-                          placeholder={
-                            userUniversity === 'kedge' ? "Tapez votre message..." : (isSocialThread ? "Write a public message in this discussion..." : "Type your message...")
-                          }
-                          value={inputValue}
-                          onChange={(e) => setInputValue(e.target.value)}
-                         // onKeyPress={handleInputKeyPressSocraticLangGraph}
-                          onKeyDown = {handleInputKeyPressSocraticLangGraph}
-                          InputProps={{
-                            startAdornment: (
-                              !isSocialThread && (userUniversity !== 'kedge') && (
-                                <InputAdornment position="start" sx={{ marginRight: '8px' }}>
-                                  <Tooltip title={isPrivate ? "Make conversation Public" : "Make conversation Private"} enterDelay={100} arrow>
-                                    <Box
-                                      onClick={() => updateConversationPrivacy(useChatStore.getState().currentChatId || '', !isPrivate)}
-                                      sx={{
-                                        fontSize: '0.8rem',
-                                        fontWeight: 'bold',
-                                        color: isPrivate ? '#6F6F6F' : '#4A90E2',
-                                        backgroundColor: isPrivate ? '#F0F0F0' : '#E0F2FF',
-                                        padding: '4px 10px',
-                                        borderRadius: '5px',
-                                        display: 'inline-block',
-                                        cursor: 'pointer',
-                                        userSelect: 'none'
-                                      }}
-                                    >
-                                      {isPrivate ? 'Private' : 'Public'}
-                                    </Box>
-                                  </Tooltip>
-                                </InputAdornment>
-                              )
-                            ),
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton
-                                  color="primary"
-                                  onClick={() => {
-                                    if (isStreaming) {
-                                      if (abortController) {
-                                        console.log("Onboarding: Stopping stream via button click...");
-                                        abortController.abort();
-                                        setAbortController(null);
-                                        setIsStreaming(false);
-                                      }
-                                    } else {
-                                      handleSendMessageSocraticLangGraph(inputValue);
-                                    }
-                                  }}
-                                  aria-label={isStreaming ? "Stop response" : "Send message"}
-                                  edge="end"
-                                >
-                                  {isStreaming ? (
-                                    <div
-                                      style={{
-                                        backgroundColor: theme.palette.error.main,
-                                        borderRadius: '50%',
-                                        width: '30px',
-                                        height: '30px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                      }}
-                                    >
-                                      <StopIcon
-                                        style={{
-                                          color: '#fff',
-                                          fontSize: '20px',
-                                        }}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div
-                                      style={{
-                                        backgroundColor: theme.palette.button_sign_in,
-                                        borderRadius: '50%',
-                                        width: '30px',
-                                        height: '30px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                      }}
-                                    >
-                                      <ArrowForwardIcon
-                                        style={{
-                                          color: '#fff',
-                                          fontSize: '20px',
-                                        }}
-                                      />
-                                    </div>
-                                  )}
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                            style: {
-                              backgroundColor: '#F4F4F4',
-                              fontSize: '1rem',
-                              padding: '17px 8px',
-                              borderRadius: '20px',
-                              fontWeight: '500',
-                              color: theme.palette.text.primary,
-                              paddingRight: '20px',
-                              paddingLeft: '20px',
-                              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                              border: 'none',
-                            },
-                          }}
-                          inputProps={{
-                            style: { color: theme.palette.text.primary },
-                          }}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': { border: 'none' },
-                              '&:hover fieldset': {
-                                boxShadow: messages.some((msg:any) => msg.TAK && msg.TAK.length > 0)
-                                  ? "none"
-                                  : "0 4px 8px rgba(0, 0, 0, 0.2)",
-                              },
-                            },
-                            '& .MuiInputBase-input::placeholder': {
-                              color: '#6F6F6F',
-                              opacity: 1,
-                            },
-                          }}
-                        />
-                        </section>
-
-                        <div className="flex justify-center w-full">
-                          <p
-                            className="hidden sm:block mt-3 mb-1 text-center text-[0.6rem] text-[#6F6F6F] opacity-80 sm:mt-3 sm:mb-0"
-                          >
-                            {userUniversity === 'kedge' ? "Lucy peut faire des erreurs. Regardez le score de confiance et pensez à vérifier les informations importantes." : "Lucy can make mistakes. Look at the confidence score and consider checking important information."}
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </footer>
-              )}
-            </>
-          )}
+              </>
+            )}
               
           </div>
 
@@ -847,8 +858,28 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   
        </div>
 
-        </motion.div>
-      </ThemeProvider>
+       {/* --- Rétablissement du Drawer droit original --- */}
+       <Drawer
+         anchor="right"
+         open={isSidebarChatOpen}
+         onClose={toggleSidebarChat}
+         variant="persistent"
+         sx={{ 
+           '& .MuiDrawer-paper': { 
+             width: '400px', // Retour à une largeur fixe (modifiable ici)
+             boxSizing: 'border-box',
+             borderLeft: `1px solid ${theme.palette.divider}`,
+             boxShadow: 'none',
+             backgroundColor: 'transparent',
+            } 
+          }}
+       >
+         <SidebarChat isOpen={isSidebarChatOpen} onClose={toggleSidebarChat} />
+       </Drawer>
+       {/* --- FIN Rétablissement Drawer --- */}
+
+      </motion.div>
+    </ThemeProvider>
   );
   
 };

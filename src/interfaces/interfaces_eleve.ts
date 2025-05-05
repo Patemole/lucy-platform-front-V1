@@ -236,7 +236,7 @@ export interface EventStudentProfile {
   banner: string;
 }
 
-
+// --- Definitions manquantes --- 
 
 export interface Course {
     id: string;
