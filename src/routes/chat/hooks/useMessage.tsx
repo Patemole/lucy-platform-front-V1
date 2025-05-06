@@ -185,7 +185,7 @@ export const useMessage = ({
               currentConversation = conversations.find((conv) => conv.chat_id === chatSessionId);
             }
 
-            const isFirstMessage = currentConversation?.name === 'New Chat';
+            const isFirstMessage = currentConversation?.name === 'New Chat' || currentConversation?.name === 'Nouvelle Conversation'; //for kedge
 
             console.log("This is the name of the current conversation", currentConversation?.name)
             console.log("This is the value of isFirstMessage", isFirstMessage)
