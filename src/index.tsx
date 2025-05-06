@@ -13,9 +13,9 @@ const root = ReactDOM.createRoot(
 
 // Le rendu simplifié sans les anciens Providers
 root.render(
-  <React.StrictMode> {/* Optionnel mais recommandé */}
+  //<React.StrictMode> {/* Optionnel mais recommandé */}
     <App />
-  </React.StrictMode>
+  //</React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

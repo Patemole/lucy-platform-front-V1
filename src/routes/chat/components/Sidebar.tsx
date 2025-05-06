@@ -14,7 +14,8 @@ import {
   People as PeopleIcon,
   Logout as LogoutIcon,
   Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon
+  VisibilityOff as VisibilityOffIcon,
+  HomeOutlined
 } from '@mui/icons-material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ProfileEdit from '@mui/icons-material/Edit';
@@ -260,8 +261,8 @@ type SidebarProps = {
                     </ListItem>
                     */}
 
-                    {/* Bouton Masquer/Afficher le chat */}
-                    <Tooltip title={showChatContent ? (isKedge ? "Masquer le chat" : "Go to Housing") : (isKedge ? "Afficher le chat" : "Back to chat")} enterDelay={100} arrow placement="right">
+                    {/* Bouton Housing Matching / Retour au Chat */}
+                    <Tooltip title={showChatContent ? (isKedge ? "Aller au Matching Logement" : "Go to Housing Matching") : (isKedge ? "Retourner au Chat" : "Back to chat")} enterDelay={100} arrow placement="right">
                       <div>
                         <ListItem
                           component="li"
@@ -292,10 +293,10 @@ type SidebarProps = {
                                   minWidth: "35px",
                               }}
                           >
-                              {showChatContent ? <VisibilityOffIcon sx={{ fontSize: "22px" }} /> : <VisibilityIcon sx={{ fontSize: "22px" }} />}
+                              {showChatContent ? <HomeOutlined sx={{ fontSize: "22px" }} /> : <VisibilityIcon sx={{ fontSize: "22px" }} />}
                           </ListItemIcon>
                           <ListItemText
-                              primary={showChatContent ? (isKedge ? "Masquer le chat" : "Go to Housing") : (isKedge ? "Afficher le chat" : "Back to chat")}
+                              primary={showChatContent ? (isKedge ? "Matching Logement" : "Housing Matching") : (isKedge ? "Retour au Chat" : "Back to chat")}
                               primaryTypographyProps={{
                                   style: {
                                       fontWeight: "500",

@@ -1,30 +1,60 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box } from '@mui/material';
 import HousingCard from './HousingCard';
 import HousingActions from './HousingActions';
 import HousingHeader from './HousingHeader';
 import HousingResults from './results/HousingResults';
-// import TinderCard from 'react-tinder-card'; // Supprimer l'ancien import
 import { useHousingTinder } from './hooks/useHousingTinder';
-import { animated } from '@react-spring/web'; // Importer animated
-import { interpolate } from '@react-spring/web'; // Importer interpolate
+import { animated, interpolate } from '@react-spring/web';
 
-const HousingTinder: React.FC = () => {
-  // Utiliser le hook mis à jour
+// --- Définition des données de logement pour les résultats ---
+const fakeHousingOptions = [
+  {
+    id: 'quad',
+    title: 'Quad',
+    imageUrl: '/quad.png', // Assurez-vous que ces images existent dans /public
+    label: 'Social',
+    subtitle: 'Ware house is perfect fit for you' 
+  },
+  {
+    id: 'hill',
+    title: 'Hill',
+    imageUrl: '/hill.jpg', // Nom d'image hypothétique
+    label: 'Social/partcial', // Note: faute de frappe dans l'image originale ?
+    subtitle: 'Good for engineers and have food hall in it'
+  },
+  {
+    id: 'lauder',
+    title: 'Lauder',
+    imageUrl: '/lauder.jpg', // Nom d'image hypothétique
+    label: 'Social',
+    subtitle: 'Brand new, suite style appartment'
+  },
+   {
+    id: 'gregory',
+    title: 'Gregory',
+    imageUrl: '/gregory.jpg', // Nom d'image hypothétique
+    label: 'Close community',
+    subtitle: 'Perfect for people that like small and close community'
+  }
+  // Ajoutez d'autres logements si nécessaire
+];
+// --- Fin définition données logement ---
+
+// Interface pour les props de HousingTinder
+interface HousingTinderProps {
+  isResultsViewActive: boolean;
+  onShowResults: () => void;
+}
+
+const HousingTinder: React.FC<HousingTinderProps> = ({ isResultsViewActive, onShowResults }) => {
   const { cards, props, bind, swipe, goBack, progressPercentage } = useHousingTinder();
 
-  // <<< Etat pour afficher les résultats >>>
-  const [showResultsView, setShowResultsView] = useState(false);
-
-  // Modifier cette fonction pour afficher les résultats
+  // La fonction handleSeeResults appelle maintenant la prop onShowResults
   const handleSeeResults = () => {
-    console.log("'See results' button clicked! Showing results...");
-    setShowResultsView(true);
+    console.log("'See results' button clicked! Calling onShowResults...");
+    onShowResults(); // Appelle la fonction passée par HousingMain
   };
-
-  // TODO: Ajouter une logique pour obtenir le classement réel
-  // Pour l'instant, on utilise juste l'ordre initial des cartes
-  const fakeRankedCards = cards; 
 
   return (
     <Box sx={{
@@ -39,20 +69,18 @@ const HousingTinder: React.FC = () => {
       overflow: 'hidden', // Très important pour contenir les cartes animées
       cursor: 'grab' // Indiquer qu'on peut saisir
     }}>
-      {/* <<< Ajouter le Header ici >>> */}
-      <HousingHeader 
-        title="Housing Matching"
-        subtitle="Want to know which housing is for you. If you like it, swipe right. If you don't, swipe left."
-        progress={progressPercentage}
-        onSeeResults={handleSeeResults}
-      />
-
-      {/* Affichage conditionnel : Deck OU Résultats */}
-      {showResultsView ? (
-        <HousingResults rankedCards={fakeRankedCards} />
+      {/* Utiliser la prop isResultsViewActive pour l'affichage conditionnel */}
+      {isResultsViewActive ? (
+        <HousingResults rankedCards={fakeHousingOptions} /> 
       ) : (
-        <React.Fragment> {/* Utiliser Fragment pour grouper le deck et les actions */}
-          {/* Conteneur pour le deck de cartes */}
+        <React.Fragment> 
+          <HousingHeader 
+            title="Housing Matching"
+            subtitle="Want to know which housing is for you. If you like it, swipe right. If you don't, swipe left."
+            progress={progressPercentage}
+            onSeeResults={handleSeeResults} // handleSeeResults appelle maintenant onShowResults
+          />
+          
           <Box sx={{ 
               width: '90vw', 
               maxWidth: '350px',
