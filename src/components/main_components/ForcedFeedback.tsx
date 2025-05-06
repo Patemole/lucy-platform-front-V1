@@ -6,6 +6,11 @@ import useChatStore from '../../stores/useChatStore';
 import useFeedbackStore from '../../stores/useFeedbackStore';
 import { saveFeedback } from '../../api/chat';
 
+// Définition de l'interface pour les props
+interface ForcedFeedbackProps {
+  userUniversity?: string; // Rendre optionnel au cas où il ne serait pas toujours fourni
+}
+
 export const useForcedFeedback = () => {
   const { messages, currentChatId, isStreamingResponse } = useChatStore();
   const [feedbackStatus, setFeedbackStatus] = useState<{[key: number]: boolean}>({});
@@ -43,13 +48,16 @@ export const useForcedFeedback = () => {
   };
 };
 
-export const ForcedFeedback: React.FC = () => {
+// Utilisation de l'interface pour les props
+export const ForcedFeedback: React.FC<ForcedFeedbackProps> = ({ userUniversity }) => {
   const { user } = useAuthStore();
   const { messages, currentChatId } = useChatStore();
   const { getLastAiMessageAndContext, setFeedbackStatus } = useFeedbackStore();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   
+  const isKedge = userUniversity === 'kedge'; // Utilisation de la prop
+
   const { aiMessage, humanMessage } = getLastAiMessageAndContext(messages);
 
   const handleFeedback = async (isPositive: boolean) => {
@@ -67,11 +75,19 @@ export const ForcedFeedback: React.FC = () => {
         humanMessageContent: humanMessage?.content || ''
       });
 
-      setSnackbarMessage(isPositive ? 'Thank you for your positive feedback!' : 'Thank you for your negative feedback!');
+      setSnackbarMessage(
+        isKedge 
+          ? (isPositive ? 'Merci pour votre retour positif !' : 'Merci pour votre retour négatif !') 
+          : (isPositive ? 'Thank you for your positive feedback!' : 'Thank you for your negative feedback!')
+      );
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error saving feedback:', error);
-      setSnackbarMessage('An error occurred while saving your feedback, but your choice has been recorded locally');
+      setSnackbarMessage(
+        isKedge 
+          ? 'Une erreur est survenue lors de l\'enregistrement de votre retour, mais votre choix a été enregistré localement' 
+          : 'An error occurred while saving your feedback, but your choice has been recorded locally'
+      );
       setSnackbarOpen(true);
     }
   };
@@ -80,21 +96,25 @@ export const ForcedFeedback: React.FC = () => {
     <>
       <div className="w-full max-w-2xl mx-auto mt-4 bg-white/50 backdrop-blur-lg border border-white/20 rounded-lg p-4">
         <h3 className="text-center text-gray-800 text-lg font-medium mb-3">
-          How do you like this answer?
+          {isKedge ? 'Comment trouvez-vous cette réponse ?' : 'How do you like this answer?'}
         </h3>
         <div className="flex justify-center space-x-8">
           <button
             onClick={() => handleFeedback(false)}
             className="flex flex-col items-center group transition-transform hover:scale-105"
           >
-            <span className="text-sm text-gray-600 mb-1">Not satisfied</span>
+            <span className="text-sm text-gray-600 mb-1">
+              {isKedge ? 'Pas satisfait' : 'Not satisfied'}
+            </span>
             <FiThumbsDown className="text-red-400 text-xl group-hover:text-red-500" />
           </button>
           <button
             onClick={() => handleFeedback(true)}
             className="flex flex-col items-center group transition-transform hover:scale-105"
           >
-            <span className="text-sm text-gray-600 mb-1">Satisfied</span>
+            <span className="text-sm text-gray-600 mb-1">
+              {isKedge ? 'Satisfait' : 'Satisfied'}
+            </span>
             <FiThumbsUp className="text-green-400 text-xl group-hover:text-green-500" />
           </button>
         </div>

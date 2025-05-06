@@ -236,7 +236,10 @@ interface TopHeaderProps {
                                 },
                             }}
                             >
-                            <MenuItem onClick={handleDialogOpen}>
+                            <MenuItem onClick={() => {
+                                handleDialogOpen();
+                                handleProfileMenuClose();
+                            }}>
                                 <ListItemIcon>
                                 <ProfileEdit fontSize="small" sx={{ color: '#011F5B' }} />
                                 </ListItemIcon>
@@ -266,7 +269,10 @@ interface TopHeaderProps {
                                 }
                                 />
                             </MenuItem>
-                            <MenuItem onClick={handleLogout}>
+                            <MenuItem onClick={() => {
+                                handleLogout();
+                                handleProfileMenuClose();
+                            }}>
                                 <ListItemIcon>
                                 <LogoutIcon fontSize="small" sx={{ color: '#F04261' }} />
                                 </ListItemIcon>

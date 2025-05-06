@@ -528,7 +528,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                   }}
                 >
                   {shouldShowFeedback(messages, isStreaming) ? (
-                    <ForcedFeedback />
+                    <ForcedFeedback userUniversity={userUniversity} />
                   ) : (
                     <>
                       {/* Nouvelle ligne pour icône, input, bouton envoi */}
@@ -665,7 +665,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                     }}
                   >
                     {shouldShowFeedback(messages, isStreaming) ? (
-                      <ForcedFeedback />
+                      <ForcedFeedback userUniversity={userUniversity} />
                     ) : (
                       <>
                         <section aria-label="Chat input section">

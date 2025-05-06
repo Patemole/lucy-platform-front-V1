@@ -275,8 +275,9 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   
 
   const [isTextDisplayed, setIsTextDisplayed] = useState(false);
-  const [showShadowSources, setShowShadowSources] = useState(false); // État pour afficher les shadow sources
-  const [hasLoadedSources, setHasLoadedSources] = useState(false); // Suivi du chargement effectif des sources
+  // Suppression de showShadowSources et hasLoadedSources
+  // const [showShadowSources, setShowShadowSources] = useState(false); 
+  // const [hasLoadedSources, setHasLoadedSources] = useState(false); 
 
 
 
@@ -317,7 +318,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
 
   const navigate = useNavigate();
 
-  //console.log("🔍 citedDocuments:", citedDocuments);
+  console.log("🔍 citedDocuments:", citedDocuments);
 
 
 
@@ -338,14 +339,16 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   }, [isResponseReceived]);
 
 
+// Suppression des useEffect pour showShadowSources et hasLoadedSources
+/*
 // Dès que les Reasoning Steps commencent, on affiche les shadow sources
 useEffect(() => {
-  if (ReasoningSteps && ReasoningSteps.length > 0) {
-    console.log("🔹 Reasoning Steps en cours → Affichage des shadow sources.");
+  if (ReasoningSteps && ReasoningSteps.length > 0 && !hasLoadedSources) { // Condition modifiée
+    console.log("🔹 Reasoning Steps en cours ET sources non chargées → Affichage des shadow sources.");
     setShowShadowSources(true);
-    setHasLoadedSources(false); // Reset du suivi des sources car on commence une nouvelle séquence
+    // setHasLoadedSources(false); // Retiré : hasLoadedSources est maintenant une condition pour entrer ici et est géré par l'arrivée de citedDocuments
   }
-}, [ReasoningSteps]);
+}, [ReasoningSteps, hasLoadedSources]); // Ajout de hasLoadedSources aux dépendances
 
 // Dès que les sources réelles sont disponibles, on remplace les shadow sources
 useEffect(() => {
@@ -365,6 +368,7 @@ useEffect(() => {
     setShowShadowSources(false);
   }
 }, [confidenceScoreData]);
+*/
   
 
 
@@ -925,6 +929,19 @@ useEffect(() => {
 
   const isKedge = userUniversity === 'kedge'; // <-- Définir isKedge
 
+  // Dérivation directe pour l'affichage des sources
+  const actualSourcesReady = citedDocuments && citedDocuments.length > 0;
+
+  // On affiche le skeleton si:
+  // - Le message est en cours de chargement initial (isMessageLoading)
+  // - OU il y a des étapes de raisonnement affichées
+  // - ET les vraies sources ne sont pas encore prêtes.
+  const displaySkeleton = (ReasoningSteps && ReasoningSteps.length > 0) && !actualSourcesReady;
+
+  // Le bloc des sources (titre + contenu) s'affiche si on doit montrer le skeleton OU si les vraies sources sont prêtes.
+  // (Et en gardant la condition !isTextDisplayed pour le moment, bien qu'elle soit toujours vraie)
+  const showOverallSourcesBlock = !isTextDisplayed && (displaySkeleton || actualSourcesReady);
+
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">
     <section
@@ -1071,20 +1088,19 @@ useEffect(() => {
 
         {/* Bloc des sources : il s'affiche uniquement si le texte n'est pas encore affiché 
           et que soit le loader est actif, soit des sources réelles sont disponibles */}
-        {!isTextDisplayed && (showShadowSources || (citedDocuments && citedDocuments.length > 0)) && (
+        {showOverallSourcesBlock && (
           <div className={`mt-0 ${!isSmallScreen ? "ml-8" : ""} pb-3 mb-6`}>
             {/* Titre Sources */}
-            {(showShadowSources || (citedDocuments && citedDocuments.length > 0)) && (
-              <div className="flex items-center mb-3">
-                <LanguageIcon sx={{ width: 20, height: 20, marginRight: 1 }} />
-                <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
-                  {isKedge ? "Sources" : "Sources"} {/* <-- Traduire ici (même mot) */}
-                </span>
-              </div>
-            )}
+            {/* Le titre s'affiche si le bloc entier s'affiche (implicite par showOverallSourcesBlock) */}
+            <div className="flex items-center mb-3">
+              <LanguageIcon sx={{ width: 20, height: 20, marginRight: 1 }} />
+              <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
+                {isKedge ? "Sources" : "Sources"} {/* <-- Traduire ici (même mot) */}
+              </span>
+            </div>
 
             {/* Contenu Sources (Skeleton ou Réel) */}
-            {showShadowSources ? (
+            {displaySkeleton ? (
               <div
                 className="sources-grid grid grid-cols-5 gap-2"
                 style={{
@@ -1121,7 +1137,7 @@ useEffect(() => {
                   }}
                 ></div>
               </div>
-            ) : (
+            ) : ( // Si on n'affiche pas le skeleton, on affiche les vraies sources (actualSourcesReady doit être vrai ici)
               <div
                 className="sources-grid grid grid-cols-5 gap-2"
                 style={{ width: "100%" }}
@@ -1199,7 +1215,7 @@ useEffect(() => {
                     onClick={() => setShowSourcesSidebar(true)}
                   >
                     <span className="no-underline group-hover:underline transition duration-200 ease-in-out">
-                      View {citedDocuments.length - 4}+
+                      {isKedge ? "Voir" : "View"} {citedDocuments.length - 4}+
                     </span>
                   </div>
                 )}
@@ -1232,7 +1248,7 @@ useEffect(() => {
     <Box sx={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
       {/* Titre */}
       <Typography variant="h6" sx={{ pb: 2, fontWeight: "bold", color: "black" }}>
-        📖 All Sources
+        📖 {isKedge ? "Toutes les sources" : "All Sources"}
       </Typography>
 
       {/* Bouton Fermer (aligné avec le titre) */}
