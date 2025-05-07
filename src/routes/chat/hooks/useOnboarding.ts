@@ -63,13 +63,20 @@ export const useOnboarding = ({
     { question: "let's get this started! Help me get to know the **real** you.\nThe **more you share** the **more accurate** we get in helping out ✨\n\nWhich school are you in?", metadata: "SCHOOL" },
     { question: "And what year are you rockin' right now?", metadata: "YEAR" },
     //{ question: "This is a test, are you Mathieu?", metadata: "TEST" },
-    { question: "What’s your insta? won’t be public — just helps me get your vibe 🏄", metadata: "INSTAGRAM" },
+    { question: "What's your insta? won't be public — just helps me get your vibe 🏄", metadata: "INSTAGRAM" },
     //{ question: "What's your favorite color?", metadata: "FAVORITE_COLOR" },
     //{ question: "What's your pet's name?", metadata: "PET_NAME" },
     { question: "Second to last question! If you've got a LinkedIn, paste it here, just helps me get your pro side 💼", metadata: "LINKEDIN" },
     { question: "Got a major or minor picked out yet? if you're still figuring it out, totally fine — just click on 'Undecided'", metadata: "MAJOR&MINOR" },
     { question: "Final step! Just check these boxes so we can vibe legally ✅", metadata: "COMPLIANCE" },
   ];
+
+  // --- NOUVEAU: Tableau de messages d'onboarding spécifique à Kedge ---
+  const onboardingMessagesKedge = [
+    { question: "Salut! Pour commencer, peux-tu me dire quel programme tu suis à Kedge ?", metadata: "SCHOOL_KEDGE" },
+    { question: "Parfait ! Dernière étape, coche ces cases pour qu'on soit sur la même longueur d'onde légalement ✅", metadata: "COMPLIANCE" },
+  ];
+
 
   // --- Fonction pour obtenir l'index de la prochaine question ---
   const getNextQuestionIndex = useCallback((currentIndex: number) => {
@@ -160,30 +167,52 @@ export const useOnboarding = ({
     fieldToUpdate?: string | Record<string, any>,
     previousAnswer?: string
   ): Promise<void> => {
+    console.time("sendNextOnboardingMessage_ENTIRE_FUNCTION"); // Timer pour toute la fonction
+    console.log(`[sendNextOnboardingMessage] Entrée - index: ${index}, currentMessagesSnom length: ${currentMessagesSnom.length}`);
+
     // ---> Ajout: Vérification KEDGE <---
     const isKedgeUser = userUniversity === 'kedge';
-    const complianceIndex = onboardingMessages.findIndex(q => q.metadata === 'COMPLIANCE'); // Normalement 5
+    const currentOnboardingSteps = isKedgeUser ? onboardingMessagesKedge : onboardingMessages;
+    const complianceIndex = currentOnboardingSteps.findIndex(q => q.metadata === 'COMPLIANCE');
+    const currentUserId = useAuthStore.getState().user?.id;
+    const currentChatId = useAuthStore.getState().chatIds[0];
 
-    // Si Kedge et on demande une question avant COMPLIANCE (sauf la première), ne rien faire.
-    if (isKedgeUser && index < complianceIndex && index !== 0) {
-        console.warn(`[useOnboarding - sendNext] Utilisateur Kedge: Saut de la question ${index} (avant conformité).`);
+    // Si Kedge et on demande une question AVANT la première (SCHOOL_KEDGE) - ne devrait pas arriver
+    // OU si Kedge et on demande une question APRES COMPLIANCE - fin de l'onboarding Kedge
+    if (isKedgeUser && (index < 0 || index > complianceIndex)) {
+        if (index > complianceIndex) { // Si après compliance, c'est la fin
+            console.log("[sendNextOnboardingMessage - Kedge] Condition de finalisation Kedge entrée (index > complianceIndex).");
+            console.time("sendNextOnboardingMessage_kedge_finalization_onSubmit_call");
+            // Logique de finalisation (similaire à la fin générale mais pour Kedge)
+            await updateUserField({ onboardingComplete: true });
+            if (previousAnswer && currentUserId && currentChatId) {
+                const lastStep = currentOnboardingSteps[complianceIndex]; // Dernière étape était compliance
+                try {
+                    console.log(`[useOnboarding - Kedge] Sauvegarde dernière étape humaine (métadata: ${lastStep.metadata}).`);
+                    await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, metadata: lastStep.metadata, message: previousAnswer, type: 'human' });
+                } catch (error) { console.error(`❌ Erreur saveOnboardingStep (fin Kedge, humain) pour ${lastStep.metadata}:`, error); }
+            }
+            if (typeof fieldToUpdate === 'object') {
+                updateUserField(fieldToUpdate);
+            }
+            const loadingAiMessage: Message = { id: generateUniqueId() + 1, type: 'ai', content: '', personaName: 'Lucy', isLoading: true };
+            const historyForSubmit = [...currentMessagesSnom, loadingAiMessage];
+            setMessages(historyForSubmit);
+            console.log("🏁 [useOnboarding - Kedge] Onboarding Kedge terminé, appel de onSubmit pour message final.");
+            setIsStreaming(true);
+            await onSubmit(historyForSubmit, '', true); // isOnboardingMessage = true
+            console.timeEnd("sendNextOnboardingMessage_kedge_finalization_onSubmit_call");
+            console.timeEnd("sendNextOnboardingMessage_ENTIRE_FUNCTION"); // Fin timer
+            return;
+        }
+        console.warn(`[useOnboarding - sendNext - Kedge] Index ${index} hors limites pour Kedge. Arrêt.`);
         return;
     }
-    // Si Kedge et c'est la première question (index 0), on saute directement à COMPLIANCE
-    if (isKedgeUser && index === 0) {
-        console.log(`[useOnboarding - sendNext] Utilisateur Kedge: Saut de la première étape vers la conformité (index ${complianceIndex}).`);
-        // On appelle récursivement avec l'index de conformité et les messages actuels
-        // Pas besoin de délai ici car il sera appliqué dans l'appel récursif si complianceIndex est 0 (ce qui n'est pas le cas)
-        // ou pas appliqué du tout si complianceIndex > 0 (ce qui est le cas)
-        return sendNextOnboardingMessage(complianceIndex, currentMessagesSnom, fieldToUpdate, previousAnswer);
-    }
-    // ---> Fin Ajout KEDGE <---
 
 
-    // ---> SÉCURITÉ SUPPLÉMENTAIRE + DÉLAI pour la première question <--- 
-    // On applique le délai seulement si ce n'est PAS un utilisateur Kedge
-    // OU si c'est un Kedge mais que la question de conformité est la première (index 0, cas peu probable)
-    if (index === 0 && !isKedgeUser) {
+    // ---> SÉCURITÉ SUPPLÉMENTAIRE + DÉLAI pour la première question ---
+    // S'applique si c'est la toute première question envoyée à l'utilisateur (index 0 du tableau pertinent)
+    if (index === 0) { // Concerne la première question du flux (standard ou Kedge)
       // Re-vérifier si l'onboarding n'est pas déjà complet juste avant d'envoyer
       const currentUser = useAuthStore.getState().user;
       if (currentUser?.onboardingComplete) {
@@ -197,16 +226,15 @@ export const useOnboarding = ({
     }
     // ---> FIN SÉCURITÉ + DÉLAI <--- 
 
-    const currentUserId = useAuthStore.getState().user?.id;
-    const currentChatId = useAuthStore.getState().chatIds[0];
     let messagesAfterUpdate = [...currentMessagesSnom];
 
-    if (index >= onboardingMessages.length) {
-      console.log("[useOnboarding] Fin de l'index, tentative de finalisation.");
+    if (index >= currentOnboardingSteps.length) {
+      console.log(`[sendNextOnboardingMessage] Condition de finalisation STANDARD entrée (index >= currentOnboardingSteps.length). Index: ${index}, Longueur: ${currentOnboardingSteps.length}`);
+      console.time("sendNextOnboardingMessage_standard_finalization_onSubmit_call");
       await updateUserField({ onboardingComplete: true });
 
       if (previousAnswer && currentUserId && currentChatId) {
-        const lastStep = onboardingMessages[onboardingMessages.length - 1];
+        const lastStep = currentOnboardingSteps[currentOnboardingSteps.length - 1];
         try {
           console.log(`[useOnboarding] Sauvegarde dernière étape humaine (métadata: ${lastStep.metadata}).`);
           await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, metadata: lastStep.metadata, message: previousAnswer, type: 'human' });
@@ -224,38 +252,51 @@ export const useOnboarding = ({
       console.log("🏁 [useOnboarding] Onboarding terminé, appel de onSubmit pour message final avec isOnboardingMessage=true.");
       setIsStreaming(true);
       await onSubmit(historyForSubmit, '', true);
+      console.timeEnd("sendNextOnboardingMessage_standard_finalization_onSubmit_call");
+      console.timeEnd("sendNextOnboardingMessage_ENTIRE_FUNCTION"); // Fin timer
       return;
     }
 
-    // Si on doit sauter la question LinkedIn
-    if (index === 3 && skipLinkedInQuestion) {
+    // Si on doit sauter la question LinkedIn (ne s'applique pas à Kedge car LinkedIn n'est pas dans leur flux)
+    if (!isKedgeUser && index === 3 && skipLinkedInQuestion) {
       console.log("[useOnboarding] Saut de la question LinkedIn car profil déjà trouvé");
       return sendNextOnboardingMessage(4, messagesAfterUpdate, fieldToUpdate, previousAnswer);
     }
 
-    console.log(`[useOnboarding] Préparation étape ${index}.`);
+    console.log(`[useOnboarding] Préparation étape ${index} pour ${isKedgeUser ? 'Kedge' : 'Standard'}.`);
     setIsLandingPageVisible(false);
     setRelatedQuestions([]);
     setIsStreaming(true);
 
-    // Récupérer la question originale et le métadata
-    const { question: originalQuestion, metadata } = onboardingMessages[index];
+    // Récupérer la question originale et le métadata DU BON TABLEAU
+    const { question: originalQuestion, metadata } = currentOnboardingSteps[index];
     let questionToSend = originalQuestion;
 
-    // Personnaliser la première question si le nom est disponible ET NON Kedge
-    if (index === 0 && userName && !isKedgeUser) {
-        questionToSend = `Ok ${userName}, ${originalQuestion.charAt(0).toLowerCase() + originalQuestion.slice(1)}`;
-        console.log(`[useOnboarding] Question personnalisée pour index 0: "${questionToSend}"`);
+    // Personnaliser la première question si le nom est disponible ET NON Kedge (pour le flux standard)
+    // OU si Kedge et c'est la première question de Kedge (SCHOOL_KEDGE)
+    if (userName && index === 0) { // S'applique à la première question de chaque flux
+        if (isKedgeUser) {
+            // Pour Kedge, la question SCHOOL_KEDGE est déjà personnalisée dans sa définition
+            // Mais on peut ajouter le nom si on veut, ex: "Salut ${userName}! Pour commencer..."
+            // Pour l'instant, on garde la question telle quelle pour Kedge.
+            // Si on veut personnaliser : questionToSend = `Salut ${userName}! ${originalQuestion.charAt(0).toLowerCase() + originalQuestion.slice(1)}`;
+            console.log(`[useOnboarding] Question Kedge (index 0 - ${metadata}): "${questionToSend}"`);
+        } else { // Flux standard
+            questionToSend = `Ok ${userName}, ${originalQuestion.charAt(0).toLowerCase() + originalQuestion.slice(1)}`;
+            console.log(`[useOnboarding] Question standard personnalisée pour index 0: "${questionToSend}"`);
+        }
     }
 
-    // ---> NOUVELLE LOGIQUE: Personnaliser la question de conformité pour Kedge <---
-    if (isKedgeUser && index === complianceIndex) {
+    // Personnalisation de la question de conformité pour Kedge (déjà gérée dans le tableau kedge)
+    // Si on voulait une personnalisation dynamique ici :
+    if (isKedgeUser && metadata === 'COMPLIANCE') {
         if (userName) {
-            questionToSend = `Salut ${userName} ! Coche ces checkbox pour qu'on soit sur la meme longueur d'onde! ✅`;
-            console.log(`[useOnboarding] Question de conformité personnalisée pour Kedge (avec nom): "${questionToSend}"`);
+            // La question est déjà "Parfait ! Dernière étape..." on peut la préfixer par le nom si besoin.
+            // Exemple: questionToSend = `Parfait ${userName}! Dernière étape...`
+            // Pour l'instant, la question dans onboardingMessagesKedge est suffisante.
+            console.log(`[useOnboarding] Question de conformité Kedge (personnalisée dans tableau): "${questionToSend}"`);
         } else {
-            questionToSend = `Salut, coche ces checkbox pour qu'on soit sur la meme longueur d'onde! ✅`;
-            console.log(`[useOnboarding] Question de conformité personnalisée pour Kedge (sans nom): "${questionToSend}"`);
+            console.log(`[useOnboarding] Question de conformité Kedge (sans nom, tableau): "${questionToSend}"`);
         }
     }
     // ---> FIN NOUVELLE LOGIQUE <---
@@ -280,11 +321,12 @@ export const useOnboarding = ({
 
     setIsStreaming(false);
     console.log(`[useOnboarding] Étape ${index} ("${metadata}") affichée.`);
+    console.timeEnd("sendNextOnboardingMessage_ENTIRE_FUNCTION"); // Fin timer si pas de return anticipé
 
   }, [
     generateUniqueId, setMessages, updateUserField, saveOnboardingStep, setIsLandingPageVisible,
     setRelatedQuestions, setIsStreaming, onSubmit, fakeStreamMessage,
-    skipLinkedInQuestion, onboardingMessages, userName, userUniversity
+    skipLinkedInQuestion, onboardingMessages, onboardingMessagesKedge, userName, userUniversity
   ]);
 
 
@@ -350,14 +392,16 @@ export const useOnboarding = ({
     if (!hasExistingOnboardingMessages && hasNotAttemptedStart) {
       onboardingStartAttemptedRef.current = true; // Marquer la tentative de démarrage
       const isKedgeAtStart = userUniversity === 'kedge';
-      const complianceIndexAtStart = onboardingMessages.findIndex(q => q.metadata === 'COMPLIANCE'); // Normalement 5
+      // Utiliser le bon tableau de messages pour Kedge
+      // const complianceIndexAtStart = onboardingMessages.findIndex(q => q.metadata === 'COMPLIANCE');
 
       if (isKedgeAtStart) {
-        console.log(`🚀 [useOnboarding ACTION - Simple - Kedge] Starting onboarding directly at COMPLIANCE step for chat ${currentChatId}...`);
-        sendNextOnboardingMessage(complianceIndexAtStart, messagesInStore); // Envoyer question COMPLIANCE
+        // Pour Kedge, on commence toujours par la première question de leur flux (SCHOOL_KEDGE)
+        console.log(`🚀 [useOnboarding ACTION - Simple - Kedge] Starting Kedge onboarding at SCHOOL_KEDGE step for chat ${currentChatId}...`);
+        sendNextOnboardingMessage(0, messagesInStore); // Envoyer la première question KEDGE (index 0 de onboardingMessagesKedge)
       } else {
         console.log(`🚀 [useOnboarding ACTION - Simple - Non-Kedge] Starting onboarding sequence / Sending first message for chat ${currentChatId}...`);
-        sendNextOnboardingMessage(0, messagesInStore); // Envoyer question 0
+        sendNextOnboardingMessage(0, messagesInStore); // Envoyer question 0 (standard)
       }
     } else {
        console.log(`[useOnboarding ACTION - Simple] Skipping message send: Either messages exist, or start already attempted.`);
@@ -463,77 +507,79 @@ export const useOnboarding = ({
 
   // Modifier handleSendINSTAGRAMMessage pour utiliser le nouveau système de vérification
   const handleSendINSTAGRAMMessage = useCallback(async (instagramMessage: string) => {
-    const currentMessages = useChatStore.getState().messages;
-    const newMessage: Message = { id: generateUniqueId(), type: 'human', content: instagramMessage };
-    const messagesWithHuman = [...currentMessages, newMessage];
-    setMessages(messagesWithHuman);
+    console.time("handleSendINSTAGRAMMessage_total_execution_time");
 
+    // Déterminer l'index suivant AVANT d'appeler handleSendGeneric
+    // (même si handleSendGeneric le prend en argument, c'est plus clair ici)
+    // Cette partie dépend de l'état de skipLinkedInQuestion qui doit être à jour.
+    const userProfileForSkipCheck = useAuthStore.getState().user; 
+    setSkipLinkedInQuestion(userProfileForSkipCheck?.linkedin_profile === true);
+    const nextIndex = getNextQuestionIndex(2); // 2 est l'index d'INSTAGRAM
+    console.log(`[handleSendINSTAGRAMMessage] nextIndex déterminé: ${nextIndex}, skipLinkedIn: ${skipLinkedInQuestion}`);
+
+    // Appeler handleSendGeneric pour la logique standard : ajout msg, sauvegarde, update field, appel sendNext
+    console.time("handleSendGeneric_for_instagram_call");
+    await handleSendGeneric(instagramMessage, nextIndex, "INSTAGRAM", 'instagram_username');
+    console.timeEnd("handleSendGeneric_for_instagram_call");
+
+    // Lancer le scraping Instagram en parallèle SANS await APRÈS que la transition vers la question suivante est initiée par handleSendGeneric
     const currentUserId = useAuthStore.getState().user?.id;
-    const currentChatId = useAuthStore.getState().chatIds[0];
-
-    if (currentUserId && currentChatId) {
-      try {
-        await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, message: instagramMessage, type: 'human', metadata: "INSTAGRAM" });
-      } catch(error) {
-        console.error(`❌ [useOnboarding] Erreur saveOnboardingStep (INSTAGRAM):`, error);
-      }
-    }
-
-    await updateUserField('instagram_username', instagramMessage);
-    
-    // Lancer le scraping Instagram en parallèle
-    if (currentUserId) {
-      console.log("[useOnboarding] Appel de scrapeInstagramProfile avec le username:", instagramMessage);
+    if (currentUserId && instagramMessage.toLowerCase() !== "don't want to answer") { // Ne pas scraper si l'utilisateur ne veut pas partager
+      console.log("[useOnboarding] Lancement SANS AWAIT de scrapeInstagramProfile avec le username:", instagramMessage);
       scrapeInstagramProfile(instagramMessage, currentUserId)
         .then(instagramData => {
           if (instagramData) {
-            console.log("[useOnboarding] Scraping Instagram terminé, Firestore devrait être mis à jour et le store suivra.");
+            console.log("[useOnboarding] Scraping Instagram (async) terminé, Firestore devrait être mis à jour et le store suivra.");
           }
         })
         .catch(error => {
-          console.error("[useOnboarding] Erreur lors du scraping Instagram:", error);
+          console.error("[useOnboarding] Erreur lors du scraping Instagram (async):", error);
         });
+    } else if (instagramMessage.toLowerCase() === "don't want to answer") {
+      console.log("[useOnboarding] L'utilisateur ne souhaite pas partager son Instagram, pas de scraping.");
     }
 
-    // Vérifier si on a déjà une réponse LinkedIn dans le store
-    const user = useAuthStore.getState().user;
-    console.log("[useOnboarding] Vérification linkedin_profile:", user?.linkedin_profile);
-    
-    // Si linkedin_profile est true, on a trouvé un profil → skip la question
-    // Si linkedin_profile est false, on n'a pas trouvé de profil → poser la question
-    // Si linkedin_profile est undefined/null, pas de réponse encore → poser la question
-    setSkipLinkedInQuestion(user?.linkedin_profile === true);
+    console.timeEnd("handleSendINSTAGRAMMessage_total_execution_time");
 
-    // Utiliser getNextQuestionIndex pour déterminer la prochaine question
-    const nextIndex = getNextQuestionIndex(2); // 2 est l'index après INSTAGRAM
-    await sendNextOnboardingMessage(nextIndex, messagesWithHuman);
-
-  }, [generateUniqueId, setMessages, saveOnboardingStep, updateUserField, sendNextOnboardingMessage, getNextQuestionIndex, checkLinkedInProfile]);
+  }, [generateUniqueId, setMessages, saveOnboardingStep, updateUserField, sendNextOnboardingMessage, getNextQuestionIndex, handleSendGeneric, skipLinkedInQuestion, setSkipLinkedInQuestion]); // Ajout handleSendGeneric et gestion skipLinkedIn
 
 
 
   const handleSendLINKEDINMessage = useCallback(async (linkedinMessage: string) => {
-    // Appeler handleSendGeneric pour mettre à jour le profil et passer à la question suivante
-    await handleSendGeneric(linkedinMessage, 4, "LINKEDIN", 'linkedin_url');
+    console.time("handleSendLINKEDINMessage_total");
+
+    // L'index suivant après LINKEDIN (index 3) est MAJOR&MINOR (index 4)
+    const nextIndex = 4;
+
+    // Appeler handleSendGeneric pour la logique standard
+    // Note: handleSendGeneric appelle sendNextOnboardingMessage à l'intérieur
+    console.time("handleSendGeneric_for_linkedin_call");
+    await handleSendGeneric(linkedinMessage, nextIndex, "LINKEDIN", 'linkedin_url');
+    console.timeEnd("handleSendGeneric_for_linkedin_call");
     
-    // Appeler scrapeLinkedInProfile pour envoyer l'URL au backend
-    try {
-      console.log("[useOnboarding] Appel de scrapeLinkedInProfile avec l'URL:", linkedinMessage);
-      const currentUserId = useAuthStore.getState().user?.id;
-      if (!currentUserId) {
-        throw new Error("User ID not found");
-      }
-      const linkedinData = await scrapeLinkedInProfile(linkedinMessage, currentUserId);
-      console.log("[useOnboarding] Résultat du scraping LinkedIn:", linkedinData);
-      
-      // Si le scraping a réussi, on met à jour le profil utilisateur avec les données
-      if (linkedinData) {
-        console.log("[useOnboarding] Scraping LinkedIn terminé, Firestore devrait être mis à jour et le store suivra.");
-      }
-    } catch (error) {
-      console.error("[useOnboarding] Erreur lors du scraping LinkedIn:", error);
+    // Lancer le scraping LinkedIn en parallèle SANS await APRÈS que la transition est initiée
+    const currentUserId = useAuthStore.getState().user?.id;
+    if (currentUserId && linkedinMessage.toLowerCase() !== "don't want to answer") { 
+      console.log("[useOnboarding] Lancement SANS AWAIT de scrapeLinkedInProfile avec l'URL:", linkedinMessage);
+      scrapeLinkedInProfile(linkedinMessage, currentUserId)
+        .then(linkedinData => {
+          if (linkedinData) {
+            console.log("[useOnboarding] Scraping LinkedIn (async) terminé, Firestore devrait être mis à jour et le store suivra.");
+            // La mise à jour Firestore déclenchera l'écouteur dans useAuthStore,
+            // qui mettra à jour user.linkedin_profile. 
+            // La prochaine fois que getNextQuestionIndex sera appelé (ex: dans handleSendINSTAGRAMMessage),
+            // il lira la valeur à jour depuis le store via useAuthStore.getState().user.
+          }
+        })
+        .catch(error => {
+          console.error("[useOnboarding] Erreur lors du scraping LinkedIn (async):", error);
+        });
+    } else if (linkedinMessage.toLowerCase() === "don't want to answer") {
+      console.log("[useOnboarding] L'utilisateur ne souhaite pas partager son LinkedIn, pas de scraping.");
+      // updateUserField({ linkedin_profile: false }); // Optionnel: Marquer explicitement comme non trouvé/partagé
     }
-  }, [handleSendGeneric]);
+    console.timeEnd("handleSendLINKEDINMessage_total");
+  }, [handleSendGeneric]); // handleSendGeneric est la seule dépendance externe directe nécessaire ici
 
 
   const handleSendMAJORMINORMessage = useCallback(({ majors, minors }: { majors: string[]; minors: string[]; }) => {
@@ -546,12 +592,13 @@ export const useOnboarding = ({
 
   const handleSendCOMPLIANCEMessage = useCallback((payload: { termsAccepted: boolean; ageConfirmed: boolean; }) => {
       // Déterminer le texte du résumé en fonction de l'université
-      const isKedgeUser = userUniversity === 'kedge';
-      const summary = isKedgeUser
+      const currentIsKedgeUser = userUniversity === 'kedge';
+      const summary = currentIsKedgeUser
         ? `Termes acceptés : ${payload.termsAccepted ? '✔️' : '❌'} | Âge confirmé : ${payload.ageConfirmed ? '✔️' : '❌'}`
         : `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
        // Pour COMPLIANCE, la mise à jour du profil est gérée par l'objet passé
-      handleSendGeneric(summary, 6, "COMPLIANCE", { complianceAccepted: true, ...payload });
+      const nextIndex = currentIsKedgeUser ? 2 : 6;
+      handleSendGeneric(summary, nextIndex, "COMPLIANCE", { complianceAccepted: true, ...payload });
   }, [handleSendGeneric, userUniversity]);
 
 
@@ -578,6 +625,14 @@ export const useOnboarding = ({
   
   // ---------------------------------------
 
+  // --- NOUVEAU HANDLER POUR SCHOOL_KEDGE ---
+  const handleSendSCHOOLKEDGEMessage = useCallback((programMessage: string) => {
+    console.log("[useOnboarding] handleSendSCHOOLKEDGEMessage appelée avec:", programMessage);
+    // L'index suivant dans onboardingMessagesKedge est COMPLIANCE (index 1)
+    console.log("[useOnboarding] Appel de handleSendGeneric pour SCHOOL_KEDGE avec index 1, metadata SCHOOL_KEDGE, field kedge_program.");
+    handleSendGeneric(programMessage, 1, "SCHOOL_KEDGE", 'kedge_program', programMessage);
+}, [handleSendGeneric]);
+
   // --- Return ---
   return {
     handleSendSCHOOLMessage,
@@ -589,5 +644,6 @@ export const useOnboarding = ({
     handleSendLINKEDINMessage,
     handleSendMAJORMINORMessage,
     handleSendCOMPLIANCEMessage,
+    handleSendSCHOOLKEDGEMessage, // Exporter le nouveau handler
   };
 };

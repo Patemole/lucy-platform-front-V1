@@ -41,6 +41,7 @@ interface ChatContentProps {
     setIsAtBottom: (val: boolean) => void;
     setNewMessagesCount: React.Dispatch<React.SetStateAction<number>>;
     userUniversity: string | null | undefined;
+    handleSendSCHOOLKEDGEMessage: (value: string) => void;
   }
 
 
@@ -76,6 +77,7 @@ interface ChatContentProps {
     setIsAtBottom,
     setNewMessagesCount,
     userUniversity,
+    handleSendSCHOOLKEDGEMessage,
   }) => {
     console.log('<<< RENDERING ChatContent >>>');
 
@@ -201,6 +203,7 @@ interface ChatContentProps {
                         handleSendCOMPLIANCEMessage={handleSendCOMPLIANCEMessage}
                         hasStartedStreaming={hasStartedStreaming}
                         userUniversity={userUniversity}
+                        handleSendSCHOOLKEDGEMessage={handleSendSCHOOLKEDGEMessage}
                     />
                     </div>
                 </div>

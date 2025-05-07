@@ -228,6 +228,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
       handleSendLINKEDINMessage,
       handleSendMAJORMINORMessage,
       handleSendCOMPLIANCEMessage,
+      handleSendSCHOOLKEDGEMessage,
   } = useOnboarding({
       generateUniqueId,
       hasStartedStreaming,
@@ -265,7 +266,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
   const onboardingMessages = [
     //{ question: "What is your current school?", metadata: "SCHOOL" },       // 0
-    { question: "let's get this started! Help me get to know the **real** you.\nThe **more you share** the **more accurate** we get in helping out ✨\n\nWhich school are you in?", metadata: "SCHOOL" },
+    { question: "let's get this started! Help me get to know the **real** you.\nThe **more you share**, the **more accurate** we get in helping out ✨\n\nWhich school are you in?", metadata: "SCHOOL" },
     { question: "And what year are you rockin' right now?", metadata: "YEAR" },
     //{ question: "This is a test, are you Mathieu?", metadata: "TEST" },
     { question: "What's your insta? won't be public — just helps me get your vibe 🏄", metadata: "INSTAGRAM" },
@@ -470,6 +471,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
             setIsAtBottom={setIsAtBottom}
             setNewMessagesCount={setNewMessagesCount}
             userUniversity={userUniversity}
+            handleSendSCHOOLKEDGEMessage={handleSendSCHOOLKEDGEMessage}
           />
 
           

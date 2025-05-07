@@ -53,6 +53,7 @@ import { ListItemText } from "@mui/material";
 import { Box,Drawer, Typography, ListItem, List } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from "@mui/material/Tooltip";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 import useAuthStore from '../../stores/useAuthStore';
 import { saveFeedback } from '../../api/chat';
@@ -148,6 +149,7 @@ interface AIMessageProps {
   handleSendTESTMessage?: (value: string) => void; // Optionnel
   handleSendFAVORITE_COLORMessage?: (value: string) => void; // Optionnel
   handleSendPET_NAMEMessage?: (value: string) => void; // Optionnel
+  handleSendSCHOOLKEDGEMessage?: (program_message: string) => void; // <-- NOUVELLE PROP
 
   handleSendCOURSEMessage: (COURSE_message: string) => void;
   drawerOpen: boolean;
@@ -200,6 +202,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   handleSendTESTMessage,
   handleSendFAVORITE_COLORMessage,
   handleSendPET_NAMEMessage,
+  handleSendSCHOOLKEDGEMessage,
   handleSendCOURSEMessage,
   drawerOpen,
   chartData,
@@ -273,6 +276,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [termsChecked, setTermsChecked] = useState(user?.termsAccepted || false);
   const [ageChecked, setAgeChecked] = useState(user?.ageConfirmed || false); 
   
+  // État pour le programme Kedge sélectionné
+  const [selectedKedgeProgram, setSelectedKedgeProgram] = useState<string | null>(null);
 
   const [isTextDisplayed, setIsTextDisplayed] = useState(false);
   // Suppression de showShadowSources et hasLoadedSources
@@ -312,8 +317,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
     { label: "Sophomore (2nd year)", value: "Sophomore" },
     { label: "Junior (3rd year)", value: "Junior" },
     { label: "Senior (4th year)", value: "Senior" },
-    { label: "Grad 1 (5th year)", value: "Grad 1" },
-    { label: "Grad 2 (6th year)", value: "Grad 2" },
+    { label: "Grad 1", value: "Grad 1" },
+    { label: "Grad 2", value: "Grad 2" },
   ];
 
   const navigate = useNavigate();
@@ -941,6 +946,22 @@ useEffect(() => {
   // Le bloc des sources (titre + contenu) s'affiche si on doit montrer le skeleton OU si les vraies sources sont prêtes.
   // (Et en gardant la condition !isTextDisplayed pour le moment, bien qu'elle soit toujours vraie)
   const showOverallSourcesBlock = !isTextDisplayed && (displaySkeleton || actualSourcesReady);
+
+  // --- NOUVEAU BLOC POUR KEDGE SCHOOL ---
+  const shouldDisplaySchoolKedgeBlock = metadataOnboarding === 'SCHOOL_KEDGE' && !isMessageLoading && isKedgeUser;
+  // -----------------------------------
+
+  // --- NOUVELLE FONCTION CLICK INTERMEDIAIRE POUR KEDGE PROGRAM ---
+  const handleKedgeProgramClick = (program: string) => {
+    console.log("[AIMessage] handleKedgeProgramClick appelée avec:", program);
+    setSelectedKedgeProgram(program); // Mettre à jour l'état local
+    if (handleSendSCHOOLKEDGEMessage) {
+      handleSendSCHOOLKEDGEMessage(program);
+    } else {
+      console.warn("[AIMessage] handleSendSCHOOLKEDGEMessage n'est pas défini.");
+    }
+  };
+  // --------------------------------------------------------------
 
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">
@@ -2149,38 +2170,38 @@ useEffect(() => {
               <label className="block text-sm font-medium text-gray-800 mb-3">Select your school(s)</label>
 
               {(selectedSchools.length === 0 ? [''] : selectedSchools).map((school, index) => (
-                <div key={index} className="flex items-center gap-2 mb-2">
-                  <select
-                    //value={school}
-                    value={selectedSchools[index] || ''}
-                    onChange={(e) => {
-                      const updatedSchools = [...selectedSchools];
-                      updatedSchools[index] = e.target.value;
-                      setSelectedSchools(updatedSchools);
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm appearance-none bg-white bg-no-repeat bg-right pr-10 focus:ring focus:ring-blue-100 focus:border-blue-500"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOCIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgOCA2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0wIDBMOCA2TCA0IDYiIGZpbGw9IiM2NjYiLz48L3N2Zz4=")`,
-                    }}
-                  >
-                    <option value="" disabled>Select your school</option>
-                    {(Array.isArray(theme.facultyOptions) ? theme.facultyOptions : []).map((faculty) => (
-                      <option key={faculty} value={faculty}>
-                        {faculty}
-                      </option>
-                    ))}
-                  </select>
-
-                  {selectedSchools.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedSchools(selectedSchools.filter((_, i) => i !== index))}
-                      className="text-red-500 text-sm"
+                  <div key={index} className="relative flex items-center gap-2 mb-2">
+                    <select
+                      value={selectedSchools[index] || ''}
+                      onChange={(e) => {
+                        const updatedSchools = [...selectedSchools];
+                        updatedSchools[index] = e.target.value;
+                        setSelectedSchools(updatedSchools);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm appearance-none bg-white focus:ring focus:ring-blue-100 focus:border-blue-500 pr-8"
                     >
-                      ✕
-                    </button>
-                  )}
-                </div>
+                      <option value="" disabled>Select your school</option>
+                      {(Array.isArray(theme.facultyOptions) ? theme.facultyOptions : []).map((faculty) => (
+                        <option key={faculty} value={faculty}>
+                          {faculty}
+                        </option>
+                      ))}
+                    </select>
+                    {/* Icône de flèche positionnée absolument */}
+                    <ArrowDropDownIcon 
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" 
+                    />
+
+                    {selectedSchools.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSchools(selectedSchools.filter((_, i) => i !== index))}
+                        className="text-red-500 text-sm"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
               ))}
 
               {selectedSchools.length < 5 && (
@@ -2326,7 +2347,7 @@ useEffect(() => {
                     type="text"
                     value={instagramUsername}
                     onChange={(e) => setInstagramUsername(e.target.value)}
-                    placeholder="@ username"
+                    placeholder="username"
                     className="w-full text-sm focus:outline-none"
                   />
                 </div>
@@ -2710,6 +2731,43 @@ useEffect(() => {
                 <label htmlFor="ageCheckbox_fr" className="text-sm text-gray-700 leading-snug">
                   Je confirme avoir au moins 18 ans ou avoir le consentement parental si j'ai entre 13 et 17 ans. 
                 </label>
+              </div>
+            </div>
+          )}
+
+
+          {/* --- NOUVEAU BLOC POUR SCHOOL_KEDGE --- */}
+          {shouldDisplaySchoolKedgeBlock && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                maxWidth: 'max-content',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+              tabIndex={0}
+            >
+              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-4">
+                Quel programme suis-tu à Kedge ?
+              </label>
+              <div className="flex flex-col gap-2">
+                {[ "Bachelor", "Programme Grande Ecole (PGE)", "Programme Spécialisé"].map((program) => (
+                  <button
+                    key={program}
+                    onClick={() => {
+                      handleKedgeProgramClick(program); // Appeler la nouvelle fonction intermédiaire
+                    }}
+                    className={`w-full px-4 py-2 rounded-lg border text-sm text-left transition-colors duration-150 ease-in-out 
+                      ${selectedKedgeProgram === program 
+                        ? 'bg-gray-800 text-white border-gray-800' 
+                        : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100 focus:bg-gray-200'}
+                      `}
+                  >
+                    {program}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -3145,6 +3203,9 @@ useEffect(() => {
             humanMessageContent={selectedHumanContent}
             userUniversity={userUniversity}
           />
+
+          
+          {/* --- FIN NOUVEAU BLOC POUR SCHOOL_KEDGE --- */}
 
         </div>
       </div>
