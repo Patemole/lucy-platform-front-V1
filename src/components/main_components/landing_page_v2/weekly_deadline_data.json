@@ -72,7 +72,10 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "People matching: meet other committed students and find your roommate"
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
+        
       }
     ]
   },
@@ -155,10 +158,14 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "People matching: meet other committed students and find your roommate"
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
       },
       {
-        "title": "Harry Potter Housing: explore all housing options and choose the right one for yourself"
+        "title": "Housing Matching",
+        "category": "Housing Matching", 
+        "imageSrc": "/housing_matching.png" 
       }
     ]
   },
@@ -250,13 +257,19 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "People matching: meet other committed students and find your roommate"
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
       },
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       },
       {
-        "title": "Harry Potter Housing: explore all housing options and choose the right one for yourself"
+        "title": "Housing Matching",
+        "category": "Housing Matching", 
+        "imageSrc": "/housing_matching.png" 
       }
     ]
   },
@@ -315,13 +328,19 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Harry Potter Housing: choose the right housing based on your needs"
+        "title": "Housing Matching",
+        "category": "Housing Matching", 
+        "imageSrc": "/housing_matching.png" 
       },
       {
-        "title": "People matching: meet other committed students and find your roommate"
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
       },
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -380,13 +399,19 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "People matching: meet other committed students and find your roommate"
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
       },
       {
-        "title": "Harry Potter Housing: choose the right housing based on your needs"
+        "title": "Housing Matching",
+        "category": "Housing Matching", 
+        "imageSrc": "/housing_matching.png" 
       },
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -451,7 +476,9 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: hear what other students at Penn have to say about the questions you have",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -511,7 +538,9 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -566,10 +595,14 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Course planner: an easy way to manage your course workload for the next 4!"
+        "title": "Course planner: manage your course workload for the next 4!",
+        "category": "Course Planner", 
+        "imageSrc": "/course_planner.png" 
       },
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -624,10 +657,14 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Course planner: an easy way to manage your course workload for the next 4!"
+        "title": "Course planner: manage your course workload for the next 4!",
+        "category": "Course Planner", 
+        "imageSrc": "/course_planner.png" 
       },
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -682,7 +719,9 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -737,7 +776,9 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -792,10 +833,14 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Course planner: helps you plan out your 4-year coursework easily"
+        "title": "Course planner: helps you plan out your 4-year coursework easily",
+        "category": "Course Planner", 
+        "imageSrc": "/course_planner.png" 
       },
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -860,16 +905,20 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Events Matching: explore all things on campus and choose what you're interested in"
+        "title": "Events Matching",
+        "category": "Events Matching", 
+        "imageSrc": "/events_matching.png" 
       },
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
   {
     "currentMonth": "August",
-    "dateRange": "July 27 - August 2",
+    "dateRange": "July 27 - Aug. 02",
     "startDate": "2025-07-27T00:00:00",
     "focusTitle": "Countdown to Campus",
     "deadlines": [
@@ -913,16 +962,20 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       },
       {
-        "title": "Matching: meet people on campus that you have common interests with"
+        "title": "Matching: meet people on campus that you have common interests with",
+        "category": "Matching", 
+        "imageSrc": "/matching.png" 
       }
     ]
   },
   {
     "currentMonth": "August",
-    "dateRange": "August 3 - 9",
+    "dateRange": "August 03 - 09",
     "startDate": "2025-08-03T00:00:00",
     "focusTitle": "Last-Minute Prep and Readiness Check-in",
     "deadlines": [
@@ -953,10 +1006,14 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Events Matching: explore all things on campus and choose what you're interested in"
+        "title": "Events Matching",
+        "category": "Events Matching", 
+        "imageSrc": "/events_matching.png" 
       },
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -1016,7 +1073,9 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       }
     ]
   },
@@ -1079,13 +1138,19 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Reddit: hear what other students at Penn have to say about the questions you have"
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
       },
       {
-        "title": "Events Matching: explore all things on campus and choose what you're interested in"
+        "title": "Events Matching",
+        "category": "Events Matching", 
+        "imageSrc": "/events_matching.png" 
       },
       {
-        "title": "People matching: meet other committed students and find your roommate"
+        "title": "People matching: meet other committed students and find your roommate",
+        "category": "People matching", 
+        "imageSrc": "/people_matching.png" 
       }
     ]
   },
@@ -1194,16 +1259,20 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Campus Discovery: explore all things on campus and choose what you're interested in"
+        "title": "Campus Discovery",
+        "category": "Campus Discovery", 
+        "imageSrc": "/campus_discovery.png" 
       },
       {
-        "title": "People matching: meet other committed students and find your roommate"
+        "title": "People matching: meet other committed students and find your roommate",
+        "category": "People matching", 
+        "imageSrc": "/people_matching.png" 
       }
     ]
   },
   {
     "currentMonth": "September",
-    "dateRange": "August 31 - September 6",
+    "dateRange": "Aug. 31 - Sept. 6",
     "startDate": "2025-08-31T00:00:00",
     "focusTitle": "Courses Begin",
     "deadlines": [
@@ -1250,10 +1319,14 @@
     "usefulLinks": [],
     "features": [
       {
-        "title": "Course Planner: plan out your 4 years of courses at Penn with minimal stress"
+        "title": "Course Planner",
+        "category": "Course Planner", 
+        "imageSrc": "/course_planner.png" 
       },
       {
-        "title": "Campus Discovery: explore all things on campus and choose what you're interested in"
+        "title": "Campus Discovery",
+        "category": "Campus Discovery", 
+        "imageSrc": "/campus_discovery.png" 
       }
     ]
   }

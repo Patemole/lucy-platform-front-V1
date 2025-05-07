@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box, Typography, List, ListItem, ListItemIcon, ListItemText, IconButton, Collapse, Chip, Divider
 } from '@mui/material';
@@ -13,6 +13,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 // Importer les interfaces depuis le fichier central
 import { Deadline, DeadlineItem } from '../initialWeeklyData'; 
@@ -36,9 +37,11 @@ interface Deadline {
 */
 
 interface DeadlinesSectionProps {
-    deadlines: Deadline[]; // Utilise l'interface importée
+    deadlines: Deadline[];
     onSelectItem: (itemText: string) => void;
     onTaskToggle: (deadlineId: string, itemId: string) => void;
+    currentVisualizedWeekStartDate: Date; // Renommé
+    actualCurrentSystemWeekStartDate: Date | null; // Nouvelle prop
 }
 
 // Helper pour calculer les tâches restantes (inchangé)
@@ -51,31 +54,76 @@ const isDeadlineComplete = (deadline: Deadline): boolean => {
     return Array.isArray(deadline.items) && deadline.items.length > 0 && deadline.items.every(item => item.isDone);
 };
 
-const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelectItem, onTaskToggle }) => {
-    const initialOpenState = deadlines.length === 1 ? { [deadlines[0]?.id]: true } : {};
-    const [openDeadlines, setOpenDeadlines] = useState<{ [key: string]: boolean }>(initialOpenState);
+// Helper pour trouver l'index de la première deadline non complétée
+const findFirstNonCompleteDeadlineIndex = (deadlines: Deadline[]): number => {
+    return deadlines.findIndex(deadline => !isDeadlineComplete(deadline));
+};
+
+const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelectItem, onTaskToggle, currentVisualizedWeekStartDate, actualCurrentSystemWeekStartDate }) => {
+    const [openDeadlines, setOpenDeadlines] = useState<{ [key: string]: boolean }>({}); // Tout est fermé initialement
+    const [deadlineToOpenWithDelay, setDeadlineToOpenWithDelay] = useState<string | null>(null);
+    const justSwitchedWeekRef = useRef(false);
+    const OPEN_DELAY = 250; // Délai en millisecondes
 
     useEffect(() => {
-        // Logique pour gérer l'état ouvert (peut être simplifiée mais laissée telle quelle pour l'instant)
-        const onlyOneDeadline = deadlines.length === 1;
-        setOpenDeadlines(prev => {
-            const newOpenState: { [key: string]: boolean } = {};
-            if (onlyOneDeadline && deadlines[0]) {
-                newOpenState[deadlines[0].id] = true; 
-            } else {
-                deadlines.forEach(d => {
-                    newOpenState[d.id] = prev[d.id] ?? false; // Par défaut non ouvert si plusieurs
-                });
+        const firstNonCompleteIndex = findFirstNonCompleteDeadlineIndex(deadlines);
+        // ID de la deadline qui devrait s'ouvrir après un possible délai (peut être null)
+        const idToPotentiallyOpenWithDelay = firstNonCompleteIndex !== -1 ? deadlines[firstNonCompleteIndex].id : null;
+
+        let currentlyOpenId: string | null = null;
+        for (const id in openDeadlines) {
+            if (openDeadlines[id]) {
+                currentlyOpenId = id;
+                break;
             }
-            // Si aucune n'est ouverte et qu'il y en a, ouvrir la première?
-            // if (Object.values(newOpenState).every(v => !v) && deadlines.length > 0) {
-            //     newOpenState[deadlines[0].id] = true;
-            // }
-            return newOpenState;
-        });
-    }, [deadlines]);
+        }
+        const currentlyOpenDeadlineObj = currentlyOpenId ? deadlines.find(d => d.id === currentlyOpenId) : null;
+
+        // Cas 1: Une deadline est ouverte et n'est PAS encore complète.
+        // L'utilisateur est probablement en train de cocher des tâches. On ne fait rien.
+        if (currentlyOpenDeadlineObj && !isDeadlineComplete(currentlyOpenDeadlineObj)) {
+            return; // Ne pas interférer
+        }
+
+        // Cas 2: Une deadline ÉTAIT ouverte, et elle VIENT d'être complétée (ou était déjà complète).
+        if (currentlyOpenDeadlineObj && isDeadlineComplete(currentlyOpenDeadlineObj)) {
+            // Elle est complète. On la ferme IMMÉDIATEMENT si elle était marquée comme ouverte.
+            // Cela gère le cas où la dernière tâche de la dernière deadline est cochée.
+            if (openDeadlines[currentlyOpenDeadlineObj.id]) {
+                 setOpenDeadlines(prev => ({ ...prev, [currentlyOpenDeadlineObj.id!]: false }));
+            }
+            // Après l'avoir fermée, on programme l'ouverture de la prochaine (ou de rien si tout est complet).
+            setDeadlineToOpenWithDelay(idToPotentiallyOpenWithDelay);
+            return; 
+        }
+
+        // Cas 3: Aucune deadline n'était "effectivement" ouverte (selon notre état `openDeadlines`),
+        // ou celle qui était ouverte n'existe plus dans la nouvelle liste `deadlines` (changement de semaine),
+        // ou celle qui était ouverte était déjà complète (peu probable avec la logique ci-dessus mais possible).
+        // Dans ces situations, on programme simplement l'ouverture de la première non complétée (ou de rien).
+        setDeadlineToOpenWithDelay(idToPotentiallyOpenWithDelay);
+
+    }, [deadlines]); // Dépend UNIQUEMENT de deadlines pour sa logique principale de réaction au changement de données.
+
+    useEffect(() => {
+        if (deadlineToOpenWithDelay) {
+            const timer = setTimeout(() => {
+                // Ouvre la deadline ciblée et s'assure que toutes les autres sont fermées.
+                const newOpenState: { [key: string]: boolean } = {};
+                deadlines.forEach(d => { // Itérer sur les `deadlines` actuelles
+                    newOpenState[d.id] = d.id === deadlineToOpenWithDelay;
+                });
+                setOpenDeadlines(newOpenState);
+                justSwitchedWeekRef.current = true; 
+                setDeadlineToOpenWithDelay(null); 
+            }, OPEN_DELAY);
+
+            return () => clearTimeout(timer); 
+        }
+    }, [deadlineToOpenWithDelay, deadlines]); // `deadlines` est nécessaire ici pour que `newOpenState` soit correct.
 
     const handleDeadlineToggle = (id: string) => {
+        justSwitchedWeekRef.current = false; // Interaction manuelle, donc animation normale
         setOpenDeadlines(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
@@ -116,10 +164,52 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
         const showExpandIcon = Array.isArray(deadline.items) && deadline.items.length > 0;
         const ExpandCollapseIcon = deadlines.length > 1 ? ArrowForwardIosIcon : (isOpen ? ExpandLessIcon : ExpandMoreIcon);
 
-        // Gestion spécifique pour les items vides "chill" (adapté de l'ancien code)
-        if (!isComplete && remainingTasks === 0 && deadline.items?.length === 0 && !deadline.isWarning && deadline.day === 'Tomorrow') {
+        let isOverdue = false;
+        if (!isComplete && actualCurrentSystemWeekStartDate && currentVisualizedWeekStartDate) {
+            // Normaliser les dates à minuit pour la comparaison de jours
+            const visualizedWeekStart = new Date(currentVisualizedWeekStartDate.getFullYear(), currentVisualizedWeekStartDate.getMonth(), currentVisualizedWeekStartDate.getDate());
+            const systemWeekStart = new Date(actualCurrentSystemWeekStartDate.getFullYear(), actualCurrentSystemWeekStartDate.getMonth(), actualCurrentSystemWeekStartDate.getDate());
+
+            if (visualizedWeekStart < systemWeekStart) {
+                isOverdue = true;
+            }
+        }
+        
+        // Logs pour vérifier la nouvelle logique overdue
+        // console.log(`[Overdue New Logic] Deadline: "${deadline.title}", VisualizedWeekStart: ${currentVisualizedWeekStartDate?.toDateString()}, SystemActualWeekStart: ${actualCurrentSystemWeekStartDate?.toDateString()}, IsComplete: ${isComplete}, Calculated Overdue: ${isOverdue}`);
+
+        const timeoutForCollapse = (justSwitchedWeekRef.current && isOpen) ? 0 : "auto";
+
+        let bgColor;
+        let hoverBgColor;
+        let iconToDisplay;
+
+        if (isComplete) {
+            bgColor = '#E6F4EA'; // Vert
+            hoverBgColor = '#D9EDE2';
+            iconToDisplay = <CheckCircleIcon sx={{ fontSize: '1.1rem', color: '#25C35E' }} />;
+        } else if (isOverdue) {
+            bgColor = '#FFEBEE'; // Rouge pastel (MUI red[50])
+            hoverBgColor = '#FFCDD2'; // Rouge pastel plus soutenu (MUI red[100])
+            iconToDisplay = <ErrorOutlineIcon color="error" sx={{ fontSize: '1.1rem' }} />;
+        } else if (deadline.isWarning) {
+            bgColor = '#FFF8E1'; // Orange pastel pour warning
+            hoverBgColor = '#FFF3CD';
+            iconToDisplay = <WarningAmberIcon color="warning" sx={{ fontSize: '1.1rem' }} />;
+        } else {
+            bgColor = '#F0F4FF'; // Bleu pastel (actif/ontrack)
+            hoverBgColor = '#E0E7FF';
+            iconToDisplay = <Box sx={{ width: '1.1rem' }} />;
+        }
+
+        // Gestion spécifique pour les items vides "chill"
+        if (!isComplete && !isOverdue && !deadline.isWarning && remainingTasks === 0 && deadline.items?.length === 0 && deadline.day === 'Tomorrow') {
+            bgColor = '#E0F8E7'; // Vert clair pour "chill"
+            hoverBgColor = '#CFF0D6'; // Vert clair un peu plus foncé
             return (
-                <Box key={deadline.id} sx={{ display: 'flex', alignItems: 'center', bgcolor: '#E0F8E7', p: 1, borderRadius: '8px', mb:1 }}>
+                <Box key={deadline.id} sx={{ display: 'flex', alignItems: 'center', bgcolor: bgColor, p: 1, borderRadius: '8px', mb:1,
+                    '&:hover': { bgcolor: hoverBgColor }
+                }}>
                     <EmojiEmotionsIcon sx={{ mr: 1, color: '#25C35E' }} />
                     <Typography sx={{ fontStyle: 'italic', color: '#006400' }}>{deadline.title}</Typography>
                 </Box>
@@ -127,32 +217,28 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
         }
 
         return (
-            <Box key={deadline.id} sx={{ mt: isFirstOfGroup ? 0 : 1 }}> {/* Ajoute de l'espace sauf pour le premier item du groupe */} 
+            <Box key={deadline.id} sx={{ mt: isFirstOfGroup ? 0 : 1 }}>
                 <ListItem
                     button
                     onClick={() => showExpandIcon ? handleDeadlineToggle(deadline.id) : undefined}
                     sx={{
                         p: 1,
                         mb: 0.5,
-                        bgcolor: isComplete ? '#E6F4EA' : deadline.isWarning ? '#FFF8E1' : '#FFF0F0',
+                        bgcolor: bgColor, // Couleur de base
                         borderRadius: '8px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         cursor: showExpandIcon ? 'pointer' : 'default',
+                        minHeight: '42px',
                         '&:hover': {
-                            bgcolor: showExpandIcon ? (isComplete ? '#D9EDE2' : deadline.isWarning ? '#FFF3CD' : '#FEE8E8') : undefined
+                            bgcolor: showExpandIcon ? hoverBgColor : bgColor // Appliquer hoverBgColor si interactif, sinon garder bgColor
                         }
                     }}
                 >
                      <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, mr: 1 }}>
                         <ListItemIcon sx={{ minWidth: 'auto', mr: 0.5 }}>
-                            {isComplete ? 
-                                <CheckCircleIcon sx={{ fontSize: '1.1rem', color: '#25C35E' }} /> 
-                                : deadline.isWarning ? 
-                                <WarningAmberIcon color="warning" sx={{ fontSize: '1.1rem' }} /> 
-                                : <Box sx={{ width: '1.1rem' }} />
-                            }
+                            {iconToDisplay}
                         </ListItemIcon>
                         <ListItemText primary={deadline.title} sx={{ m: 0 }} primaryTypographyProps={{fontWeight: 'medium'}} />
                     </Box>
@@ -168,7 +254,7 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
                     </Box>
                 </ListItem>
                 {Array.isArray(deadline.items) && deadline.items.length > 0 && (
-                    <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                    <Collapse in={isOpen} timeout={timeoutForCollapse} unmountOnExit>
                         <List component="div" disablePadding dense sx={{ pl: 1 }}>
                             {deadline.items.map((item) => (
                                 <ListItem

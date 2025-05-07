@@ -4,7 +4,8 @@ import { Box, Typography, Paper } from '@mui/material';
 // L'interface FeatureItem ne contient plus sectionTitle
 interface FeatureItem {
     title: string;
-    image?: string;
+    category: string;
+    imageSrc?: string | null;
 }
 
 // FeatureHighlightCardProps ne contient plus sectionTitle
@@ -37,10 +38,10 @@ const FeatureHighlightCard: React.FC<FeatureHighlightCardProps> = ({ featureItem
                     position: 'relative',
                 }}
             >
-                {featureItem.image && (
+                {featureItem.imageSrc && (
                     <Box
                         component="img"
-                        src={featureItem.image}
+                        src={featureItem.imageSrc}
                         alt={featureItem.title}
                         sx={{
                             width: '100%',

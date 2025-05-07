@@ -16,7 +16,8 @@ interface Deadline {
     title: string;
     items: DeadlineItem[];
     isWarning?: boolean;
-    day: 'Today' | 'Tomorrow';
+    day: string;
+    dueDate?: Date | Timestamp | { start: Date | Timestamp; end: Date | Timestamp };
 }
 interface UsefulLink {
     text: string;
@@ -25,7 +26,8 @@ interface UsefulLink {
 }
 interface FeatureItem {
     title: string;
-    image?: string;
+    category: string;
+    imageSrc?: string | null;
 }
 
 // Exporter l'interface pour qu'elle puisse être importée ailleurs

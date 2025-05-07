@@ -18,7 +18,7 @@ interface Deadline {
     title: string;
     items: DeadlineItem[];
     isWarning?: boolean;
-    day: 'Today' | 'Tomorrow';
+    day: string;
     // count n'est plus nécessaire ici car calculé dans DeadlinesSection
 }
 
@@ -29,10 +29,10 @@ interface UsefulLink {
 }
 
 // --- Interface pour une Feature (reçue de LandingPageV2) --- 
-// Assurez-vous que cette définition correspond à celle de LandingPageV2
 interface FeatureItemProp {
     title: string;
-    image?: string;
+    category: string;
+    imageSrc?: string | null;
 }
 
 // Mettre à jour WeeklyFocusProps pour accepter features[]
@@ -42,6 +42,8 @@ interface WeeklyFocusProps {
     deadlines: Deadline[]; 
     usefulLinks: UsefulLink[];
     features: FeatureItemProp[]; // Utiliser l'interface définie ci-dessus
+    currentVisualizedWeekStartDate: Date; // Renommé
+    actualCurrentSystemWeekStartDate: Date | null; // Nouvelle prop, peut être null
     onSelectItem: (itemText: string) => void;
     onNextWeek: () => void;
     onPreviousWeek: () => void;
@@ -56,6 +58,8 @@ const WeeklyFocus: React.FC<WeeklyFocusProps> = ({
     deadlines, 
     usefulLinks, 
     features, 
+    currentVisualizedWeekStartDate, // Récupérer la prop renommée
+    actualCurrentSystemWeekStartDate, // Récupérer la nouvelle prop
     onSelectItem,
     onNextWeek,
     onPreviousWeek,
@@ -80,6 +84,8 @@ const WeeklyFocus: React.FC<WeeklyFocusProps> = ({
                 deadlines={deadlines} 
                 onSelectItem={onSelectItem} 
                 onTaskToggle={onTaskToggle}
+                currentVisualizedWeekStartDate={currentVisualizedWeekStartDate} // Passer la prop renommée
+                actualCurrentSystemWeekStartDate={actualCurrentSystemWeekStartDate} // Passer la nouvelle prop
             />
             <UsefulLinksSection usefulLinks={usefulLinks} />
             

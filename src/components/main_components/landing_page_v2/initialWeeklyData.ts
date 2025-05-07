@@ -22,7 +22,8 @@ export interface UsefulLink {
 }
 export interface FeatureItem {
     title: string;
-    image?: string;
+    category: string;
+    imageSrc?: string | null;
 }
 export interface WeeklyData {
     // Note: Pas d'ID Firestore ici car ce sont les données *avant* insertion
@@ -35,6 +36,8 @@ export interface WeeklyData {
     currentMonth: string; 
 }
 
+
+/*
 // --- Données Initiales --- 
 export const initialAllWeeksData: WeeklyData[] = [
     { // Semaine 1
@@ -249,3 +252,4 @@ export const initialAllWeeksData: WeeklyData[] = [
         ],
     },
 ]; 
+*/

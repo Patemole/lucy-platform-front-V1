@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ProgressBar from './ProgressBar';
 import WeeklyFocus from './WeeklyFocus';
 import InputArea from './InputArea';
@@ -74,6 +74,7 @@ const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity })
     console.log("--- LandingPageV2 Component Rendering --- NOW WITH EXTRA LOGS ---"); 
     // S'assurer que l'état inputValue est bien déclaré ici
     const [inputValue, setInputValue] = useState('');
+    const seedExecutedRef = useRef(false); // Ajout du ref
     
     const {
         weeks,
@@ -92,6 +93,33 @@ const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity })
         onboardingComplete
     );
 
+    // Déterminer la date de début de la semaine "réellement actuelle" basée sur la date système.
+    // `useInitialWeekIndex` devrait déjà nous donner l'index de cette semaine.
+    // Nous allons supposer que l'index initial de `useInitialWeekIndex` est bien celui de la semaine contenant `new Date()`.
+    // Et que `weeks` est chargé avant que `currentWeekDataForOverdue` soit utilisé.
+    const actualCurrentSystemWeekStartDate = useMemo(() => {
+        if (weeks && weeks.length > 0 && isIndexInitialized) {
+            // Tentative de trouver la semaine qui contient la date d'aujourd'hui
+            // Si `useInitialWeekIndex` ne le fait pas déjà, il faudrait une logique plus robuste ici.
+            // Pour l'instant, on se base sur le `currentWeekIndex` initial qui est censé être celui de la semaine actuelle.
+            // On prendra la `startDate` de la `weeks[currentWeekIndex]` AU MOMENT DE L'INITIALISATION.
+            // ATTENTION: Ce `currentWeekIndex` change avec la navigation. Nous avons besoin d'une référence stable.
+            // La solution la plus simple est de trouver la semaine qui ENCADRE `new Date()`.
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const systemCurrentWeek = weeks.find(week => {
+                const weekStart = new Date(week.startDate);
+                weekStart.setHours(0,0,0,0);
+                const weekEnd = new Date(weekStart);
+                // Supposons que les semaines durent 7 jours pour calculer la fin
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                return today >= weekStart && today <= weekEnd;
+            });
+            return systemCurrentWeek ? new Date(systemCurrentWeek.startDate) : null;
+        }
+        return null;
+    }, [weeks, isIndexInitialized]);
+
     // --- UseEffect pour charger les données (Conditionné, inchangé) --- 
     useEffect(() => {
         if (onboardingComplete === true && weeks.length === 0 && !isLoading) {
@@ -105,9 +133,20 @@ const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity })
     // --- UseEffect pour le Seeding (inchangé) --- 
     useEffect(() => {
         // Décommentez pour insérer les données
-        console.log("Seeding Firestore data...");
-         seedFirestoreData();
+        // console.log("Seeding Firestore data...");
+        //  seedFirestoreData();
         // Re-commentez après!
+
+        // Nouvelle logique pour exécution unique
+        if (process.env.NODE_ENV === 'development' && !seedExecutedRef.current) {
+            console.log("Attempting to seed Firestore data (dev mode, once per component mount)...");
+            seedFirestoreData().then(() => {
+                console.log("Seeding function executed.");
+            }).catch(error => {
+                console.error("Seeding failed or already done:", error);
+            });
+            seedExecutedRef.current = true; // Marquer comme exécuté
+        }
     }, []); 
 
 
@@ -188,20 +227,23 @@ const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity })
                 />
             </Box>
             <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-                <WeeklyFocus
-                    dateRange={currentWeekData.dateRange}
-                    focusTitle={currentWeekData.focusTitle}
-                    deadlines={currentWeekData.deadlines} 
-                    usefulLinks={currentWeekData.usefulLinks}
-                    features={currentWeekData.features}
-                    onSelectItem={handleDeadlineItemSelect}
-                    onNextWeek={handleNextWeek}
-                    onPreviousWeek={handlePreviousWeek}
-                    // Passer la fonction qui appelle le store avec les bons ID
-                    onTaskToggle={(deadlineId, itemId) => handleTaskToggle(currentWeekData.id, deadlineId, itemId)} 
-                    isFirstWeek={isFirstWeek}
-                    isLastWeek={isLastWeek}
-                />
+                {currentWeekData && (
+                    <WeeklyFocus
+                        dateRange={currentWeekData.dateRange}
+                        focusTitle={currentWeekData.focusTitle}
+                        deadlines={currentWeekData.deadlines} 
+                        usefulLinks={currentWeekData.usefulLinks}
+                        features={currentWeekData.features}
+                        currentVisualizedWeekStartDate={currentWeekData.startDate} // Renommé pour clarté
+                        actualCurrentSystemWeekStartDate={actualCurrentSystemWeekStartDate} // Nouvelle prop
+                        onSelectItem={handleDeadlineItemSelect}
+                        onNextWeek={handleNextWeek}
+                        onPreviousWeek={handlePreviousWeek}
+                        onTaskToggle={(deadlineId, itemId) => handleTaskToggle(currentWeekData.id, deadlineId, itemId)} 
+                        isFirstWeek={isFirstWeek}
+                        isLastWeek={isLastWeek}
+                    />
+                )}
             </Box>
             <Box sx={{ flexShrink: 0 }}>
                 <InputArea
