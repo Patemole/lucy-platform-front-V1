@@ -3,11 +3,23 @@ import { Box, Paper, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { AIMessage } from '../../MessagesWEB';
 
+// Interface pour les données de la carte logement à afficher dans le side chat
+interface HousingCardDisplayData {
+  id: string; // Garder l'id, même s'il n'est pas directement affiché, pour la cohérence
+  imageUrl: string;
+  label: string;
+  subtitle: string;
+  title: string;
+  rank?: number; // Le rang pourrait aussi être utile à afficher ou pour la logique
+  price?: string; // Le prix aussi
+}
+
 // Interface simplifiée pour les messages du side chat
 interface SideChatMessage {
   id: string | number;
   type: 'human' | 'ai';
   content: string;
+  metadataHousing?: HousingCardDisplayData; // Ajout des métadonnées pour la carte logement
 }
 
 interface SideChatDisplayProps {
@@ -67,6 +79,8 @@ const SideChatDisplay: React.FC<SideChatDisplayProps> = ({ messages }) => {
                 isComplete={true} // Message affiché est toujours complet
                 hasDocs={false}   // Pas de documents cités dans ce contexte simple
                 isMessageLoading={false} // Pas de chargement individuel de message ici
+                chatContext="SideChat" // Ajout du contexte de chat
+                housingCardData={message.metadataHousing} // Passer les données de la carte logement
                 // --- Callbacks non utilisés dans ce sidechat simplifié ---
                 handleFeedback={noOp}
                 handleWrongAnswerClick={noOp}

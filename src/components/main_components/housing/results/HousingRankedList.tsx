@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Chip } from '@mui/material';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-import { useRankedListDnd } from './hooks/useRankedListDnd';
+import { useTheme } from '@mui/material/styles';
 
 // Interface pour les données (partagée)
 interface CardData {
@@ -15,9 +15,10 @@ interface CardData {
 
 interface HousingRankedListProps {
   rankedCards: CardData[];
+  onDragEndList: (result: DropResult) => void;
 }
 
-// Fonction pour obtenir la couleur du label (déplacée ici)
+// Fonction pour obtenir la couleur du label
 const getLabelColor = (label: string) => {
   if (label.toLowerCase() === 'social') return '#FFDAB9'; // PeachPuff
   if (label.toLowerCase() === 'study') return '#ADD8E6'; // LightBlue
@@ -25,12 +26,11 @@ const getLabelColor = (label: string) => {
   return '#E0E0E0'; // Gris par défaut
 };
 
-const HousingRankedList: React.FC<HousingRankedListProps> = ({ rankedCards: initialRankedCards }) => {
-  // Utiliser le hook pour gérer l'état et la logique DND
-  const { items, onDragEnd } = useRankedListDnd(initialRankedCards);
+const HousingRankedList: React.FC<HousingRankedListProps> = ({ rankedCards, onDragEndList }) => {
+  const theme = useTheme();
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <DragDropContext onDragEnd={onDragEndList}>
       <Droppable droppableId="rankedList">
         {(provided) => (
           <List 
@@ -38,7 +38,7 @@ const HousingRankedList: React.FC<HousingRankedListProps> = ({ rankedCards: init
             {...provided.droppableProps}
             ref={provided.innerRef}
           >
-            {items.map((card, index) => (
+            {rankedCards.map((card: CardData, index: number) => (
               <Draggable key={card.id} draggableId={card.id} index={index}>
                 {(providedDraggable) => (
                   <ListItem 
@@ -50,7 +50,8 @@ const HousingRankedList: React.FC<HousingRankedListProps> = ({ rankedCards: init
                       border: '1px solid lightgrey',
                       borderRadius: '8px',
                       marginBottom: 2,
-                      backgroundColor: 'white'
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: '0px 1px 2px rgba(0,0,0,0.05)',
                     }}
                   >
                     {/* Indicateur de rang et drag handle */}

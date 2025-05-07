@@ -1,0 +1,177 @@
+[
+  {
+    "id": "dining1",
+    "imageUrl": "/dinning_hall.jpg",
+    "label": "Dining",
+    "subtitle": "Do you want a dining hall right under your room? 🍽️🏠",
+    "title": "Built-in Dining Hall"
+  },
+  {
+    "id": "cooling1",
+    "imageUrl": "/air_conditionneur.jpg",
+    "label": "Cooling",
+    "subtitle": "Is air-conditioning non-negotiable for you? ❄️🎐",
+    "title": "Chilled Air"
+  },
+  {
+    "id": "suite1",
+    "imageUrl": "/suite_style.png",
+    "label": "Suite",
+    "subtitle": "Do you prefer a suite over a corridor layout? 🛋️🏡",
+    "title": "Suite Style"
+  },
+  {
+    "id": "traditions1",
+    "imageUrl": "/house_traditions.jpg",
+    "label": "Traditions",
+    "subtitle": "Do big, lively traditions sound exciting? 🎉🏰",
+    "title": "House Traditions"
+  },
+  {
+    "id": "quiet1",
+    "imageUrl": "/nightly_quiet.png",
+    "label": "Quiet",
+    "subtitle": "Do quiet study lounges matter every night? 🤫📚",
+    "title": "Nightly Quiet"
+  },
+  {
+    "id": "social1",
+    "imageUrl": "/social_hubs.png",
+    "label": "Social",
+    "subtitle": "Are you joining greek life or club sports weekly? 🏛️⚽",
+    "title": "Social Hubs"
+  },
+  {
+    "id": "budget1",
+    "imageUrl": "/budget_first.jpg",
+    "label": "Budget",
+    "subtitle": "Is cost more important than room size? 💸📏",
+    "title": "Budget First"
+  },
+  {
+    "id": "close1",
+    "imageUrl": "/engineering_walk.jpg",
+    "label": "Close",
+    "subtitle": "Is a five-minute walk to engineering classes a must? 🛠️🚶",
+    "title": "Engineering Walk"
+  },
+  {
+    "id": "gothic1",
+    "imageUrl": "/gothic_vibes.png",
+    "label": "Gothic",
+    "subtitle": "Do you love historic gothic architecture? 🏰🕰️",
+    "title": "Gothic Vibes"
+  },
+  {
+    "id": "modern1",
+    "imageUrl": "/modern_comforts.jpg",
+    "label": "Modern",
+    "subtitle": "Do you want the newest bathrooms and finishes? 🚿✨",
+    "title": "Modern Comforts"
+  },
+  {
+    "id": "private1",
+    "imageUrl": "/private_bath.png",
+    "label": "Private",
+    "subtitle": "Do you prefer a private or semi-private bathroom? 🚻🛁",
+    "title": "Private Bath"
+  },
+  {
+    "id": "mentoring1",
+    "imageUrl": "/faculty_dinners.png",
+    "label": "Mentoring",
+    "subtitle": "Does strong in-house faculty mentoring appeal to you? 👩‍🏫🍽️",
+    "title": "Faculty Dinners"
+  },
+  {
+    "id": "themes1",
+    "imageUrl": "/theme_floors.png",
+    "label": "Themes",
+    "subtitle": "Are identity or theme communities interesting? 🎨🌐",
+    "title": "Theme Floors"
+  },
+  {
+    "id": "small1",
+    "imageUrl": "/small_community.png",
+    "label": "Small",
+    "subtitle": "Would you rather live in a 350‑student house than a 700‑student one? 👥🏠",
+    "title": "Small Community"
+  },
+  {
+    "id": "courtyard1",
+    "imageUrl": "/courtyard_life.png",
+    "label": "Courtyard",
+    "subtitle": "Do you want a green outdoor courtyard outside your door? 🌳🏡",
+    "title": "Courtyard Life"
+  },
+  {
+    "id": "skyline1",
+    "imageUrl": "/skyline_view.png",
+    "label": "Skyline",
+    "subtitle": "Are philly skyline views a priority? 🌆👀",
+    "title": "Skyline View"
+  },
+  {
+    "id": "gym1",
+    "imageUrl": "/in_house_gym.png",
+    "label": "Gym",
+    "subtitle": "Is having a fitness room inside the building a plus? 🏋️‍♂️💪",
+    "title": "In‑house Gym"
+  },
+  {
+    "id": "makerspace1",
+    "imageUrl": "/maker_spaces.png",
+    "label": "Makerspace",
+    "subtitle": "Are music practice or maker spaces important? 🎸🔧",
+    "title": "Maker Spaces"
+  },
+  {
+    "id": "sink1",
+    "imageUrl": "/sink_in_room.png",
+    "label": "Sink",
+    "subtitle": "Do you want a sink inside the bedroom? 🚰🛏️",
+    "title": "Sink in Room"
+  },
+  {
+    "id": "laundry1",
+    "imageUrl": "/easy_laundry.png",
+    "label": "Laundry",
+    "subtitle": "Does laundry on every floor save you time? 🧺🌀",
+    "title": "Easy Laundry"
+  },
+  {
+    "id": "latenight1",
+    "imageUrl": "/late_night_food.png",
+    "label": "Late‑night",
+    "subtitle": "Would grab‑and‑go late‑night food downstairs help? 🌙🍔",
+    "title": "Late‑night Food"
+  },
+  {
+    "id": "freshmen1",
+    "imageUrl": "/firstyear_floor.jpg",
+    "label": "Freshmen",
+    "subtitle": "Do you prefer living with only other first‑years? 🎓🫂",
+    "title": "First‑year Floor"
+  },
+  {
+    "id": "lounge1",
+    "imageUrl": "/big_lounges.jpg",
+    "label": "Lounge",
+    "subtitle": "Do you plan to host group study sessions often? 🛋️👥",
+    "title": "Big Lounges"
+  },
+  {
+    "id": "sunlight1",
+    "imageUrl": "/natural_light.png",
+    "label": "Sunlight",
+    "subtitle": "Does natural light outweigh room size for you? ☀️🪟",
+    "title": "Natural Light"
+  },
+  {
+    "id": "events1",
+    "imageUrl": "/resident_events.png",
+    "label": "Events",
+    "subtitle": "Are resident‑run events a must? 🎬🍿",
+    "title": "Resident Events"
+  }
+]

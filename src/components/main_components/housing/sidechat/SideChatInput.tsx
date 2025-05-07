@@ -66,16 +66,15 @@ const SideChatInput: React.FC<SideChatInputProps> = ({ onSendMessage }) => {
       />
       <IconButton 
         onClick={handleSend} 
-        disabled={!inputValue.trim()}
         sx={{
-          backgroundColor: inputValue.trim() ? theme.palette.primary.main : theme.palette.action.disabledBackground,
-          color: inputValue.trim() ? theme.palette.primary.contrastText : theme.palette.action.disabled,
+          backgroundColor: theme.palette.primary.main,
+          color: theme.palette.primary.contrastText,
           width: '36px',
           height: '36px',
           borderRadius: '50%',
           transition: 'background-color 0.3s',
           '&:hover': {
-            backgroundColor: inputValue.trim() ? theme.palette.primary.dark : theme.palette.action.disabledBackground,
+            backgroundColor: theme.palette.primary.dark,
           }
         }}
       >

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { DropResult } from 'react-beautiful-dnd';
 
 // Interface partagée (assurez-vous qu'elle correspond)
-interface CardData {
+export interface CardData {
   id: string;
   imageUrl: string;
   label: string;
@@ -24,10 +24,16 @@ const reorder = (
 
 export const useRankedListDnd = (initialItems: CardData[]) => {
   const [items, setItems] = useState<CardData[]>(initialItems);
+  const [topRankedItem, setTopRankedItem] = useState<CardData | null>(null);
 
-  // Mettre à jour l'état si les éléments initiaux changent
+  // Mettre à jour l'état et le topRankedItem si les éléments initiaux changent
   useEffect(() => {
     setItems(initialItems);
+    if (initialItems && initialItems.length > 0) {
+      setTopRankedItem(initialItems[0]);
+    } else {
+      setTopRankedItem(null);
+    }
   }, [initialItems]);
 
   const onDragEnd = (result: DropResult) => {
@@ -50,11 +56,19 @@ export const useRankedListDnd = (initialItems: CardData[]) => {
     );
 
     setItems(reorderedItems);
+    // Mettre à jour le topRankedItem après le réarrangement
+    if (reorderedItems && reorderedItems.length > 0) {
+      setTopRankedItem(reorderedItems[0]);
+    } else {
+      setTopRankedItem(null);
+    }
     console.log('New order:', reorderedItems.map(item => item.title)); // Pour le debug
+    console.log('Top ranked item after DND:', reorderedItems.length > 0 ? reorderedItems[0].title : 'None');
   };
 
   return {
     items,
     onDragEnd,
+    topRankedItem, // Retourner l'élément le mieux classé
   };
 }; 

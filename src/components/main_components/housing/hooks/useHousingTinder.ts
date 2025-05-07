@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSprings, animated, to as interpolate } from '@react-spring/web'; 
 import { useDrag } from '@use-gesture/react';
+import initialCardsDataFromFile from './swiping_cards.json'; // Importation du JSON
 
 // Définir l'interface CardData ici
 interface CardData {
@@ -12,11 +13,8 @@ interface CardData {
 }
 
 // S'assurer que initialCardsData est typé et non vide pour l'inférence
-const initialCardsData: CardData[] = [
-  { id: 'quad1', imageUrl: '/quad.png', label: 'Social', subtitle: 'Do you like to party ? 🥳', title: 'Quad' },
-  { id: 'castle1', imageUrl: '/Castle-min.png', label: 'Study', subtitle: 'Prefer quiet nights and focus? 📚', title: 'Castle' },
-  { id: 'roommate1', imageUrl: '/roomate_matching.png', label: 'Mixte', subtitle: 'Looking for a roommate balance? 🧑‍🤝‍🧑', title: 'Roommate Match' },
-];
+// Utiliser les données importées
+const initialCardsData: CardData[] = initialCardsDataFromFile;
 
 const initialCount = initialCardsData.length;
 
