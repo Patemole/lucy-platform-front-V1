@@ -2689,18 +2689,9 @@ useEffect(() => {
                 />
                 <label htmlFor="termsCheckbox_fr" className="text-sm text-gray-700 leading-snug">
                   Vous acceptez nos{' '}
-                  <a href="#" className="underline text-blue-700 hover:text-blue-900">
-                    Conditions d'utilisation
-                  </a>{' '}
-                  et notre{' '}
-                  <a
-                    href="https://trust-ressources.s3.us-east-1.amazonaws.com/Privacy+Policy+-+My+Lucy+Corp+-+2024+-+11%3A11%3A24.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline text-blue-700 hover:text-blue-900"
-                  >
-                    Politique de confidentialité
-                  </a>. Vous reconnaissez également être magnifique.
+                  <a href="/LUCY_CGU_V20250312.pdf" target="_blank" rel="noopener noreferrer" className="underline text-blue-700 hover:text-blue-900">
+                    CGU
+                  </a>.
                 </label>
               </div>
 
@@ -2717,15 +2708,7 @@ useEffect(() => {
                   className="mt-1"
                 />
                 <label htmlFor="ageCheckbox_fr" className="text-sm text-gray-700 leading-snug">
-                  Je confirme avoir au moins 18 ans ou avoir le consentement parental si j'ai entre 13 et 17 ans. Les utilisateurs de moins de 13 ans ne sont pas autorisés.{" "}
-                  <a
-                    href="/documents/age-consent.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-700 underline"
-                  >
-                    Détails
-                  </a>.
+                  Je confirme avoir au moins 18 ans ou avoir le consentement parental si j'ai entre 13 et 17 ans. 
                 </label>
               </div>
             </div>

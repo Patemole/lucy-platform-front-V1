@@ -251,10 +251,10 @@ export const useOnboarding = ({
     // ---> NOUVELLE LOGIQUE: Personnaliser la question de conformité pour Kedge <---
     if (isKedgeUser && index === complianceIndex) {
         if (userName) {
-            questionToSend = `Salut ${userName} ! Coche des checkbox pour qu'on soit sur la meme longueur d'onde! ✅`;
+            questionToSend = `Salut ${userName} ! Coche ces checkbox pour qu'on soit sur la meme longueur d'onde! ✅`;
             console.log(`[useOnboarding] Question de conformité personnalisée pour Kedge (avec nom): "${questionToSend}"`);
         } else {
-            questionToSend = `Salut, coche des checkbox pour qu'on soit sur la meme longueur d'onde! ✅`;
+            questionToSend = `Salut, coche ces checkbox pour qu'on soit sur la meme longueur d'onde! ✅`;
             console.log(`[useOnboarding] Question de conformité personnalisée pour Kedge (sans nom): "${questionToSend}"`);
         }
     }
