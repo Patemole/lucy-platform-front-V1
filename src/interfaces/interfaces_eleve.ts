@@ -28,7 +28,7 @@ export interface User {
   createdAt?: string;
   lastLogin?: string;
   profilePicture?: string;
-
+  ambassador_referral?: string | null;
 }
 
 export interface AuthContextType {

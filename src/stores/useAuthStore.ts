@@ -331,6 +331,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
             termsAccepted: userDataFromDb.termsAccepted !== undefined ? userDataFromDb.termsAccepted : false,
             ageConfirmed: userDataFromDb.ageConfirmed !== undefined ? userDataFromDb.ageConfirmed : false,
             onboardingMessageSent: userDataFromDb.onboardingMessageSent !== undefined ? userDataFromDb.onboardingMessageSent : true,
+            ambassador_referral: userDataFromDb.ambassador_referral || null,
           };
           // Mettre à jour l'état centralisé via _setUserAndAuth
           _setUserAndAuth(fullUserData);

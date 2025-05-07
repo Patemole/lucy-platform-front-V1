@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
   createUserWithEmailAndPassword,
   OAuthProvider,
@@ -127,10 +127,10 @@ export default function SignUp() {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const { referralCode } = useParams();
 
   const subdomain = config.subdomain;
   const isKedge = subdomain === 'kedge';
-  const courseId = location.pathname.split('/sign-up/')[1] || '';
 
   const [shouldRedirect, setShouldRedirect] = useState(true);
 
@@ -203,6 +203,7 @@ export default function SignUp() {
           createdAt: currentTime,
           chatsessions: [initialChatId],
           major: [], minor: [], interests: [], year: null, faculty: [], linkedin_profile: null,
+          ambassador_referral: referralCode || null,
         };
         await setDoc(userRef, newUserFirestoreData);
 
@@ -368,6 +369,7 @@ export default function SignUp() {
         onboardingComplete: false,
         chatsessions: [chatId],
         major: [], minor: [], interests: [], year: null, faculty: [], linkedin_profile: null,
+        ambassador_referral: referralCode || null,
       };
       await setDoc(userDocRef, userData);
 
@@ -566,7 +568,7 @@ export default function SignUp() {
 
           <p className="mt-8 text-xs text-center text-gray-600">
             {isKedge ? 'Vous avez déjà un compte ?' : 'Already have an account?'}{' '}
-            <a href={`/auth/sign-in${courseId ? `/${courseId}` : ''}`} className="text-blue-600 underline hover:text-blue-800">
+            <a href={`/auth/sign-in${referralCode ? `/${referralCode}` : ''}`} className="text-blue-600 underline hover:text-blue-800">
               {isKedge ? 'Se connecter' : 'Sign in'}
             </a>
           </p>

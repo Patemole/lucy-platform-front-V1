@@ -25,6 +25,7 @@ export interface SendMessageRequest {
     isFirstMessage: boolean;
     user?: any;
     isOnboardingMessage?: boolean;
+    ambassador_referral?: string | null;
 }
 
 
@@ -106,7 +107,6 @@ export async function getChatHistory(chat_id: string) {
 
 
 
-
 //Endpoint to send a message
 export async function* sendMessageSocraticLangGraph({
     message,
@@ -123,6 +123,7 @@ export async function* sendMessageSocraticLangGraph({
     isFirstMessage, 
     user,
     isOnboardingMessage,
+    ambassador_referral,
 
 }: SendMessageRequest,
     signal?: AbortSignal)
@@ -149,6 +150,7 @@ export async function* sendMessageSocraticLangGraph({
             is_first_message: isFirstMessage, // Ajoute isFirstMessage au payload
             user: user,
             isOnboardingMessage: isOnboardingMessage,
+            ambassador_referral: ambassador_referral,
 
             //is_first_message: true, // Ajoute isFirstMessage au payload
         }),

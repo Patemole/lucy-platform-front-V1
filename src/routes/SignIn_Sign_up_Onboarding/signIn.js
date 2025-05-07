@@ -108,7 +108,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
   const { isAuthenticated: isAuth, isLoading: loading, user, setUser } = useAuthStore();
   const theme = useTheme();
   const navigate = useNavigate();
-  const { course_id } = useParams();
+  const { referralCode } = useParams();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -464,7 +464,7 @@ const SignIn = ({ handleToggleThemeMode }) => {
           {/* Traduction de la section "Don't have an account?" */}
           <p className="mt-5 text-xs text-center text-gray-600">
             {isKedge ? "Vous n'avez pas de compte ?" : "Don't have an account?"}{' '}
-            <a href={`/auth/sign-up${course_id ? `/${course_id}` : ''}`} className="text-blue-600 underline hover:underline">
+            <a href={`/auth/sign-up${referralCode ? `/${referralCode}` : ''}`} className="text-blue-600 underline hover:underline">
               {isKedge ? 'Inscrivez-vous !' : 'Sign up now!'}
             </a>
           </p>

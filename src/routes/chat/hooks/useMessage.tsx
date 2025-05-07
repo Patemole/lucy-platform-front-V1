@@ -152,6 +152,7 @@ export const useMessage = ({
             const major = Array.isArray(user?.major) ? user?.major : ['None_Default'];
             const minor = Array.isArray(user?.minor) ? user?.minor : ['None_Default'];
             const faculty = Array.isArray(user?.faculty) ? user?.faculty : ['None_Default'];
+            const ambassador_referral = user?.ambassador_referral || null; // Récupérer ambassador_referral
 
             console.log('chatSessionId:', chatSessionId);
             console.log('username:', username);
@@ -208,6 +209,7 @@ export const useMessage = ({
                 isFirstMessage: isFirstMessage,
                 user: user,
                 isOnboardingMessage: isOnboardingMessage,
+                ambassador_referral: ambassador_referral, // Ajouter ambassador_referral ici
             },
             abortController.signal
         )) {

@@ -93,8 +93,8 @@ const App: React.FC = () => {
                  {/* `location` et `key` sont passés pour qu'AnimatePresence détecte les changements de page */}
                 <Routes location={location} key={location.pathname}>
                     {/* Routes publiques (Authentification, Pages légales) */}
-                    <Route path="/auth/sign-in" element={<SignIn handleToggleThemeMode={handleToggleThemeMode} />} />
-                    <Route path="/auth/sign-up" element={<SignUp />} />
+                    <Route path="/auth/sign-in/:referralCode?" element={<SignIn handleToggleThemeMode={handleToggleThemeMode} />} />
+                    <Route path="/auth/sign-up/:referralCode?" element={<SignUp />} />
                     <Route path="/auth/reset-password" element={<ResetPassword />} />
                     <Route path="/auth/lti-login" element={<LtiLogin />} />
                     <Route path="/auth/choose-your-university" element={<UniversityWaitlist />} />
