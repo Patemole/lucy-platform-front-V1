@@ -277,7 +277,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [ageChecked, setAgeChecked] = useState(user?.ageConfirmed || false); 
   
   // État pour le programme Kedge sélectionné
-  const [selectedKedgeProgram, setSelectedKedgeProgram] = useState<string | null>(null);
+  const [selectedKedgeProgram, setSelectedKedgeProgram] = useState<string | null>(user?.kedge_program || null);
 
   const [isTextDisplayed, setIsTextDisplayed] = useState(false);
   // Suppression de showShadowSources et hasLoadedSources

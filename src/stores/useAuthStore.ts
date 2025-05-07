@@ -38,6 +38,7 @@ interface AuthState {
   error: string | null; // Erreur liée à l'authentification ou au chargement des données user
   chatIds: string[]; // Liste des IDs de chat de l'utilisateur (synchronisée depuis user.chatsessions)
   userListenerUnsubscribe: Unsubscribe | null; // Fonction pour arrêter l'écouteur Firestore de l'utilisateur
+  kedge_program?: string | null; // Ajout du programme Kedge
 
   // --- Actions Internes --- (Utilisées par le store lui-même)
   _setUserAndAuth: (user: User | null) => void; // Met à jour user, isAuthenticated, chatIds, et gère l'arrêt du listener Firestore si user est null.
@@ -66,6 +67,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   chatIds: [],
   userListenerUnsubscribe: null,
+  kedge_program: null, // Initialisation
 
 
 
@@ -93,6 +95,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
         error: null,
         chatIds: [],
         userListenerUnsubscribe: null, // Nettoyer la référence à l'unsubscribe
+        kedge_program: null, // Réinitialiser kedge_program
       });
       console.log("AuthStore: Utilisateur déconnecté (via _setUserAndAuth)");
 
@@ -103,8 +106,9 @@ const useAuthStore = create<AuthState>((set, get) => ({
       // Vérifier si l'utilisateur ou les chatIds ont réellement changé pour optimiser les re-renders
       const hasUserChanged = JSON.stringify(userData) !== JSON.stringify(get().user);
       const hasChatIdsChanged = JSON.stringify(chatSessions) !== JSON.stringify(get().chatIds);
+      const hasKedgeProgramChanged = userData.kedge_program !== get().kedge_program;
 
-      if (hasUserChanged || hasChatIdsChanged) {
+      if (hasUserChanged || hasChatIdsChanged || hasKedgeProgramChanged) {
           console.log(`%c>>> AuthStore updating user state <<<`, 'color: red; font-weight: bold;', userData); 
           set({
             user: userData, // Mettre à jour le profil complet
@@ -112,9 +116,11 @@ const useAuthStore = create<AuthState>((set, get) => ({
             isLoading: false, // Le statut Auth est connu et on a les données user
             error: null, // Réinitialiser l'erreur en cas de succès
             chatIds: chatSessions, // Mettre à jour les chatIds
+            kedge_program: userData.kedge_program || null, // Mettre à jour kedge_program
           });
           if (hasUserChanged) console.log("AuthStore: Données utilisateur mises à jour depuis Firestore (via _setUserAndAuth):", userData);
           if (hasChatIdsChanged) console.log("AuthStore: Chat IDs mis à jour depuis Firestore:", chatSessions);
+          if (hasKedgeProgramChanged) console.log("AuthStore: Kedge program mis à jour depuis Firestore:", userData.kedge_program);
       } else {
           // Si les données reçues sont identiques, s'assurer au moins que isLoading est false.
            if (get().isLoading) {
@@ -332,6 +338,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
             ageConfirmed: userDataFromDb.ageConfirmed !== undefined ? userDataFromDb.ageConfirmed : false,
             onboardingMessageSent: userDataFromDb.onboardingMessageSent !== undefined ? userDataFromDb.onboardingMessageSent : true,
             ambassador_referral: userDataFromDb.ambassador_referral || null,
+            kedge_program: userDataFromDb.kedge_program || null, // Récupération de kedge_program
           };
           // Mettre à jour l'état centralisé via _setUserAndAuth
           _setUserAndAuth(fullUserData);
@@ -340,7 +347,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
           console.error("AuthStore: (onSnapshot) Document utilisateur non trouvé dans Firestore pour", userId);
           _setError("Profil utilisateur introuvable.");
           // Option: Déconnecter complètement? Pour l'instant, on vide juste user/chatIds.
-          set({ user: null, chatIds: [] });
+          set({ user: null, chatIds: [] }); // _setUserAndAuth(null) sera appelé et nettoiera kedge_program
         }
       },
       (error) => {
