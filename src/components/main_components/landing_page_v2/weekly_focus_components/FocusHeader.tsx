@@ -39,7 +39,7 @@ const FocusHeader: React.FC<FocusHeaderProps> = ({
                         disabled={isFirstWeek} 
                         sx={{ p: '4px' }}
                     >
-                        <ChevronLeftIcon />
+                        <ChevronLeftIcon sx={{ color: '#011F5B' }} />
                     </IconButton>
                 </Box>
                 <Box sx={{ flexGrow: 1, minWidth: 0, textAlign: 'center' }}>
@@ -64,7 +64,7 @@ const FocusHeader: React.FC<FocusHeaderProps> = ({
                         disabled={isLastWeek} 
                         sx={{ p: '4px' }}
                     >
-                        <ChevronRightIcon />
+                        <ChevronRightIcon sx={{ color: '#011F5B' }} />
                     </IconButton>
                 </Box>
             </Box>
