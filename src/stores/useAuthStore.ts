@@ -28,6 +28,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, updateDoc, onSnapshot, Unsubscribe, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { auth, db } from '../auth/firebase';
 import { User } from '../interfaces/interfaces_eleve';
+import useChatStore from './useChatStore';
 
 // Note: La gestion de l'unsubscribe Firestore est maintenant dans l'état du store.
 
@@ -95,6 +96,9 @@ const useAuthStore = create<AuthState>((set, get) => ({
         kedge_program: null, // Réinitialiser kedge_program
       });
       console.log("AuthStore: Utilisateur déconnecté (via _setUserAndAuth)");
+      // Nettoyer l'état du chat lors de la déconnexion
+      useChatStore.getState().clearChatState();
+      console.log("AuthStore: clearChatState() appelé après la déconnexion.");
 
     } else {
       // Connexion ou Mise à Jour via l'écouteur Firestore:

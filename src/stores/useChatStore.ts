@@ -380,18 +380,43 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       _setIsLoadingConversations(false);
       _setError(null);
 
-      // --- Logique pour le chat initial ---
-      const isInitialOnboardingLoad = isInitialLoad && !useAuthStore.getState().user?.onboardingComplete;
-      if (isInitialLoad && !isInitialOnboardingLoad && !get().currentChatId && fetchedConversations.length > 0) {
-          const initialChatId = fetchedConversations[0].chat_id;
-          console.log(`[ChatStore - fetchConversations] Initial load complete (non-onboarding). Setting initial active chat to: ${initialChatId}`);
-          setActiveChat(initialChatId); 
-      } else if (isInitialLoad && !isInitialOnboardingLoad && !get().currentChatId && fetchedConversations.length === 0) {
-          console.log("[ChatStore - fetchConversations] Initial load complete (non-onboarding). No conversations found, setting active chat to null.");
-          setActiveChat(null);
-      } else if (isInitialOnboardingLoad) {
+      // --- Nouvelle logique pour le chat initial ---
+      const userCompletedOnboarding = useAuthStore.getState().user?.onboardingComplete;
+      const currentChatId = get().currentChatId;
+
+      if (isInitialLoad && userCompletedOnboarding && !currentChatId) {
+        console.log("[ChatStore - fetchConversations] Initial load for an onboarded user with no active chat. Creating a new conversation.");
+        get().addNewConversation()
+          .then(newChatId => {
+            if (newChatId) {
+              console.log(`[ChatStore - fetchConversations] New conversation ${newChatId} was created and set active by addNewConversation itself.`);
+            } else {
+              console.error("[ChatStore - fetchConversations] addNewConversation() failed. Fallback: attempting to load an existing chat or landing page.");
+              if (fetchedConversations.length > 0) {
+                get().setActiveChat(fetchedConversations[0].chat_id);
+              } else {
+                get().setActiveChat(null);
+              }
+            }
+          })
+          .catch(error => {
+            console.error("[ChatStore - fetchConversations] Critical Error during addNewConversation() call:", error);
+            if (fetchedConversations.length > 0) {
+              get().setActiveChat(fetchedConversations[0].chat_id);
+            } else {
+              get().setActiveChat(null);
+            }
+          });
+      } else if (isInitialLoad && !userCompletedOnboarding && !currentChatId) {
           console.log("[ChatStore - fetchConversations] Initial load for onboarding user. Waiting for signup/onboarding flow to set active chat.");
-          // Ne rien faire ici, laisser le flux d'inscription/onboarding appeler setActiveChat
+          if (fetchedConversations.length === 0) {
+              console.log("[ChatStore - fetchConversations] Onboarding user, no existing chats. Setting active chat to null (landing page).");
+              get().setActiveChat(null);
+          }
+      } else if (isInitialLoad && currentChatId) {
+          console.log(`[ChatStore - fetchConversations] Initial load, but a chat (${currentChatId}) is already active. No change.`);
+      } else if (isInitialLoad) {
+          console.log(`[ChatStore - fetchConversations] Initial load, conditions for auto new chat not met (userCompletedOnboarding: ${userCompletedOnboarding}, currentChatId: ${currentChatId}). Behavior retained.`);
       }
 
     }, (error) => {
@@ -647,7 +672,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     // Mise à jour optimiste (inchangée)
     set({
         currentChatId: newChatId,
-        isLandingPageVisible: true,
+        isLandingPageVisible: false,
         messages: [],
         isLoadingMessages: false,
         isSocialThreadActive: false,

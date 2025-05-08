@@ -53,6 +53,7 @@ interface WeeklyData {
 interface LandingPageV2Props {
     onSend: (message: string) => void;
     userUniversity: string | null | undefined;
+    onTaskTextSelect?: (taskText: string) => void;
 }
 
 // Déplacer progressBarData si souhaité, ou le laisser ici
@@ -68,7 +69,7 @@ const progressBarData = {
     ],
 };
 
-const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity }) => {
+const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity, onTaskTextSelect }) => {
     // Log ajouté au tout début pour confirmer le rendu initial
     console.log("--- LandingPageV2 Component Start Render ---");
     console.log("--- LandingPageV2 Component Rendering --- NOW WITH EXTRA LOGS ---"); 
@@ -138,8 +139,9 @@ const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity })
         // Re-commentez après!
 
         // Nouvelle logique pour exécution unique
-        if (process.env.NODE_ENV === 'development' && !seedExecutedRef.current) {
-            console.log("Attempting to seed Firestore data (dev mode, once per component mount)...");
+        // Modifié pour s'exécuter une fois dans n'importe quel environnement pour ce déploiement spécifique
+        if (!seedExecutedRef.current) { 
+            console.log("Attempting to seed Firestore data (once per component mount, any environment for this deploy)...");
             seedFirestoreData().then(() => {
                 console.log("Seeding function executed.");
             }).catch(error => {
@@ -158,7 +160,12 @@ const LandingPageV2: React.FC<LandingPageV2Props> = ({ onSend, userUniversity })
         setCurrentWeekIndex((prevIndex) => Math.max(prevIndex - 1, 0));
     };
     // --- Autres fonctions (inchangées) --- 
-     const handleDeadlineItemSelect = (itemText: string) => { setInputValue(itemText); };
+     const handleDeadlineItemSelect = (itemText: string) => { 
+        setInputValue(itemText);
+        if (onTaskTextSelect) {
+            onTaskTextSelect(itemText);
+        }
+    };
      const handleSendFromInput = (message: string) => { onSend(message); setInputValue(''); };
      const handleTaskToggle = (weekId: string, deadlineId: string, itemId: string) => {
         toggleTask(weekId, deadlineId, itemId);

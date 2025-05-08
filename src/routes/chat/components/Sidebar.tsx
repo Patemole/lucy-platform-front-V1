@@ -86,6 +86,9 @@ type SidebarProps = {
     console.log('<<< RENDERING Sidebar >>>');
     const isKedge = userUniversity === 'kedge'; // Variable pour la traduction
 
+    // Déterminer si l'on est en environnement de production
+    const isProduction = process.env.NODE_ENV === 'production';
+
     // Fonction pour déterminer le titre du bouton Social Thread
     const getSocialThreadTitle = (year: string | null | undefined): string => {
       switch (year) {
@@ -262,7 +265,7 @@ type SidebarProps = {
                     */}
 
                     {/* Bouton Housing Matching / Retour au Chat */}
-                    {userUniversity === 'upenn' && (
+                    {!isProduction && userUniversity === 'upenn' && (
                         <Tooltip title={showChatContent ? "Go to Housing Matching" : "Back to chat"} enterDelay={100} arrow placement="right">
                         <div>
                             <ListItem

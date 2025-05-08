@@ -5,7 +5,19 @@ import LandingPage from '../../../components/main_components/LandingPageImprove'
 import LandingPageV2 from '../../../components/main_components/landing_page_v2/LandingPageV2'; // Nouvelle Landing Page
 import { Message } from '../../../interfaces/interfaces_eleve';
 import { useTheme } from '@mui/material/styles';
+import useAuthStore from '../../../stores/useAuthStore';
+import useChatStore from '../../../stores/useChatStore';
 
+// Interface pour l'état AuthState (partielle, juste ce dont on a besoin ici)
+interface PartialAuthState {
+  user?: { onboardingComplete?: boolean } | null;
+}
+
+// Interface pour l'état ChatState (partielle, juste ce dont on a besoin ici)
+interface PartialChatState {
+  currentChatId: string | null;
+  isLoadingMessages: boolean;
+}
 
 interface ChatContentProps {
     isLandingPageVisible: boolean;
@@ -79,19 +91,33 @@ interface ChatContentProps {
     setNewMessagesCount,
     userUniversity,
     handleSendSCHOOLKEDGEMessage,
+    setInputValue,
   }) => {
     console.log('<<< RENDERING ChatContent >>>');
 
     const theme = useTheme();
+    const onboardingComplete = useAuthStore((state: PartialAuthState) => state.user?.onboardingComplete);
+    const currentChatId = useChatStore((state: PartialChatState) => state.currentChatId);
+    const isLoadingMessages = useChatStore((state: PartialChatState) => state.isLoadingMessages);
+
+    // Déterminer si l'on est en environnement de production
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Déterminer si la landing page doit être affichée
+    const shouldShowLandingPage = (isLandingPageVisible || (currentChatId && messages.length === 0 && !!onboardingComplete)) && !isLoadingMessages;
+
+    // Déterminer quelle landing page afficher (V2 pour UPenn en dev, ancienne sinon ou en prod)
+    const useNewLandingPage = !isProduction && userUniversity === 'upenn';
 
     return (
         <>
-           {isLandingPageVisible ? (
+           {shouldShowLandingPage ? (
         <>
-            {userUniversity === 'upenn' ? (
+            {useNewLandingPage ? (
                 <LandingPageV2 
                     onSend={handleSendMessageFromLandingPage} 
                     userUniversity={userUniversity}
+                    onTaskTextSelect={setInputValue}
                 />
             ) : (
                 <LandingPage 
