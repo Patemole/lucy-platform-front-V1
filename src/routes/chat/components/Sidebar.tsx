@@ -262,52 +262,54 @@ type SidebarProps = {
                     */}
 
                     {/* Bouton Housing Matching / Retour au Chat */}
-                    <Tooltip title={showChatContent ? (isKedge ? "Aller au Matching Logement" : "Go to Housing Matching") : (isKedge ? "Retourner au Chat" : "Back to chat")} enterDelay={100} arrow placement="right">
-                      <div>
-                        <ListItem
-                          component="li"
-                          tabIndex={0}
-                          onClick={() => {
-                              toggleChatContentVisibility();
-                              if (isSmallScreen) setTimeout(toggleDrawer, 50);
-                          }}
-                          onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
+                    {userUniversity === 'upenn' && (
+                        <Tooltip title={showChatContent ? "Go to Housing Matching" : "Back to chat"} enterDelay={100} arrow placement="right">
+                        <div>
+                            <ListItem
+                              component="li"
+                              tabIndex={0}
+                              onClick={() => {
                                   toggleChatContentVisibility();
                                   if (isSmallScreen) setTimeout(toggleDrawer, 50);
-                              }
-                          }}
-                          sx={{
-                              cursor: "pointer",
-                              borderRadius: "8px",
-                              mb: 1,
-                              "&:hover": {
-                                  backgroundColor: theme.palette.action.hover,
-                              },
-                          }}
-                          >
-                          <ListItemIcon
-                              sx={{
-                                  color: theme.palette.sidebar,
-                                  minWidth: "35px",
                               }}
-                          >
-                              {showChatContent ? <HomeOutlined sx={{ fontSize: "22px" }} /> : <VisibilityIcon sx={{ fontSize: "22px" }} />}
-                          </ListItemIcon>
-                          <ListItemText
-                              primary={showChatContent ? (isKedge ? "Matching Logement" : "Housing Matching") : (isKedge ? "Retour au Chat" : "Back to chat")}
-                              primaryTypographyProps={{
-                                  style: {
-                                      fontWeight: "500",
-                                      fontSize: "0.875rem",
-                                      color: theme.palette.text.primary,
+                              onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      toggleChatContentVisibility();
+                                      if (isSmallScreen) setTimeout(toggleDrawer, 50);
+                                  }
+                              }}
+                              sx={{
+                                  cursor: "pointer",
+                                  borderRadius: "8px",
+                                  mb: 1,
+                                  "&:hover": {
+                                      backgroundColor: theme.palette.action.hover,
                                   },
                               }}
-                          />
-                          </ListItem>
-                      </div>
-                    </Tooltip>
+                              >
+                              <ListItemIcon
+                                  sx={{
+                                      color: theme.palette.sidebar,
+                                      minWidth: "35px",
+                                  }}
+                              >
+                                  {showChatContent ? <HomeOutlined sx={{ fontSize: "22px" }} /> : <VisibilityIcon sx={{ fontSize: "22px" }} />}
+                              </ListItemIcon>
+                              <ListItemText
+                                  primary={showChatContent ? "Go to Housing Matching" : "Back to chat"}
+                                  primaryTypographyProps={{
+                                      style: {
+                                          fontWeight: "500",
+                                          fontSize: "0.875rem",
+                                          color: theme.palette.text.primary,
+                                      },
+                                  }}
+                              />
+                              </ListItem>
+                        </div>
+                        </Tooltip>
+                    )}
 
                     {/* bouton conversation history */}
                     <Tooltip title={isKedge ? "Voir vos conversations passées" : "View your past private and public conversations"} enterDelay={100} arrow placement="right">
