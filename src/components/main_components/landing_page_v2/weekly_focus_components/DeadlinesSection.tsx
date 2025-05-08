@@ -197,8 +197,9 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines, onSelect
             hoverBgColor = '#FFF3CD';
             iconToDisplay = <WarningAmberIcon color="warning" sx={{ fontSize: '1.1rem' }} />;
         } else {
-            bgColor = '#F0F4FF'; // Bleu pastel (actif/ontrack)
-            hoverBgColor = '#E0E7FF';
+            //bgColor = '#F0F4FF'; // Bleu pastel (actif/ontrack)
+            bgColor = '#FFEFE4';
+            hoverBgColor = '#FFD9BF';
             iconToDisplay = <Box sx={{ width: '1.1rem' }} />;
         }
 
