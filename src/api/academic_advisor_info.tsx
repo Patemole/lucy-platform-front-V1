@@ -8,7 +8,7 @@ const apiUrlPrefix: string = config.server_url;
 // Function to send the backend the feedback on wrong answer or issue on the student platform message
 export const submitAcademicAdvisorEmailAdress = async (email: string, uid: string) => {
     try {
-        const response = await fetch(`${apiUrlPrefix}/feedback/academic_advisor/email`, {
+        const response = await fetch(`${apiUrlPrefix}/academic_advisor/email`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
