@@ -41,6 +41,7 @@ import OnboardingLucyQuestions from "./routes/chat/onboardingLucyQuestions"; // 
 // Pages de documents légaux
 import DataPrivacy from './routes/compliance_document/DataPrivacy';
 import CookiePolicy from './routes/compliance_document/CookiePolicy';
+import LeaderboardPage from './routes/leaderboard/LeaderboardPage'; // Ajout de l'importation pour la page Leaderboard
 
 /**
  * Composant principal de l'application React.
@@ -103,6 +104,7 @@ const App: React.FC = () => {
                     <Route path="/dashboard/admin" element={<UserAnalytics />} /> {/* Dashboard Admin */}
                     <Route path="/dataprivacy" element={<DataPrivacy />} />
                     <Route path="/cookiepolicy" element={< CookiePolicy/>} />
+                    <Route path="/leaderboard/ambassadors" element={<LeaderboardPage />} /> {/* Nouvelle route pour le leaderboard des ambassadeurs */}
 
 
                     {/* Route principale du Chat (peut être privée ou publique selon la configuration) */}
