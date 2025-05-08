@@ -50,7 +50,7 @@ import './MessageWEBCSS.css';
 import { FiRefreshCw } from "react-icons/fi";
 import { FiMessageSquare } from "react-icons/fi";
 import { ListItemText } from "@mui/material";
-import { Box,Drawer, Typography, ListItem, List } from "@mui/material";
+import { Box,Drawer, Typography, ListItem, List, Chip } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from "@mui/material/Tooltip";
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -166,7 +166,26 @@ interface AIMessageProps {
   metadataOnboarding?: string | null; //for onboarding
   hasStartedStreaming?: boolean; // ✅ indique que le stream a démarré
   userUniversity?: string | null | undefined; // <-- Ajouter la prop ici
+  chatContext?: 'PrincipalChat' | 'SideChat'; // Ajout de la prop de contexte
+  housingCardData?: CardData; // Ajout de la prop pour la carte de logement
 }
+
+// Définition de l'interface CardData (peut être importée/partagée plus tard)
+interface CardData {
+  id: string;
+  imageUrl: string;
+  label: string;
+  subtitle: string;
+  title: string;
+}
+
+// Fonction pour obtenir la couleur du label (similaire à HousingRankedList)
+const getLabelColor = (label: string, theme: any) => {
+  if (label.toLowerCase() === 'social') return '#FFDAB9'; // PeachPuff
+  if (label.toLowerCase() === 'study') return '#ADD8E6'; // LightBlue
+  if (label.toLowerCase() === 'mixte') return '#98FB98'; // PaleGreen
+  return theme.palette.grey[300]; // Gris par défaut du thème
+};
 
 export const AIMessage: React.FC<AIMessageProps> = ({
   messageId,
@@ -218,6 +237,8 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   metadataOnboarding,
   hasStartedStreaming,
   userUniversity, // <-- Récupérer la prop ici
+  chatContext = 'PrincipalChat', // Récupération avec valeur par défaut
+  housingCardData, // Récupération de la nouvelle prop
 }) => {
 
   console.log('<<< RENDERING AIMessage >>>');
@@ -304,11 +325,19 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   // Thème et responsive
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-
-  // Ajustement de la taille de la police en fonction de la taille de l'écran
+  
+  // Rétablissement de messageFontSize
   const messageFontSize = isSmallScreen ? "custom-phone" : "text-lg";
 
+  // La variable answerLabelIsHidden et messageContainerMarginTopClass sont supprimées.
+  // ReasoningSteps et takData sont des props.
+  // L'état interne 'messages' est utilisé pour le contenu textuel.
 
+  // Condition pour afficher le bloc "Answer"
+  const showAnswerBlock = 
+    !(chatContext === 'SideChat' && (!ReasoningSteps || ReasoningSteps.length === 0)) && 
+    messages.length > 0 && // 'messages' ici est l'état interne du composant
+    (!takData || takData.length === 0);
 
   const yearOptions = [
     { label: "Incoming Freshman", value: "Incoming Freshman" },
@@ -962,6 +991,25 @@ useEffect(() => {
     }
   };
   // --------------------------------------------------------------
+
+  // Style pour la carte de logement (peut être ajusté)
+  const housingCardMessageStyle = {
+    border: `1px solid ${theme.palette.divider}`,
+    borderRadius: theme.shape.borderRadius,
+    padding: theme.spacing(2),
+    //marginTop: theme.spacing(1), // Réduction de la marge supérieure ici
+    backgroundColor: theme.palette.background.paper,
+    maxWidth: '380px', // Limiter la largeur
+    boxShadow: theme.shadows[1],
+  };
+
+  const housingImageMessageStyle = {
+    width: '100%',
+    height: '180px', // Hauteur fixe pour l'image dans le message
+    objectFit: 'cover' as 'cover',
+    borderRadius: theme.shape.borderRadius,
+    marginBottom: theme.spacing(1.5),
+  };
 
   return (
     //<div className="py-5 px-5 flex -mr-6 w-full relative">
@@ -1726,8 +1774,8 @@ useEffect(() => {
             )}
 
 
-            {/* ✅ Afficher "Answer" uniquement s'il y a des messages */}
-            {messages.length > 0 && (!takData || takData.length === 0) && (
+            {/* Condition d'affichage pour le label "Answer" */}
+            {showAnswerBlock && (
               <div className={`mt-0 ${!isSmallScreen ? "ml-8" : ""} pb-2 flex items-center`}>
                 <FiMessageSquare style={{ width: 20, height: 20, marginRight: 8, color: theme.palette.text.primary }} />
                 <span className="font-bold text-gray-900" style={{ fontSize: "1.1rem" }}>
@@ -1736,7 +1784,7 @@ useEffect(() => {
               </div>
             )}
 
-            {/* Affichage des messages accumulés */}
+            {/* Affichage des messages accumulés (sans marge conditionnelle ajoutée ici) */}
             <div className="mobile-fullScreen-container">
               {!takData || takData.length === 0 ? (
                 messages.map((msg, index) => (
@@ -1907,6 +1955,46 @@ useEffect(() => {
               </div>
             </Tooltip>
           )}
+
+
+
+          {/* Affichage de la carte de logement si housingCardData est fourni */}
+          {housingCardData && chatContext === 'SideChat' && (
+              <Box sx={{ display: 'flex', justifyContent: !isSmallScreen ? 'flex-start' : 'center', pl: !isSmallScreen ? 4 : 0 /* mt: 1 a été supprimé ici */ }}> 
+                <Box sx={housingCardMessageStyle}>
+                  <img 
+                    src={housingCardData.imageUrl} 
+                    alt={housingCardData.title} 
+                    style={housingImageMessageStyle} 
+                  />
+                  <Typography variant="h6" sx={{ fontWeight: 500, mb: 0.5 }}>
+                    {housingCardData.title}
+                  </Typography>
+                  <Chip 
+                    label={housingCardData.label} 
+                    size="small"
+                    sx={{ 
+                      backgroundColor: getLabelColor(housingCardData.label, theme),
+                      color: '#333', // Couleur de texte plus foncée pour lisibilité
+                      fontWeight: '500', 
+                      mb: 1 
+                    }} 
+                  />
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                    {housingCardData.subtitle}
+                  </Typography>
+                  {/* Ici, on pourrait ajouter un bouton "En savoir plus" ou similaire si besoin */}
+                </Box>
+              </Box>
+            )}
+
+
+
+
+
+
+
+
 
             
 

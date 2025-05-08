@@ -1,0 +1,1333 @@
+[
+  {
+    "currentMonth": "April",
+    "dateRange": "April 28 - May 3",
+    "startDate": "2025-04-28T00:00:00",
+    "focusTitle": "Confirm Enrollment & Set Up Penn Accounts",
+    "deadlines": [
+      {
+        "id": "accept-offer-today",
+        "title": "Accept offer of enrollment",
+        "day": "Today",
+        "items": [
+          {
+            "id": "aoe1",
+            "text": "Where do I sign the letter of enrollment?",
+            "isDone": false
+          },
+          {
+            "id": "aoe2",
+            "text": "How much does it cost to sign the letter of enrollment?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "activate-pennkey",
+        "title": "Activate PennKey and Email",
+        "day": "May 2",
+        "dueDate": "2025-05-02T00:00:00",
+        "items": [
+          {
+            "id": "pk1",
+            "text": "What is a PennKey?",
+            "isDone": false
+          },
+          {
+            "id": "pk2",
+            "text": "How long does my PennKey have to be?",
+            "isDone": false
+          },
+          {
+            "id": "pk3",
+            "text": "Where do I find the email setup guidelines?",
+            "isDone": false
+          },
+          {
+            "id": "pk4",
+            "text": "Why do I need to set a PennKey now?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "review-penn10",
+        "title": "Review \"Penn10\" Pre-Arrival Checklist",
+        "day": "May 3",
+        "dueDate": "2025-05-03T00:00:00",
+        "items": [
+          {
+            "id": "p10-1",
+            "text": "What is a Penn10 checklist?",
+            "isDone": false
+          },
+          {
+            "id": "p10-2",
+            "text": "How long does it usually take to complete the Penn10 checklist?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
+        
+      }
+    ]
+  },
+  {
+    "currentMonth": "May",
+    "dateRange": "May 4 - 10",
+    "startDate": "2025-05-04T00:00:00",
+    "focusTitle": "Begin Housing Application & Health Requirements",
+    "deadlines": [
+      {
+        "id": "review-housing",
+        "title": "Review Housing Application",
+        "day": "May 4",
+        "dueDate": "2025-05-04T00:00:00",
+        "items": [
+          {
+            "id": "rh1",
+            "text": "What are the various housing options available?",
+            "isDone": false
+          },
+          {
+            "id": "rh2",
+            "text": "What are the criteria for choosing the best option?",
+            "isDone": false
+          },
+          {
+            "id": "rh3",
+            "text": "Where can I find more information about the rooms available?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "plan-roommate",
+        "title": "Plan Roommate Strategy",
+        "day": "May 5",
+        "dueDate": "2025-05-05T00:00:00",
+        "items": [
+          {
+            "id": "prs1",
+            "text": "Where can I find a potential roommate?",
+            "isDone": false
+          },
+          {
+            "id": "prs2",
+            "text": "What should I consider when looking for a roommate?",
+            "isDone": false
+          },
+          {
+            "id": "prs3",
+            "text": "What is the most important factor when looking for a roommate?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "start-health-forms",
+        "title": "Start Health & Immunization Forms",
+        "day": "May 10",
+        "dueDate": "2025-05-10T00:00:00",
+        "items": [
+          {
+            "id": "hf1",
+            "text": "When do I have to submit all of the immunization records by?",
+            "isDone": false
+          },
+          {
+            "id": "hf2",
+            "text": "What type of records do I need to submit?",
+            "isDone": false
+          },
+          {
+            "id": "hf3",
+            "text": "Where do I find the complete list of all immunizations I need?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
+      },
+      {
+        "title": "Housing Matching",
+        "category": "Housing Matching", 
+        "imageSrc": "/housing_matching.png" 
+      }
+    ]
+  },
+  {
+    "currentMonth": "May",
+    "dateRange": "May 11 - 17",
+    "startDate": "2025-05-11T00:00:00",
+    "focusTitle": "Engage with Advising & Consider Pre-Orientation",
+    "deadlines": [
+      {
+        "id": "familiarize-advising",
+        "title": "Familiarize with academic advising system",
+        "day": "Today",
+        "items": [
+          {
+            "id": "fa1",
+            "text": "Where do I find out who my advisor is?",
+            "isDone": false
+          },
+          {
+            "id": "fa2",
+            "text": "What is the role of the advisor?",
+            "isDone": false
+          },
+          {
+            "id": "fa3",
+            "text": "What questions should I prepare for my advising meeting?",
+            "isDone": false
+          },
+          {
+            "id": "fa4",
+            "text": "Who is an academic advisor?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "placement-exams",
+        "title": "Look into Placement Exams",
+        "day": "May 12",
+        "dueDate": "2025-05-12T00:00:00",
+        "items": [
+          {
+            "id": "pe1",
+            "text": "What are placement tests?",
+            "isDone": false
+          },
+          {
+            "id": "pe2",
+            "text": "What do I need to take placement tests for?",
+            "isDone": false
+          },
+          {
+            "id": "pe3",
+            "text": "When are the placements tests due?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "connect-classmates",
+        "title": "Connect with Classmates",
+        "day": "May 16",
+        "dueDate": "2025-05-16T00:00:00",
+        "items": [
+          {
+            "id": "cc1",
+            "text": "What is the best way to find other people who got into Penn?",
+            "isDone": false
+          },
+          {
+            "id": "cc2",
+            "text": "Where can I find a Discord group to meet other incoming freshmen?",
+            "isDone": false
+          },
+          {
+            "id": "cc3",
+            "text": "What message should I write to reach out to other committed Penn students?",
+            "isDone": false
+          },
+          {
+            "id": "cc4",
+            "text": "How many people are usually in an incoming freshman class?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
+      },
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      },
+      {
+        "title": "Housing Matching",
+        "category": "Housing Matching", 
+        "imageSrc": "/housing_matching.png" 
+      }
+    ]
+  },
+  {
+    "currentMonth": "May",
+    "dateRange": "May 18 - 25",
+    "startDate": "2025-05-18T00:00:00",
+    "focusTitle": "Finalize Housing Preferences",
+    "deadlines": [
+      {
+        "id": "finalize-roommate",
+        "title": "Finalize roommate selections",
+        "day": "Today",
+        "items": [
+          {
+            "id": "fr1",
+            "text": "How do I know that someone would be a good roommate fit?",
+            "isDone": false
+          },
+          {
+            "id": "fr2",
+            "text": "Where do I find a roommate if I still don't have one?",
+            "isDone": false
+          },
+          {
+            "id": "fr3",
+            "text": "What do other people say about having a good roommate experience?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "research-preo",
+        "title": "Research Pre-orientation programs",
+        "day": "May 20",
+        "dueDate": "2025-05-20T00:00:00",
+        "items": [
+          {
+            "id": "rpo1",
+            "text": "What are the pre-orientation programs?",
+            "isDone": false
+          },
+          {
+            "id": "rpo2",
+            "text": "Should I do a pre-orientation program if I am an introvert?",
+            "isDone": false
+          },
+          {
+            "id": "rpo3",
+            "text": "What pre-orientation program options are there?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Housing Matching",
+        "category": "Housing Matching", 
+        "imageSrc": "/housing_matching.png" 
+      },
+      {
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
+      },
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "May",
+    "dateRange": "May 26 - 31",
+    "startDate": "2025-05-26T00:00:00",
+    "focusTitle": "Meet Housing Deadline & Continue Onboarding Tasks",
+    "deadlines": [
+      {
+        "id": "submit-housing-app",
+        "title": "Submit your housing application",
+        "day": "Today",
+        "items": [
+          {
+            "id": "sha1",
+            "text": "What is the link to submit the housing application?",
+            "isDone": false
+          },
+          {
+            "id": "sha2",
+            "text": "How do I know that I have submitted the application in the right place?",
+            "isDone": false
+          },
+          {
+            "id": "sha3",
+            "text": "What happens if I submit the form late?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "wrap-up-forms",
+        "title": "Wrap Up School Forms",
+        "day": "May 29",
+        "dueDate": "2025-05-29T00:00:00",
+        "items": [
+          {
+            "id": "wusf1",
+            "text": "What forms do I need to submit this month?",
+            "isDone": false
+          },
+          {
+            "id": "wusf2",
+            "text": "What school form would require the most effort to complete?",
+            "isDone": false
+          },
+          {
+            "id": "wusf3",
+            "text": "How long would it approximately take to complete all of the forms?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Roomate Matching",
+        "category": "Roommate Matching", 
+        "imageSrc": "/romate_matching.png" 
+      },
+      {
+        "title": "Housing Matching",
+        "category": "Housing Matching", 
+        "imageSrc": "/housing_matching.png" 
+      },
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "June",
+    "dateRange": "June 1 - 7",
+    "startDate": "2025-06-01T00:00:00",
+    "focusTitle": "Prepare for Summer Deadlines & Pre-Orientation Choices",
+    "deadlines": [
+      {
+        "id": "consider-preo-programs",
+        "title": "Consider pre-orientation programs",
+        "day": "June 3",
+        "dueDate": "2025-06-03T00:00:00",
+        "items": [
+          {
+            "id": "cpp1",
+            "text": "What are pre-orientation programs?",
+            "isDone": false
+          },
+          {
+            "id": "cpp2",
+            "text": "Where can I learn more about pre-orientation programs?",
+            "isDone": false
+          },
+          {
+            "id": "cpp3",
+            "text": "How do I choose the program that suits me best?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "reach-out-advisor",
+        "title": "Reach out to your academic advisor",
+        "day": "June 6",
+        "dueDate": "2025-06-06T00:00:00",
+        "items": [
+          {
+            "id": "roa1",
+            "text": "How do I know who my academic advisor is?",
+            "isDone": false
+          },
+          {
+            "id": "roa2",
+            "text": "What role does an academic advisor play?",
+            "isDone": false
+          },
+          {
+            "id": "roa3",
+            "text": "Where do I find the email and contact information of my academic advisor?",
+            "isDone": false
+          },
+          {
+            "id": "roa4",
+            "text": "Can Lucy help with drafting an email to my academic advisor?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Reddit: hear what other students at Penn have to say about the questions you have",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "June",
+    "dateRange": "June 8 - 14",
+    "startDate": "2025-06-08T00:00:00",
+    "focusTitle": "Submit Pre-Orientation Applications & Academic Planning",
+    "deadlines": [
+      {
+        "id": "submit-preo-apps",
+        "title": "Submit Pre-Orientation Applications",
+        "day": "June 11",
+        "dueDate": "2025-06-11T00:00:00",
+        "items": [
+          {
+            "id": "spa1",
+            "text": "How many pre-orientation can I apply for?",
+            "isDone": false
+          },
+          {
+            "id": "spa2",
+            "text": "What is the benefit of doing pre-orientation programs at Penn?",
+            "isDone": false
+          },
+          {
+            "id": "spa3",
+            "text": "What is the best pre-orientation program for my interests?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "double-check-placement",
+        "title": "Double-Check Placement Exam Completion",
+        "day": "June 13",
+        "dueDate": "2025-06-13T00:00:00",
+        "items": [
+          {
+            "id": "dcpe1",
+            "text": "Where do I double-check which placement exams I need?",
+            "isDone": false
+          },
+          {
+            "id": "dcpe2",
+            "text": "What are the placement exams and what do they determine?",
+            "isDone": false
+          },
+          {
+            "id": "dcpe3",
+            "text": "Are placement exams graded?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "June",
+    "dateRange": "June 15 - 21",
+    "startDate": "2025-06-15T00:00:00",
+    "focusTitle": "Anticipate Housing & Pre-O Results; Course Registration Nears",
+    "deadlines": [
+      {
+        "id": "verify-housing-details",
+        "title": "Verify Housing Details",
+        "day": "June 19",
+        "dueDate": "2025-06-19T00:00:00",
+        "items": [
+          {
+            "id": "vhd1",
+            "text": "When should I expect to hear back from the housing office?",
+            "isDone": false
+          },
+          {
+            "id": "vhd2",
+            "text": "What happens if I am not satisfied with my housing assignment?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "prepare-adv-registration",
+        "title": "Prepare for Advance Registration (Course Selection)",
+        "day": "June 21",
+        "dueDate": "2025-06-21T00:00:00",
+        "items": [
+          {
+            "id": "par1",
+            "text": "How do I start exploring courses at Penn?",
+            "isDone": false
+          },
+          {
+            "id": "par2",
+            "text": "What are the general requirements for graduating at College of Arts and Sciences?",
+            "isDone": false
+          },
+          {
+            "id": "par3",
+            "text": "How many classes do I have to complete to graduate on time?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Course planner: manage your course workload for the next 4!",
+        "category": "Course Planner", 
+        "imageSrc": "/course_planner.png" 
+      },
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "June",
+    "dateRange": "June 22 - 28",
+    "startDate": "2025-06-22T00:00:00",
+    "focusTitle": "Anticipate Housing & Pre-O Results; Course Registration Nears",
+    "deadlines": [
+      {
+        "id": "review-housing-assignment",
+        "title": "Review housing assignment",
+        "day": "June 24",
+        "dueDate": "2025-06-24T00:00:00",
+        "items": [
+          {
+            "id": "rha1",
+            "text": "How do I request a housing change if I am not happy with my housing assignment?",
+            "isDone": false
+          },
+          {
+            "id": "rha2",
+            "text": "What are the conditions for requesting a housing exception?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "advance-registration-opens",
+        "title": "Advance Registration opens",
+        "day": "June 26",
+        "dueDate": "2025-06-26T00:00:00",
+        "items": [
+          {
+            "id": "aro1",
+            "text": "What courses could I take as an incoming freshman who is interested in biology?",
+            "isDone": false
+          },
+          {
+            "id": "aro2",
+            "text": "When I sign up for a class during advanced registration, does it mean that I am registered?",
+            "isDone": false
+          },
+          {
+            "id": "aro3",
+            "text": "What is the difference between advanced registration and regular registration?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Course planner: manage your course workload for the next 4!",
+        "category": "Course Planner", 
+        "imageSrc": "/course_planner.png" 
+      },
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "July",
+    "dateRange": "June 29 - July 4",
+    "startDate": "2025-06-29T00:00:00",
+    "focusTitle": "Immunization Deadline & Ongoing Course Registration",
+    "deadlines": [
+      {
+        "id": "immunization-records-due",
+        "title": "Immunization Records Due",
+        "day": "July 1",
+        "dueDate": "2025-07-01T00:00:00",
+        "items": [
+          {
+            "id": "ird1",
+            "text": "Could you provide me with a list of immunizations I need before I come to Penn?",
+            "isDone": false
+          },
+          {
+            "id": "ird2",
+            "text": "What happens if I have a hold on my account because of immunization compliance?",
+            "isDone": false
+          },
+          {
+            "id": "ird3",
+            "text": "How do I remove the hold on my account because of immunizations?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "submit-penncard-photo",
+        "title": "Submit PennCard photo",
+        "day": "July 3",
+        "dueDate": "2025-07-03T00:00:00",
+        "items": [
+          {
+            "id": "pcp1",
+            "text": "What type of photos can I use for my PennCard photo?",
+            "isDone": false
+          },
+          {
+            "id": "pcp2",
+            "text": "Where would my PennCard photo be used in the future?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "July",
+    "dateRange": "July 6 - 12",
+    "startDate": "2025-07-06T00:00:00",
+    "focusTitle": "Immunization Deadline & Ongoing Course Registration",
+    "deadlines": [
+      {
+        "id": "immunization-records-due-jul",
+        "title": "Immunization Records Due",
+        "day": "July 6",
+        "dueDate": "2025-07-06T00:00:00",
+        "items": [
+          {
+            "id": "irdj1",
+            "text": "Could you provide me with a list of immunizations I need before I come to Penn?",
+            "isDone": false
+          },
+          {
+            "id": "irdj2",
+            "text": "What happens if I have a hold on my account because of immunization compliance?",
+            "isDone": false
+          },
+          {
+            "id": "irdj3",
+            "text": "How do I remove the hold on my account because of immunizations?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "submit-penncard-photo-jul",
+        "title": "Submit PennCard photo",
+        "day": "July 10",
+        "dueDate": "2025-07-10T00:00:00",
+        "items": [
+          {
+            "id": "pcpj1",
+            "text": "What type of photos can I use for my PennCard photo?",
+            "isDone": false
+          },
+          {
+            "id": "pcpj2",
+            "text": "Where would my PennCard photo be used in the future?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "July",
+    "dateRange": "July 13 - 19",
+    "startDate": "2025-07-13T00:00:00",
+    "focusTitle": "Course Schedule Results & Tuition Payment",
+    "deadlines": [
+      {
+        "id": "review-course-schedule",
+        "title": "Review course schedule",
+        "day": "July 14",
+        "dueDate": "2025-07-14T00:00:00",
+        "items": [
+          {
+            "id": "rcs1",
+            "text": "Where can I view my school schedule after classes have been released?",
+            "isDone": false
+          },
+          {
+            "id": "rcs2",
+            "text": "What do I do if I did not get the classes I wanted?",
+            "isDone": false
+          },
+          {
+            "id": "rcs3",
+            "text": "Can I still sign up for a class if it says 'full'?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "confirm-insurance",
+        "title": "Confirm Health Insurance Waiver/Enrollment",
+        "day": "July 18",
+        "dueDate": "2025-07-18T00:00:00",
+        "items": [
+          {
+            "id": "chi1",
+            "text": "Where do I find the options for health insurance?",
+            "isDone": false
+          },
+          {
+            "id": "chi2",
+            "text": "What is the best health insurance provider for an international student?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Course planner: helps you plan out your 4-year coursework easily",
+        "category": "Course Planner", 
+        "imageSrc": "/course_planner.png" 
+      },
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "July",
+    "dateRange": "July 20 - 26",
+    "startDate": "2025-07-20T00:00:00",
+    "focusTitle": "Paperwork Wrap-Up & Family Farewells",
+    "deadlines": [
+      {
+        "id": "plan-move-in-logistics",
+        "title": "Plan move-in logistics",
+        "day": "July 24",
+        "dueDate": "2025-07-24T00:00:00",
+        "items": [
+          {
+            "id": "pmil1",
+            "text": "Where do I find my move-in date for college housing?",
+            "isDone": false
+          },
+          {
+            "id": "pmil2",
+            "text": "Does the move-in date mean I cannot move in earlier or later?",
+            "isDone": false
+          },
+          {
+            "id": "pmil3",
+            "text": "What items should I bring with me on move-in?",
+            "isDone": false
+          },
+          {
+            "id": "pmil4",
+            "text": "Does Penn provide me with any items to successfully move on campus?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "supplies-ready-move",
+        "title": "Ensure you have all supplies ready to move",
+        "day": "July 26",
+        "dueDate": "2025-07-26T00:00:00",
+        "items": [
+          {
+            "id": "srm1",
+            "text": "What is the best store near campus I can get everything I am missing?",
+            "isDone": false
+          },
+          {
+            "id": "srm2",
+            "text": "If I forgot anything at home, are there many places in Philadelphia that I can shop at?",
+            "isDone": false
+          },
+          {
+            "id": "srm3",
+            "text": "What is the closest Target to campus at Penn?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Events Matching",
+        "category": "Events Matching", 
+        "imageSrc": "/events_matching.png" 
+      },
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "August",
+    "dateRange": "July 27 - Aug. 02",
+    "startDate": "2025-07-27T00:00:00",
+    "focusTitle": "Countdown to Campus",
+    "deadlines": [
+      {
+        "id": "confirm-move-in-details",
+        "title": "Confirm your move-in details",
+        "day": "Aug. 1",
+        "dueDate": "2025-08-01T00:00:00",
+        "items": [
+          {
+            "id": "cmid1",
+            "text": "What is a move-in appointment and do I really need to make one? Can I just move in?",
+            "isDone": false
+          },
+          {
+            "id": "cmid2",
+            "text": "What permits do I need to print to move on campus?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "final-check-ins",
+        "title": "Do the final check-ins",
+        "day": "Aug. 2",
+        "dueDate": "2025-08-02T00:00:00",
+        "items": [
+          {
+            "id": "fci1",
+            "text": "Where do I find the final NSO checklist emails?",
+            "isDone": false
+          },
+          {
+            "id": "fci2",
+            "text": "How could I make sure that all of the financial to-dos are properly completed on my end?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      },
+      {
+        "title": "Matching: meet people on campus that you have common interests with",
+        "category": "Matching", 
+        "imageSrc": "/matching.png" 
+      }
+    ]
+  },
+  {
+    "currentMonth": "August",
+    "dateRange": "August 03 - 09",
+    "startDate": "2025-08-03T00:00:00",
+    "focusTitle": "Last-Minute Prep and Readiness Check-in",
+    "deadlines": [
+      {
+        "id": "confirm-orientation-attendance",
+        "title": "Confirm orientation events attendance",
+        "day": "Aug. 9",
+        "dueDate": "2025-08-09T00:00:00",
+        "items": [
+          {
+            "id": "coea1",
+            "text": "What day should I come on campus if I am trying to attend all possible on-campus events?",
+            "isDone": false
+          },
+          {
+            "id": "coea2",
+            "text": "What happens if I change my mind about attending pre-orientation events?",
+            "isDone": false
+          },
+          {
+            "id": "coea3",
+            "text": "How do I meet people who are also interested in my pre-orientation events?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Events Matching",
+        "category": "Events Matching", 
+        "imageSrc": "/events_matching.png" 
+      },
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "August",
+    "dateRange": "August 10 - 16",
+    "startDate": "2025-08-10T00:00:00",
+    "focusTitle": "Pre-Orientation Programs & Last-Minute Prep",
+    "deadlines": [
+      {
+        "id": "preo-program-begins",
+        "title": "Pre-orientation program begins",
+        "day": "Aug. 14",
+        "dueDate": "2025-08-14T00:00:00",
+        "items": [
+          {
+            "id": "popb1",
+            "text": "What time should I arrive for the pre-orientation program?",
+            "isDone": false
+          },
+          {
+            "id": "popb2",
+            "text": "Where can I find the list of exact events I can expect during the program?",
+            "isDone": false
+          },
+          {
+            "id": "popb3",
+            "text": "If I am doing the pre-orientation, how early should I move on campus?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "confirm-move-in-info",
+        "title": "Confirm Move-In Info from Residential Services",
+        "day": "Aug. 16",
+        "dueDate": "2025-08-16T00:00:00",
+        "items": [
+          {
+            "id": "cmi1",
+            "text": "Where do I pick up my keys for the dorm next week?",
+            "isDone": false
+          },
+          {
+            "id": "cmi2",
+            "text": "How do I make sure to come to the right place when moving in?",
+            "isDone": false
+          },
+          {
+            "id": "cmi3",
+            "text": "Are there specific move-in instructions I should be following?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      }
+    ]
+  },
+  {
+    "currentMonth": "August",
+    "dateRange": "August 17 - 22",
+    "startDate": "2025-08-17T00:00:00",
+    "focusTitle": "Move-In & New Student Orientation (NSO)",
+    "deadlines": [
+      {
+        "id": "first-year-move-in",
+        "title": "First year move in",
+        "day": "Aug. 19-20",
+        "dueDate": {
+          "start": "2025-08-19T00:00:00",
+          "end": "2025-08-20T23:59:59"
+        },
+        "items": [
+          {
+            "id": "fym1",
+            "text": "What time should I arrive for the pre-orientation program?",
+            "isDone": false
+          },
+          {
+            "id": "fym2",
+            "text": "Where can I find the list of exact events I can expect during the program?",
+            "isDone": false
+          },
+          {
+            "id": "fym3",
+            "text": "If I am doing the pre-orientation, how early should I move on campus?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "nso-begins",
+        "title": "New Student Orientation (NSO) begins",
+        "day": "Aug. 21",
+        "dueDate": "2025-08-21T00:00:00",
+        "items": [
+          {
+            "id": "nsob1",
+            "text": "Where do I find the event schedule for NSO?",
+            "isDone": false
+          },
+          {
+            "id": "nsob2",
+            "text": "What is the best way to meet people at NSO?",
+            "isDone": false
+          },
+          {
+            "id": "nsob3",
+            "text": "Where does the first NSO event take place and how do I get there from the Quad?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Reddit: Student Testimonials",
+        "category": "Reddit", 
+        "imageSrc": null 
+      },
+      {
+        "title": "Events Matching",
+        "category": "Events Matching", 
+        "imageSrc": "/events_matching.png" 
+      },
+      {
+        "title": "People matching: meet other committed students and find your roommate",
+        "category": "People matching", 
+        "imageSrc": "/people_matching.png" 
+      }
+    ]
+  },
+  {
+    "currentMonth": "August",
+    "dateRange": "August 24 - 30",
+    "startDate": "2025-08-24T00:00:00",
+    "focusTitle": "Welcome to Penn & New Student Orientation (NSO)",
+    "deadlines": [
+      {
+        "id": "opening-convocation",
+        "title": "Opening Convocation",
+        "day": "Aug. 25",
+        "dueDate": "2025-08-25T00:00:00",
+        "items": [
+          {
+            "id": "oc1",
+            "text": "Where does the Opening Convocation take place and what time?",
+            "isDone": false
+          },
+          {
+            "id": "oc2",
+            "text": "Should I dress up for the Opening Convocation or is it more casual?",
+            "isDone": false
+          },
+          {
+            "id": "oc3",
+            "text": "Is Opening Convocation black tie for guys?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "last-day-nso",
+        "title": "Last Day of NSO",
+        "day": "Aug. 25",
+        "dueDate": "2025-08-25T00:00:00",
+        "items": [
+          {
+            "id": "ldn1",
+            "text": "Can I attend the last NSO event even if I did not go to other ones?",
+            "isDone": false
+          },
+          {
+            "id": "ldn2",
+            "text": "Do I need to RSVP for any of the NSO events?",
+            "isDone": false
+          },
+          {
+            "id": "ldn3",
+            "text": "Could I get a full list of all of the NSO events happening this week with the times they are happening at?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "first-day-class",
+        "title": "First Day of Class",
+        "day": "Aug. 26",
+        "dueDate": "2025-08-26T00:00:00",
+        "items": [
+          {
+            "id": "fdc1",
+            "text": "Where do I find my class schedule?",
+            "isDone": false
+          },
+          {
+            "id": "fdc2",
+            "text": "What is the difference between Primary and Alternatives cart?",
+            "isDone": false
+          },
+          {
+            "id": "fdc3",
+            "text": "Where is David Rittenhouse Laboratory located?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "activities-fair",
+        "title": "Activities Fair",
+        "day": "Aug. 27-30",
+        "dueDate": {
+          "start": "2025-08-27T00:00:00",
+          "end": "2025-08-30T23:59:59"
+        },
+        "items": [
+          {
+            "id": "af1",
+            "text": "What time is the Activities Fair on August 27?",
+            "isDone": false
+          },
+          {
+            "id": "af2",
+            "text": "How many clubs should I join my freshman year?",
+            "isDone": false
+          },
+          {
+            "id": "af3",
+            "text": "What are the best clubs to join as a freshman if I am interested in the music industry?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Campus Discovery",
+        "category": "Campus Discovery", 
+        "imageSrc": "/campus_discovery.png" 
+      },
+      {
+        "title": "People matching: meet other committed students and find your roommate",
+        "category": "People matching", 
+        "imageSrc": "/people_matching.png" 
+      }
+    ]
+  },
+  {
+    "currentMonth": "September",
+    "dateRange": "Aug. 31 - Sept. 6",
+    "startDate": "2025-08-31T00:00:00",
+    "focusTitle": "Courses Begin",
+    "deadlines": [
+      {
+        "id": "labor-day",
+        "title": "Labor Day (no class)",
+        "day": "Sept. 1",
+        "dueDate": "2025-09-01T00:00:00",
+        "items": [
+          {
+            "id": "ld1",
+            "text": "Does Penn have classes on Labor Day?",
+            "isDone": false
+          },
+          {
+            "id": "ld2",
+            "text": "Why does the United States celebrate Labor Day?",
+            "isDone": false
+          }
+        ]
+      },
+      {
+        "id": "course-selection",
+        "title": "Course Selection",
+        "day": "Sept. 1-22",
+        "dueDate": {
+          "start": "2025-09-01T00:00:00",
+          "end": "2025-09-22T23:59:59"
+        },
+        "items": [
+          {
+            "id": "cs1",
+            "text": "What is the difference between course selection and advanced registration?",
+            "isDone": false
+          },
+          {
+            "id": "cs2",
+            "text": "How do I request a permit for a course and why would I need one?",
+            "isDone": false
+          }
+        ]
+      }
+    ],
+    "usefulLinks": [],
+    "features": [
+      {
+        "title": "Course Planner",
+        "category": "Course Planner", 
+        "imageSrc": "/course_planner.png" 
+      },
+      {
+        "title": "Campus Discovery",
+        "category": "Campus Discovery", 
+        "imageSrc": "/campus_discovery.png" 
+      }
+    ]
+  }
+]

@@ -30,6 +30,7 @@ export interface User {
   profilePicture?: string;
   ambassador_referral?: string | null;
   kedge_program?: string | null;
+  completedTaskIds?: string[];
 }
 
 export interface AuthContextType {
