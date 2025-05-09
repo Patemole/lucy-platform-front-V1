@@ -265,7 +265,7 @@ type SidebarProps = {
                     */}
 
                     {/* Bouton Housing Matching / Retour au Chat */}
-                    {!isProduction && userUniversity === 'upenn' && (
+                    {userUniversity === 'upenn' && (
                         <Tooltip title={showChatContent ? "Go to Housing Matching" : "Back to chat"} enterDelay={100} arrow placement="right">
                         <div>
                             <ListItem

@@ -111,8 +111,8 @@ interface ChatContentProps {
       !isLoadingMessages &&
       (isLandingPageVisible || (currentChatId && messages.length === 0 && !!onboardingComplete));
 
-    // Déterminer quelle landing page afficher (V2 pour UPenn en dev, ancienne sinon ou en prod)
-    const useNewLandingPage = !isProduction && userUniversity === 'upenn';
+    // Déterminer quelle landing page afficher (V2 pour UPenn, ancienne sinon)
+    const useNewLandingPage = userUniversity === 'upenn';
 
     return (
         <>
