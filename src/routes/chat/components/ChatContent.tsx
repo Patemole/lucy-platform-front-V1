@@ -17,6 +17,7 @@ interface PartialAuthState {
 interface PartialChatState {
   currentChatId: string | null;
   isLoadingMessages: boolean;
+  isLoadingOnboardingMessage: boolean;
 }
 
 interface ChatContentProps {
@@ -99,12 +100,16 @@ interface ChatContentProps {
     const onboardingComplete = useAuthStore((state: PartialAuthState) => state.user?.onboardingComplete);
     const currentChatId = useChatStore((state: PartialChatState) => state.currentChatId);
     const isLoadingMessages = useChatStore((state: PartialChatState) => state.isLoadingMessages);
+    const isLoadingOnboardingMessage = useChatStore((state) => state.isLoadingOnboardingMessage);
 
     // Déterminer si l'on est en environnement de production
     const isProduction = process.env.NODE_ENV === 'production';
 
     // Déterminer si la landing page doit être affichée
-    const shouldShowLandingPage = (isLandingPageVisible || (currentChatId && messages.length === 0 && !!onboardingComplete)) && !isLoadingMessages;
+    const shouldShowLandingPage = 
+      (onboardingComplete || !isLoadingOnboardingMessage) &&
+      !isLoadingMessages &&
+      (isLandingPageVisible || (currentChatId && messages.length === 0 && !!onboardingComplete));
 
     // Déterminer quelle landing page afficher (V2 pour UPenn en dev, ancienne sinon ou en prod)
     const useNewLandingPage = !isProduction && userUniversity === 'upenn';

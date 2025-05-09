@@ -32,6 +32,7 @@ export const useOnboarding = ({
     currentChatId,
     isLoadingMessages,
     isStreamingResponse,
+    _setIsLoadingOnboardingMessage,
   } = useChatStore();
   const { isAppInitialized } = useAppInitializationStore();
 
@@ -202,6 +203,11 @@ export const useOnboarding = ({
             setIsStreaming(true);
             await onSubmit(historyForSubmit, '', true); // isOnboardingMessage = true
             console.timeEnd("sendNextOnboardingMessage_kedge_finalization_onSubmit_call");
+            // NOUVEAU: Si c'était la première question (index 0) qui mène à la fin
+            if (index === 0 && useChatStore.getState().isLoadingOnboardingMessage) { // Vérifie l'état actuel
+              console.log("[useOnboarding - Kedge Final] Remise à false de isLoadingOnboardingMessage.");
+              _setIsLoadingOnboardingMessage(false);
+            }
             console.timeEnd("sendNextOnboardingMessage_ENTIRE_FUNCTION"); // Fin timer
             return;
         }
@@ -253,6 +259,11 @@ export const useOnboarding = ({
       setIsStreaming(true);
       await onSubmit(historyForSubmit, '', true);
       console.timeEnd("sendNextOnboardingMessage_standard_finalization_onSubmit_call");
+      // NOUVEAU: Si c'était la première question (index 0) qui mène à la fin
+      if (index === 0 && useChatStore.getState().isLoadingOnboardingMessage) { // Vérifie l'état actuel
+        console.log("[useOnboarding - Standard Final] Remise à false de isLoadingOnboardingMessage.");
+        _setIsLoadingOnboardingMessage(false);
+      }
       console.timeEnd("sendNextOnboardingMessage_ENTIRE_FUNCTION"); // Fin timer
       return;
     }
@@ -320,13 +331,19 @@ export const useOnboarding = ({
     messagesAfterUpdate = await fakeStreamMessage(questionToSend, metadata, onboardingMessageId, messagesAfterUpdate);
 
     setIsStreaming(false);
+    // NOUVEAU: Remettre à false si c'était la première question et que l'état est toujours vrai
+    if (index === 0 && useChatStore.getState().isLoadingOnboardingMessage) { // Vérifie l'état actuel
+        console.log("[useOnboarding - sendNext] Premier message (" + metadata + ") streamé, remettant isLoadingOnboardingMessage à false.");
+        _setIsLoadingOnboardingMessage(false);
+    }
     console.log(`[useOnboarding] Étape ${index} ("${metadata}") affichée.`);
     console.timeEnd("sendNextOnboardingMessage_ENTIRE_FUNCTION"); // Fin timer si pas de return anticipé
 
   }, [
     generateUniqueId, setMessages, updateUserField, saveOnboardingStep, setIsLandingPageVisible,
     setRelatedQuestions, setIsStreaming, onSubmit, fakeStreamMessage,
-    skipLinkedInQuestion, onboardingMessages, onboardingMessagesKedge, userName, userUniversity
+    skipLinkedInQuestion, onboardingMessages, onboardingMessagesKedge, userName, userUniversity,
+    _setIsLoadingOnboardingMessage,
   ]);
 
 
@@ -357,29 +374,47 @@ export const useOnboarding = ({
         const onboardingChatId = userChatSessions[0];
         console.warn(`[useOnboarding - Simple] Setting active chat for resume: ${onboardingChatId}. Loading history...`);
         setActiveChat(onboardingChatId); // Déclenche chargement historique
+         // NOUVEAU: Si on active le chat pour reprise d'onboarding, on n'est plus en train de "préparer" le tout premier message car l'historique va être chargé.
+        // Mais si l'onboarding n'est PAS complet, et qu'on va charger l'historique, il se peut qu'il n'y en ait pas encore
+        // et que le premier message soit toujours en attente. Laisser isLoadingOnboardingMessage à true ici est plus sûr.
+        // Il sera mis à false par sendNextOnboardingMessage ou le check suivant.
         return; // Attendre la mise à jour et le chargement
       } else {
         console.error(`[useOnboarding - Simple] Cannot resume: Unable to find single chat ID. Sessions:`, userChatSessions);
+        // NOUVEAU: Si on ne peut pas reprendre, on ne "prépare" plus rien.
+        if (useChatStore.getState().isLoadingOnboardingMessage) _setIsLoadingOnboardingMessage(false);
         hasRunOnboardingCheckRef.current = false;
         return;
       }
     }
 
-    // --- Étape 4: Attendre la stabilité (messages chargés, pas de streaming) ---
+    // --- Étape 4: Attendre la stabilité (messages chargés, pas de streaming) ---    
     if (isLoadingMessages || isStreamingResponse) {
       if (isLoadingMessages) console.log(`[useOnboarding Check - Simple] Waiting for messages for chat ${currentChatId}...`);
       if (isStreamingResponse) console.log(`[useOnboarding Check - Simple] Waiting for AI response for chat ${currentChatId}...`);
-      hasRunOnboardingCheckRef.current = false; // On attend, on pourra agir après
+      // Ne pas toucher à hasRunOnboardingCheckRef.current ici, pour permettre une action au prochain cycle stable.
       return;
     }
 
-    // --- Étape 5: Éviter actions multiples dans un état stable ---
+    // --- Étape 5: Gérer le cas où l'utilisateur est déjà onboardé --- 
+    if (isOnboardingComplete) {
+      // NOUVEAU: Si l'utilisateur est déjà onboardé, s'assurer que isLoadingOnboardingMessage est false.
+      if (useChatStore.getState().isLoadingOnboardingMessage) {
+        console.log("[useOnboarding Check - Simple] User already onboarded. Setting isLoadingOnboardingMessage to false.");
+        _setIsLoadingOnboardingMessage(false);
+      }
+      hasRunOnboardingCheckRef.current = false; // Pas besoin d'agir plus pour l'onboarding
+      onboardingStartAttemptedRef.current = false;
+      return;
+    }
+
+    // --- Étape 6: Éviter actions multiples dans un état stable --- 
     if (hasRunOnboardingCheckRef.current) {
       console.log("[useOnboarding Check - Simple] Action already performed in this stable cycle. Skipping.");
       return;
     }
 
-    // --- Étape 6: ACTION (Uniquement pour le démarrage initial / reprise à zéro) ---
+    // --- Étape 7: ACTION (Démarrage initial / reprise à zéro pour un utilisateur non onboardé) ---
     console.log(`[useOnboarding ACTION - Simple] Stable state for chat ${currentChatId}. Checking if first message needed...`);
     hasRunOnboardingCheckRef.current = true; // Marquer qu'on a évalué ce cycle
 
@@ -389,12 +424,13 @@ export const useOnboarding = ({
 
     // Envoyer la première question SEULEMENT si aucune question d'onboarding n'a jamais été envoyée
     // ET qu'on n'a pas déjà essayé de démarrer dans un cycle précédent.
-    if (!hasExistingOnboardingMessages && hasNotAttemptedStart) {
+    // ET que isLoadingOnboardingMessage est toujours vrai (ce qui signifie qu'on ne l'a pas encore mis à false via une autre logique)
+    if (!hasExistingOnboardingMessages && hasNotAttemptedStart && useChatStore.getState().isLoadingOnboardingMessage) {
       onboardingStartAttemptedRef.current = true; // Marquer la tentative de démarrage
-      const isKedgeAtStart = userUniversity === 'kedge';
-      // Utiliser le bon tableau de messages pour Kedge
-      // const complianceIndexAtStart = onboardingMessages.findIndex(q => q.metadata === 'COMPLIANCE');
+      // Pas besoin de mettre isLoadingOnboardingMessage à true ici, car il est déjà true par défaut.
+      console.log("[useOnboarding ACTION - Simple] isLoadingOnboardingMessage est true, on va envoyer le premier message.");
 
+      const isKedgeAtStart = userUniversity === 'kedge';
       if (isKedgeAtStart) {
         // Pour Kedge, on commence toujours par la première question de leur flux (SCHOOL_KEDGE)
         console.log(`🚀 [useOnboarding ACTION - Simple - Kedge] Starting Kedge onboarding at SCHOOL_KEDGE step for chat ${currentChatId}...`);

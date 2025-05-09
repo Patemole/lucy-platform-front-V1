@@ -63,6 +63,7 @@ interface ChatState {
   relatedQuestions: string[];
   error: string | null; // Pour les erreurs spécifiques au chat
   abortController: AbortController | null; // Pour gérer l'annulation des requêtes
+  isLoadingOnboardingMessage: boolean; // NOUVEAU: Vrai si le premier message d'onboarding est en attente/chargement
 
   // --- Actions ---
 
@@ -82,6 +83,7 @@ interface ChatState {
   _setRelatedQuestions: (questions: string[]) => void;
   _setError: (error: string | null) => void;
   setAbortController: (controller: AbortController | null) => void; // Action pour définir l'AbortController
+  _setIsLoadingOnboardingMessage: (isLoading: boolean) => void; // NOUVEAU: Action pour cet état
 
   // Public Actions / Business Logic
   addOptimisticMessage: (humanMessageContent: string) => Message[]; // Ajoute message humain + placeholder AI
@@ -123,6 +125,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   relatedQuestions: [],
   error: null,
   abortController: null, // Initialiser à null
+  isLoadingOnboardingMessage: true, // NOUVEAU: Initialisation à true
 
   // --- Internal Setters ---
   setMessages: (messages: Message[]) => set({ messages }),
@@ -140,6 +143,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   _setRelatedQuestions: (questions: string[]) => set({ relatedQuestions: questions }),
   _setError: (error: string | null) => set({ error: error, isLoadingMessages: false, isLoadingConversations: false, isLoadingSocialThreads: false }), // Stop loading on error
   setAbortController: (controller) => set({ abortController: controller }), // Implémenter l'action
+  _setIsLoadingOnboardingMessage: (isLoading) => set({ isLoadingOnboardingMessage: isLoading }), // NOUVEAU: Implémentation
 
   // --- Public Actions ---
 
@@ -317,7 +321,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       conversations: [],
       socialThreads: [],
       currentChatId: null,
-      isLandingPageVisible: true, // Réinitialiser sur la landing page
+      isLandingPageVisible: true,
       isSocialThreadActive: false,
       isCurrentChatPrivate: false,
       isLoadingMessages: false,
@@ -328,6 +332,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       relatedQuestions: [],
       error: null,
       abortController: null,
+      isLoadingOnboardingMessage: true, // NOUVEAU: Réinitialisation à true ici aussi
     });
   },
 

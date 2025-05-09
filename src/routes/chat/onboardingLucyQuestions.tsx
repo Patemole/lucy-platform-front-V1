@@ -98,7 +98,10 @@ const OnboardingLucyQuestions: React.FC = ()=> {
     loadChatMessages, // Action from store
     clearChatState, // Action from store
     updateConversationTitleAndTopic, // Action from store
-    markSocialThreadAsRead // Action from store
+    markSocialThreadAsRead, // Action from store
+    currentChatId, 
+    isLoadingMessages,
+    isLoadingOnboardingMessage,
   } = useChatStore(); // Use Zustand store
 
   //3. Messages et gestion du Chat - some states might be directly from store now
@@ -115,6 +118,12 @@ const OnboardingLucyQuestions: React.FC = ()=> {
   const scrollableDivRef = useRef<HTMLDivElement>(null); // Keep local ref
   const endDivRef = useRef<HTMLDivElement>(null); // Keep local ref
   const [showChatContent, setShowChatContent] = useState(true); // NOUVEL ETAT
+
+  // AJOUT: Calculer si ChatContent affiche effectivement une landing page
+  const isEffectivelyShowingLandingPage =
+    (onboardingComplete || !isLoadingOnboardingMessage) && 
+    !isLoadingMessages &&
+    (isLandingPageVisible || (currentChatId && messages.length === 0 && !!onboardingComplete));
 
   //4. Onboarding
   const hasMetadataOnboarding = Array.isArray(messages) && messages.some(msg => msg.METADATAONBOARDING);
@@ -528,7 +537,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
 
 
             {/* Footer Input Section - CONDITIONALLY RENDERED */}
-            {showChatContent && currentView === 'chat' && !isLandingPageVisible && onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
+            {showChatContent && currentView === 'chat' && !isEffectivelyShowingLandingPage && onboardingComplete && (!hasTak || inputValue.trim() !== "") && (
             <>
               {isSmallScreen ? (
                 // VERSION MOBILE AVEC MODIFICATIONS
