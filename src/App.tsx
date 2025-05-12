@@ -12,7 +12,7 @@ import { useAppInitializationStore } from './stores/useAppInitializationStore'; 
 
 // Page principale (Chat)
 import WebChat from './routes/website_widget/WebChat';
-import WebChatWIDGET from './routes/website_widget/WebWIDGETChat'; // Variante Widget
+import WidgetChat from './routes/website_widget/WebWIDGETChat'; // Renommé pour clarté ou utiliser l'ancien nom
 
 // Anciens Dashboards (potentiellement obsolètes ou spécifiques)
 import FlagingDashboard from './routes/dashboard_for_university/FlagingDashboard';
@@ -44,11 +44,12 @@ import CookiePolicy from './routes/compliance_document/CookiePolicy';
 import LeaderboardPage from './routes/leaderboard/LeaderboardPage'; // Ajout de l'importation pour la page Leaderboard
 
 /**
- * Composant principal de l'application React.
+ * Composant Wrapper pour la logique principale de l'application.
  * Gère le thème, l'authentification, le routage et l'initialisation globale.
+ * Cette partie ne sera PAS exécutée pour la route /chatWidget.
  */
-const App: React.FC = () => {
-    // Récupère le sous-domaine depuis la configuration (pour le thème spécifique)
+const MainAppLogic: React.FC = () => {
+     // Récupère le sous-domaine depuis la configuration (pour le thème spécifique)
     const subdomain = config.subdomain || 'default';
 
     // --- Gestion du Thème ---
@@ -99,12 +100,10 @@ const App: React.FC = () => {
                     <Route path="/auth/reset-password" element={<ResetPassword />} />
                     <Route path="/auth/lti-login" element={<LtiLogin />} />
                     <Route path="/auth/choose-your-university" element={<UniversityWaitlist />} />
-                    <Route path="/chatWidget" element={<WebChatWIDGET />} /> {/* Chat version Widget */}
                     <Route path="/auth/sign-up/enrollment" element={<SignUpEnrollment />} />
                     <Route path="/dashboard/admin" element={<UserAnalytics />} /> {/* Dashboard Admin */}
                     <Route path="/dataprivacy" element={<DataPrivacy />} />
                     <Route path="/cookiepolicy" element={< CookiePolicy/>} />
-                    <Route path="/leaderboard/ambassadors" element={<LeaderboardPage />} /> {/* Nouvelle route pour le leaderboard des ambassadeurs */}
 
 
                     {/* Route principale du Chat (peut être privée ou publique selon la configuration) */}
@@ -198,7 +197,7 @@ const App: React.FC = () => {
              setAppInitialized(false);
         }
         // Dépendances mises à jour pour utiliser les sélecteurs spécifiques
-    }, [isLoadingAuth, isAuthenticated, userId, userUniversity, isAppInitialized, setAppInitialized]); 
+    }, [isLoadingAuth, isAuthenticated, userId, userUniversity, isAppInitialized, setAppInitialized]);
 
 
 
@@ -208,25 +207,61 @@ const App: React.FC = () => {
         return <div>Chargement de l'authentification...</div>;
     }
 
-
-    // Configuration pour react-router v6+ (gestion des transitions)
-    const future = { v7_startTransition: true };
-
-
-    // --- Rendu final du composant App ---
+     // --- Rendu de la logique principale ---
     return (
         // Fournit le thème MUI à tous les composants enfants
         <ThemeProvider theme={theme}>
-             {/* Encapsule l'application dans un ErrorBoundary pour attraper les erreurs */}
-            <ErrorBoundary>
-                {/* Configure le routeur principal de l'application */}
-                <Router future={future}>
-                    {/* Affiche les routes définies dans AnimatedRoutes */}
-                    <AnimatedRoutes />
-                </Router>
-            </ErrorBoundary>
+            {/* Affiche les routes définies dans AnimatedRoutes */}
+            <AnimatedRoutes />
         </ThemeProvider>
     );
 };
 
-export default App;
+
+/**
+ * Composant principal de l'application React.
+ * Pointe d'entrée qui décide de rendre soit le WidgetChat soit la logique complète de l'app.
+ */
+const App: React.FC = () => {
+  const location = useLocation();
+
+  // Si l'URL commence par /chatWidget, on rend SEULEMENT le composant WidgetChat.
+  if (location.pathname.startsWith('/chatWidget')) {
+    console.log("App: Route /chatWidget détectée, rendu du WidgetChat seul.");
+    return <WidgetChat />;
+  }
+
+  // Si l'URL commence par /leaderboard/ambassadors, on rend SEULEMENT la page Leaderboard.
+  if (location.pathname.startsWith('/leaderboard/ambassadors')) {
+    console.log("App: Route /leaderboard/ambassadors détectée, rendu de LeaderboardPage seule.");
+    return <LeaderboardPage />;
+  }
+
+  // Pour toutes les autres routes, on rend la logique complète de l'application.
+  console.log("App: Route standard détectée, rendu de MainAppLogic.");
+  return <MainAppLogic />;
+};
+
+
+/**
+* Point d'entrée de l'application qui utilise BrowserRouter.
+* Il est important que useLocation soit utilisé dans un composant enfant
+* de BrowserRouter.
+*/
+const RootApp: React.FC = () => {
+  // Configuration pour react-router v6+ (gestion des transitions)
+  const future = { v7_startTransition: true };
+
+  return (
+    <Router future={future}>
+      {/* Encapsule l'application dans un ErrorBoundary pour attraper les erreurs */}
+      <ErrorBoundary>
+         {/* App contient maintenant la logique de routage conditionnelle */}
+         <App />
+      </ErrorBoundary>
+    </Router>
+  );
+};
+
+// L'export par défaut de RootApp vient APRÈS sa définition.
+export default RootApp;

@@ -95,6 +95,7 @@ var LucyWidget = (function () {
 
             // Création de la zone de saisie
             var inputContainer = document.createElement('div');
+            inputContainer.setAttribute('role', 'search');
             inputContainer.style.width = '100%';
             inputContainer.style.position = 'relative';
             inputContainer.style.marginTop = '0px';
@@ -113,6 +114,7 @@ var LucyWidget = (function () {
             inputField.style.color = '#000000';
             inputField.style.boxSizing = 'border-box';
             inputField.style.outline = 'none';
+            inputField.setAttribute('aria-label', 'Ask a question');
             inputField.placeholder = this.language === 'fr' ? 'What are you looking for?' : 'What are you looking for?'; // Placeholder
             inputField.style.position = 'relative';
             inputField.style.zIndex = '1'; // Assure que l'input est au-dessus du wrapper
@@ -132,6 +134,7 @@ var LucyWidget = (function () {
             sendButton.style.background = 'none';
             sendButton.style.cursor = 'pointer'; // Indicateur de clicabilité
             sendButton.style.zIndex = '2'; // Assure que le bouton est au-dessus du wrapper
+            sendButton.setAttribute('aria-label', 'Send message'); // Add aria-label for accessibility
             inputContainer.appendChild(sendButton);
 
             // Gestion du clic sur le bouton d'envoi
@@ -359,12 +362,6 @@ var LucyWidget = (function () {
             windowHeader.style.borderTopLeftRadius = '20px'; // Correspond au border-radius
             windowHeader.style.borderTopRightRadius = '20px';
 
-            // Supprimer le texte du titre
-            // var windowTitle = document.createElement('div');
-            // windowTitle.innerText = this.university + ' Chat';
-            // windowTitle.style.fontSize = '1rem';
-            // windowTitle.style.color = '#333';
-
             // Bouton de fermeture
             var closeButton = document.createElement('button');
             closeButton.innerHTML = '&times;';
@@ -373,6 +370,7 @@ var LucyWidget = (function () {
             closeButton.style.cursor = 'pointer';
             closeButton.style.fontSize = '1.5rem';
             closeButton.style.color = '#333';
+            closeButton.setAttribute('aria-label', 'Close chat window');
 
             // Action du bouton de fermeture
             closeButton.addEventListener('click', function () {
@@ -396,6 +394,7 @@ var LucyWidget = (function () {
             chatIframe.style.width = '100%';
             chatIframe.style.height = '100%';
             chatIframe.style.border = 'none';
+            chatIframe.title = 'Lucy Chat Window'; // WCAG: Add accessible name
 
             windowContent.appendChild(chatIframe);
 
@@ -547,6 +546,10 @@ var LucyWidget = (function () {
                     questionElement.style.color = '#333';
                     questionElement.style.transition = 'background-color 0.3s';
                     questionElement.style.borderRadius = '4px';
+                    // --- WCAG AA Enhancements ---
+                    questionElement.setAttribute('role', 'button'); // Set role to button
+                    questionElement.setAttribute('tabindex', '0'); // Make it focusable
+                    // --- End WCAG AA Enhancements ---
 
                     // Effets au survol des questions
                     questionElement.addEventListener('mouseenter', function () {
@@ -562,6 +565,15 @@ var LucyWidget = (function () {
                     questionElement.addEventListener('click', function () {
                         self.handleSendQuestion(question);
                     });
+
+                    // --- WCAG AA Enhancement: Keyboard activation ---
+                    questionElement.addEventListener('keydown', function (event) {
+                        if (event.key === 'Enter' || event.key === ' ') { // Trigger on Enter or Space
+                            event.preventDefault(); // Prevent default space scroll or other actions
+                            self.handleSendQuestion(question);
+                        }
+                    });
+                    // --- End WCAG AA Enhancement ---
 
                     self.questionsContainer.appendChild(questionElement);
 
@@ -740,7 +752,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-
 /* CODE QUI FONCTIONNE EN MVP
 var LucyWidget = (function () {
     return {
@@ -846,6 +857,7 @@ var LucyWidget = (function () {
 
             // Création de la zone de saisie
             var inputContainer = document.createElement('div');
+            inputContainer.setAttribute('role', 'search');
             inputContainer.style.width = '100%';
             inputContainer.style.position = 'relative';
             inputContainer.style.marginTop = '0px';
@@ -864,6 +876,7 @@ var LucyWidget = (function () {
             inputField.style.color = '#000000';
             inputField.style.boxSizing = 'border-box';
             inputField.style.outline = 'none';
+            inputField.setAttribute('aria-label', 'Ask a question');
             inputField.placeholder = this.language === 'fr' ? 'What are you looking for?' : 'What are you looking for?'; // Placeholder
             inputField.style.position = 'relative';
             inputField.style.zIndex = '1'; // Assure que l'input est au-dessus du wrapper
@@ -883,6 +896,7 @@ var LucyWidget = (function () {
             sendButton.style.background = 'none';
             sendButton.style.cursor = 'pointer'; // Indicateur de clicabilité
             sendButton.style.zIndex = '2'; // Assure que le bouton est au-dessus du wrapper
+            sendButton.setAttribute('aria-label', 'Send message'); // Add aria-label for accessibility
             inputContainer.appendChild(sendButton);
 
             // Gestion du clic sur le bouton d'envoi
@@ -1125,6 +1139,7 @@ var LucyWidget = (function () {
             closeButton.style.cursor = 'pointer';
             closeButton.style.fontSize = '2rem';
             closeButton.style.color = '#333';
+            closeButton.setAttribute('aria-label', 'Close chat window');
 
             // Ajoute l'événement de clic pour fermer le modal
             closeButton.addEventListener('click', function () {
@@ -1202,6 +1217,10 @@ var LucyWidget = (function () {
                     questionElement.style.color = '#333';
                     questionElement.style.transition = 'background-color 0.3s';
                     questionElement.style.borderRadius = '4px';
+                    // --- WCAG AA Enhancements ---
+                    questionElement.setAttribute('role', 'button'); // Set role to button
+                    questionElement.setAttribute('tabindex', '0'); // Make it focusable
+                    // --- End WCAG AA Enhancements ---
 
                     // Effets au survol des questions
                     questionElement.addEventListener('mouseenter', function () {
@@ -1217,6 +1236,15 @@ var LucyWidget = (function () {
                     questionElement.addEventListener('click', function () {
                         self.handleSendQuestion(question);
                     });
+
+                    // --- WCAG AA Enhancement: Keyboard activation ---
+                    questionElement.addEventListener('keydown', function (event) {
+                        if (event.key === 'Enter' || event.key === ' ') { // Trigger on Enter or Space
+                            event.preventDefault(); // Prevent default space scroll or other actions
+                            self.handleSendQuestion(question);
+                        }
+                    });
+                    // --- End WCAG AA Enhancement ---
 
                     self.questionsContainer.appendChild(questionElement);
 

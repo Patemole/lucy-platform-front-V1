@@ -13,7 +13,6 @@ import {
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CloseIcon from '@mui/icons-material/Close';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
 import { v4 as uuidv4 } from 'uuid';
 import { doc, getDoc} from 'firebase/firestore';
 import '../../index.css';
@@ -29,10 +28,10 @@ import { saveMessageAIToBackend,sendMessageSocraticLangGraph } from '../../api/c
 import { AnswerDocument, AnswerPiecePacket, AnswerDocumentPacket, StreamingError } from '../../interfaces/interfaces';
 import { submitFeedbackAnswer, submitFeedbackWrongAnswer, submitFeedbackGoodAnswer } from '../../api/feedback_wrong_answer';
 import debounce from 'lodash/debounce';
+import { upennTheme } from '../../themes/upennTheme';
 const drawerWidth = 240;
 
 const Dashboard_eleve_template: React.FC = () => {
-  const theme = useTheme();
   const { uid } = useParams<{ uid: string }>();
   const { setPopup } = usePopup();
 
@@ -58,7 +57,7 @@ const Dashboard_eleve_template: React.FC = () => {
   const [hasNewContent, setHasNewContent] = useState(false); // Nouvel état pour détecter du contenu
   const scrollableDivRef = useRef<HTMLDivElement>(null);
   const endDivRef = useRef<HTMLDivElement>(null);
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const isSmallScreen = useMediaQuery(upennTheme.breakpoints.down('sm'));
   const messageMarginX = isSmallScreen ? 'mx-0' : 'mx-25';
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
@@ -332,8 +331,8 @@ useEffect(() => {
         year: year,
         faculty: [faculty],
         isFirstMessage: false,
-        user: {},  // 👈 ajout nécessaire
-        isOnboardingMessage: false, // 👈 ajout nécessaire
+        user: {},
+        isOnboardingMessage: false,
 
       })) {
         if (Array.isArray(packetBunch)) {
@@ -748,7 +747,7 @@ useEffect(() => {
 
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={upennTheme}>
       <div
         className="flex h-screen"
         style={{
@@ -774,6 +773,7 @@ useEffect(() => {
             <div
               className="flex-grow overflow-y-auto"
               style={{ backgroundColor: 'transparent', paddingBottom: '60px' }} // Réduction du paddingBottom
+              aria-live="polite" // Added for screen reader announcements of new messages
             >
               <div className="flex flex-col space-y-2 p-4" ref={scrollableDivRef}>
                 {messages.map((message, index) =>
@@ -789,7 +789,7 @@ useEffect(() => {
                         <div className="flex justify-end">
                           <div
                             style={{
-                              backgroundColor: theme.palette.button.background,
+                              backgroundColor: upennTheme.palette.button.background,
                               padding: '8px',
                               borderRadius: '12px',
                               display: 'inline-block',
@@ -797,7 +797,7 @@ useEffect(() => {
                               maxWidth: '75%',
                               marginRight: '30px',
                               fontSize: '1.05rem', // Taille de la police maintenue
-                              color: theme.palette.text_human_message_historic,
+                              color: upennTheme.palette.text_human_message_historic,
                             }}
                           >
                             {message.fileType ? (
@@ -867,8 +867,8 @@ useEffect(() => {
                     variant="outlined"
                     onClick={() => setInputValue(question)}
                     sx={{
-                      borderColor: theme.palette.button_sign_in,
-                      color: theme.palette.button_sign_in,
+                      borderColor: upennTheme.palette.button_sign_in,
+                      color: upennTheme.palette.button_sign_in,
                       textTransform: 'none',
                       fontSize: '0.875rem',
                       fontWeight: '500',
@@ -884,7 +884,9 @@ useEffect(() => {
           )}
 
           {/* Input Field at the Bottom */}
-          <div
+          {/* WCAG: Wrap input area in a landmark */}
+          <section
+            aria-label="Chat input area"
             className="flex justify-center p-2" // Réduction du padding de 4 à 2
             style={{
                 backgroundColor: 'rgba(240, 240, 240, 0.95)', // Couleur blanche avec une légère transparence
@@ -906,6 +908,7 @@ useEffect(() => {
                 minRows={1} // Maintien d'une hauteur minimale
                 maxRows={4} // Réduction du maxRows de 6 à 4 pour limiter la hauteur
                 placeholder="Message..."
+                aria-label="Message input field" // Added aria-label for accessibility
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleInputKeyPressSocraticLangGraph}
@@ -918,7 +921,7 @@ useEffect(() => {
                         aria-label="send message"
                         edge="end"
                         >
-                        <ArrowForwardIcon style={{ color: theme.palette.button_sign_in }} />
+                        <ArrowForwardIcon style={{ color: upennTheme.palette.button_sign_in }} />
                         </IconButton>
                     </InputAdornment>
                     ),
@@ -928,7 +931,7 @@ useEffect(() => {
                     padding: '10px 8px', // Réduction du padding de 17px à 10px
                     borderRadius: '20px',
                     fontWeight: '500',
-                    color: theme.palette.text.primary, // Directement utiliser la couleur du texte du thème
+                    color: upennTheme.palette.text.primary,
                     paddingRight: '20px', // Assurer l'espace pour l'icône
                     paddingLeft: '20px', // Assurer l'espace pour l'icône
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', // Réduction de l'ombre
@@ -936,7 +939,7 @@ useEffect(() => {
                     },
                 }}
                 inputProps={{
-                    style: { color: theme.palette.text.primary },
+                    style: { color: upennTheme.palette.text.primary },
                 }}
                 sx={{
                     '& .MuiOutlinedInput-root': {
@@ -954,21 +957,21 @@ useEffect(() => {
                 }}
                 />
             </div>
-          </div>
+          </section>
         </div>
 
         {/* Right-Side Iframe for Sources */}
         {iframeSrc && (
           <div
             className="fixed bottom-0 right-0 h-[45%] w-[30%] shadow-lg border-t"
-            style={{ backgroundColor: theme.palette.background.paper, borderColor: theme.palette.divider }}
+            style={{ backgroundColor: upennTheme.palette.background.paper, borderColor: upennTheme.palette.divider }}
           >
             <div className="flex items-center justify-between p-2 bg-gray-200">
-              <Typography variant="body1" style={{ color: theme.palette.text.primary }}>
+              <Typography variant="body1" style={{ color: upennTheme.palette.text.primary }}>
                 Sources
               </Typography>
-              <IconButton onClick={handleIframeClose}>
-                <CloseIcon sx={{ color: theme.palette.error.main }} />
+              <IconButton onClick={handleIframeClose} aria-label="Close sources view">
+                <CloseIcon sx={{ color: upennTheme.palette.error.main }} />
               </IconButton>
             </div>
             <iframe src={iframeSrc} title="Document Viewer" className="w-full h-full" frameBorder="0" />
