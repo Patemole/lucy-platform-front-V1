@@ -492,8 +492,8 @@ var LucyWidget = (function () {
             console.log('Message stocké dans un cookie:', message);
         
             // Générer l'URL et ouvrir la fenêtre
-            //const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget`;
-            const widgetUrl = 'http://upenn.localhost:3001/chatWidget';
+            const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget`;
+            //const widgetUrl = 'http://upenn.localhost:3001/chatWidget';
             this.openFloatingWindow(widgetUrl);
         
             // Réinitialiser le champ
@@ -512,8 +512,8 @@ var LucyWidget = (function () {
             document.cookie = `tempMessage=${encodeURIComponent(question)};path=/`;
         
             // Générer l'URL pour ouvrir le widget
-            //const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget`;
-            const widgetUrl = 'http://upenn.localhost:3001/chatWidget';
+            const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget`;
+            //const widgetUrl = 'http://upenn.localhost:3001/chatWidget';
         
             console.log('Tentative d\'ouverture avec question:', question);
             console.log('URL générée:', widgetUrl);
