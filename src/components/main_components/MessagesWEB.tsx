@@ -64,9 +64,26 @@ import useFeedbackStore from '../../stores/useFeedbackStore';
 import PopupWrongAnswer from './Popup/PopupWrongAnswer'; // Ajouté pour la popup
 import config from '../../config'; // Ajouté pour vérifier l'environnement
 
-
-
-
+// DÉFINITION DE LA NOUVELLE LISTE DE PROGRAMMES KEDGE
+const KEDGE_PROGRAMS_LIST = [
+  { value: "MAI_12", label: "MAI 12 mois : Management des Achats Internationaux & Innovation" },
+  { value: "MAI_24", label: "MAI 24 mois : Management des Achats Internationaux & Innovation" },
+  { value: "ISLI_12", label: "ISLI 12 mois : Manager de la chaîne logistique durable" },
+  { value: "ISLI_24", label: "ISLI 24 mois : Manager de la chaîne logistique durable" },
+  { value: "IA_12_PRIMOS", label: "IA 12 mois primos : Programme Ingénieur d'Affaires" },
+  { value: "IA_24", label: "IA 24 mois : Programme Ingénieur d'Affaires" },
+  { value: "ITL_12", label: "ITL 12 mois : Master Transport et Logistique Internationale ; International Trade & Maritime Logistics" },
+  { value: "ITL_24", label: "ITL 24 mois : Master Transport et Logistique Internationale ; International Trade & Maritime Logistics" },
+  { value: "IMPI", label: "IMPI: Patrimoine & Immobilier" },
+  { value: "MVS", label: "MVS : Management des Vins et Spiritueux ; Manager du développement dans la filière vins et spiritueux" },
+  { value: "IMR", label: "IMR : Management des Risques" },
+  { value: "IS_SANTE", label: "IS : Mastère Spécialisé Innovation et Santé" },
+  { value: "ITE_ENTREP", label: "ITE : Mastère Spécialisé Innovation, Transformation, Entrepreneuriat" },
+  { value: "ISMQ", label: "ISMQ: Management par la Qualité" },
+  { value: "MDD", label: "MDD: Mastère Spécialisé® Marketing Digital & Data" },
+  { value: "MKT", label: "MKT: (marketing) MSc, Master of Science Marketing" },
+];
+// FIN DÉFINITION LISTE
 
 HighchartsMore(Highcharts);
 
@@ -2841,19 +2858,19 @@ useEffect(() => {
                 Quel programme suis-tu à Kedge ?
               </label>
               <div className="flex flex-col gap-2">
-                {[ "Bachelor", "Programme Grande Ecole (PGE)", "Programme Spécialisé"].map((program) => (
+                {KEDGE_PROGRAMS_LIST.map((programOption) => (
                   <button
-                    key={program}
+                    key={programOption.value}
                     onClick={() => {
-                      handleKedgeProgramClick(program); // Appeler la nouvelle fonction intermédiaire
+                      handleKedgeProgramClick(programOption.value); // MODIFIÉ ICI: passer programOption.value
                     }}
                     className={`w-full px-4 py-2 rounded-lg border text-sm text-left transition-colors duration-150 ease-in-out 
-                      ${selectedKedgeProgram === program 
+                      ${selectedKedgeProgram === programOption.value // MODIFIÉ ICI: comparer avec programOption.value
                         ? 'bg-gray-800 text-white border-gray-800' 
                         : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100 focus:bg-gray-200'}
                       `}
                   >
-                    {program}
+                    {programOption.label} {/* L'affichage reste le label complet */}
                   </button>
                 ))}
               </div>

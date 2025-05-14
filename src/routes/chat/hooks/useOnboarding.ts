@@ -665,8 +665,8 @@ export const useOnboarding = ({
   const handleSendSCHOOLKEDGEMessage = useCallback((programMessage: string) => {
     console.log("[useOnboarding] handleSendSCHOOLKEDGEMessage appelée avec:", programMessage);
     // L'index suivant dans onboardingMessagesKedge est COMPLIANCE (index 1)
-    console.log("[useOnboarding] Appel de handleSendGeneric pour SCHOOL_KEDGE avec index 1, metadata SCHOOL_KEDGE, field kedge_program.");
-    handleSendGeneric(programMessage, 1, "SCHOOL_KEDGE", 'kedge_program', programMessage);
+    console.log("[useOnboarding] Appel de handleSendGeneric pour SCHOOL_KEDGE avec index 1, metadata SCHOOL_KEDGE, field faculty, valeur à sauvegarder (dans un tableau):", [programMessage]);
+    handleSendGeneric(programMessage, 1, "SCHOOL_KEDGE", 'faculty', [programMessage]);
 }, [handleSendGeneric]);
 
   // --- Return ---
