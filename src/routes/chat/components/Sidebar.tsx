@@ -87,7 +87,14 @@ type SidebarProps = {
     const isKedge = userUniversity === 'kedge'; // Variable pour la traduction
 
     // Déterminer si l'on est en environnement de production
-    const isProduction = process.env.NODE_ENV === 'production';
+    // const isProduction = process.env.NODE_ENV === 'production';
+    // Nouvelle condition pour afficher le bouton Housing et la Landing Page V2
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'ssr'; // ou une valeur par défaut pour SSR
+    const isPreprodUpenn = hostname.includes('preprod') && userUniversity === 'upenn';
+
+    console.log('[Sidebar] Hostname:', hostname);
+    console.log('[Sidebar] User University:', userUniversity);
+    console.log('[Sidebar] isPreprodUpenn (for Housing button):', isPreprodUpenn);
 
     // Fonction pour déterminer le titre du bouton Social Thread
     const getSocialThreadTitle = (year: string | null | undefined): string => {
@@ -265,7 +272,7 @@ type SidebarProps = {
                     */}
 
                     {/* Bouton Housing Matching / Retour au Chat */}
-                    {!isProduction && userUniversity === 'upenn' && (
+                    {isPreprodUpenn && (
                         <Tooltip title={showChatContent ? "Go to Housing Matching" : "Back to chat"} enterDelay={100} arrow placement="right">
                         <div>
                             <ListItem

@@ -103,7 +103,7 @@ interface ChatContentProps {
     const isLoadingOnboardingMessage = useChatStore((state) => state.isLoadingOnboardingMessage);
 
     // Déterminer si l'on est en environnement de production
-    const isProduction = process.env.NODE_ENV === 'production';
+    //const isProduction = process.env.NODE_ENV === 'production';
 
     // Déterminer si la landing page doit être affichée
     const shouldShowLandingPage = 
@@ -111,8 +111,15 @@ interface ChatContentProps {
       !isLoadingMessages &&
       (isLandingPageVisible || (currentChatId && messages.length === 0 && !!onboardingComplete));
 
-    // Déterminer quelle landing page afficher (V2 pour UPenn en dev, ancienne sinon ou en prod)
-    const useNewLandingPage = !isProduction && userUniversity === 'upenn';
+    // Déterminer quelle landing page afficher
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'ssr';
+    const useNewLandingPage = hostname.includes('preprod') && userUniversity === 'upenn';
+
+    console.log('[ChatContent] Hostname:', hostname);
+    console.log('[ChatContent] User University:', userUniversity);
+    console.log('[ChatContent] isLandingPageVisible (prop from parent):', isLandingPageVisible);
+    console.log('[ChatContent] shouldShowLandingPage (overall LP visibility):', shouldShowLandingPage);
+    console.log('[ChatContent] useNewLandingPage (for V2 vs V1):', useNewLandingPage);
 
     return (
         <>

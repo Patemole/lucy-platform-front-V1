@@ -447,8 +447,8 @@ var LucyWidget = (function () {
         
             // Construire l'URL avec les paramètres tempMessage et university
             // Laisser les URLs cibles commentées pour gestion manuelle de l'environnement
-            const widgetUrl = `http://upenn.localhost:3001/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(message)}`;
-            // const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(message)}`;
+            //const widgetUrl = `http://upenn.localhost:3001/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(message)}`;
+            const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(message)}`;
             // const widgetUrl = `https://upenn.my-lucy.com/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(message)}`;
 
             console.log('Message et université passés via URL. URL générée:', widgetUrl);
@@ -468,8 +468,8 @@ var LucyWidget = (function () {
             if (!question) return;
         
             // Construire l'URL avec les paramètres tempMessage et university
-            const widgetUrl = `http://upenn.localhost:3001/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(question)}`;
-            // const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(question)}`;
+            //const widgetUrl = `http://upenn.localhost:3001/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(question)}`;
+            const widgetUrl = `https://preprod.upenn.my-lucy.com/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(question)}`;
             // const widgetUrl = `https://upenn.my-lucy.com/chatWidget?university=${encodeURIComponent(this.university)}&tempMessage=${encodeURIComponent(question)}`;
         
             console.log('Question et université passées via URL. URL générée:', widgetUrl);
