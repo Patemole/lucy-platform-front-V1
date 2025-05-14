@@ -65,6 +65,8 @@ const Dashboard_eleve_template: React.FC = () => {
 
   const generateUniqueId = (): number => Date.now() + Math.floor(Math.random() * 1000);
 
+  //const generateUniqueId = (): string => uuidv4();
+  const effectRan = useRef(false);
   
   const lastAiMessageId = useMemo(() => {
     const lastAiMessage = [...messages].reverse().find(m => m.type === 'ai');
@@ -89,43 +91,6 @@ const getCookie = (cookieName: string) => {
 const deleteCookie = (cookieName: string) => {
   document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
 };
-
-// Lecture du cookie dans le useEffect
-useEffect(() => {
-  console.log('useEffect exécuté une seule fois');
-  
-  // Ajout d'un drapeau local pour éviter les appels multiples
-  let hasExecuted = false;
-
-  const tempMessage = getCookie('tempMessage');
-  if (tempMessage && !hasExecuted) {
-    console.log('Message récupéré depuis le cookie:', tempMessage);
-
-    // Supprime immédiatement le cookie pour éviter d'autres appels
-    deleteCookie('tempMessage');
-    console.log('Cookie supprimé.');
-
-    const sendTempMessage = async () => {
-      try {
-        // Crée une nouvelle conversation
-        await handleNewConversation();
-
-        console.log("Message récupéré pour SocraticLangGraph:", tempMessage);
-        await handleSendMessageSocraticLangGraph(tempMessage); // Envoie le message
-
-        console.log('Message envoyé avec succès.');
-      } catch (error) {
-        console.error('Erreur lors de l\'envoi du message:', error);
-      }
-    };
-
-    sendTempMessage();
-    hasExecuted = true; // Marque comme exécuté
-  } else {
-    console.log('Aucun message à récupérer ou déjà traité.');
-  }
-}, []); // Les dépendances sont vides pour s'assurer que l'effet ne s'exécute qu'une fois.
-
 
   const fetchCourseOptionsAndChatSessions = async () => {
     if (uid) {
@@ -255,7 +220,6 @@ useEffect(() => {
 
   // Fonction pour envoyer le message à l'AI ou à l'API
   const onSubmit = async (messageHistory: Message[], inputValue: string) => {
-
     console.log('onSubmit called');
     console.log('Message history passed to onSubmit:', messageHistory);
     console.log('Input value:', inputValue);
@@ -744,7 +708,35 @@ useEffect(() => {
     }
   }, [messages]);
 
+  // --- useEffect to read URL parameters ONCE on mount ---
+  useEffect(() => {
+    if (!effectRan.current) {
+      console.log('[WebWIDGETChat] Mount Effect: Attempting to read URL parameters... (Ref check passed)');
 
+      const searchParams = new URLSearchParams(window.location.search);
+      const initialMessageFromUrl = searchParams.get('tempMessage');
+      const universityFromUrl = searchParams.get('university');
+
+      if (universityFromUrl) {
+        console.log('[WebWIDGETChat] University found in URL:', universityFromUrl);
+        setUserUniversity(universityFromUrl); 
+      }
+
+      if (initialMessageFromUrl) {
+        console.log('[WebWIDGETChat] Initial message found in URL:', initialMessageFromUrl);
+        handleSendMessageSocraticLangGraph(initialMessageFromUrl);
+      } else {
+        console.log('[WebWIDGETChat] No initial message (tempMessage) found in URL.');
+      }
+      
+      effectRan.current = true;
+    } else {
+      console.log('[WebWIDGETChat] Mount Effect: Skipped URL parameter reading (already run).');
+    }
+
+    // Empty dependency array ensures this effect runs only once after the initial render.
+  }, []); 
+  // --- END useEffect for URL parameters ---
 
   return (
     <ThemeProvider theme={upennTheme}>
