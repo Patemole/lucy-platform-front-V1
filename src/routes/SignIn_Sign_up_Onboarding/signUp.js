@@ -530,7 +530,7 @@ export default function SignUp() {
                   required
                   onBlur={handleEmailBlur}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring focus:ring-blue-100 focus:border-blue-500"
-                  placeholder={isKedge ? 'Votre adresse e-mail universitaire' : 'Your university email address'}
+                  placeholder={isKedge ? 'Votre adresse e-mail universitaire' : (subdomain === 'upenn' ? 'Your email address' : 'Your university email address')}
                   aria-invalid={!!errors.email || !!emailError}
                   aria-describedby={errors.email ? "email-error-submit" : (emailError ? "email-error-blur" : undefined)}
                 />
