@@ -66,6 +66,7 @@ import config from '../../config'; // Ajouté pour vérifier l'environnement
 
 // DÉFINITION DE LA NOUVELLE LISTE DE PROGRAMMES KEDGE
 const KEDGE_PROGRAMS_LIST = [
+  { value: "Bachelor", label: "Bachelor" },
   { value: "MAI_12", label: "MAI 12 mois : Management des Achats Internationaux & Innovation" },
   { value: "MAI_24", label: "MAI 24 mois : Management des Achats Internationaux & Innovation" },
   { value: "ISLI_12", label: "ISLI 12 mois : Manager de la chaîne logistique durable" },
