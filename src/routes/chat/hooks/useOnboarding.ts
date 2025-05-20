@@ -666,19 +666,20 @@ export const useOnboarding = ({
 
   // --- NOUVEAU HANDLER POUR SCHOOL_KEDGE ---
   const handleSendSCHOOLKEDGEMessage = useCallback((programMessage: string) => {
-    console.log("[useOnboarding] handleSendSCHOOLKEDGEMessage appelée avec:", programMessage);
+    console.log("[useOnboarding] handleSendSCHOOLKEDGEMessage appelée avec (programme Kedge):", programMessage);
     // L'index suivant dans onboardingMessagesKedge est CAMPUS_KEDGE (index 1)
-    console.log("[useOnboarding] Appel de handleSendGeneric pour SCHOOL_KEDGE avec index 1, metadata SCHOOL_KEDGE, field faculty, valeur à sauvegarder (dans un tableau):", [programMessage]);
-    handleSendGeneric(programMessage, 1, "SCHOOL_KEDGE", 'year', [programMessage]);
+    // Enregistre le programme Kedge dans la variable 'year' (string)
+    console.log("[useOnboarding] Appel de handleSendGeneric pour SCHOOL_KEDGE avec index 1, metadata SCHOOL_KEDGE, field year, valeur à sauvegarder:", programMessage);
+    handleSendGeneric(programMessage, 1, "SCHOOL_KEDGE", 'year', programMessage);
 }, [handleSendGeneric]);
 
   // --- NOUVEAU HANDLER POUR CAMPUS_KEDGE ---
   const handleSendCAMPUSKEDGEMessage = useCallback((campusMessage: string) => {
-    console.log("[useOnboarding] handleSendCAMPUSKEDGEMessage appelée avec:", campusMessage);
+    console.log("[useOnboarding] handleSendCAMPUSKEDGEMessage appelée avec (campus Kedge):", campusMessage);
     // L'index suivant dans onboardingMessagesKedge est COMPLIANCE (index 2)
-    // Enregistre la valeur du campus dans le champ 'faculty' (qui est string[])
+    // Enregistre le campus Kedge dans la variable 'faculty' (string[])
     console.log("[useOnboarding] Appel de handleSendGeneric pour CAMPUS_KEDGE avec index 2, metadata CAMPUS_KEDGE, field faculty, valeur à sauvegarder (dans un tableau):", [campusMessage]);
-    handleSendGeneric(campusMessage, 2, "CAMPUS_KEDGE", 'faculty', [campusMessage]); // Enregistre comme [campusMessage]
+    handleSendGeneric(campusMessage, 2, "CAMPUS_KEDGE", 'faculty', [campusMessage]);
   }, [handleSendGeneric]);
 
   // --- Return ---

@@ -317,10 +317,10 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   const [termsChecked, setTermsChecked] = useState(user?.termsAccepted || false);
   const [ageChecked, setAgeChecked] = useState(user?.ageConfirmed || false); 
   
-  // État pour le programme Kedge sélectionné
-  const [selectedKedgeProgram, setSelectedKedgeProgram] = useState<string | null>(user?.kedge_program || null);
-  // Initialiser avec la première valeur de faculty si elle existe, sinon null. Ou user.year si c'est ce qu'on veut afficher initialement.
-  // Pour l'instant, partons du principe qu'on veut afficher le premier campus de 'faculty' s'il existe.
+  // État pour le programme Kedge sélectionné. Le programme Kedge est maintenant stocké dans user.year.
+  const [selectedKedgeProgram, setSelectedKedgeProgram] = useState<string | null>(user?.year || null);
+  // État pour le campus Kedge sélectionné. Le campus Kedge est maintenant stocké dans user.faculty (en tant que tableau).
+  // On prend le premier élément de faculty pour l'affichage initial, s'il existe.
   const [selectedKedgeCampus, setSelectedKedgeCampus] = useState<string | null>(
     user && Array.isArray(user.faculty) && user.faculty.length > 0 ? user.faculty[0] : null
   );
