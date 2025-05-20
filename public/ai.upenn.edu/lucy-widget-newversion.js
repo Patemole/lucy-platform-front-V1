@@ -698,7 +698,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Initialisation du widget
     LucyWidget.init({
         container: '#lucy-widget-container',  // Utilisez le bon ID ici
-        university: 'PennAI', //Valeur a modifier pour changer 
+        university: 'pennai', //Valeur a modifier pour changer 
         theme: 'light',
         language: 'fr'
     });
