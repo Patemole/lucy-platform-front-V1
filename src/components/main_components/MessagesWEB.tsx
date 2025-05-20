@@ -168,6 +168,7 @@ interface AIMessageProps {
   handleSendFAVORITE_COLORMessage?: (value: string) => void; // Optionnel
   handleSendPET_NAMEMessage?: (value: string) => void; // Optionnel
   handleSendSCHOOLKEDGEMessage?: (program_message: string) => void; // <-- NOUVELLE PROP
+  handleSendCAMPUSKEDGEMessage?: (campus_message: string) => void; // <-- NOUVELLE PROP POUR CAMPUS KEDGE
 
   handleSendCOURSEMessage: (COURSE_message: string) => void;
   drawerOpen: boolean;
@@ -240,6 +241,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   handleSendFAVORITE_COLORMessage,
   handleSendPET_NAMEMessage,
   handleSendSCHOOLKEDGEMessage,
+  handleSendCAMPUSKEDGEMessage, // <-- Récupérer la nouvelle prop
   handleSendCOURSEMessage,
   drawerOpen,
   chartData,
@@ -317,6 +319,11 @@ export const AIMessage: React.FC<AIMessageProps> = ({
   
   // État pour le programme Kedge sélectionné
   const [selectedKedgeProgram, setSelectedKedgeProgram] = useState<string | null>(user?.kedge_program || null);
+  // Initialiser avec la première valeur de faculty si elle existe, sinon null. Ou user.year si c'est ce qu'on veut afficher initialement.
+  // Pour l'instant, partons du principe qu'on veut afficher le premier campus de 'faculty' s'il existe.
+  const [selectedKedgeCampus, setSelectedKedgeCampus] = useState<string | null>(
+    user && Array.isArray(user.faculty) && user.faculty.length > 0 ? user.faculty[0] : null
+  );
 
   const [isTextDisplayed, setIsTextDisplayed] = useState(false);
   // Suppression de showShadowSources et hasLoadedSources
@@ -998,6 +1005,10 @@ useEffect(() => {
   const shouldDisplaySchoolKedgeBlock = metadataOnboarding === 'SCHOOL_KEDGE' && !isMessageLoading && isKedgeUser;
   // -----------------------------------
 
+  // --- NOUVEAU BLOC POUR KEDGE CAMPUS ---
+  const shouldDisplayCampusKedgeBlock = metadataOnboarding === 'CAMPUS_KEDGE' && !isMessageLoading && isKedgeUser;
+  // ------------------------------------
+
   // --- NOUVELLE FONCTION CLICK INTERMEDIAIRE POUR KEDGE PROGRAM ---
   const handleKedgeProgramClick = (program: string) => {
     console.log("[AIMessage] handleKedgeProgramClick appelée avec:", program);
@@ -1009,6 +1020,20 @@ useEffect(() => {
     }
   };
   // --------------------------------------------------------------
+
+  // --- NOUVELLE FONCTION CLICK INTERMEDIAIRE POUR KEDGE CAMPUS ---
+  const KEDGE_CAMPUS_OPTIONS = ["BORDEAUX", "MARSEILLE", "TOULON", "PARIS"];
+
+  const handleKedgeCampusClick = (campus: string) => {
+    console.log("[AIMessage] handleKedgeCampusClick appelée avec:", campus);
+    setSelectedKedgeCampus(campus); // Mettre à jour l'état local
+    if (handleSendCAMPUSKEDGEMessage) {
+      handleSendCAMPUSKEDGEMessage(campus);
+    } else {
+      console.warn("[AIMessage] handleSendCAMPUSKEDGEMessage n'est pas défini.");
+    }
+  };
+  // -------------------------------------------------------------
 
   // Style pour la carte de logement (peut être ajusté)
   const housingCardMessageStyle = {
@@ -2878,6 +2903,41 @@ useEffect(() => {
             </div>
           )}
 
+          {/* --- NOUVEAU BLOC POUR CAMPUS_KEDGE --- */}
+          {shouldDisplayCampusKedgeBlock && (
+            <div
+              className={`p-4 rounded-lg shadow ${!isSmallScreen ? 'ml-8' : ''} mb-3`}
+              style={{
+                maxWidth: 'max-content',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(60px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+              tabIndex={0}
+            >
+              <label className="block text-left text-sm font-medium text-gray-800 mt-2 mb-4">
+                Sur quel campus es-tu ?
+              </label>
+              <div className="flex flex-col gap-2">
+                {KEDGE_CAMPUS_OPTIONS.map((campusOption) => (
+                  <button
+                    key={campusOption}
+                    onClick={() => {
+                      handleKedgeCampusClick(campusOption);
+                    }}
+                    className={`w-full px-4 py-2 rounded-lg border text-sm text-left transition-colors duration-150 ease-in-out 
+                      ${selectedKedgeCampus === campusOption
+                        ? 'bg-gray-800 text-white border-gray-800' 
+                        : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100 focus:bg-gray-200'}
+                      `}
+                  >
+                    {campusOption}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
 
 

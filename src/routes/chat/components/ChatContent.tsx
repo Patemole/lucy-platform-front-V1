@@ -56,6 +56,7 @@ interface ChatContentProps {
     setNewMessagesCount: React.Dispatch<React.SetStateAction<number>>;
     userUniversity: string | null | undefined;
     handleSendSCHOOLKEDGEMessage: (value: string) => void;
+    handleSendCAMPUSKEDGEMessage: (value: string) => void;
   }
 
 
@@ -92,6 +93,7 @@ interface ChatContentProps {
     setNewMessagesCount,
     userUniversity,
     handleSendSCHOOLKEDGEMessage,
+    handleSendCAMPUSKEDGEMessage,
     setInputValue,
   }) => {
     console.log('<<< RENDERING ChatContent >>>');
@@ -250,6 +252,7 @@ interface ChatContentProps {
                         hasStartedStreaming={hasStartedStreaming}
                         userUniversity={userUniversity}
                         handleSendSCHOOLKEDGEMessage={handleSendSCHOOLKEDGEMessage}
+                        handleSendCAMPUSKEDGEMessage={handleSendCAMPUSKEDGEMessage}
                     />
                     </div>
                 </div>

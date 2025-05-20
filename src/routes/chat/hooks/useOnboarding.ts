@@ -75,6 +75,7 @@ export const useOnboarding = ({
   // --- NOUVEAU: Tableau de messages d'onboarding spécifique à Kedge ---
   const onboardingMessagesKedge = [
     { question: "Salut! Pour commencer, peux-tu me dire quel programme tu suis à Kedge ?", metadata: "SCHOOL_KEDGE" },
+    { question: "Super! Et sur quel campus es-tu ?", metadata: "CAMPUS_KEDGE" },
     { question: "Parfait ! Dernière étape, coche ces cases pour qu'on soit sur la même longueur d'onde légalement ✅", metadata: "COMPLIANCE" },
   ];
 
@@ -187,11 +188,13 @@ export const useOnboarding = ({
             // Logique de finalisation (similaire à la fin générale mais pour Kedge)
             await updateUserField({ onboardingComplete: true });
             if (previousAnswer && currentUserId && currentChatId) {
-                const lastStep = currentOnboardingSteps[complianceIndex]; // Dernière étape était compliance
-                try {
-                    console.log(`[useOnboarding - Kedge] Sauvegarde dernière étape humaine (métadata: ${lastStep.metadata}).`);
-                    await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, metadata: lastStep.metadata, message: previousAnswer, type: 'human' });
-                } catch (error) { console.error(`❌ Erreur saveOnboardingStep (fin Kedge, humain) pour ${lastStep.metadata}:`, error); }
+                const lastStepMetadata = currentOnboardingSteps[complianceIndex]?.metadata; // Utiliser complianceIndex
+                if (lastStepMetadata) {
+                    try {
+                        console.log(`[useOnboarding - Kedge] Sauvegarde dernière étape humaine (métadata: ${lastStepMetadata}).`);
+                        await saveOnboardingStep({ chatId: currentChatId, userId: currentUserId, metadata: lastStepMetadata, message: previousAnswer, type: 'human' });
+                    } catch (error) { console.error(`❌ Erreur saveOnboardingStep (fin Kedge, humain) pour ${lastStepMetadata}:`, error); }
+                }
             }
             if (typeof fieldToUpdate === 'object') {
                 updateUserField(fieldToUpdate);
@@ -633,7 +636,7 @@ export const useOnboarding = ({
         ? `Termes acceptés : ${payload.termsAccepted ? '✔️' : '❌'} | Âge confirmé : ${payload.ageConfirmed ? '✔️' : '❌'}`
         : `Terms accepted: ${payload.termsAccepted ? '✔️' : '❌'} | Age confirmed: ${payload.ageConfirmed ? '✔️' : '❌'}`;
        // Pour COMPLIANCE, la mise à jour du profil est gérée par l'objet passé
-      const nextIndex = currentIsKedgeUser ? 2 : 6;
+      const nextIndex = currentIsKedgeUser ? onboardingMessagesKedge.findIndex(q => q.metadata === 'COMPLIANCE') + 1 : 6; // Ajuster l'index pour Kedge
       handleSendGeneric(summary, nextIndex, "COMPLIANCE", { complianceAccepted: true, ...payload });
   }, [handleSendGeneric, userUniversity]);
 
@@ -664,10 +667,19 @@ export const useOnboarding = ({
   // --- NOUVEAU HANDLER POUR SCHOOL_KEDGE ---
   const handleSendSCHOOLKEDGEMessage = useCallback((programMessage: string) => {
     console.log("[useOnboarding] handleSendSCHOOLKEDGEMessage appelée avec:", programMessage);
-    // L'index suivant dans onboardingMessagesKedge est COMPLIANCE (index 1)
+    // L'index suivant dans onboardingMessagesKedge est CAMPUS_KEDGE (index 1)
     console.log("[useOnboarding] Appel de handleSendGeneric pour SCHOOL_KEDGE avec index 1, metadata SCHOOL_KEDGE, field faculty, valeur à sauvegarder (dans un tableau):", [programMessage]);
-    handleSendGeneric(programMessage, 1, "SCHOOL_KEDGE", 'faculty', [programMessage]);
+    handleSendGeneric(programMessage, 1, "SCHOOL_KEDGE", 'year', [programMessage]);
 }, [handleSendGeneric]);
+
+  // --- NOUVEAU HANDLER POUR CAMPUS_KEDGE ---
+  const handleSendCAMPUSKEDGEMessage = useCallback((campusMessage: string) => {
+    console.log("[useOnboarding] handleSendCAMPUSKEDGEMessage appelée avec:", campusMessage);
+    // L'index suivant dans onboardingMessagesKedge est COMPLIANCE (index 2)
+    // Enregistre la valeur du campus dans le champ 'faculty' (qui est string[])
+    console.log("[useOnboarding] Appel de handleSendGeneric pour CAMPUS_KEDGE avec index 2, metadata CAMPUS_KEDGE, field faculty, valeur à sauvegarder (dans un tableau):", [campusMessage]);
+    handleSendGeneric(campusMessage, 2, "CAMPUS_KEDGE", 'faculty', [campusMessage]); // Enregistre comme [campusMessage]
+  }, [handleSendGeneric]);
 
   // --- Return ---
   return {
@@ -681,5 +693,6 @@ export const useOnboarding = ({
     handleSendMAJORMINORMessage,
     handleSendCOMPLIANCEMessage,
     handleSendSCHOOLKEDGEMessage, // Exporter le nouveau handler
+    handleSendCAMPUSKEDGEMessage, // Exporter le nouveau handler
   };
 };

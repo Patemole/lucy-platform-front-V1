@@ -244,6 +244,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
       handleSendMAJORMINORMessage,
       handleSendCOMPLIANCEMessage,
       handleSendSCHOOLKEDGEMessage,
+      handleSendCAMPUSKEDGEMessage,
   } = useOnboarding({
       generateUniqueId,
       hasStartedStreaming,
@@ -495,6 +496,7 @@ const OnboardingLucyQuestions: React.FC = ()=> {
                 setNewMessagesCount={setNewMessagesCount}
                 userUniversity={userUniversity}
                 handleSendSCHOOLKEDGEMessage={handleSendSCHOOLKEDGEMessage}
+                handleSendCAMPUSKEDGEMessage={handleSendCAMPUSKEDGEMessage}
               />
             ) : (
               <HousingMain />
