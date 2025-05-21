@@ -255,7 +255,7 @@ const deleteCookie = (cookieName: string) => {
       const interests = localStorage.getItem('interests') || 'default_interests';
       const uid = user.id || 'default_uid';
       //const university = localStorage.getItem('university') || 'upenn'; // Changer pour mettre Upenn ou autre en fonction de ou on met le widget
-      const university = 'upenn'; // Changer pour mettre Upenn ou autre en fonction de ou on met le widget
+      const university = userUniversity === 'aiu' ? 'aiu' : 'upenn'; // Changer pour mettre Upenn ou autre en fonction de ou on met le widget
       const major = localStorage.getItem('major') || 'default_major';
       const minor = localStorage.getItem('minor') || 'default_minor';
       const year = localStorage.getItem('year') || 'default_year';
